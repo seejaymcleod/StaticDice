@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto-Roller v9.0 | Unified Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap');
+        
+        :root {
+            --bg-deep: #020617;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --accent-sky: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.4);
+            --accent-rose: #f43f5e;
+            --accent-emerald: #10b981;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shine: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(244, 63, 94, 0.05) 0%, transparent 50%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
+        .glass-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .segmented-row {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: stretch;
+            height: 3rem;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .segmented-row:focus-within {
+            border-color: var(--accent-sky);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .segmented-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .segmented-btn:active:not(:disabled) { background: rgba(255, 255, 255, 0.08); transform: scale(0.98); }
+        .segmented-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        .btn-side { 
+            width: 20%; 
+            flex-shrink: 0; 
+            font-size: 1.25rem; 
+            font-weight: 600; 
+            color: #94a3b8;
+        }
+        
+        .btn-center { 
+            flex-grow: 1; 
+            border-left: 1px solid var(--glass-border); 
+            border-right: 1px solid var(--glass-border); 
+            background: rgba(15, 23, 42, 0.2);
+            overflow: hidden;
+        }
+
+        .btn-center svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.08;
+            width: 2.5rem;
+            height: 2.5rem;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .segmented-row:hover .btn-center svg { opacity: 0.15; transform: translate(-50%, -50%) scale(1.15); }
+
+        @keyframes pulse-emerald {
+            0% { filter: drop-shadow(0 0 0px var(--accent-emerald)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 30px var(--accent-emerald)); transform: scale(1.15); }
+            100% { filter: drop-shadow(0 0 10px var(--accent-emerald)); transform: scale(1); }
+        }
+        .crit-hit { animation: pulse-emerald 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: var(--accent-emerald) !important; text-shadow: 0 0 25px var(--accent-emerald); }
+        .crit-fail { color: var(--accent-rose) !important; opacity: 0.8; transform: scale(0.9) rotate(-3deg); text-shadow: 0 0 20px var(--accent-rose); transition: all 0.3s ease; }
+
+        @keyframes roll-blur {
+            0% { filter: blur(0) brightness(1); transform: translateY(0); }
+            50% { filter: blur(6px) brightness(1.2); transform: translateY(-4px); }
+            100% { filter: blur(0) brightness(1); transform: translateY(0); }
+        }
+        .is-rolling { animation: roll-blur 0.1s infinite; }
+
+        .bar { background: var(--accent-sky); border-radius: 2px; transition: height 0.3s ease; box-shadow: 0 0 10px var(--accent-glow); }
+        
+        .saved-item {
+            background: rgba(30, 41, 59, 0.2);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .saved-item:hover {
+            background: rgba(51, 65, 85, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        #color-picker-overlay {
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(16px);
+            z-index: 100;
+        }
+        
+        .result-shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        .result-shimmer::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .drawer-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .drawer-content {
+            position: fixed;
+            top: 0; right: 0; bottom: 0;
+            width: 85%;
+            max-width: 320px;
+            background: var(--bg-deep);
+            border-left: 1px solid var(--glass-border);
+            z-index: 60;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -20px 0 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .drawer-content.active { transform: translateX(0); }
+
+        .desktop-only { display: none; }
+        @media (min-width: 640px) {
+            .mobile-only { display: none !important; }
+            .desktop-only { display: block !important; }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center">
+    <div class="w-full max-w-md p-4 space-y-5 flex flex-col min-h-screen">
+        
+        <!-- HEADER -->
+        <header class="flex justify-between items-center px-2">
+            <div>
+                <h1 class="text-xl font-black text-white tracking-tighter leading-none">UNIFIED<span class="text-sky-500">PRO</span></h1>
+                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Dice Engine v10.0</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleDrawer(true)" class="mobile-only bg-sky-500/10 text-sky-400 px-3 py-1.5 rounded-lg text-[9px] font-black border border-sky-500/20 uppercase tracking-widest hover:bg-sky-500/20 transition-all">
+                    Arsenal
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN DISPLAY -->
+        <main class="glass-panel p-4 rounded-3xl flex flex-col items-center justify-center min-h-[110px] relative overflow-hidden shrink-0 result-shimmer">
+            <div class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none"></div>
+            <div id="final-result" class="final-result-val text-6xl font-black text-white leading-none tabular-nums tracking-tighter transition-all duration-300 drop-shadow-2xl">0</div>
+            <div id="detail-text" class="detail-text-val text-[9px] mono text-slate-400 mt-2 text-center px-4 h-4 flex items-center justify-center opacity-60 leading-tight tracking-wide uppercase">READY</div>
+        </main>
+
+        <!-- CONTROLS -->
+        <section class="space-y-3">
+            <div class="flex gap-2">
+                <div class="flex-1 glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[40px] border-white/5">
+                    <div id="queue-display" class="text-[10px] font-bold text-sky-400 mono text-center leading-relaxed uppercase">Empty Queue</div>
+                </div>
+                <div class="flex gap-1.5">
+                    <button onclick="clearQueue()" class="bg-slate-800/50 text-slate-400 px-3 py-1.5 rounded-lg border border-white/5 font-black text-[9px] active:bg-rose-500/20 transition-all uppercase hover:text-rose-400">
+                        Clear
+                    </button>
+                    <button id="save-queue-btn" onclick="saveCurrentQueue()" disabled class="bg-sky-500/10 text-sky-400/50 px-3 py-1.5 rounded-lg border border-sky-500/10 font-black text-[9px] transition-all uppercase disabled:opacity-20">
+                        Save
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button id="adv-btn" onclick="applyModifier('ADV')" disabled class="segmented-row justify-center items-center flex-col disabled:opacity-20 transition-all hover:bg-white/5 group !h-[2.5rem]">
+                    <span id="adv-label" class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Advantage</span>
+                    <span id="adv-sub" class="text-[8px] font-bold text-slate-600 mono leading-none">LOCKED</span>
+                </button>
+                <button id="dis-btn" onclick="applyModifier('DIS')" disabled class="segmented-row justify-center items-center flex-col disabled:opacity-20 transition-all hover:bg-white/5 group !h-[2.5rem]">
+                    <span id="dis-label" class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-rose-400 transition-colors">Disadvantage</span>
+                    <span id="dis-sub" class="text-[8px] font-bold text-slate-600 mono leading-none">LOCKED</span>
+                </button>
+            </div>
+
+            <button id="roll-button" onclick="resolveRolling()" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-3 rounded-xl text-xl shadow-[0_0_20px_rgba(56,189,248,0.2)] active:scale-[0.98] transition-all border-b-2 border-sky-700 uppercase tracking-widest">
+                ROLL
+            </button>
+        </section>
+
+        <section id="arsenal-grid" class="grid grid-cols-2 gap-3">
+            <script>
+                const diceSet = [
+                    { d: 4, path: "M12 2L2 20h20L12 2z" },
+                    { d: 6, path: "M4 4h16v16H4z" },
+                    { d: 8, path: "M12 2l10 10-10 10-10-10L12 2z" },
+                    { d: 10, path: "M12 2l8 6-2 12-6 2-6-2-2-12 8-6z" },
+                    { d: 12, path: "M12 2l7 4v8l-7 4-7-4V6l7-4z" },
+                    { d: 20, path: "M12 2l9 5v10l-9 5-9-5V7l9-5z M12 2v20" },
+                    { d: 100, path: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" }
+                ];
+
+                diceSet.forEach(cfg => {
+                    document.write(`
+                        <div class="segmented-row">
+                            <button onclick="changeQueue(${cfg.d}, -1)" class="segmented-btn btn-side">－</button>
+                            <button onclick="instantRoll(${cfg.d})" class="segmented-btn btn-center group/dice">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="${cfg.path}" />
+                                </svg>
+                                <span class="font-black text-sm text-white z-10 mono">D${cfg.d}</span>
+                            </button>
+                            <button onclick="changeQueue(${cfg.d}, 1)" class="segmented-btn btn-side">＋</button>
+                        </div>
+                    `);
+                });
+
+                document.write(`
+                    <div class="segmented-row">
+                        <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
+                        <div class="segmented-btn btn-center cursor-default flex flex-col justify-center">
+                            <span class="text-[8px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
+                            <span id="mod-val-display" class="font-black text-xl text-sky-400 mono leading-none">0</span>
+                        </div>
+                        <button onclick="adjustFlatMod(1)" class="segmented-btn btn-side">＋</button>
+                    </div>
+                `);
+            </script>
+        </section>
+
+        <!-- DESKTOP INLINE ARSENAL -->
+        <section class="desktop-only space-y-4 py-2">
+            <div class="flex justify-between items-center px-2">
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Saved Arsenal</h3>
+                <div class="flex gap-2">
+                    <button onclick="exportArsenal()" class="text-[9px] font-bold text-sky-400/60 hover:text-sky-400 bg-sky-400/5 px-2 py-0.5 rounded-lg border border-sky-400/10 transition-all uppercase">Export</button>
+                    <button onclick="document.getElementById('import-input').click()" class="text-[9px] font-bold text-emerald-400/60 hover:text-emerald-400 bg-emerald-400/5 px-2 py-0.5 rounded-lg border border-emerald-400/10 transition-all uppercase">Import</button>
+                </div>
+            </div>
+            <div class="saved-queues-list grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scroll pr-1">
+                <!-- Desktop items injected here -->
+            </div>
+        </section>
+
+        <!-- SIDE DRAWER -->
+        <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer(false)"></div>
+        <aside id="arsenal-drawer" class="drawer-content p-6 custom-scroll overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-black text-white uppercase tracking-[0.3em]">Saved Arsenal</h3>
+                <button onclick="toggleDrawer(false)" class="text-slate-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Mirrored Result Display -->
+            <div class="mb-6 p-4 glass-panel rounded-2xl flex flex-col items-center justify-center min-h-[90px] relative overflow-hidden result-shimmer shrink-0">
+                <div class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none"></div>
+                <div class="final-result-val text-4xl font-black text-white leading-none tabular-nums tracking-tighter transition-all duration-300 drop-shadow-xl">0</div>
+                <div class="detail-text-val text-[8px] mono text-slate-400 mt-2 text-center px-2 h-4 flex items-center justify-center opacity-60 leading-tight tracking-wide uppercase">READY</div>
+            </div>
+            
+            <section id="saved-arsenal" class="space-y-6">
+                <div class="flex justify-between items-center px-1">
+                    <div class="flex gap-2">
+                        <button onclick="exportArsenal()" class="text-[9px] font-bold text-sky-400/60 hover:text-sky-400 bg-sky-400/5 px-2.5 py-1 rounded-lg border border-sky-400/10 transition-all uppercase">Export</button>
+                        <button onclick="document.getElementById('import-input').click()" class="text-[9px] font-bold text-emerald-400/60 hover:text-emerald-400 bg-emerald-400/5 px-2.5 py-1 rounded-lg border border-emerald-400/10 transition-all uppercase">Import</button>
+                    </div>
+                    <span class="text-[9px] text-slate-600 mono" id="saved-count">0/20</span>
+                </div>
+                <div class="saved-queues-list grid grid-cols-1 gap-3">
+                    <!-- Saved items injected here -->
+                </div>
+            </section>
+        </aside>
+
+        <input type="file" id="import-input" class="hidden" accept=".json" onchange="importArsenal(event)">
+
+        <section class="flex-grow space-y-3 pb-4">
+            <div class="glass-panel rounded-xl p-3 flex flex-col space-y-2 border-white/5">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-[9px] font-black text-slate-500 uppercase tracking-widest">History</h3>
+                    <button onclick="clearHistory()" class="text-[9px] font-black text-slate-600 hover:text-rose-400 transition-colors uppercase">Wipe</button>
+                </div>
+                <div id="history-log" class="custom-scroll max-h-24 overflow-y-auto space-y-1.5 pr-1">
+                    <p class="text-[9px] text-slate-600 italic px-1">Log is empty...</p>
+                </div>
+            </div>
+
+            <details class="group">
+                <summary class="list-none cursor-pointer flex items-center justify-between glass-panel p-4 rounded-2xl border-white/5">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Entropy Verification</h3>
+                    <svg class="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </summary>
+                <div class="p-4 space-y-3 bg-black/20 rounded-b-2xl border-x border-b border-white/5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-slate-500 mono">D20 Distribution (N=1000)</span>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="stress-count" value="1000" class="w-14 bg-slate-900 border border-white/5 rounded-lg text-[10px] font-black text-sky-400 px-2 py-1 focus:outline-none focus:border-sky-500/50">
+                            <button onclick="runCustomStressTest()" class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-[10px] font-black hover:bg-sky-500 hover:text-slate-950 transition-all uppercase">Verify</button>
+                        </div>
+                    </div>
+                    <div id="chart-area" class="h-12 flex items-end justify-between gap-0.5 border-b border-white/5 pb-1"></div>
+                </div>
+            </details>
+        </section>
+    </div>
+
+    <!-- Color Picker Modal -->
+    <div id="color-picker-overlay" class="fixed inset-0 hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-2xl w-full max-w-[280px] space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Color</h3>
+                <button onclick="closeColorPicker()" class="text-slate-500 hover:text-white transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="color-grid" class="grid grid-cols-4 gap-3">
+                <!-- Colors injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rollingQueue = [];
+        let activeModifier = null; 
+        let modifierLevel = 0;
+        let flatMod = 0;
+        let isRolling = false;
+        let savedQueues = [];
+        let pickerTargetId = null;
+        const COLOR_PALETTE = [
+            '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981',
+            '#06b6d4', '#38bdf8', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'
+        ];
+
+        function toggleDrawer(open) {
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('arsenal-drawer');
+            if (open) {
+                overlay.classList.add('active');
+                drawer.classList.add('active');
+            } else {
+                overlay.classList.remove('active');
+                drawer.classList.remove('active');
+            }
+        }
+
+        function vibrate(ms = 10) {
+            if (navigator.vibrate) navigator.vibrate(ms);
+        }
+
+        function getCryptoRoll(sides) {
+            const cryptoArray = new Uint32Array(1);
+            const maxVal = 2**32;
+            const limit = maxVal - (maxVal % sides);
+            let val;
+            do {
+                window.crypto.getRandomValues(cryptoArray);
+                val = cryptoArray[0];
+            } while (val >= limit);
+            return (val % sides) + 1;
+        }
+
+        function adjustFlatMod(val) {
+            flatMod += val;
+            updateUI();
+        }
+
+        function changeQueue(sides, delta) {
+            vibrate(5);
+            const index = rollingQueue.findIndex(q => q.sides === sides);
+            if (index > -1) {
+                rollingQueue[index].count += delta;
+                if (rollingQueue[index].count <= 0) rollingQueue.splice(index, 1);
+            } else if (delta > 0) {
+                rollingQueue.push({ sides: sides, count: delta });
+            }
+            updateUI();
+        }
+
+        function applyModifier(type) {
+            vibrate(10);
+            if (rollingQueue.length === 0) return;
+            if (activeModifier === type) {
+                modifierLevel++;
+            } else if (activeModifier !== null) {
+                activeModifier = null;
+                modifierLevel = 0;
+            } else {
+                activeModifier = type;
+                modifierLevel = 1;
+            }
+            updateUI();
+        }
+
+        function clearQueue() {
+            rollingQueue = [];
+            activeModifier = null;
+            modifierLevel = 0;
+            flatMod = 0;
+            updateDisplay("0", "READY");
+            updateUI();
+        }
+
+        function updateDisplay(val, detail, classAction = null) {
+            const results = document.querySelectorAll('.final-result-val');
+            const details = document.querySelectorAll('.detail-text-val');
+            
+            results.forEach(el => {
+                el.innerText = val;
+                if (classAction === 'rolling') el.classList.add('is-rolling');
+                else if (classAction === 'stop') el.classList.remove('is-rolling');
+                else if (classAction) {
+                    el.className = el.className.split(' ').filter(c => !c.startsWith('crit-')).join(' ');
+                    el.classList.add(classAction);
+                } else {
+                    el.className = el.className.split(' ').filter(c => !c.startsWith('crit-')).join(' ');
+                }
+            });
+            details.forEach(el => el.innerText = detail);
+        }
+
+        function updateUI() {
+            const display = document.getElementById('queue-display');
+            const advBtn = document.getElementById('adv-btn');
+            const disBtn = document.getElementById('dis-btn');
+            const advSub = document.getElementById('adv-sub');
+            const disSub = document.getElementById('dis-sub');
+            const modDisplay = document.getElementById('mod-val-display');
+            const saveBtn = document.getElementById('save-queue-btn');
+            
+            let parts = rollingQueue.map(q => `${q.count}d${q.sides}`);
+            if (flatMod !== 0) parts.push(`[${flatMod > 0 ? '+' : ''}${flatMod}]`);
+            
+            let modifierText = activeModifier ? ` [${activeModifier}${modifierLevel > 1 ? '+' + (modifierLevel-1) : ''}]` : "";
+            display.innerText = parts.length > 0 || modifierText ? parts.join(" + ") + modifierText : "EMPTY QUEUE";
+            
+            modDisplay.innerText = flatMod;
+
+            const hasDice = rollingQueue.length > 0;
+            advBtn.disabled = !hasDice;
+            disBtn.disabled = !hasDice;
+
+            if (!hasDice) {
+                activeModifier = null;
+                modifierLevel = 0;
+            }
+
+            advBtn.style.borderColor = activeModifier === 'ADV' ? 'var(--accent-emerald)' : '';
+            disBtn.style.borderColor = activeModifier === 'DIS' ? 'var(--accent-rose)' : '';
+            
+            advSub.innerText = !hasDice ? 'LOCKED' : (activeModifier === 'ADV' ? (modifierLevel > 1 ? `PLUS ${modifierLevel-1}` : 'ACTIVE') : 'NEUTRAL');
+            disSub.innerText = !hasDice ? 'LOCKED' : (activeModifier === 'DIS' ? (modifierLevel > 1 ? `PLUS ${modifierLevel-1}` : 'ACTIVE') : 'NEUTRAL');
+
+            saveBtn.disabled = !hasDice && flatMod === 0;
+        }
+
+        // --- SAVED QUEUES LOGIC ---
+
+        function saveCurrentQueue() {
+            if (rollingQueue.length === 0 && flatMod === 0) return;
+            const name = prompt("Name this configuration:", `Loadout ${savedQueues.length + 1}`);
+            if (!name) return;
+
+            const newSaved = {
+                id: Date.now(),
+                name: name,
+                color: COLOR_PALETTE[0],
+                queue: JSON.parse(JSON.stringify(rollingQueue)),
+                modifier: activeModifier,
+                modLevel: modifierLevel,
+                flat: flatMod
+            };
+
+            savedQueues.push(newSaved);
+            persistSaved();
+            renderSavedQueues();
+        }
+
+        function loadQueue(id) {
+            const item = savedQueues.find(q => q.id === id);
+            if (!item) return;
+
+            rollingQueue = JSON.parse(JSON.stringify(item.queue));
+            activeModifier = item.modifier;
+            modifierLevel = item.modLevel;
+            flatMod = item.flat;
+            
+            updateUI();
+        }
+
+        function deleteQueue(id, event) {
+            event.stopPropagation();
+            if (!confirm("Delete this saved configuration?")) return;
+            savedQueues = savedQueues.filter(q => q.id !== id);
+            persistSaved();
+            renderSavedQueues();
+        }
+
+        function renameQueue(id, event) {
+            event.stopPropagation();
+            const item = savedQueues.find(q => q.id === id);
+            if (!item) return;
+            const newName = prompt("Rename configuration:", item.name);
+            if (newName) {
+                item.name = newName;
+                persistSaved();
+                renderSavedQueues();
+            }
+        }
+
+        function openColorPicker(id, event) {
+            event.stopPropagation();
+            pickerTargetId = id;
+            const overlay = document.getElementById('color-picker-overlay');
+            const grid = document.getElementById('color-grid');
+            
+            grid.innerHTML = '';
+            COLOR_PALETTE.forEach(color => {
+                const btn = document.createElement('button');
+                btn.className = 'color-option w-10 h-10 rounded-full border-2 border-white/5';
+                btn.style.backgroundColor = color;
+                btn.style.color = color;
+                btn.onclick = () => selectColor(color);
+                grid.appendChild(btn);
+            });
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
+
+        function closeColorPicker() {
+            const overlay = document.getElementById('color-picker-overlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            pickerTargetId = null;
+        }
+
+        function selectColor(color) {
+            if (pickerTargetId === null) return;
+            const item = savedQueues.find(q => q.id === pickerTargetId);
+            if (item) {
+                item.color = color;
+                persistSaved();
+                renderSavedQueues();
+            }
+            closeColorPicker();
+        }
+
+        function updateSavedQueue(id, event) {
+            event.stopPropagation();
+            const item = savedQueues.find(q => q.id === id);
+            if (!item) return;
+            
+            if (!confirm(`Overwrite "${item.name}" with the current active queue?`)) return;
+
+            item.queue = JSON.parse(JSON.stringify(rollingQueue));
+            item.modifier = activeModifier;
+            item.modLevel = modifierLevel;
+            item.flat = flatMod;
+
+            persistSaved();
+            renderSavedQueues();
+        }
+
+        function persistSaved() {
+            localStorage.setItem('crypto_roller_saved', JSON.stringify(savedQueues));
+        }
+
+        function exportArsenal() {
+            if (savedQueues.length === 0) {
+                alert("Nothing to export!");
+                return;
+            }
+            const dataStr = JSON.stringify(savedQueues, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `arsenal_backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function importArsenal(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) throw new Error("Invalid format");
+
+                    const mode = confirm("Import successful! \n\nClick OK to MERGE with current arsenal. \nClick CANCEL to OVERWRITE everything.") ? 'merge' : 'overwrite';
+                    
+                    if (mode === 'merge') {
+                        // Avoid duplicates by ID if they exist, or just append
+                        const currentIds = new Set(savedQueues.map(q => q.id));
+                        imported.forEach(item => {
+                            if (!currentIds.has(item.id)) {
+                                savedQueues.push(item);
+                            } else {
+                                // If ID matches, give it a new ID to avoid conflict
+                                item.id = Date.now() + Math.random();
+                                savedQueues.push(item);
+                            }
+                        });
+                    } else {
+                        savedQueues = imported;
+                    }
+
+                    persistSaved();
+                    renderSavedQueues();
+                    alert(`Successfully imported ${imported.length} items!`);
+                } catch (err) {
+                    alert("Error importing file. Please ensure it's a valid Arsenal JSON backup.");
+                }
+                event.target.value = ''; // Reset input
+            };
+            reader.readAsText(file);
+        }
+
+        function renderSavedQueues() {
+            const lists = document.querySelectorAll('.saved-queues-list');
+            const countDisplays = document.querySelectorAll('.saved-count');
+            
+            const countText = `${savedQueues.length}/20`;
+            countDisplays.forEach(el => el.innerText = countText);
+
+            lists.forEach(list => {
+                list.innerHTML = '';
+                
+                if (savedQueues.length === 0) {
+                    list.innerHTML = '<div class="text-[10px] text-slate-600 italic px-1 py-8 text-center border-2 border-dashed border-white/5 rounded-[1.5rem] bg-white/[0.02] col-span-full">No saved loadouts yet.</div>';
+                    return;
+                }
+                
+                savedQueues.forEach(q => {
+                    const item = document.createElement('div');
+                    item.className = 'saved-item p-3 rounded-xl flex items-center gap-3 cursor-pointer group relative overflow-hidden';
+                    item.onclick = () => { loadQueue(q.id); resolveRolling(); };
+                    
+                    let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
+                    if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
+                    if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel-1) : ''}]`;
+
+                    item.innerHTML = `
+                        <div class="w-1 h-6 rounded-full shadow-[0_0_8px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>
+                        <div class="flex-grow min-w-0">
+                            <div class="text-[11px] font-black text-white truncate uppercase tracking-tight">${q.name}</div>
+                            <div class="text-[9px] mono text-slate-500 truncate mt-0.5">${formula || 'Empty'}</div>
+                        </div>
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onclick="updateSavedQueue(${q.id}, event)" class="w-6 h-6 flex items-center justify-center hover:bg-sky-500/20 rounded-lg text-[9px] text-sky-400" title="Update">💾</button>
+                            <button onclick="openColorPicker(${q.id}, event)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-lg text-[9px] text-slate-400">🎨</button>
+                            <button onclick="deleteQueue(${q.id}, event)" class="w-6 h-6 flex items-center justify-center hover:bg-rose-500/20 rounded-lg text-[9px] text-rose-400">✕</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            });
+        }
+
+        async function instantRoll(sides) {
+            if (isRolling) return;
+            vibrate(10);
+            
+            const isSameTypeOnly = rollingQueue.length === 1 && rollingQueue[0].sides === sides;
+            
+            if (isSameTypeOnly) {
+                rollingQueue[0].count++;
+            } else {
+                rollingQueue = [{ sides: sides, count: 1 }];
+            }
+            
+            updateUI();
+            // Perform the visual roll for ONLY the die just clicked
+            resolveRolling([{ sides: sides, count: 1 }], true);
+        }
+
+        async function resolveRolling(forcedQueue = null, isInstant = false) {
+            const activeQueue = forcedQueue || rollingQueue;
+            const activeFlat = isInstant ? 0 : flatMod; // Instant rolls don't include flat mod unless part of full roll
+
+            if ((activeQueue.length === 0 && activeFlat === 0) || isRolling) return;
+            isRolling = true;
+            vibrate(15);
+            
+            updateDisplay("...", "ROLLING", "rolling");
+            
+            for(let i = 0; i < 8; i++) {
+                updateDisplay(Math.floor(Math.random() * 20) + 1, "ROLLING");
+                await new Promise(r => setTimeout(r, 40));
+            }
+
+            let total = 0;
+            let details = [];
+            let hasCritHit = false;
+            let hasCritFail = false;
+            
+            activeQueue.forEach(group => {
+                let pool = [];
+                let rawRolls = [];
+                const rollsToTake = 1 + (activeModifier ? modifierLevel : 0); 
+                
+                for (let i = 0; i < group.count; i++) {
+                    let dieRolls = [];
+                    for (let j = 0; j < rollsToTake; j++) dieRolls.push(getCryptoRoll(group.sides));
+                    
+                    let kept = dieRolls[0];
+                    if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
+                    if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
+                    
+                    pool.push(kept);
+                    
+                    if (dieRolls.length > 1) {
+                        rawRolls.push(`[${dieRolls.join(',')}]`);
+                    } else {
+                        rawRolls.push(dieRolls[0]);
+                    }
+                    
+                    if (group.sides === 20) {
+                        if (kept === 20) hasCritHit = true;
+                        if (kept === 1) hasCritFail = true;
+                    }
+                }
+
+                let sum = pool.reduce((a, b) => a + b, 0);
+                details.push(`${group.count}d${group.sides}(${rawRolls.join(',')})`);
+                total += sum;
+            });
+
+            total += activeFlat;
+            if (activeFlat !== 0) details.push(`Mod:${activeFlat}`);
+
+            updateDisplay(total, details.join(" + "), "stop");
+            
+            // Prioritize Crit Hit over Fail if both exist in a pool
+            if (hasCritHit) { 
+                updateDisplay(total, details.join(" + "), "crit-hit");
+                vibrate([40, 80, 40]); 
+            } else if (hasCritFail) { 
+                updateDisplay(total, details.join(" + "), "crit-fail");
+                vibrate(60); 
+            } else {
+                vibrate(25);
+            }
+
+            addToHistory(total, details.join(" + "));
+            isRolling = false;
+        }
+
+        function addToHistory(val, desc) {
+            const log = document.getElementById('history-log');
+            if (log.innerHTML.includes('No history')) log.innerHTML = '';
+            const item = document.createElement('div');
+            item.className = 'history-item flex items-center justify-between bg-slate-800/10 p-1.5 rounded-lg border border-slate-800/40';
+            item.innerHTML = `<span class="text-[8px] text-slate-500 mono truncate">${desc}</span><span class="font-black text-sky-400 mono text-[10px]">${val}</span>`;
+            log.prepend(item);
+            if (log.children.length > 20) log.removeChild(log.lastChild);
+        }
+
+        function clearHistory() {
+            document.getElementById('history-log').innerHTML = '<p class="text-[9px] text-slate-700 italic px-1">No history yet...</p>';
+        }
+
+        function runCustomStressTest() {
+            const iterations = parseInt(document.getElementById('stress-count').value) || 1000;
+            const sides = 20;
+            const tallies = new Array(sides).fill(0);
+            const chartArea = document.getElementById('chart-area');
+            chartArea.innerHTML = '';
+            for (let i = 0; i < iterations; i++) tallies[getCryptoRoll(sides) - 1]++;
+            const max = Math.max(...tallies);
+            tallies.forEach((t, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar flex-1';
+                bar.style.height = `${(t / max) * 100}%`;
+                chartArea.appendChild(bar);
+            });
+        }
+
+        window.onload = () => {
+            const stored = localStorage.getItem('crypto_roller_saved');
+            if (stored) {
+                savedQueues = JSON.parse(stored);
+                renderSavedQueues();
+            }
+            runCustomStressTest();
+        };
+    </script>
+</body>
+</html>
