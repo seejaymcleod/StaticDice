@@ -151,75 +151,99 @@
             100% { transform: translateX(100%) rotate(45deg); }
         }
 
-        .drawer-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(2, 6, 23, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 50;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        .drawer-overlay.active { opacity: 1; pointer-events: auto; }
-
-        .drawer-content {
-            position: fixed;
-            top: 0; right: 0; bottom: 0;
-            width: 85%;
-            max-width: 320px;
-            background: var(--bg-deep);
-            border-left: 1px solid var(--glass-border);
-            z-index: 60;
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: -20px 0 50px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-        }
-        .drawer-content.active { transform: translateX(0); }
-
         .desktop-only { display: none; }
         @media (min-width: 640px) {
             .mobile-only { display: none !important; }
             .desktop-only { display: block !important; }
         }
+
+        /* Mode Toggle Styles */
+        .mode-dice .section-dice { order: 2; }
+        .mode-dice .section-arsenal { order: 3; }
+        .mode-arsenal .section-dice { order: 3; }
+        .mode-arsenal .section-arsenal { order: 2; }
+
+        .section-sticky { order: 0; }
+        .section-controls { order: 1; }
+        .section-bottom { order: 10; }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(30, 41, 59, 0.5);
+            transition: .4s;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 12px; width: 12px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider { background-color: var(--accent-sky); }
+        input:checked + .toggle-slider:before { transform: translateX(16px); }
     </style>
 </head>
 <body class="flex flex-col items-center">
-    <div class="w-full max-w-md p-4 space-y-5 flex flex-col min-h-screen">
+    <div id="main-container" class="w-full max-w-md p-4 space-y-5 flex flex-col min-h-screen mode-dice">
         
-        <!-- HEADER -->
-        <header class="flex justify-between items-center px-2">
-            <div>
-                <h1 class="text-xl font-black text-white tracking-tighter leading-none">UNIFIED<span class="text-sky-500">PRO</span></h1>
-                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Dice Engine v10.0</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="toggleDrawer(true)" class="mobile-only bg-sky-500/10 text-sky-400 px-3 py-1.5 rounded-lg text-[9px] font-black border border-sky-500/20 uppercase tracking-widest hover:bg-sky-500/20 transition-all">
-                    Arsenal
-                </button>
-            </div>
-        </header>
+        <!-- STICKY TOP -->
+        <div class="section-sticky sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md -mx-4 px-4 py-3 space-y-4 shadow-xl border-b border-white/5">
+            <!-- HEADER -->
+            <header class="flex justify-between items-center px-2">
+                <div>
+                    <h1 class="text-xl font-black text-white tracking-tighter leading-none">UNIFIED<span class="text-sky-500">PRO</span></h1>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Dice Engine v10.0</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-1">Insta-Queue</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="insta-queue-toggle" onchange="vibrate(5)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <button onclick="toggleMode()" class="bg-sky-500/10 text-sky-400 px-3 py-1.5 rounded-lg text-[9px] font-black border border-sky-500/20 uppercase tracking-widest hover:bg-sky-500/20 transition-all flex items-center gap-2">
+                        <span id="mode-label">Arsenal</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                    </button>
+                </div>
+            </header>
 
-        <!-- MAIN DISPLAY -->
-        <main class="glass-panel p-4 rounded-3xl flex flex-col items-center justify-center min-h-[110px] relative overflow-hidden shrink-0 result-shimmer">
-            <div class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none"></div>
-            <div id="final-result" class="final-result-val text-6xl font-black text-white leading-none tabular-nums tracking-tighter transition-all duration-300 drop-shadow-2xl">0</div>
-            <div id="detail-text" class="detail-text-val text-[9px] mono text-slate-400 mt-2 text-center px-4 h-4 flex items-center justify-center opacity-60 leading-tight tracking-wide uppercase">READY</div>
-        </main>
+            <!-- MAIN DISPLAY -->
+            <main class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center min-h-[90px] relative overflow-hidden shrink-0 result-shimmer">
+                <div class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none"></div>
+                <div id="final-result" class="final-result-val text-5xl font-black text-white leading-none tabular-nums tracking-tighter transition-all duration-300 drop-shadow-2xl">0</div>
+                <div id="detail-text" class="detail-text-val text-[9px] mono text-slate-400 mt-2 text-center px-4 h-4 flex items-center justify-center opacity-60 leading-tight tracking-wide uppercase">READY</div>
+            </main>
+        </div>
 
         <!-- CONTROLS -->
-        <section class="space-y-3">
+        <section class="section-controls space-y-3">
             <div class="flex gap-2">
-                <div class="flex-1 glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[40px] border-white/5">
-                    <div id="queue-display" class="text-[10px] font-bold text-sky-400 mono text-center leading-relaxed uppercase">Empty Queue</div>
+                <div class="flex-1 glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[40px] border-white/5 overflow-hidden">
+                    <div id="queue-display" class="text-[10px] font-bold text-sky-400 mono text-center leading-relaxed uppercase truncate">Empty Queue</div>
                 </div>
                 <div class="flex gap-1.5">
-                    <button onclick="clearQueue()" class="bg-slate-800/50 text-slate-400 px-3 py-1.5 rounded-lg border border-white/5 font-black text-[9px] active:bg-rose-500/20 transition-all uppercase hover:text-rose-400">
+                    <button onclick="backspaceQueue()" class="bg-slate-800/50 text-slate-400 px-2.5 py-1.5 rounded-lg border border-white/5 font-black text-[9px] active:bg-sky-500/20 transition-all uppercase hover:text-sky-400">
+                        ⌫
+                    </button>
+                    <button onclick="clearQueue()" class="bg-slate-800/50 text-slate-400 px-2 py-1.5 rounded-lg border border-white/5 font-black text-[9px] active:bg-rose-500/20 transition-all uppercase hover:text-rose-400">
                         Clear
                     </button>
-                    <button id="save-queue-btn" onclick="saveCurrentQueue()" disabled class="bg-sky-500/10 text-sky-400/50 px-3 py-1.5 rounded-lg border border-sky-500/10 font-black text-[9px] transition-all uppercase disabled:opacity-20">
+                    <button id="save-queue-btn" onclick="saveCurrentQueue()" disabled class="bg-sky-500/10 text-sky-400/50 px-2.5 py-1.5 rounded-lg border border-sky-500/10 font-black text-[9px] transition-all uppercase disabled:opacity-20">
                         Save
                     </button>
                 </div>
@@ -241,48 +265,50 @@
             </button>
         </section>
 
-        <section id="arsenal-grid" class="grid grid-cols-2 gap-3">
-            <script>
-                const diceSet = [
-                    { d: 4, path: "M12 2L2 20h20L12 2z" },
-                    { d: 6, path: "M4 4h16v16H4z" },
-                    { d: 8, path: "M12 2l10 10-10 10-10-10L12 2z" },
-                    { d: 10, path: "M12 2l8 6-2 12-6 2-6-2-2-12 8-6z" },
-                    { d: 12, path: "M12 2l7 4v8l-7 4-7-4V6l7-4z" },
-                    { d: 20, path: "M12 2l9 5v10l-9 5-9-5V7l9-5z M12 2v20" },
-                    { d: 100, path: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" }
-                ];
+        <section id="dice-section" class="section-dice space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+                <script>
+                    const diceSet = [
+                        { d: 4, path: "M12 2L2 20h20L12 2z" },
+                        { d: 6, path: "M4 4h16v16H4z" },
+                        { d: 8, path: "M12 2l10 10-10 10-10-10L12 2z" },
+                        { d: 10, path: "M12 2l8 6-2 12-6 2-6-2-2-12 8-6z" },
+                        { d: 12, path: "M12 2l7 4v8l-7 4-7-4V6l7-4z" },
+                        { d: 20, path: "M12 2l9 5v10l-9 5-9-5V7l9-5z M12 2v20" },
+                        { d: 100, path: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" }
+                    ];
 
-                diceSet.forEach(cfg => {
+                    diceSet.forEach(cfg => {
+                        document.write(`
+                            <div class="segmented-row">
+                                <button onclick="changeQueue(${cfg.d}, -1)" class="segmented-btn btn-side">－</button>
+                                <button onclick="instantRoll(${cfg.d})" class="segmented-btn btn-center group/dice">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="${cfg.path}" />
+                                    </svg>
+                                    <span class="font-black text-sm text-white z-10 mono">D${cfg.d}</span>
+                                </button>
+                                <button onclick="changeQueue(${cfg.d}, 1)" class="segmented-btn btn-side">＋</button>
+                            </div>
+                        `);
+                    });
+
                     document.write(`
                         <div class="segmented-row">
-                            <button onclick="changeQueue(${cfg.d}, -1)" class="segmented-btn btn-side">－</button>
-                            <button onclick="instantRoll(${cfg.d})" class="segmented-btn btn-center group/dice">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <path d="${cfg.path}" />
-                                </svg>
-                                <span class="font-black text-sm text-white z-10 mono">D${cfg.d}</span>
-                            </button>
-                            <button onclick="changeQueue(${cfg.d}, 1)" class="segmented-btn btn-side">＋</button>
+                            <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
+                            <div class="segmented-btn btn-center cursor-default flex flex-col justify-center">
+                                <span class="text-[8px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
+                                <span id="mod-val-display" class="font-black text-xl text-sky-400 mono leading-none">0</span>
+                            </div>
+                            <button onclick="adjustFlatMod(1)" class="segmented-btn btn-side">＋</button>
                         </div>
                     `);
-                });
-
-                document.write(`
-                    <div class="segmented-row">
-                        <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
-                        <div class="segmented-btn btn-center cursor-default flex flex-col justify-center">
-                            <span class="text-[8px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
-                            <span id="mod-val-display" class="font-black text-xl text-sky-400 mono leading-none">0</span>
-                        </div>
-                        <button onclick="adjustFlatMod(1)" class="segmented-btn btn-side">＋</button>
-                    </div>
-                `);
-            </script>
+                </script>
+            </div>
         </section>
 
-        <!-- DESKTOP INLINE ARSENAL -->
-        <section class="desktop-only space-y-4 py-2">
+        <!-- ARSENAL VIEW -->
+        <section id="arsenal-section" class="section-arsenal space-y-4 py-2">
             <div class="flex justify-between items-center px-2">
                 <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Saved Arsenal</h3>
                 <div class="flex gap-2">
@@ -290,45 +316,14 @@
                     <button onclick="document.getElementById('import-input').click()" class="text-[9px] font-bold text-emerald-400/60 hover:text-emerald-400 bg-emerald-400/5 px-2 py-0.5 rounded-lg border border-emerald-400/10 transition-all uppercase">Import</button>
                 </div>
             </div>
-            <div class="saved-queues-list grid grid-cols-2 gap-3 max-h-64 overflow-y-auto custom-scroll pr-1">
-                <!-- Desktop items injected here -->
+            <div class="saved-queues-list grid grid-cols-1 gap-3">
+                <!-- Items injected here -->
             </div>
         </section>
 
-        <!-- SIDE DRAWER -->
-        <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer(false)"></div>
-        <aside id="arsenal-drawer" class="drawer-content p-6 custom-scroll overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-black text-white uppercase tracking-[0.3em]">Saved Arsenal</h3>
-                <button onclick="toggleDrawer(false)" class="text-slate-500 hover:text-white transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-
-            <!-- Mirrored Result Display -->
-            <div class="mb-6 p-4 glass-panel rounded-2xl flex flex-col items-center justify-center min-h-[90px] relative overflow-hidden result-shimmer shrink-0">
-                <div class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none"></div>
-                <div class="final-result-val text-4xl font-black text-white leading-none tabular-nums tracking-tighter transition-all duration-300 drop-shadow-xl">0</div>
-                <div class="detail-text-val text-[8px] mono text-slate-400 mt-2 text-center px-2 h-4 flex items-center justify-center opacity-60 leading-tight tracking-wide uppercase">READY</div>
-            </div>
-            
-            <section id="saved-arsenal" class="space-y-6">
-                <div class="flex justify-between items-center px-1">
-                    <div class="flex gap-2">
-                        <button onclick="exportArsenal()" class="text-[9px] font-bold text-sky-400/60 hover:text-sky-400 bg-sky-400/5 px-2.5 py-1 rounded-lg border border-sky-400/10 transition-all uppercase">Export</button>
-                        <button onclick="document.getElementById('import-input').click()" class="text-[9px] font-bold text-emerald-400/60 hover:text-emerald-400 bg-emerald-400/5 px-2.5 py-1 rounded-lg border border-emerald-400/10 transition-all uppercase">Import</button>
-                    </div>
-                    <span class="text-[9px] text-slate-600 mono" id="saved-count">0/20</span>
-                </div>
-                <div class="saved-queues-list grid grid-cols-1 gap-3">
-                    <!-- Saved items injected here -->
-                </div>
-            </section>
-        </aside>
-
         <input type="file" id="import-input" class="hidden" accept=".json" onchange="importArsenal(event)">
 
-        <section class="flex-grow space-y-3 pb-4">
+        <section id="bottom-section" class="section-bottom flex-grow space-y-3 pb-4">
             <div class="glass-panel rounded-xl p-3 flex flex-col space-y-2 border-white/5">
                 <div class="flex justify-between items-center">
                     <h3 class="text-[9px] font-black text-slate-500 uppercase tracking-widest">History</h3>
@@ -375,6 +370,7 @@
 
     <script>
         let rollingQueue = [];
+        let queueHistory = []; // Tracks order of dice additions
         let activeModifier = null; 
         let modifierLevel = 0;
         let flatMod = 0;
@@ -386,16 +382,19 @@
             '#06b6d4', '#38bdf8', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'
         ];
 
-        function toggleDrawer(open) {
-            const overlay = document.getElementById('drawer-overlay');
-            const drawer = document.getElementById('arsenal-drawer');
-            if (open) {
-                overlay.classList.add('active');
-                drawer.classList.add('active');
+        function toggleMode() {
+            const container = document.getElementById('main-container');
+            const label = document.getElementById('mode-label');
+            if (container.classList.contains('mode-dice')) {
+                container.classList.remove('mode-dice');
+                container.classList.add('mode-arsenal');
+                label.innerText = 'Dice';
             } else {
-                overlay.classList.remove('active');
-                drawer.classList.remove('active');
+                container.classList.remove('mode-arsenal');
+                container.classList.add('mode-dice');
+                label.innerText = 'Arsenal';
             }
+            vibrate(10);
         }
 
         function vibrate(ms = 10) {
@@ -414,11 +413,6 @@
             return (val % sides) + 1;
         }
 
-        function adjustFlatMod(val) {
-            flatMod += val;
-            updateUI();
-        }
-
         function changeQueue(sides, delta) {
             vibrate(5);
             const index = rollingQueue.findIndex(q => q.sides === sides);
@@ -428,6 +422,34 @@
             } else if (delta > 0) {
                 rollingQueue.push({ sides: sides, count: delta });
             }
+            
+            if (delta > 0) {
+                queueHistory.push({ type: 'dice', sides: sides });
+            }
+            updateUI();
+        }
+
+        function backspaceQueue() {
+            if (queueHistory.length === 0) return;
+            vibrate(10);
+            const lastAction = queueHistory.pop();
+            
+            if (lastAction.type === 'dice') {
+                const index = rollingQueue.findIndex(q => q.sides === lastAction.sides);
+                if (index > -1) {
+                    rollingQueue[index].count--;
+                    if (rollingQueue[index].count <= 0) rollingQueue.splice(index, 1);
+                }
+            } else if (lastAction.type === 'mod') {
+                flatMod -= lastAction.val;
+            }
+            
+            updateUI();
+        }
+
+        function adjustFlatMod(val) {
+            flatMod += val;
+            queueHistory.push({ type: 'mod', val: val });
             updateUI();
         }
 
@@ -448,6 +470,7 @@
 
         function clearQueue() {
             rollingQueue = [];
+            queueHistory = [];
             activeModifier = null;
             modifierLevel = 0;
             flatMod = 0;
@@ -722,17 +745,22 @@
             if (isRolling) return;
             vibrate(10);
             
-            const isSameTypeOnly = rollingQueue.length === 1 && rollingQueue[0].sides === sides;
+            const affectsQueue = document.getElementById('insta-queue-toggle').checked;
             
-            if (isSameTypeOnly) {
-                rollingQueue[0].count++;
+            if (affectsQueue) {
+                const index = rollingQueue.findIndex(q => q.sides === sides);
+                if (index > -1) {
+                    rollingQueue[index].count++;
+                } else {
+                    rollingQueue.push({ sides: sides, count: 1 });
+                }
+                queueHistory.push({ type: 'dice', sides: sides });
+                updateUI();
+                resolveRolling(); // Roll the full queue
             } else {
-                rollingQueue = [{ sides: sides, count: 1 }];
+                // Perform the visual roll for ONLY the die just clicked
+                resolveRolling([{ sides: sides, count: 1 }], true);
             }
-            
-            updateUI();
-            // Perform the visual roll for ONLY the die just clicked
-            resolveRolling([{ sides: sides, count: 1 }], true);
         }
 
         async function resolveRolling(forcedQueue = null, isInstant = false) {
