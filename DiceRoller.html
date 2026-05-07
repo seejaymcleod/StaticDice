@@ -370,7 +370,6 @@
 
     <script>
         let rollingQueue = [];
-        let queueHistory = []; // Tracks order of dice additions
         let activeModifier = null; 
         let modifierLevel = 0;
         let flatMod = 0;
@@ -423,33 +422,24 @@
                 rollingQueue.push({ sides: sides, count: delta });
             }
             
-            if (delta > 0) {
-                queueHistory.push({ type: 'dice', sides: sides });
-            }
             updateUI();
         }
 
         function backspaceQueue() {
-            if (queueHistory.length === 0) return;
             vibrate(10);
-            const lastAction = queueHistory.pop();
-            
-            if (lastAction.type === 'dice') {
-                const index = rollingQueue.findIndex(q => q.sides === lastAction.sides);
-                if (index > -1) {
-                    rollingQueue[index].count--;
-                    if (rollingQueue[index].count <= 0) rollingQueue.splice(index, 1);
-                }
-            } else if (lastAction.type === 'mod') {
-                flatMod -= lastAction.val;
+            if (activeModifier) {
+                activeModifier = null;
+                modifierLevel = 0;
+            } else if (flatMod !== 0) {
+                flatMod = 0;
+            } else if (rollingQueue.length > 0) {
+                rollingQueue.pop();
             }
-            
             updateUI();
         }
 
         function adjustFlatMod(val) {
             flatMod += val;
-            queueHistory.push({ type: 'mod', val: val });
             updateUI();
         }
 
@@ -470,7 +460,6 @@
 
         function clearQueue() {
             rollingQueue = [];
-            queueHistory = [];
             activeModifier = null;
             modifierLevel = 0;
             flatMod = 0;
@@ -754,7 +743,6 @@
                 } else {
                     rollingQueue.push({ sides: sides, count: 1 });
                 }
-                queueHistory.push({ type: 'dice', sides: sides });
                 updateUI();
                 resolveRolling(); // Roll the full queue
             } else {
