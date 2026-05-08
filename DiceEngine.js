@@ -7,7 +7,8 @@ class DiceEngine {
         this.rollRules = {
             rerollOp: "", rerollVal: null,
             explodeOp: "", explodeVal: null,
-            targetMode: "sum", targetOp: "", targetVal: null
+            targetMode: "sum", targetOp: "", targetVal: null,
+            setsOp: "", setsVal: null
         };
         this.savedQueues = [];
         this.rng = this.defaultRng;
@@ -80,6 +81,7 @@ class DiceEngine {
         this.rollRules.rerollOp = "";
         this.rollRules.explodeOp = "";
         this.rollRules.targetOp = "";
+        this.rollRules.setsOp = "";
     }
 
     updateRules(rules) {
@@ -119,7 +121,7 @@ class DiceEngine {
         this.activeModifier = item.modifier;
         this.modifierLevel = item.modLevel;
         this.flatMod = item.flat;
-        this.rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetMode: "sum", targetOp: "", targetVal: null };
+        this.rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetMode: "sum", targetOp: "", targetVal: null, setsOp: "", setsVal: null };
         if (!this.rollRules.targetMode) this.rollRules.targetMode = "sum";
     }
 
@@ -230,8 +232,26 @@ class DiceEngine {
 
             let sum = 0;
             let filteredPool = pool;
+            
+            // 1. Apply Target Condition
             if (this.rollRules.targetOp) {
                 filteredPool = pool.filter(v => this.checkCondition(v, this.rollRules.targetOp, this.rollRules.targetVal));
+            }
+
+            // 2. Apply Sets Condition
+            let setGroups = {};
+            if (this.rollRules.setsOp && this.rollRules.setsVal !== null) {
+                const counts = {};
+                filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
+                
+                // Identify which values are part of a valid set
+                Object.keys(counts).forEach(v => {
+                    if (this.checkCondition(counts[v], this.rollRules.setsOp, this.rollRules.setsVal)) {
+                        setGroups[v] = counts[v];
+                    }
+                });
+
+                filteredPool = filteredPool.filter(v => setGroups[v] !== undefined);
             }
             
             if (this.rollRules.targetMode === 'count') {
@@ -251,9 +271,33 @@ class DiceEngine {
             } else {
                 if (this.rollRules.targetOp) f += `s${this.rollRules.targetOp.replace('=', '')}${this.rollRules.targetVal}`;
             }
+            if (this.rollRules.setsOp) f += `set${this.rollRules.setsOp.replace('=', '')}${this.rollRules.setsVal}`;
             f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
 
-            let groupLog = `<span><span class="text-sky-400 font-bold">${f}</span> [${rawRolls.join(', ')}] &rarr; <span class="text-white font-bold">${sum}</span>${this.rollRules.targetMode === 'count' ? ' ✓' : ''}</span>`;
+            // Highlight sets in the roll log
+            let highlightedRaw = rawRolls.map(dieStr => {
+                // Extracts the final kept value from dieStr (e.g., "1r->5" -> 5)
+                const parts = dieStr.split('->');
+                const lastPart = parts[parts.length - 1];
+                const val = parseInt(lastPart.split('!')[0]); // Handle explosion markers if any
+                
+                if (this.rollRules.setsOp && this.rollRules.setsVal !== null) {
+                    if (setGroups[val] !== undefined) {
+                        return `<span class="set-match" data-val="${val}">${dieStr}</span>`;
+                    } else {
+                        return `<span class="set-dim">${dieStr}</span>`;
+                    }
+                }
+                return dieStr;
+            });
+
+            let setSummary = "";
+            const setsFound = Object.keys(setGroups);
+            if (setsFound.length > 0) {
+                setSummary = ` <span class="text-[8px] text-sky-300/60 uppercase">Sets: ${setsFound.map(v => `${setGroups[v]}x[${v}]`).join(', ')}</span>`;
+            }
+
+            let groupLog = `<span><span class="text-sky-400 font-bold">${f}</span> [${highlightedRaw.join(', ')}] &rarr; <span class="text-white font-bold">${sum}</span>${this.rollRules.targetMode === 'count' ? ' ✓' : ''}${setSummary}</span>`;
             
             details.push(groupLog);
             total += sum;
