@@ -77,7 +77,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .segmented-row:focus-within {
+        .segmented-row:focus-within:not(.toggle-btn) {
             border-color: var(--accent-sky);
             box-shadow: 0 0 15px var(--accent-glow);
         }
@@ -226,8 +226,15 @@
         }
 
         @keyframes menu-pop {
-            from { transform: scale(0.9) translateY(-10px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
+            from {
+                transform: scale(0.9) translateY(-10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
         }
 
         .menu-item {
@@ -438,9 +445,30 @@
                 <div class="flex flex-col">
                     <h1 class="text-xl font-black text-white tracking-tighter leading-none">STATIC<span
                             class="text-sky-500">DICE</span></h1>
-                    <span class="text-[8px] font-bold uppercase tracking-[0.15em] leading-none mt-1 bg-gradient-to-r from-slate-400 to-slate-600 bg-clip-text text-transparent" style="-webkit-background-clip: text; -webkit-text-fill-color: transparent;">Harnessing raw electrical entropy</span>
+                    <span
+                        class="text-[8px] font-bold uppercase tracking-[0.15em] leading-none mt-1 bg-gradient-to-r from-slate-400 to-slate-600 bg-clip-text text-transparent"
+                        style="-webkit-background-clip: text; -webkit-text-fill-color: transparent;">Harnessing raw
+                        electrical entropy</span>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1.5 sm:gap-3">
+                    <!-- SETTINGS CONTROLS -->
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="document.getElementById('import-input').click()"
+                            class="bg-slate-800/50 text-slate-400 h-8 w-8 flex items-center justify-center rounded-lg border border-white/5 transition-all hover:text-emerald-400 active:scale-95" title="Import Settings & Loadouts">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </button>
+                        <button onclick="exportSettings()"
+                            class="bg-slate-800/50 text-slate-400 h-8 w-8 flex items-center justify-center rounded-lg border border-white/5 transition-all hover:text-sky-400 active:scale-95" title="Export Settings & Loadouts">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="w-px h-6 bg-white/10 hidden sm:block"></div>
+
                     <!-- SOUND CONTROL -->
                     <div class="flex items-center relative">
                         <button id="sound-btn" onclick="toggleSound()" onmousedown="handleSoundStart(event)"
@@ -515,34 +543,28 @@
             </button>
 
             <!-- ADV DIS & EXTRA CONTROLS -->
-            <div class="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center">
+            <div class="grid grid-cols-[1fr_1fr_auto] gap-2 items-stretch">
                 <button id="adv-btn" onclick="applyModifier('ADV')" disabled
-                    class="segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group !h-[2.5rem]">
+                    class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
+                    <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
+                    </div>
                     <span id="adv-label"
                         class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-emerald-400 transition-colors">Advantage</span>
-                    <span id="adv-sub" class="text-[8px] font-bold text-slate-600 mono leading-none">LOCKED</span>
+                    <span id="adv-sub"
+                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">LOCKED</span>
                 </button>
                 <button id="dis-btn" onclick="applyModifier('DIS')" disabled
-                    class="segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group !h-[2.5rem]">
+                    class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
+                    <div id="dis-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
+                    </div>
                     <span id="dis-label"
                         class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-rose-400 transition-colors">Disadvantage</span>
-                    <span id="dis-sub" class="text-[8px] font-bold text-slate-600 mono leading-none">LOCKED</span>
+                    <span id="dis-sub"
+                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">LOCKED</span>
                 </button>
 
-                <div class="flex flex-col justify-center items-center !h-[2.5rem] px-1 border-l border-white/5 pl-2">
-                    <span
-                        class="text-[6px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1 text-center w-full">Roll
-                        to<br>Queue</span>
-                    <div class="flex items-center mt-[-2px]">
-                        <label class="toggle-switch scale-[0.55] origin-center">
-                            <input type="checkbox" id="insta-queue-toggle" onchange="saveInstaQueueState(); vibrate(5)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-
                 <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
-                    class="w-[2.5rem] h-[2.5rem] rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex flex-col items-center justify-center text-slate-400 hover:text-sky-400 transition-colors border border-white/5">
+                    class="row-span-2 w-[2.5rem] rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex flex-col items-center justify-center text-slate-400 hover:text-sky-400 transition-colors border border-white/5 h-full">
                     <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
@@ -551,6 +573,27 @@
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                     <span class="text-[5px] font-black uppercase tracking-widest">Rules</span>
+                </button>
+
+                <button id="modded-quick-btn" onclick="toggleModdedQuick()"
+                    class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
+                    <div id="modded-quick-pip"
+                        class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
+                    <span
+                        class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-sky-400 transition-colors">Modded
+                        Quick</span>
+                    <span id="modded-quick-sub"
+                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">OFF</span>
+                </button>
+                <button id="insta-queue-btn" onclick="toggleInstaQueue()"
+                    class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
+                    <div id="insta-queue-pip"
+                        class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
+                    <span
+                        class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-sky-400 transition-colors">Roll
+                        to Queue</span>
+                    <span id="insta-queue-sub"
+                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">OFF</span>
                 </button>
             </div>
 
@@ -688,27 +731,21 @@
         <section id="arsenal-section" class="section-arsenal space-y-3">
             <div class="flex justify-between items-center px-2">
                 <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Dice Arsenal</h3>
-                <div class="flex gap-2">
-                    <button onclick="toggleMode()"
-                        class="bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded-lg text-[9px] font-bold border border-sky-500/20 uppercase transition-all flex items-center gap-1 hover:bg-sky-500/20">
-                        <span id="mode-label">Arsenal</span>
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                        </svg>
-                    </button>
-                    <button onclick="exportSettings()"
-                        class="text-[9px] font-bold text-sky-400/60 hover:text-sky-400 bg-sky-400/5 px-2 py-0.5 rounded-lg border border-sky-400/10 transition-all uppercase">Export</button>
-                    <button onclick="document.getElementById('import-input').click()"
-                        class="text-[9px] font-bold text-emerald-400/60 hover:text-emerald-400 bg-emerald-400/5 px-2 py-0.5 rounded-lg border border-emerald-400/10 transition-all uppercase">Import</button>
-                </div>
+                <button onclick="toggleMode()"
+                    class="bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded-lg text-[9px] font-bold border border-sky-500/20 uppercase transition-all flex items-center gap-1 hover:bg-sky-500/20">
+                    <span id="mode-label">Arsenal</span>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                    </svg>
+                </button>
             </div>
             <div class="saved-queues-list grid grid-cols-1 gap-3">
                 <!-- Items injected here -->
             </div>
         </section>
 
-        <input type="file" id="import-input" class="hidden" accept=".json" onchange="importSettings(event)">
+
 
         <section id="bottom-section" class="section-bottom flex-grow space-y-3 pb-4">
             <div class="glass-panel rounded-xl p-3 flex flex-col space-y-2 border-white/5">
@@ -750,7 +787,8 @@
     </div>
 
     <!-- Color Picker Modal -->
-    <div id="color-picker-overlay" onclick="if(event.target === this) closeColorPicker()" class="fixed inset-0 hidden items-center justify-center p-4">
+    <div id="color-picker-overlay" onclick="if(event.target === this) closeColorPicker()"
+        class="fixed inset-0 hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-2xl w-full max-w-[280px] space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Color</h3>
@@ -779,6 +817,23 @@
         const rollSound = new Audio('Assets/353844__magnesus__dice8.flac');
         rollSound.volume = volume;
 
+        let isModdedQuick = false;
+        let isInstaQueue = false;
+
+        function toggleModdedQuick() {
+            isModdedQuick = !isModdedQuick;
+            saveSettings();
+            updateUI();
+            vibrate(5);
+        }
+
+        function toggleInstaQueue() {
+            isInstaQueue = !isInstaQueue;
+            saveSettings();
+            updateUI();
+            vibrate(5);
+        }
+
         const COLOR_PALETTE = [
             '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981',
             '#06b6d4', '#38bdf8', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'
@@ -804,9 +859,7 @@
             }
         }
 
-        function saveInstaQueueState() {
-            saveSettings();
-        }
+
 
         function adjustRuleVal(type, delta) {
             const opSelect = document.getElementById(`rule-${type}-op`);
@@ -1045,14 +1098,69 @@
             modDisplay.innerText = engine.flatMod;
 
             const hasDice = engine.rollingQueue.length > 0;
-            advBtn.disabled = !hasDice;
-            disBtn.disabled = !hasDice;
+            const canMod = hasDice || isModdedQuick;
 
-            advBtn.style.borderColor = engine.activeModifier === 'ADV' ? 'var(--accent-emerald)' : '';
-            disBtn.style.borderColor = engine.activeModifier === 'DIS' ? 'var(--accent-rose)' : '';
+            advBtn.disabled = !canMod;
+            disBtn.disabled = !canMod;
 
-            advSub.innerText = !hasDice ? 'LOCKED' : (engine.activeModifier === 'ADV' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
-            disSub.innerText = !hasDice ? 'LOCKED' : (engine.activeModifier === 'DIS' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
+            const advPip = document.getElementById('adv-pip');
+            if (engine.activeModifier === 'ADV') {
+                advBtn.style.borderColor = 'var(--accent-emerald)';
+                advBtn.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.4)';
+                advPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-400 shadow-[0_0_12px_var(--accent-emerald)] transition-all duration-300';
+            } else {
+                advBtn.style.borderColor = '';
+                advBtn.style.boxShadow = '';
+                advPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-emerald-400/30';
+            }
+
+            const disPip = document.getElementById('dis-pip');
+            if (engine.activeModifier === 'DIS') {
+                disBtn.style.borderColor = 'var(--accent-rose)';
+                disBtn.style.boxShadow = '0 0 15px rgba(244, 63, 94, 0.4)';
+                disPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-rose-400 shadow-[0_0_12px_var(--accent-rose)] transition-all duration-300';
+            } else {
+                disBtn.style.borderColor = '';
+                disBtn.style.boxShadow = '';
+                disPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-rose-400/30';
+            }
+
+            const mqBtn = document.getElementById('modded-quick-btn');
+            const mqPip = document.getElementById('modded-quick-pip');
+            const mqSub = document.getElementById('modded-quick-sub');
+            if (isModdedQuick) {
+                mqBtn.style.borderColor = 'var(--accent-sky)';
+                mqBtn.style.boxShadow = '0 0 15px var(--accent-glow)';
+                mqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-sky-400 shadow-[0_0_12px_var(--accent-sky)] transition-all duration-300';
+                mqSub.innerText = 'ACTIVE';
+                mqSub.classList.add('text-sky-400');
+            } else {
+                mqBtn.style.borderColor = '';
+                mqBtn.style.boxShadow = '';
+                mqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-sky-400/30';
+                mqSub.innerText = 'OFF';
+                mqSub.classList.remove('text-sky-400');
+            }
+
+            const iqBtn = document.getElementById('insta-queue-btn');
+            const iqPip = document.getElementById('insta-queue-pip');
+            const iqSub = document.getElementById('insta-queue-sub');
+            if (isInstaQueue) {
+                iqBtn.style.borderColor = 'var(--accent-sky)';
+                iqBtn.style.boxShadow = '0 0 15px var(--accent-glow)';
+                iqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-sky-400 shadow-[0_0_12px_var(--accent-sky)] transition-all duration-300';
+                iqSub.innerText = 'ACTIVE';
+                iqSub.classList.add('text-sky-400');
+            } else {
+                iqBtn.style.borderColor = '';
+                iqBtn.style.boxShadow = '';
+                iqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-sky-400/30';
+                iqSub.innerText = 'OFF';
+                iqSub.classList.remove('text-sky-400');
+            }
+
+            advSub.innerText = !canMod ? 'LOCKED' : (engine.activeModifier === 'ADV' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
+            disSub.innerText = !canMod ? 'LOCKED' : (engine.activeModifier === 'DIS' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
 
             saveBtn.disabled = !hasDice && engine.flatMod === 0;
         }
@@ -1081,7 +1189,7 @@
 
         function deleteQueue(id, event) {
             if (event) event.stopPropagation();
-            
+
             // Close arsenal menus
             document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
             document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
@@ -1107,7 +1215,7 @@
 
         function openColorPicker(id, event) {
             event.stopPropagation();
-            
+
             // Close arsenal menus if open
             document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
             document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
@@ -1148,7 +1256,7 @@
 
         function updateSavedQueue(id, event) {
             if (event) event.stopPropagation();
-            
+
             // Close arsenal menus
             document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
             document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
@@ -1172,7 +1280,8 @@
             localStorage.setItem('crypto_roller_settings', JSON.stringify({
                 soundEnabled: soundEnabled,
                 volume: volume,
-                instaQueue: document.getElementById('insta-queue-toggle').checked
+                instaQueue: isInstaQueue,
+                moddedQuick: isModdedQuick
             }));
         }
 
@@ -1182,10 +1291,11 @@
                 settings: {
                     soundEnabled: soundEnabled,
                     volume: volume,
-                    instaQueue: document.getElementById('insta-queue-toggle').checked
+                    instaQueue: isInstaQueue,
+                    moddedQuick: isModdedQuick
                 }
             };
-            
+
             const dataStr = JSON.stringify(exportData, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
@@ -1219,7 +1329,7 @@
                         throw new Error("Invalid format");
                     }
 
-                    const mode = confirm("Import successful! \n\nClick OK to MERGE queues (settings will be overwritten). \nClick CANCEL to OVERWRITE everything.") ? 'merge' : 'overwrite';
+                    const mode = confirm("Settings Import Detected!\n\nClick OK to MERGE loadouts (settings will be updated).\nClick CANCEL to OVERWRITE all loadouts and settings.") ? 'merge' : 'overwrite';
 
                     if (mode === 'merge') {
                         const currentIds = new Set(engine.savedQueues.map(q => q.id));
@@ -1245,8 +1355,10 @@
                             document.getElementById('volume-slider').value = volume;
                         }
                         if (importedSettings.instaQueue !== undefined) {
-                            document.getElementById('insta-queue-toggle').checked = importedSettings.instaQueue;
-                            saveInstaQueueState();
+                            isInstaQueue = importedSettings.instaQueue;
+                        }
+                        if (importedSettings.moddedQuick !== undefined) {
+                            isModdedQuick = importedSettings.moddedQuick;
                         }
                         saveSettings();
                         updateSoundUI();
@@ -1254,9 +1366,9 @@
 
                     persistSaved();
                     renderSavedQueues();
-                    alert(`Successfully imported backup!`);
+                    alert(`Settings and loadouts successfully imported!`);
                 } catch (err) {
-                    alert("Error importing file. Please ensure it's a valid Arsenal JSON backup.");
+                    alert("Error importing file. Please ensure it's a valid StaticDice settings backup.");
                 }
                 event.target.value = '';
             };
@@ -1272,13 +1384,13 @@
             const items = document.querySelectorAll('.arsenal-item-wrapper');
             const targetMenu = document.getElementById(`menu-${id}`);
             const parentItem = targetMenu.closest('.arsenal-item-wrapper');
-            
+
             const isShowing = !targetMenu.classList.contains('hidden');
-            
+
             // Hide all first
             menus.forEach(m => m.classList.add('hidden'));
             items.forEach(i => i.classList.remove('z-50'));
-            
+
             if (!isShowing) {
                 targetMenu.classList.remove('hidden');
                 parentItem.classList.add('z-50');
@@ -1298,7 +1410,7 @@
 
         function renameSavedQueue(id, e) {
             if (e) e.stopPropagation();
-            
+
             // Close arsenal menus
             document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
             document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
@@ -1393,14 +1505,12 @@
         function instantRoll(sides) {
             vibrate(10);
 
-            const affectsQueue = document.getElementById('insta-queue-toggle').checked;
-
-            if (affectsQueue) {
+            if (isInstaQueue) {
                 engine.changeQueue(sides, 1);
                 updateUI();
                 resolveRolling();
             } else {
-                resolveRolling([{ sides: sides, count: 1 }], true);
+                resolveRolling([{ sides: sides, count: 1 }], !isModdedQuick);
             }
         }
 
@@ -1520,17 +1630,21 @@
                         document.getElementById('volume-slider').value = volume;
                     }
                     if (savedSettings.instaQueue !== undefined) {
-                        document.getElementById('insta-queue-toggle').checked = savedSettings.instaQueue;
+                        isInstaQueue = savedSettings.instaQueue;
                     }
+                    if (savedSettings.moddedQuick !== undefined) {
+                        isModdedQuick = savedSettings.moddedQuick;
+                    }
+                    updateUI();
                     updateSoundUI();
-                } catch (e) {}
+                } catch (e) { }
             }
 
             // Fallback for old instaQueueState if crypto_roller_settings doesn't have it
             if (!savedSettingsStr || !JSON.parse(savedSettingsStr).hasOwnProperty('instaQueue')) {
                 const savedInstaQueue = localStorage.getItem('instaQueueState');
                 if (savedInstaQueue !== null) {
-                    document.getElementById('insta-queue-toggle').checked = savedInstaQueue === 'true';
+                    isInstaQueue = savedInstaQueue === 'true';
                 }
             }
 

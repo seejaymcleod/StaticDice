@@ -60,7 +60,6 @@ class DiceEngine {
     }
 
     applyModifier(type) {
-        if (this.rollingQueue.length === 0) return;
         if (this.activeModifier === type) {
             this.modifierLevel++;
         } else if (this.activeModifier !== null) {
