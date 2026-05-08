@@ -49,6 +49,15 @@
             border-radius: 10px;
         }
 
+        .hide-spinners::-webkit-outer-spin-button,
+        .hide-spinners::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .hide-spinners {
+            -moz-appearance: textfield;
+        }
+
         .glass-panel {
             background: var(--bg-card);
             backdrop-filter: blur(12px);
@@ -502,37 +511,56 @@
             <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden mt-2" id="rules-panel">
                 <div class="p-3 space-y-3 bg-slate-900/40">
                     <!-- Reroll -->
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest w-16">Reroll</span>
-                        <select id="rule-reroll-op" class="flex-1 bg-slate-950/50 text-sky-400 text-[10px] rounded-lg p-1.5 outline-none border border-white/5" onchange="updateRulesUI()">
-                            <option value="">None</option>
-                            <option value="<=">&le; (or less)</option>
-                            <option value="=">= (exact)</option>
-                            <option value=">=">&ge; (or more)</option>
-                        </select>
-                        <input type="number" id="rule-reroll-val" class="w-12 bg-slate-950/50 text-sky-400 text-[10px] rounded-lg p-1.5 outline-none border border-white/5 text-center" oninput="updateRulesUI()" placeholder="#">
+                    <div class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Reroll</span>
+                        <div class="flex-1 flex gap-1 items-center justify-end">
+                            <select id="rule-reroll-op" class="bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
+                                <option value="">Off</option>
+                                <option value="<=">&le;</option>
+                                <option value="=">=</option>
+                                <option value=">=">&ge;</option>
+                            </select>
+                            <div id="rule-reroll-input-container" class="flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                <button onclick="adjustRuleVal('reroll', -1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
+                                <input type="number" id="rule-reroll-val" class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors" placeholder="#" oninput="updateRulesUI(true)">
+                                <button onclick="adjustRuleVal('reroll', 1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                            </div>
+                        </div>
                     </div>
                     <!-- Explode -->
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest w-16">Explode</span>
-                        <select id="rule-explode-op" class="flex-1 bg-slate-950/50 text-sky-400 text-[10px] rounded-lg p-1.5 outline-none border border-white/5" onchange="updateRulesUI()">
-                            <option value="">None</option>
-                            <option value=">=">&ge; (or more)</option>
-                            <option value="=">= (exact)</option>
-                            <option value="<=">&le; (or less)</option>
-                        </select>
-                        <input type="number" id="rule-explode-val" class="w-12 bg-slate-950/50 text-sky-400 text-[10px] rounded-lg p-1.5 outline-none border border-white/5 text-center" oninput="updateRulesUI()" placeholder="#">
+                    <div class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Explode</span>
+                        <div class="flex-1 flex gap-1 items-center justify-end">
+                            <select id="rule-explode-op" class="bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
+                                <option value="">Off</option>
+                                <option value=">=">&ge;</option>
+                                <option value="=">=</option>
+                                <option value="<=">&le;</option>
+                            </select>
+                            <div id="rule-explode-input-container" class="flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                <button onclick="adjustRuleVal('explode', -1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
+                                <input type="number" id="rule-explode-val" class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors" placeholder="#" oninput="updateRulesUI(true)">
+                                <button onclick="adjustRuleVal('explode', 1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                            </div>
+                        </div>
                     </div>
-                    <!-- Target -->
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest w-16">Target</span>
-                        <select id="rule-target-op" class="flex-1 bg-slate-950/50 text-emerald-400 text-[10px] rounded-lg p-1.5 outline-none border border-emerald-500/20" onchange="updateRulesUI()">
-                            <option value="">Sum All (Default)</option>
-                            <option value=">=">Count &ge;</option>
-                            <option value="=">Count =</option>
-                            <option value="<=">Count &le;</option>
-                        </select>
-                        <input type="number" id="rule-target-val" class="w-12 bg-slate-950/50 text-emerald-400 text-[10px] rounded-lg p-1.5 outline-none border border-emerald-500/20 text-center" oninput="updateRulesUI()" placeholder="#">
+                    <!-- Target -> Method -->
+                    <div class="flex items-center justify-between gap-1 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center pl-1">Method</span>
+                        <div class="flex-1 flex gap-1 items-center justify-end">
+                            <button id="rule-target-mode" onclick="toggleTargetMode()" class="bg-slate-900 text-emerald-400 text-[9px] font-bold rounded px-1.5 py-1 outline-none border border-emerald-500/20 text-center uppercase w-12 transition-colors hover:bg-emerald-500/10">SUM</button>
+                            <select id="rule-target-op" class="bg-slate-900 text-emerald-400 text-[10px] font-bold rounded p-1 outline-none border border-emerald-500/20 text-center" onchange="updateRulesUI()">
+                                <option value="">All</option>
+                                <option value=">=">&ge;</option>
+                                <option value="=">=</option>
+                                <option value="<=">&le;</option>
+                            </select>
+                            <div id="rule-target-input-container" class="flex items-center bg-slate-900 rounded border border-emerald-500/20 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                <button onclick="adjustRuleVal('target', -1)" class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
+                                <input type="number" id="rule-target-val" class="w-6 bg-transparent text-emerald-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors" placeholder="#" oninput="updateRulesUI(true)">
+                                <button onclick="adjustRuleVal('target', 1)" class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -672,8 +700,18 @@
         let rollRules = {
             rerollOp: "", rerollVal: null,
             explodeOp: "", explodeVal: null,
-            targetOp: "", targetVal: null
+            targetMode: "sum", targetOp: "", targetVal: null
         };
+
+        function toggleTargetMode() {
+            const btn = document.getElementById('rule-target-mode');
+            if (btn.innerText === 'SUM') {
+                btn.innerText = 'COUNT';
+            } else {
+                btn.innerText = 'SUM';
+            }
+            updateRulesUI();
+        }
 
         function toggleRulesPanel() {
             const panel = document.getElementById('rules-panel');
@@ -694,11 +732,38 @@
             localStorage.setItem('instaQueueState', isChecked);
         }
 
-        function updateRulesUI() {
+        function adjustRuleVal(type, delta) {
+            const opSelect = document.getElementById(`rule-${type}-op`);
+            if (!opSelect.value) return; 
+            
+            const input = document.getElementById(`rule-${type}-val`);
+            let val = parseInt(input.value) || (type === 'target' ? 5 : 1);
+            val += delta;
+            if (val < 1) val = 1;
+            input.value = val;
+            updateRulesUI();
+        }
+
+        function updateRulesUI(fromInput = false) {
+            ['reroll', 'explode', 'target'].forEach(type => {
+                const op = document.getElementById(`rule-${type}-op`).value;
+                const container = document.getElementById(`rule-${type}-input-container`);
+                const input = document.getElementById(`rule-${type}-val`);
+                
+                if (op) {
+                    container.classList.remove('opacity-30', 'pointer-events-none');
+                    if (!fromInput && !input.value) input.value = type === 'target' ? '5' : '1';
+                } else {
+                    container.classList.add('opacity-30', 'pointer-events-none');
+                    if (!fromInput) input.value = '';
+                }
+            });
+
             rollRules.rerollOp = document.getElementById('rule-reroll-op').value;
             rollRules.rerollVal = parseInt(document.getElementById('rule-reroll-val').value) || null;
             rollRules.explodeOp = document.getElementById('rule-explode-op').value;
             rollRules.explodeVal = parseInt(document.getElementById('rule-explode-val').value) || null;
+            rollRules.targetMode = document.getElementById('rule-target-mode').innerText.toLowerCase();
             rollRules.targetOp = document.getElementById('rule-target-op').value;
             rollRules.targetVal = parseInt(document.getElementById('rule-target-val').value) || null;
             updateUI();
@@ -900,6 +965,12 @@
             activeModifier = null;
             modifierLevel = 0;
             flatMod = 0;
+            
+            document.getElementById('rule-reroll-op').value = "";
+            document.getElementById('rule-explode-op').value = "";
+            document.getElementById('rule-target-op').value = "";
+            updateRulesUI();
+            
             updateDisplay("0", "READY");
             updateUI();
         }
@@ -939,7 +1010,12 @@
             let rulesText = "";
             if (rollRules.rerollOp && rollRules.rerollVal !== null) rulesText += ` RR${rollRules.rerollOp}${rollRules.rerollVal}`;
             if (rollRules.explodeOp && rollRules.explodeVal !== null) rulesText += ` EX${rollRules.explodeOp}${rollRules.explodeVal}`;
-            if (rollRules.targetOp && rollRules.targetVal !== null) rulesText += ` TGT${rollRules.targetOp}${rollRules.targetVal}`;
+            if (rollRules.targetMode === 'count') {
+                rulesText += ` CT`;
+                if (rollRules.targetOp && rollRules.targetVal !== null) rulesText += `${rollRules.targetOp}${rollRules.targetVal}`;
+            } else {
+                if (rollRules.targetOp && rollRules.targetVal !== null) rulesText += ` SUM${rollRules.targetOp}${rollRules.targetVal}`;
+            }
 
             display.innerText = (parts.length > 0 || modifierText || rulesText) ? parts.join(" + ") + modifierText + rulesText : "EMPTY QUEUE";
 
@@ -994,13 +1070,15 @@
             activeModifier = item.modifier;
             modifierLevel = item.modLevel;
             flatMod = item.flat;
-            rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetOp: "", targetVal: null };
+            rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetMode: "sum", targetOp: "", targetVal: null };
+            if (!rollRules.targetMode) rollRules.targetMode = "sum";
 
             // Update Rules UI to match
             document.getElementById('rule-reroll-op').value = rollRules.rerollOp;
             document.getElementById('rule-reroll-val').value = rollRules.rerollVal;
             document.getElementById('rule-explode-op').value = rollRules.explodeOp;
             document.getElementById('rule-explode-val').value = rollRules.explodeVal;
+            document.getElementById('rule-target-mode').innerText = rollRules.targetMode.toUpperCase();
             document.getElementById('rule-target-op').value = rollRules.targetOp;
             document.getElementById('rule-target-val').value = rollRules.targetVal;
 
@@ -1271,7 +1349,7 @@
                         explodeCount++;
                     }
 
-                    if (rollRules.targetOp) {
+                    if (rollRules.targetOp || rollRules.targetMode === 'count') {
                         pool.push(kept);
                         if (explodeCount > 0) {
                             let parts = dieLog.split('!->');
@@ -1285,17 +1363,22 @@
 
                     rawRolls.push(dieLog);
 
-                    if (group.sides === 20 && !rollRules.targetOp) {
+                    if (group.sides === 20 && !rollRules.targetOp && rollRules.targetMode === 'sum') {
                         if (totalValueForThisDie === 20) hasCritHit = true;
                         if (totalValueForThisDie === 1) hasCritFail = true;
                     }
                 }
 
                 let sum = 0;
+                let filteredPool = pool;
                 if (rollRules.targetOp) {
-                    sum = pool.filter(v => checkCondition(v, rollRules.targetOp, rollRules.targetVal)).length;
+                    filteredPool = pool.filter(v => checkCondition(v, rollRules.targetOp, rollRules.targetVal));
+                }
+                
+                if (rollRules.targetMode === 'count') {
+                    sum = filteredPool.length;
                 } else {
-                    sum = pool.reduce((a, b) => a + b, 0);
+                    sum = filteredPool.reduce((a, b) => a + b, 0);
                 }
                 
                 let f = `${group.count}d${group.sides}`;
@@ -1303,23 +1386,28 @@
                 if (activeModifier === 'DIS') f += 'kl1';
                 if (rollRules.rerollOp) f += `r${rollRules.rerollOp.replace('=', '')}${rollRules.rerollVal}`;
                 if (rollRules.explodeOp) f += `e${rollRules.explodeOp.replace('=', '')}${rollRules.explodeVal}`;
-                if (rollRules.targetOp) f += `c${rollRules.targetOp.replace('=', '')}${rollRules.targetVal}`;
+                if (rollRules.targetMode === 'count') {
+                    f += 'c';
+                    if (rollRules.targetOp) f += `${rollRules.targetOp.replace('=', '')}${rollRules.targetVal}`;
+                } else {
+                    if (rollRules.targetOp) f += `s${rollRules.targetOp.replace('=', '')}${rollRules.targetVal}`;
+                }
                 f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
 
-                let groupLog = `<span><span class="text-sky-400 font-bold">${f}</span> [${rawRolls.join(', ')}] &rarr; <span class="text-white font-bold">${sum}</span>${rollRules.targetOp ? ' ✓' : ''}</span>`;
+                let groupLog = `<span><span class="text-sky-400 font-bold">${f}</span> [${rawRolls.join(', ')}] &rarr; <span class="text-white font-bold">${sum}</span>${rollRules.targetMode === 'count' ? ' ✓' : ''}</span>`;
                 
                 details.push(groupLog);
                 total += sum;
             });
 
-            if (!rollRules.targetOp) {
+            if (rollRules.targetMode !== 'count') {
                 total += activeFlat;
                 if (activeFlat !== 0) details.push(`<span><span class="text-sky-400 font-bold">Flat Mod</span> &rarr; <span class="text-white font-bold">${activeFlat > 0 ? '+' : ''}${activeFlat}</span></span>`);
             }
 
             // Target Mode UI tweaks
             let finalDetailText = details.join("");
-            if (rollRules.targetOp) {
+            if (rollRules.targetMode === 'count') {
                 updateDisplay(total, finalDetailText, "stop");
                 if (total > 0) {
                     vibrate([40, 80, 40]);
@@ -1343,7 +1431,7 @@
 
             // Strip HTML tags for history text
             let historyText = finalDetailText.replace(/<[^>]*>?/gm, ' ');
-            if (rollRules.targetOp) historyText = `${total} SUCCESSES [ ${historyText} ]`;
+            if (rollRules.targetMode === 'count') historyText = `${total} SUCCESSES [ ${historyText} ]`;
             addToHistory(total, historyText);
             isRolling = false;
         }
