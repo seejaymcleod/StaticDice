@@ -714,7 +714,6 @@
     <script src="DiceEngine.js"></script>
     <script>
         const engine = new DiceEngine();
-        let isRolling = false;
         let pickerTargetId = null;
         let soundEnabled = true;
         let volume = 0.5;
@@ -1236,8 +1235,7 @@
             });
         }
 
-        async function instantRoll(sides) {
-            if (isRolling) return;
+        function instantRoll(sides) {
             vibrate(10);
 
             const affectsQueue = document.getElementById('insta-queue-toggle').checked;
@@ -1251,28 +1249,51 @@
             }
         }
 
-        async function resolveRolling(forcedQueue = null, isInstant = false) {
-            if (isRolling) return;
+        let rollGeneration = 0;
+
+        function resolveRolling(forcedQueue = null, isInstant = false) {
             if (!forcedQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
 
-            isRolling = true;
+            // Increment generation to cancel any in-progress animation
+            const thisGen = ++rollGeneration;
+
             vibrate(15);
             playRollSound();
 
+            // Compute result immediately (synchronous)
+            const res = engine.calculateRoll(forcedQueue, isInstant);
+            if (!res) return;
+
+            // Log to history immediately
+            let historyText = res.details.replace(/<[^>]*>?/gm, ' ');
+            if (res.targetMode === 'count') historyText = `${res.total} SUCCESSES [ ${historyText} ]`;
+            addToHistory(res.total, historyText);
+
+            // Start cosmetic animation, then reveal result
             updateDisplay("...", "ROLLING", "rolling");
 
-            for (let i = 0; i < 8; i++) {
-                updateDisplay(Math.floor(Math.random() * 20) + 1, "ROLLING");
-                await new Promise(r => setTimeout(r, 40));
+            let frame = 0;
+            const totalFrames = 8;
+            const frameDelay = 40;
+
+            function animateFrame() {
+                // If a newer roll has started, stop this animation
+                if (rollGeneration !== thisGen) return;
+
+                if (frame < totalFrames) {
+                    updateDisplay(Math.floor(Math.random() * 20) + 1, "ROLLING");
+                    frame++;
+                    setTimeout(animateFrame, frameDelay);
+                } else {
+                    // Animation done — show the real result
+                    showResult(res);
+                }
             }
 
-            const res = engine.calculateRoll(forcedQueue, isInstant);
+            setTimeout(animateFrame, frameDelay);
+        }
 
-            if (!res) {
-                isRolling = false;
-                return;
-            }
-
+        function showResult(res) {
             if (res.targetMode === 'count') {
                 updateDisplay(res.total, res.details, "stop");
                 if (res.total > 0) {
@@ -1294,11 +1315,6 @@
                     vibrate(25);
                 }
             }
-
-            let historyText = res.details.replace(/<[^>]*>?/gm, ' ');
-            if (res.targetMode === 'count') historyText = `${res.total} SUCCESSES [ ${historyText} ]`;
-            addToHistory(res.total, historyText);
-            isRolling = false;
         }
 
         function addToHistory(val, desc) {
