@@ -1,17 +1,15 @@
 # StaticDice
 A TTRPG dice roller that uses hardware static noise to generate cryptographically secure pseudo-random numbers. High-fidelity math meets a frictionless, tactile interface.
 
+* vars as targets
+* save and import vars and their arsenal
+* maybe a dice checker built in.. or a character sheet sister tool 
 
-[ ] ... Alternate functions...
-[ ] Reroll under x (after roll or before)
-[ ] Explode  above x (after or before)
-[ ] Target number
-[ ] Target table or results table
-[ ] Resource pool and as targets
-[ ] Highlight doubles, multiples
-[ ] Count above or below target
-[ ] 2d10
-[ ] Adv and dis refactor as keep 1 highest etc, drop all but 1 lowest?
-[ ] Effects on targets
-[ ] Roll under mode
-[ ] Target to ignore modifier for die rolls (crit and fumble)
+* custom dice maker
+* dcc dice 
+* 2d10 
+* highlight sets
+* tables 
+* effects
+* ignore mod button or settings for things like crit and fumble
+
