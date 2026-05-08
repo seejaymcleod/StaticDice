@@ -196,18 +196,73 @@
             background: rgba(30, 41, 59, 0.2);
             border: 1px solid var(--glass-border);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 3.5rem;
         }
 
         .saved-item:hover {
             background: rgba(51, 65, 85, 0.3);
             border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         #color-picker-overlay {
             background: rgba(2, 6, 23, 0.85);
             backdrop-filter: blur(16px);
             z-index: 100;
+        }
+
+        /* Arsenal Action Menu */
+        .arsenal-menu {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            min-width: 160px;
+            padding: 0.6rem;
+            transform-origin: top right;
+            animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes menu-pop {
+            from { transform: scale(0.9) translateY(-10px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.75rem;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            transition: all 0.2s ease;
+            width: 100%;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #f8fafc;
+        }
+
+        .menu-item.danger:hover {
+            background: rgba(244, 63, 94, 0.1);
+            color: #fb7185;
+        }
+
+        .menu-item svg {
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .menu-item:hover svg {
+            opacity: 1;
         }
 
         .result-shimmer {
@@ -695,7 +750,7 @@
     </div>
 
     <!-- Color Picker Modal -->
-    <div id="color-picker-overlay" class="fixed inset-0 hidden items-center justify-center p-4">
+    <div id="color-picker-overlay" onclick="if(event.target === this) closeColorPicker()" class="fixed inset-0 hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-2xl w-full max-w-[280px] space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Color</h3>
@@ -1025,7 +1080,13 @@
         }
 
         function deleteQueue(id, event) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
+            
+            // Close arsenal menus
+            document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+            activeMenuId = null;
+
             if (!confirm("Delete this saved configuration?")) return;
             engine.deleteQueue(id);
             persistSaved();
@@ -1046,6 +1107,12 @@
 
         function openColorPicker(id, event) {
             event.stopPropagation();
+            
+            // Close arsenal menus if open
+            document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+            activeMenuId = null;
+
             pickerTargetId = id;
             const overlay = document.getElementById('color-picker-overlay');
             const grid = document.getElementById('color-grid');
@@ -1080,7 +1147,13 @@
         }
 
         function updateSavedQueue(id, event) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
+            
+            // Close arsenal menus
+            document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+            activeMenuId = null;
+
             const item = engine.savedQueues.find(q => q.id === id);
             if (!item) return;
             if (!confirm(`Overwrite "${item.name}" with the current active queue?`)) return;
@@ -1088,6 +1161,7 @@
             engine.updateSavedQueue(id);
             persistSaved();
             renderSavedQueues();
+            vibrate(5);
         }
 
         function persistSaved() {
@@ -1189,6 +1263,58 @@
             reader.readAsText(file);
         }
 
+        let activeMenuId = null;
+
+        function toggleArsenalMenu(id, e) {
+            if (e) e.stopPropagation();
+            vibrate(5);
+            const menus = document.querySelectorAll('.arsenal-menu');
+            const items = document.querySelectorAll('.arsenal-item-wrapper');
+            const targetMenu = document.getElementById(`menu-${id}`);
+            const parentItem = targetMenu.closest('.arsenal-item-wrapper');
+            
+            const isShowing = !targetMenu.classList.contains('hidden');
+            
+            // Hide all first
+            menus.forEach(m => m.classList.add('hidden'));
+            items.forEach(i => i.classList.remove('z-50'));
+            
+            if (!isShowing) {
+                targetMenu.classList.remove('hidden');
+                parentItem.classList.add('z-50');
+                activeMenuId = id;
+            } else {
+                activeMenuId = null;
+            }
+        }
+
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('.arsenal-menu') && !e.target.closest('.gear-btn')) {
+                document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
+                document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+                activeMenuId = null;
+            }
+        });
+
+        function renameSavedQueue(id, e) {
+            if (e) e.stopPropagation();
+            
+            // Close arsenal menus
+            document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+            activeMenuId = null;
+
+            const item = engine.savedQueues.find(q => q.id === id);
+            if (!item) return;
+            const newName = prompt("Enter new name for this loadout:", item.name);
+            if (newName && newName.trim()) {
+                engine.renameQueue(id, newName.trim());
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+
         function renderSavedQueues() {
             const lists = document.querySelectorAll('.saved-queues-list');
             const countDisplays = document.querySelectorAll('.saved-count');
@@ -1205,8 +1331,11 @@
                 }
 
                 engine.savedQueues.forEach(q => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative';
+
                     const item = document.createElement('div');
-                    item.className = 'saved-item p-3 rounded-xl flex items-center gap-3 cursor-pointer group relative overflow-hidden';
+                    item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                     item.onclick = () => { loadQueue(q.id); resolveRolling(); };
 
                     let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
@@ -1220,18 +1349,43 @@
                     }
 
                     item.innerHTML = `
-                        <div class="w-1 h-6 rounded-full shadow-[0_0_8px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>
-                        <div class="flex-grow min-w-0">
-                            <div class="text-[11px] font-black text-white truncate uppercase tracking-tight">${q.name}</div>
-                            <div class="text-[9px] mono text-slate-500 truncate mt-0.5">${formula || 'Empty'}</div>
-                        </div>
-                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onclick="updateSavedQueue(${q.id}, event)" class="w-6 h-6 flex items-center justify-center hover:bg-sky-500/20 rounded-lg text-[9px] text-sky-400" title="Update">💾</button>
-                            <button onclick="openColorPicker(${q.id}, event)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-lg text-[9px] text-slate-400">🎨</button>
-                            <button onclick="deleteQueue(${q.id}, event)" class="w-6 h-6 flex items-center justify-center hover:bg-rose-500/20 rounded-lg text-[9px] text-rose-400">✕</button>
+                        <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[0_0_12px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>
+                        <div class="flex-grow min-w-0 pl-6">
+                            <div class="text-sm font-black text-white truncate uppercase tracking-tight">${q.name}</div>
+                            <div class="text-xs mono text-slate-400 truncate mt-0.5">${formula || 'Empty'}</div>
                         </div>
                     `;
-                    list.appendChild(item);
+                    wrapper.appendChild(item);
+
+                    const gearContainer = document.createElement('div');
+                    gearContainer.className = 'shrink-0 relative';
+                    gearContainer.innerHTML = `
+                        <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-10 h-10 flex items-center justify-center hover:bg-slate-800 rounded-xl text-slate-400 transition-all border border-white/5 bg-slate-800/40 hover:text-white hover:border-white/20 active:scale-95">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden">
+                            <button onclick="updateSavedQueue(${q.id}, event)" class="menu-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                <span>Overwrite</span>
+                            </button>
+                            <button onclick="renameSavedQueue(${q.id}, event)" class="menu-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-slate-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>Rename</span>
+                            </button>
+                            <button onclick="openColorPicker(${q.id}, event)" class="menu-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-slate-400"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
+                                <span>Appearance</span>
+                            </button>
+                            <div class="h-px bg-white/5 my-1"></div>
+                            <button onclick="deleteQueue(${q.id}, event)" class="menu-item danger">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    `;
+                    wrapper.appendChild(gearContainer);
+
+                    list.appendChild(wrapper);
                 });
             });
         }
