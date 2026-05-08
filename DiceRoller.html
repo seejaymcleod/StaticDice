@@ -644,7 +644,7 @@
             </button>
 
             <!-- ADV DIS & EXTRA CONTROLS -->
-            <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-stretch">
+            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-stretch">
                 <button id="adv-btn" onclick="applyModifier('ADV')" disabled
                     class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
                     <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
@@ -676,6 +676,21 @@
                             value="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
                     </div>
                     <button onclick="adjustFlatMod(1)" class="segmented-btn btn-side">＋</button>
+                </div>
+                
+                <!-- OVERALL TARGET -->
+                <div id="overall-target-container"
+                    class="segmented-row !h-[2.5rem] bg-slate-900 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                    <button onclick="adjustOverallTarget(-1)" class="segmented-btn btn-side">－</button>
+                    <div
+                        class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
+                        <span
+                            class="text-[7px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Target</span>
+                        <input type="number" id="overall-target-input"
+                            class="w-full bg-transparent font-black text-[14px] text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                            value="" placeholder="-" oninput="setOverallTarget(this.value)" onblur="updateUI()">
+                    </div>
+                    <button onclick="adjustOverallTarget(1)" class="segmented-btn btn-side">＋</button>
                 </div>
 
                 <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
@@ -772,16 +787,20 @@
                         </div>
                     </div>
                     <!-- Target -> Method -->
-                    <div
-                        class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
-                        <span
-                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Method</span>
+                    <div id="rule-target-container"
+                        class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5 transition-all">
+                        <div class="flex flex-col w-14 items-center">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center leading-none">Success</span>
+                            <span class="text-[7px] font-bold text-slate-500 uppercase tracking-widest text-center mt-0.5">Cond.</span>
+                        </div>
                         <div class="flex-1 flex gap-2 items-center justify-end">
-                            <div class="flex bg-slate-900 rounded border border-sky-500/20 overflow-hidden w-[82px]">
+                            <div class="flex bg-slate-900 rounded border border-sky-500/20 overflow-hidden w-[120px]">
                                 <button id="target-mode-sum" onclick="setTargetMode('sum')"
                                     class="flex-1 text-[8px] font-black py-1 transition-all uppercase hover:bg-sky-500/10">SUM</button>
                                 <button id="target-mode-count" onclick="setTargetMode('count')"
                                     class="flex-1 text-[8px] font-black py-1 transition-all uppercase hover:bg-sky-500/10 border-l border-sky-500/20">COUNT</button>
+                                <button id="target-mode-list" onclick="setTargetMode('list')"
+                                    class="flex-1 text-[8px] font-black py-1 transition-all uppercase hover:bg-sky-500/10 border-l border-sky-500/20">LIST</button>
                             </div>
                             <select id="rule-target-op"
                                 class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center"
@@ -1231,13 +1250,39 @@
             // Update target mode button styles
             const sumBtn = document.getElementById('target-mode-sum');
             const countBtn = document.getElementById('target-mode-count');
+            const listBtn = document.getElementById('target-mode-list');
+            const targetOpSelect = document.getElementById('rule-target-op');
+            const targetValContainer = document.getElementById('rule-target-input-container');
+            const overallTargetContainer = document.getElementById('overall-target-container');
+
+            const inactiveClass = 'flex-1 text-[8px] font-black py-1 transition-all uppercase hover:bg-sky-500/10 text-sky-400 border-l border-sky-500/20';
+            const activeClass = 'flex-1 text-[8px] font-black py-1 transition-all uppercase bg-sky-500 text-slate-950 border-l border-sky-500/20';
+
+            // Special case for first button (no left border)
+            const inactiveFirst = 'flex-1 text-[8px] font-black py-1 transition-all uppercase hover:bg-sky-500/10 text-sky-400';
+            const activeFirst = 'flex-1 text-[8px] font-black py-1 transition-all uppercase bg-sky-500 text-slate-950';
 
             if (currentTargetMode === 'sum') {
-                sumBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase bg-sky-500 text-slate-950';
-                countBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase hover:bg-sky-500/10 border-l border-sky-500/20 text-sky-400';
-            } else {
-                sumBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase hover:bg-sky-500/10 text-sky-400';
-                countBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase bg-sky-500 text-slate-950 border-l border-sky-500/20';
+                sumBtn.className = activeFirst;
+                countBtn.className = inactiveClass;
+                listBtn.className = inactiveClass;
+                targetOpSelect.classList.add('hidden');
+                targetValContainer.classList.add('hidden');
+                overallTargetContainer.classList.remove('hidden');
+            } else if (currentTargetMode === 'count') {
+                sumBtn.className = inactiveFirst;
+                countBtn.className = activeClass;
+                listBtn.className = inactiveClass;
+                targetOpSelect.classList.remove('hidden');
+                targetValContainer.classList.remove('hidden');
+                overallTargetContainer.classList.remove('hidden');
+            } else { // LIST
+                sumBtn.className = inactiveFirst;
+                countBtn.className = inactiveClass;
+                listBtn.className = activeClass;
+                targetOpSelect.classList.add('hidden');
+                targetValContainer.classList.add('hidden');
+                overallTargetContainer.classList.add('hidden');
             }
 
             engine.updateRules({
@@ -1393,6 +1438,20 @@
             updateUI();
         }
 
+        function adjustOverallTarget(val) {
+            engine.adjustOverallTarget(val);
+            updateUI();
+        }
+
+        function setOverallTarget(val) {
+            if (val === "") {
+                engine.overallTarget = null;
+            } else {
+                engine.overallTarget = parseInt(val) || null;
+            }
+            updateUI();
+        }
+
         function applyModifier(type) {
             vibrate(10);
             engine.applyModifier(type);
@@ -1465,14 +1524,21 @@
             if (engine.rollRules.targetMode === 'count') {
                 rulesText += ` CT`;
                 if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) rulesText += `${engine.rollRules.targetOp}${engine.rollRules.targetVal}`;
+            } else if (engine.rollRules.targetMode === 'list') {
+                rulesText += ` LIST`;
             } else {
-                if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) rulesText += ` SUM${engine.rollRules.targetOp}${engine.rollRules.targetVal}`;
+                rulesText += ` SUM`;
             }
+            if (engine.overallTarget !== null) rulesText += ` TARGET≥${engine.overallTarget}`;
 
             display.innerText = (parts.length > 0 || modifierText || rulesText) ? parts.join(" + ") + modifierText + rulesText : "EMPTY QUEUE";
 
             if (modInput && document.activeElement !== modInput) {
                 modInput.value = engine.flatMod > 0 ? `+${engine.flatMod}` : engine.flatMod;
+            }
+            const overallTargetInput = document.getElementById('overall-target-input');
+            if (overallTargetInput && document.activeElement !== overallTargetInput) {
+                overallTargetInput.value = engine.overallTarget !== null ? engine.overallTarget : '';
             }
 
             const hasDice = engine.rollingQueue.length > 0;

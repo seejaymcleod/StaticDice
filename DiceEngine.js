@@ -12,6 +12,7 @@ class DiceEngine {
         };
         this.savedQueues = [];
         this.rng = this.defaultRng;
+        this.overallTarget = null;
     }
 
     defaultRng(sides) {
@@ -46,7 +47,9 @@ class DiceEngine {
     }
 
     backspaceQueue() {
-        if (this.activeModifier) {
+        if (this.overallTarget !== null) {
+            this.overallTarget = null;
+        } else if (this.activeModifier) {
             this.activeModifier = null;
             this.modifierLevel = 0;
         } else if (this.flatMod !== 0) {
@@ -58,6 +61,11 @@ class DiceEngine {
 
     adjustFlatMod(val) {
         this.flatMod += val;
+    }
+
+    adjustOverallTarget(val) {
+        if (this.overallTarget === null) this.overallTarget = 0;
+        this.overallTarget += val;
     }
 
     applyModifier(type) {
@@ -82,6 +90,8 @@ class DiceEngine {
         this.rollRules.explodeOp = "";
         this.rollRules.targetOp = "";
         this.rollRules.setsOp = "";
+        
+        this.overallTarget = null;
     }
 
     updateRules(rules) {
@@ -166,7 +176,8 @@ class DiceEngine {
 
         if ((activeQueue.length === 0 && activeFlat === 0)) return null;
 
-        let total = 0;
+        const isListMode = this.rollRules.targetMode === 'list';
+        let total = isListMode ? [] : 0;
         let breakdownRows = [];
         let hasCritHit = false;
         let hasCritFail = false;
@@ -240,8 +251,8 @@ class DiceEngine {
             let sum = 0;
             let filteredPool = pool;
             
-            // 1. Apply Target Condition
-            if (this.rollRules.targetOp) {
+            // 1. Apply Target Condition (Only for COUNT mode)
+            if (this.rollRules.targetOp && this.rollRules.targetMode === 'count') {
                 filteredPool = pool.filter(v => this.checkCondition(v, this.rollRules.targetOp, this.rollRules.targetVal));
             }
 
@@ -269,6 +280,10 @@ class DiceEngine {
             
             if (this.rollRules.targetMode === 'count') {
                 sum = filteredPool.length;
+            } else if (this.rollRules.targetMode === 'list') {
+                // Sort each die type individually
+                filteredPool.sort((a, b) => a - b);
+                sum = filteredPool.join(', ');
             } else {
                 sum = filteredPool.reduce((a, b) => a + b, 0);
             }
@@ -282,8 +297,6 @@ class DiceEngine {
             if (this.rollRules.targetMode === 'count') {
                 f += 'c';
                 if (this.rollRules.targetOp) f += `${this.rollRules.targetOp.replace('=', '')}${this.rollRules.targetVal}`;
-            } else {
-                if (this.rollRules.targetOp) f += `s${this.rollRules.targetOp.replace('=', '')}${this.rollRules.targetVal}`;
             }
             if (this.rollRules.setsOp) f += `set${this.rollRules.setsOp.replace('=', '')}${this.rollRules.setsVal}`;
             f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
@@ -310,10 +323,18 @@ class DiceEngine {
                 subtotal: sum
             });
             
-            total += sum;
+            if (isListMode) {
+                if (sum) total.push(sum);
+            } else {
+                total += sum;
+            }
         });
 
-        if (this.rollRules.targetMode !== 'count') {
+        if (isListMode) {
+            total = total.join(', ') || '0';
+        }
+
+        if (this.rollRules.targetMode !== 'count' && !isListMode) {
             total += activeFlat;
             if (activeFlat !== 0) {
                 breakdownRows.push({
@@ -373,51 +394,40 @@ class DiceEngine {
             const op = this._getDisplayOp(rules.setsOp);
             
             if (setEntries.length === 0) {
-                return { text: `NO SETS ${op} ${rules.setsVal} ➔ FAIL`, color: 'rose' };
+                return { text: `0 DICE SETS ${op} ${rules.setsVal} ➔ FAIL`, color: 'rose' };
             }
             
-            // Generate description
-            let desc = "";
-            if (setEntries.length === 1) {
-                const [val, count] = setEntries[0];
-                const name = this._getSetName(count).toUpperCase();
-                desc = `${name} OF ${val}'S`;
-            } else {
-                const typeCounts = {};
-                setEntries.forEach(([val, count]) => {
-                    const name = this._getSetName(count).toUpperCase();
-                    typeCounts[name] = (typeCounts[name] || 0) + 1;
-                });
-                desc = Object.entries(typeCounts).map(([name, qty]) => {
-                    return qty > 1 ? `${qty} ${name}S` : name;
-                }).join(' + ');
-            }
+            // Generate details: (Count x Value's)
+            const details = setEntries.map(([val, count]) => `(${count} x ${val}'s)`).join(', ');
+            const matchingDiceCount = setEntries.reduce((sum, [_, count]) => sum + count, 0);
             
-            // Result for sets is always Success if any sets were found (since engine filtered them)
-            return { text: `${desc} ${op} ${rules.setsVal} ➔ SUCCESS`, color: 'sky' };
+            return { text: `${matchingDiceCount} DICE SETS ${op} ${rules.setsVal} ➔ ${details}`, color: 'sky' };
         }
 
-        // Priority 2: Target (Sum or Count)
-        if (rules.targetOp && rules.targetVal !== null) {
-            const op = this._getDisplayOp(rules.targetOp);
-            const isSuccess = this.checkCondition(total, rules.targetOp, rules.targetVal);
+        // Priority 2: Overall Target
+        if (this.overallTarget !== null) {
+            const isSuccess = total >= this.overallTarget;
             const status = isSuccess ? 'SUCCESS' : 'FAIL';
             const color = isSuccess ? 'emerald' : 'rose';
             
-            let valLabel = total;
             if (rules.targetMode === 'count') {
-                valLabel = `${total} SUCCESS${total !== 1 ? 'ES' : ''}`;
+                return { text: `${total} DICE ≥ ${this.overallTarget} ➔ ${status}`, color: color };
+            } else {
+                return { text: `RESULT ≥ ${this.overallTarget} ➔ ${status}`, color: color };
             }
-            
-            return { text: `${valLabel} ${op} ${rules.targetVal} ➔ ${status}`, color: color };
         }
 
-        // Priority 3: Default Count Label
+        // Priority 3: Default Count Label (No target op)
         if (rules.targetMode === 'count') {
             return { text: `${total} SUCCESS${total !== 1 ? 'ES' : ''}`, color: 'emerald' };
         }
 
-        // Priority 4: Crits
+        // Priority 4: List mode
+        if (rules.targetMode === 'list') {
+            return { text: 'DICE LIST', color: 'sky' };
+        }
+
+        // Priority 5: Crits
         if (hasCritHit) return { text: 'NATURAL 20', color: 'emerald' };
         if (hasCritFail) return { text: 'NATURAL 1', color: 'rose' };
 
@@ -429,7 +439,7 @@ class DiceEngine {
 
         // Sets badge (when label is showing something else, e.g. count mode)
         const setsActive = rules.setsOp && rules.setsVal !== null;
-        const labelIsSetInfo = label && (label.text.includes('PAIR') || label.text.includes('TRIPLE') || label.text.includes('QUAD') || label.text.includes('KIND') || label.text === 'NO SETS FOUND');
+        const labelIsSetInfo = label && label.text.includes('DICE SETS');
         if (setsActive && !labelIsSetInfo) {
             const setEntries = Object.entries(setGroups);
             if (setEntries.length > 0) {
