@@ -167,13 +167,18 @@ class DiceEngine {
         if ((activeQueue.length === 0 && activeFlat === 0)) return null;
 
         let total = 0;
-        let details = [];
+        let breakdownRows = [];
         let hasCritHit = false;
         let hasCritFail = false;
+        let allSetGroups = {};
+        let totalRerolls = 0;
+        let totalExplosions = 0;
 
         activeQueue.forEach(group => {
             let pool = [];
             let rawRolls = [];
+            let groupRerolls = 0;
+            let groupExplosions = 0;
             const rollsToTake = 1 + (this.activeModifier ? this.modifierLevel : 0);
 
             for (let i = 0; i < group.count; i++) {
@@ -197,6 +202,7 @@ class DiceEngine {
                     dieLog += `r->${kept}`;
                     rerollCount++;
                 }
+                groupRerolls += rerollCount;
 
                 let totalValueForThisDie = kept;
 
@@ -209,6 +215,7 @@ class DiceEngine {
                     dieLog += `!->${currentExplodeDie}`;
                     explodeCount++;
                 }
+                groupExplosions += explodeCount;
 
                 if (this.rollRules.targetOp || this.rollRules.targetMode === 'count') {
                     pool.push(kept);
@@ -244,7 +251,6 @@ class DiceEngine {
                 const counts = {};
                 filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
                 
-                // Identify which values are part of a valid set
                 Object.keys(counts).forEach(v => {
                     if (this.checkCondition(counts[v], this.rollRules.setsOp, this.rollRules.setsVal)) {
                         setGroups[v] = counts[v];
@@ -253,6 +259,13 @@ class DiceEngine {
 
                 filteredPool = filteredPool.filter(v => setGroups[v] !== undefined);
             }
+
+            // Aggregate set groups across all dice groups
+            Object.entries(setGroups).forEach(([v, c]) => {
+                allSetGroups[v] = (allSetGroups[v] || 0) + c;
+            });
+            totalRerolls += groupRerolls;
+            totalExplosions += groupExplosions;
             
             if (this.rollRules.targetMode === 'count') {
                 sum = filteredPool.length;
@@ -260,6 +273,7 @@ class DiceEngine {
                 sum = filteredPool.reduce((a, b) => a + b, 0);
             }
             
+            // Build formula string
             let f = `${group.count}d${group.sides}`;
             if (this.activeModifier === 'ADV') f += 'kh1';
             if (this.activeModifier === 'DIS') f += 'kl1';
@@ -276,10 +290,9 @@ class DiceEngine {
 
             // Highlight sets in the roll log
             let highlightedRaw = rawRolls.map(dieStr => {
-                // Extracts the final kept value from dieStr (e.g., "1r->5" -> 5)
                 const parts = dieStr.split('->');
                 const lastPart = parts[parts.length - 1];
-                const val = parseInt(lastPart.split('!')[0]); // Handle explosion markers if any
+                const val = parseInt(lastPart.split('!')[0]);
                 
                 if (this.rollRules.setsOp && this.rollRules.setsVal !== null) {
                     if (setGroups[val] !== undefined) {
@@ -291,30 +304,159 @@ class DiceEngine {
                 return dieStr;
             });
 
-            let setSummary = "";
-            const setsFound = Object.keys(setGroups);
-            if (setsFound.length > 0) {
-                setSummary = ` <span class="text-[8px] text-sky-300/60 uppercase">Sets: ${setsFound.map(v => `${setGroups[v]}x[${v}]`).join(', ')}</span>`;
-            }
-
-            let groupLog = `<span><span class="text-sky-400 font-bold">${f}</span> [${highlightedRaw.join(', ')}] &rarr; <span class="text-white font-bold">${sum}</span>${this.rollRules.targetMode === 'count' ? ' ✓' : ''}${setSummary}</span>`;
+            breakdownRows.push({
+                formula: f,
+                rolls: highlightedRaw.join(', '),
+                subtotal: sum
+            });
             
-            details.push(groupLog);
             total += sum;
         });
 
         if (this.rollRules.targetMode !== 'count') {
             total += activeFlat;
-            if (activeFlat !== 0) details.push(`<span><span class="text-sky-400 font-bold">Flat Mod</span> &rarr; <span class="text-white font-bold">${activeFlat > 0 ? '+' : ''}${activeFlat}</span></span>`);
+            if (activeFlat !== 0) {
+                breakdownRows.push({
+                    formula: 'Flat Mod',
+                    rolls: '',
+                    subtotal: `${activeFlat > 0 ? '+' : ''}${activeFlat}`
+                });
+            }
         }
+
+        // Compute heroClass
+        let heroClass = null;
+        if (hasCritHit) heroClass = 'crit-hit';
+        else if (hasCritFail) heroClass = 'crit-fail';
+
+        // Compute label and badges
+        const setsActive = this.rollRules.setsOp && this.rollRules.setsVal !== null;
+        let label = this._computeLabel(total, this.rollRules, allSetGroups, hasCritHit, hasCritFail);
+        let badges = this._computeBadges(this.rollRules, allSetGroups, hasCritHit, hasCritFail, totalRerolls, totalExplosions, label);
+
+        // Flat description for history log
+        let flatDescription = breakdownRows.map(r => {
+            let clean = r.rolls.replace(/<[^>]*>/g, '');
+            return clean ? `${r.formula} [${clean}] → ${r.subtotal}` : `${r.formula} → ${r.subtotal}`;
+        }).join(' | ');
 
         return {
             total,
-            details: details.join(""),
-            hasCritHit,
-            hasCritFail,
-            targetMode: this.rollRules.targetMode
+            heroClass,
+            label,
+            badges,
+            breakdown: breakdownRows,
+            targetMode: this.rollRules.targetMode,
+            flatDescription
         };
+    }
+
+    // --- Display Zone Helpers ---
+
+    _getSetName(count) {
+        if (count === 2) return 'Pair';
+        if (count === 3) return 'Triple';
+        if (count === 4) return 'Quad';
+        return `${count}-of-a-Kind`;
+    }
+
+    _getDisplayOp(op) {
+        if (!op) return "";
+        return op.replace(/>=/g, '≥').replace(/<=/g, '≤').replace(/==/g, '=').replace(/=/g, '=');
+    }
+
+    _computeLabel(total, rules, setGroups, hasCritHit, hasCritFail) {
+        // Priority 1: Sets
+        const setsActive = rules.setsOp && rules.setsVal !== null;
+        if (setsActive) {
+            const setEntries = Object.entries(setGroups);
+            const op = this._getDisplayOp(rules.setsOp);
+            
+            if (setEntries.length === 0) {
+                return { text: `NO SETS ${op} ${rules.setsVal} ➔ FAIL`, color: 'rose' };
+            }
+            
+            // Generate description
+            let desc = "";
+            if (setEntries.length === 1) {
+                const [val, count] = setEntries[0];
+                const name = this._getSetName(count).toUpperCase();
+                desc = `${name} OF ${val}'S`;
+            } else {
+                const typeCounts = {};
+                setEntries.forEach(([val, count]) => {
+                    const name = this._getSetName(count).toUpperCase();
+                    typeCounts[name] = (typeCounts[name] || 0) + 1;
+                });
+                desc = Object.entries(typeCounts).map(([name, qty]) => {
+                    return qty > 1 ? `${qty} ${name}S` : name;
+                }).join(' + ');
+            }
+            
+            // Result for sets is always Success if any sets were found (since engine filtered them)
+            return { text: `${desc} ${op} ${rules.setsVal} ➔ SUCCESS`, color: 'sky' };
+        }
+
+        // Priority 2: Target (Sum or Count)
+        if (rules.targetOp && rules.targetVal !== null) {
+            const op = this._getDisplayOp(rules.targetOp);
+            const isSuccess = this.checkCondition(total, rules.targetOp, rules.targetVal);
+            const status = isSuccess ? 'SUCCESS' : 'FAIL';
+            const color = isSuccess ? 'emerald' : 'rose';
+            
+            let valLabel = total;
+            if (rules.targetMode === 'count') {
+                valLabel = `${total} SUCCESS${total !== 1 ? 'ES' : ''}`;
+            }
+            
+            return { text: `${valLabel} ${op} ${rules.targetVal} ➔ ${status}`, color: color };
+        }
+
+        // Priority 3: Default Count Label
+        if (rules.targetMode === 'count') {
+            return { text: `${total} SUCCESS${total !== 1 ? 'ES' : ''}`, color: 'emerald' };
+        }
+
+        // Priority 4: Crits
+        if (hasCritHit) return { text: 'NATURAL 20', color: 'emerald' };
+        if (hasCritFail) return { text: 'NATURAL 1', color: 'rose' };
+
+        return null;
+    }
+
+    _computeBadges(rules, setGroups, hasCritHit, hasCritFail, totalRerolls, totalExplosions, label) {
+        let badges = [];
+
+        // Sets badge (when label is showing something else, e.g. count mode)
+        const setsActive = rules.setsOp && rules.setsVal !== null;
+        const labelIsSetInfo = label && (label.text.includes('PAIR') || label.text.includes('TRIPLE') || label.text.includes('QUAD') || label.text.includes('KIND') || label.text === 'NO SETS FOUND');
+        if (setsActive && !labelIsSetInfo) {
+            const setEntries = Object.entries(setGroups);
+            if (setEntries.length > 0) {
+                const setTexts = setEntries.map(([v, c]) => `${c}×${v}`);
+                badges.push({ icon: '🎲', text: `Sets: ${setTexts.join(', ')}`, color: 'sky' });
+            }
+        }
+
+        // Crit badges (when label is showing something else)
+        if (hasCritHit && (!label || label.text !== 'NATURAL 20')) {
+            badges.push({ icon: '⚡', text: 'NAT 20', color: 'emerald' });
+        }
+        if (hasCritFail && (!label || label.text !== 'NATURAL 1')) {
+            badges.push({ icon: '💀', text: 'NAT 1', color: 'rose' });
+        }
+
+        // Explosions
+        if (totalExplosions > 0) {
+            badges.push({ icon: '💥', text: `${totalExplosions} Explosion${totalExplosions > 1 ? 's' : ''}`, color: 'amber' });
+        }
+
+        // Rerolls
+        if (totalRerolls > 0) {
+            badges.push({ icon: '🔄', text: `${totalRerolls} Reroll${totalRerolls > 1 ? 's' : ''}`, color: 'slate' });
+        }
+
+        return badges;
     }
 }
 
