@@ -619,9 +619,10 @@
                         class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
                         <span
                             class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Reroll</span>
-                        <div class="flex-1 flex gap-1 items-center justify-end">
+                        <div class="flex-1 flex gap-2 items-center justify-end">
+                            <div class="w-[82px]"></div>
                             <select id="rule-reroll-op"
-                                class="bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center"
+                                class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center"
                                 onchange="updateRulesUI()">
                                 <option value="">Off</option>
                                 <option value="<=">&le;</option>
@@ -629,7 +630,7 @@
                                 <option value=">=">&ge;</option>
                             </select>
                             <div id="rule-reroll-input-container"
-                                class="flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                class="w-[80px] flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
                                 <button onclick="adjustRuleVal('reroll', -1)"
                                     class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
                                 <input type="number" id="rule-reroll-val"
@@ -645,9 +646,10 @@
                         class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
                         <span
                             class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Explode</span>
-                        <div class="flex-1 flex gap-1 items-center justify-end">
+                        <div class="flex-1 flex gap-2 items-center justify-end">
+                            <div class="w-[82px]"></div>
                             <select id="rule-explode-op"
-                                class="bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center"
+                                class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center"
                                 onchange="updateRulesUI()">
                                 <option value="">Off</option>
                                 <option value=">=">&ge;</option>
@@ -655,7 +657,7 @@
                                 <option value="<=">&le;</option>
                             </select>
                             <div id="rule-explode-input-container"
-                                class="flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                class="w-[80px] flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
                                 <button onclick="adjustRuleVal('explode', -1)"
                                     class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
                                 <input type="number" id="rule-explode-val"
@@ -668,14 +670,18 @@
                     </div>
                     <!-- Target -> Method -->
                     <div
-                        class="flex items-center justify-between gap-1 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
+                        class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
                         <span
-                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center pl-1">Method</span>
-                        <div class="flex-1 flex gap-1 items-center justify-end">
-                            <button id="rule-target-mode" onclick="toggleTargetMode()"
-                                class="bg-slate-900 text-emerald-400 text-[9px] font-bold rounded px-1.5 py-1 outline-none border border-emerald-500/20 text-center uppercase w-12 transition-colors hover:bg-emerald-500/10">SUM</button>
+                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Method</span>
+                        <div class="flex-1 flex gap-2 items-center justify-end">
+                            <div class="flex bg-slate-900 rounded border border-sky-500/20 overflow-hidden w-[82px]">
+                                <button id="target-mode-sum" onclick="setTargetMode('sum')"
+                                    class="flex-1 text-[8px] font-black py-1 transition-all uppercase hover:bg-sky-500/10">SUM</button>
+                                <button id="target-mode-count" onclick="setTargetMode('count')"
+                                    class="flex-1 text-[8px] font-black py-1 transition-all uppercase hover:bg-sky-500/10 border-l border-sky-500/20">COUNT</button>
+                            </div>
                             <select id="rule-target-op"
-                                class="bg-slate-900 text-emerald-400 text-[10px] font-bold rounded p-1 outline-none border border-emerald-500/20 text-center"
+                                class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center"
                                 onchange="updateRulesUI()">
                                 <option value="">All</option>
                                 <option value=">=">&ge;</option>
@@ -683,14 +689,14 @@
                                 <option value="<=">&le;</option>
                             </select>
                             <div id="rule-target-input-container"
-                                class="flex items-center bg-slate-900 rounded border border-emerald-500/20 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                class="w-[80px] flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
                                 <button onclick="adjustRuleVal('target', -1)"
-                                    class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
+                                    class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
                                 <input type="number" id="rule-target-val"
-                                    class="w-6 bg-transparent text-emerald-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors"
+                                    class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors"
                                     placeholder="#" oninput="updateRulesUI(true)">
                                 <button onclick="adjustRuleVal('target', 1)"
-                                    class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                                    class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
                             </div>
                         </div>
                     </div>
@@ -1030,10 +1036,12 @@
             '#06b6d4', '#38bdf8', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'
         ];
 
-        function toggleTargetMode() {
-            const btn = document.getElementById('rule-target-mode');
-            btn.innerText = btn.innerText === 'SUM' ? 'COUNT' : 'SUM';
+        let currentTargetMode = 'sum';
+
+        function setTargetMode(mode) {
+            currentTargetMode = mode;
             updateRulesUI();
+            vibrate(5);
         }
 
         function toggleRulesPanel() {
@@ -1079,12 +1087,24 @@
                 }
             });
 
+            // Update target mode button styles
+            const sumBtn = document.getElementById('target-mode-sum');
+            const countBtn = document.getElementById('target-mode-count');
+            
+            if (currentTargetMode === 'sum') {
+                sumBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase bg-sky-500 text-slate-950';
+                countBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase hover:bg-sky-500/10 border-l border-sky-500/20 text-sky-400';
+            } else {
+                sumBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase hover:bg-sky-500/10 text-sky-400';
+                countBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase bg-sky-500 text-slate-950 border-l border-sky-500/20';
+            }
+
             engine.updateRules({
                 rerollOp: document.getElementById('rule-reroll-op').value,
                 rerollVal: parseInt(document.getElementById('rule-reroll-val').value) || null,
                 explodeOp: document.getElementById('rule-explode-op').value,
                 explodeVal: parseInt(document.getElementById('rule-explode-val').value) || null,
-                targetMode: document.getElementById('rule-target-mode').innerText.toLowerCase(),
+                targetMode: currentTargetMode,
                 targetOp: document.getElementById('rule-target-op').value,
                 targetVal: parseInt(document.getElementById('rule-target-val').value) || null
             });
@@ -1387,7 +1407,7 @@
             document.getElementById('rule-reroll-val').value = engine.rollRules.rerollVal;
             document.getElementById('rule-explode-op').value = engine.rollRules.explodeOp;
             document.getElementById('rule-explode-val').value = engine.rollRules.explodeVal;
-            document.getElementById('rule-target-mode').innerText = engine.rollRules.targetMode.toUpperCase();
+            currentTargetMode = engine.rollRules.targetMode;
             document.getElementById('rule-target-op').value = engine.rollRules.targetOp;
             document.getElementById('rule-target-val').value = engine.rollRules.targetVal;
             updateUI();
@@ -1508,7 +1528,8 @@
                 volume: volume,
                 instaQueue: isInstaQueue,
                 moddedQuick: isModdedQuick,
-                customDice: customDice
+                customDice: customDice,
+                currentTargetMode: currentTargetMode
             }));
         }
 
@@ -1596,8 +1617,11 @@
                             }
                             if (importedSettings.customDice !== undefined) {
                                 customDice = importedSettings.customDice;
-                                renderDiceGrid();
                             }
+                            if (importedSettings.currentTargetMode !== undefined) {
+                                currentTargetMode = importedSettings.currentTargetMode;
+                            }
+                            renderDiceGrid();
                             saveSettings();
                             updateSoundUI();
                         }
@@ -1884,6 +1908,9 @@
                     if (savedSettings.customDice !== undefined) {
                         customDice = savedSettings.customDice;
                     }
+                    if (savedSettings.currentTargetMode !== undefined) {
+                        currentTargetMode = savedSettings.currentTargetMode;
+                    }
                     updateUI();
                     updateSoundUI();
                 } catch (e) { }
@@ -1899,6 +1926,7 @@
 
             runCustomStressTest();
             renderDiceGrid();
+            updateRulesUI();
         };
 
     </script>
