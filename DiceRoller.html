@@ -54,6 +54,7 @@
             -webkit-appearance: none;
             margin: 0;
         }
+
         .hide-spinners {
             -moz-appearance: textfield;
         }
@@ -490,9 +491,11 @@
                         class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-rose-400 transition-colors">Disadvantage</span>
                     <span id="dis-sub" class="text-[8px] font-bold text-slate-600 mono leading-none">LOCKED</span>
                 </button>
-                
+
                 <div class="flex flex-col justify-center items-center !h-[2.5rem] px-1 border-l border-white/5 pl-2">
-                    <span class="text-[6px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1 text-center w-full">Roll to<br>Queue</span>
+                    <span
+                        class="text-[6px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1 text-center w-full">Roll
+                        to<br>Queue</span>
                     <div class="flex items-center mt-[-2px]">
                         <label class="toggle-switch scale-[0.55] origin-center">
                             <input type="checkbox" id="insta-queue-toggle" onchange="saveInstaQueueState(); vibrate(5)">
@@ -501,64 +504,100 @@
                     </div>
                 </div>
 
-                <button id="adv-rules-toggle" onclick="toggleRulesPanel()" class="w-[2.5rem] h-[2.5rem] rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex flex-col items-center justify-center text-slate-400 hover:text-sky-400 transition-colors border border-white/5">
-                    <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
+                    class="w-[2.5rem] h-[2.5rem] rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex flex-col items-center justify-center text-slate-400 hover:text-sky-400 transition-colors border border-white/5">
+                    <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
                     <span class="text-[5px] font-black uppercase tracking-widest">Rules</span>
                 </button>
             </div>
-            
+
             <!-- ADVANCED RULES PANEL -->
-            <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden mt-2" id="rules-panel">
+            <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden mt-2"
+                id="rules-panel">
                 <div class="p-3 space-y-3 bg-slate-900/40">
                     <!-- Reroll -->
-                    <div class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Reroll</span>
+                    <div
+                        class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
+                        <span
+                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Reroll</span>
                         <div class="flex-1 flex gap-1 items-center justify-end">
-                            <select id="rule-reroll-op" class="bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
+                            <select id="rule-reroll-op"
+                                class="bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center"
+                                onchange="updateRulesUI()">
                                 <option value="">Off</option>
                                 <option value="<=">&le;</option>
                                 <option value="=">=</option>
                                 <option value=">=">&ge;</option>
                             </select>
-                            <div id="rule-reroll-input-container" class="flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
-                                <button onclick="adjustRuleVal('reroll', -1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
-                                <input type="number" id="rule-reroll-val" class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors" placeholder="#" oninput="updateRulesUI(true)">
-                                <button onclick="adjustRuleVal('reroll', 1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                            <div id="rule-reroll-input-container"
+                                class="flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                <button onclick="adjustRuleVal('reroll', -1)"
+                                    class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
+                                <input type="number" id="rule-reroll-val"
+                                    class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors"
+                                    placeholder="#" oninput="updateRulesUI(true)">
+                                <button onclick="adjustRuleVal('reroll', 1)"
+                                    class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
                             </div>
                         </div>
                     </div>
                     <!-- Explode -->
-                    <div class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Explode</span>
+                    <div
+                        class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
+                        <span
+                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Explode</span>
                         <div class="flex-1 flex gap-1 items-center justify-end">
-                            <select id="rule-explode-op" class="bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
+                            <select id="rule-explode-op"
+                                class="bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center"
+                                onchange="updateRulesUI()">
                                 <option value="">Off</option>
                                 <option value=">=">&ge;</option>
                                 <option value="=">=</option>
                                 <option value="<=">&le;</option>
                             </select>
-                            <div id="rule-explode-input-container" class="flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
-                                <button onclick="adjustRuleVal('explode', -1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
-                                <input type="number" id="rule-explode-val" class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors" placeholder="#" oninput="updateRulesUI(true)">
-                                <button onclick="adjustRuleVal('explode', 1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                            <div id="rule-explode-input-container"
+                                class="flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                <button onclick="adjustRuleVal('explode', -1)"
+                                    class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
+                                <input type="number" id="rule-explode-val"
+                                    class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors"
+                                    placeholder="#" oninput="updateRulesUI(true)">
+                                <button onclick="adjustRuleVal('explode', 1)"
+                                    class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
                             </div>
                         </div>
                     </div>
                     <!-- Target -> Method -->
-                    <div class="flex items-center justify-between gap-1 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center pl-1">Method</span>
+                    <div
+                        class="flex items-center justify-between gap-1 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
+                        <span
+                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center pl-1">Method</span>
                         <div class="flex-1 flex gap-1 items-center justify-end">
-                            <button id="rule-target-mode" onclick="toggleTargetMode()" class="bg-slate-900 text-emerald-400 text-[9px] font-bold rounded px-1.5 py-1 outline-none border border-emerald-500/20 text-center uppercase w-12 transition-colors hover:bg-emerald-500/10">SUM</button>
-                            <select id="rule-target-op" class="bg-slate-900 text-emerald-400 text-[10px] font-bold rounded p-1 outline-none border border-emerald-500/20 text-center" onchange="updateRulesUI()">
+                            <button id="rule-target-mode" onclick="toggleTargetMode()"
+                                class="bg-slate-900 text-emerald-400 text-[9px] font-bold rounded px-1.5 py-1 outline-none border border-emerald-500/20 text-center uppercase w-12 transition-colors hover:bg-emerald-500/10">SUM</button>
+                            <select id="rule-target-op"
+                                class="bg-slate-900 text-emerald-400 text-[10px] font-bold rounded p-1 outline-none border border-emerald-500/20 text-center"
+                                onchange="updateRulesUI()">
                                 <option value="">All</option>
                                 <option value=">=">&ge;</option>
                                 <option value="=">=</option>
                                 <option value="<=">&le;</option>
                             </select>
-                            <div id="rule-target-input-container" class="flex items-center bg-slate-900 rounded border border-emerald-500/20 overflow-hidden transition-all opacity-30 pointer-events-none">
-                                <button onclick="adjustRuleVal('target', -1)" class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
-                                <input type="number" id="rule-target-val" class="w-6 bg-transparent text-emerald-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors" placeholder="#" oninput="updateRulesUI(true)">
-                                <button onclick="adjustRuleVal('target', 1)" class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                            <div id="rule-target-input-container"
+                                class="flex items-center bg-slate-900 rounded border border-emerald-500/20 overflow-hidden transition-all opacity-30 pointer-events-none">
+                                <button onclick="adjustRuleVal('target', -1)"
+                                    class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
+                                <input type="number" id="rule-target-val"
+                                    class="w-6 bg-transparent text-emerald-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors"
+                                    placeholder="#" oninput="updateRulesUI(true)">
+                                <button onclick="adjustRuleVal('target', 1)"
+                                    class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
                             </div>
                         </div>
                     </div>
@@ -613,7 +652,7 @@
             <div class="flex justify-between items-center px-2">
                 <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Saved Arsenal</h3>
                 <div class="flex gap-2">
-                    <button onclick="exportArsenal()"
+                    <button onclick="exportSettings()"
                         class="text-[9px] font-bold text-sky-400/60 hover:text-sky-400 bg-sky-400/5 px-2 py-0.5 rounded-lg border border-sky-400/10 transition-all uppercase">Export</button>
                     <button onclick="document.getElementById('import-input').click()"
                         class="text-[9px] font-bold text-emerald-400/60 hover:text-emerald-400 bg-emerald-400/5 px-2 py-0.5 rounded-lg border border-emerald-400/10 transition-all uppercase">Import</button>
@@ -624,7 +663,7 @@
             </div>
         </section>
 
-        <input type="file" id="import-input" class="hidden" accept=".json" onchange="importArsenal(event)">
+        <input type="file" id="import-input" class="hidden" accept=".json" onchange="importSettings(event)">
 
         <section id="bottom-section" class="section-bottom flex-grow space-y-3 pb-4">
             <div class="glass-panel rounded-xl p-3 flex flex-col space-y-2 border-white/5">
@@ -728,8 +767,8 @@
 
         function adjustRuleVal(type, delta) {
             const opSelect = document.getElementById(`rule-${type}-op`);
-            if (!opSelect.value) return; 
-            
+            if (!opSelect.value) return;
+
             const input = document.getElementById(`rule-${type}-val`);
             let val = parseInt(input.value) || (type === 'target' ? 5 : 1);
             val += delta;
@@ -743,7 +782,7 @@
                 const op = document.getElementById(`rule-${type}-op`).value;
                 const container = document.getElementById(`rule-${type}-input-container`);
                 const input = document.getElementById(`rule-${type}-val`);
-                
+
                 if (op) {
                     container.classList.remove('opacity-30', 'pointer-events-none');
                     if (!fromInput && !input.value) input.value = type === 'target' ? '5' : '1';
@@ -905,12 +944,12 @@
 
         function clearQueue() {
             engine.clearQueue();
-            
+
             document.getElementById('rule-reroll-op').value = "";
             document.getElementById('rule-explode-op').value = "";
             document.getElementById('rule-target-op').value = "";
             updateRulesUI();
-            
+
             updateDisplay("0", "READY");
             updateUI();
         }
@@ -946,7 +985,7 @@
             if (engine.flatMod !== 0) parts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
 
             let modifierText = engine.activeModifier ? ` [${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}]` : "";
-            
+
             let rulesText = "";
             if (engine.rollRules.rerollOp && engine.rollRules.rerollVal !== null) rulesText += ` RR${engine.rollRules.rerollOp}${engine.rollRules.rerollVal}`;
             if (engine.rollRules.explodeOp && engine.rollRules.explodeVal !== null) rulesText += ` EX${engine.rollRules.explodeOp}${engine.rollRules.explodeVal}`;
@@ -1056,7 +1095,7 @@
             const item = engine.savedQueues.find(q => q.id === id);
             if (!item) return;
             if (!confirm(`Overwrite "${item.name}" with the current active queue?`)) return;
-            
+
             engine.updateSavedQueue(id);
             persistSaved();
             renderSavedQueues();
@@ -1066,7 +1105,7 @@
             localStorage.setItem('crypto_roller_saved', JSON.stringify(engine.savedQueues));
         }
 
-        function exportArsenal() {
+        function exportSettings() {
             if (engine.savedQueues.length === 0) {
                 alert("Nothing to export!");
                 return;
@@ -1077,14 +1116,14 @@
 
             const link = document.createElement('a');
             link.href = url;
-            link.download = `arsenal_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            link.download = `StaticDice_backup_${new Date().toISOString().slice(0, 10)}.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
 
-        function importArsenal(event) {
+        function importSettings(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -1094,7 +1133,7 @@
                     const imported = JSON.parse(e.target.result);
                     if (!Array.isArray(imported)) throw new Error("Invalid format");
 
-                    const mode = confirm("Import successful! \n\nClick OK to MERGE with current arsenal. \nClick CANCEL to OVERWRITE everything.") ? 'merge' : 'overwrite';
+                    const mode = confirm("Import successful! \n\nClick OK to MERGE with current settings. \nClick CANCEL to OVERWRITE everything.") ? 'merge' : 'overwrite';
 
                     if (mode === 'merge') {
                         const currentIds = new Set(engine.savedQueues.map(q => q.id));
@@ -1144,7 +1183,7 @@
                     let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
                     if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
                     if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
-                    
+
                     if (q.rules) {
                         if (q.rules.rerollOp && q.rules.rerollVal !== null) formula += ` RR${q.rules.rerollOp}${q.rules.rerollVal}`;
                         if (q.rules.explodeOp && q.rules.explodeVal !== null) formula += ` EX${q.rules.explodeOp}${q.rules.explodeVal}`;
@@ -1186,7 +1225,7 @@
         async function resolveRolling(forcedQueue = null, isInstant = false) {
             if (isRolling) return;
             if (!forcedQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
-            
+
             isRolling = true;
             vibrate(15);
             playRollSound();
@@ -1199,7 +1238,7 @@
             }
 
             const res = engine.calculateRoll(forcedQueue, isInstant);
-            
+
             if (!res) {
                 isRolling = false;
                 return;
@@ -1269,12 +1308,12 @@
                 engine.setSavedQueues(JSON.parse(stored));
                 renderSavedQueues();
             }
-            
+
             const savedInstaQueue = localStorage.getItem('instaQueueState');
             if (savedInstaQueue !== null) {
                 document.getElementById('insta-queue-toggle').checked = savedInstaQueue === 'true';
             }
-            
+
             runCustomStressTest();
         };
 
