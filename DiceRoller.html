@@ -440,6 +440,7 @@
         <!-- STICKY TOP -->
         <div
             class="section-sticky sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md -mx-4 px-4 py-3 space-y-4 shadow-xl border-b border-white/5">
+            <input type="file" id="import-input" class="hidden" accept=".json" onchange="importSettings(event)">
             <!-- HEADER -->
             <header class="flex justify-between items-center px-2">
                 <div class="flex flex-col">
@@ -456,13 +457,13 @@
                         <button onclick="document.getElementById('import-input').click()"
                             class="bg-slate-800/50 text-slate-400 h-8 w-8 flex items-center justify-center rounded-lg border border-white/5 transition-all hover:text-emerald-400 active:scale-95" title="Import Settings & Loadouts">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                             </svg>
                         </button>
                         <button onclick="exportSettings()"
                             class="bg-slate-800/50 text-slate-400 h-8 w-8 flex items-center justify-center rounded-lg border border-white/5 transition-all hover:text-sky-400 active:scale-95" title="Export Settings & Loadouts">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                             </svg>
                         </button>
                     </div>
