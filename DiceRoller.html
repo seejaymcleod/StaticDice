@@ -754,13 +754,16 @@
                 </summary>
                 <div class="p-4 space-y-3 bg-black/20 rounded-b-2xl border-x border-b border-white/5">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-slate-500 mono">D20 Distribution (N=1000)</span>
-                        <div class="flex items-center gap-2">
-                            <input type="number" id="stress-count" value="1000"
-                                class="w-14 bg-slate-900 border border-white/5 rounded-lg text-[10px] font-black text-sky-400 px-2 py-1 focus:outline-none focus:border-sky-500/50">
-                            <button onclick="runCustomStressTest()"
-                                class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-[10px] font-black hover:bg-sky-500 hover:text-slate-950 transition-all uppercase">Verify</button>
+                        <span id="stress-label" class="text-[10px] text-slate-500 mono">D20 Distribution (N=100,000)</span>
+                        <button onclick="runCustomStressTest()"
+                            class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-[10px] font-black hover:bg-sky-500 hover:text-slate-950 transition-all uppercase">Verify</button>
+                    </div>
+                    <div class="segmented-row !h-[2.2rem] w-full bg-slate-950/40">
+                        <button onclick="adjustStressCount(0.1)" class="segmented-btn btn-side text-[11px] font-black">÷10</button>
+                        <div class="segmented-btn btn-center cursor-default flex items-center justify-center border-x border-white/5">
+                            <span id="stress-count-display" class="font-black text-[11px] text-sky-400 mono">100,000</span>
                         </div>
+                        <button onclick="adjustStressCount(10)" class="segmented-btn btn-side text-[11px] font-black">×10</button>
                     </div>
                     <div id="chart-area"
                         class="h-12 flex items-end justify-between gap-0.5 border-b border-white/5 pb-1"></div>
@@ -813,6 +816,7 @@
         let isModdedQuick = false;
         let isInstaQueue = false;
         let customDice = [];
+        let stressCount = 100000;
 
         let modalResolve = () => {};
 
@@ -1867,10 +1871,11 @@
         }
 
         function runCustomStressTest() {
-            const iterations = parseInt(document.getElementById('stress-count').value) || 1000;
+            const iterations = stressCount;
             const sides = 20;
             const tallies = new Array(sides).fill(0);
             const chartArea = document.getElementById('chart-area');
+            if (!chartArea) return;
             chartArea.innerHTML = '';
             for (let i = 0; i < iterations; i++) tallies[engine.rng(sides) - 1]++;
             const max = Math.max(...tallies);
@@ -1880,6 +1885,19 @@
                 bar.style.height = `${(t / max) * 100}%`;
                 chartArea.appendChild(bar);
             });
+        }
+
+        function adjustStressCount(factor) {
+            stressCount = Math.min(1000000000, Math.max(1, Math.round(stressCount * factor)));
+            updateStressUI();
+            vibrate(5);
+        }
+
+        function updateStressUI() {
+            const display = document.getElementById('stress-count-display');
+            if (display) display.innerText = stressCount.toLocaleString();
+            const label = document.getElementById('stress-label');
+            if (label) label.innerText = `D20 Distribution (N=${stressCount.toLocaleString()})`;
         }
 
         window.onload = () => {
@@ -1924,6 +1942,7 @@
                 }
             }
 
+            updateStressUI();
             runCustomStressTest();
             renderDiceGrid();
             updateRulesUI();
