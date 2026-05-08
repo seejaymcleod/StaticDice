@@ -334,16 +334,15 @@
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
-            padding: 8px 12px;
+            padding: 8px 16px;
             border-radius: 1rem;
             z-index: 100;
             display: none;
             flex-direction: row;
             align-items: center;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            width: 160px;
+            width: 180px;
             height: 40px;
-            gap: 10px;
         }
 
         .volume-slider-overlay.show {
@@ -357,6 +356,8 @@
             border-radius: 3px;
             outline: none;
             appearance: none;
+            margin: 0;
+            width: 100%;
         }
 
         .horizontal-range::-webkit-slider-thumb {
@@ -406,8 +407,6 @@
                         <div id="volume-overlay" class="volume-overlay volume-slider-overlay">
                             <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5"
                                 class="horizontal-range" oninput="updateVolume(this.value)">
-                            <span class="text-[8px] font-black text-sky-400 mono min-w-[24px]"
-                                id="vol-percent">50%</span>
                         </div>
                     </div>
                 </div>
@@ -751,8 +750,7 @@
         }
 
         function saveInstaQueueState() {
-            const isChecked = document.getElementById('insta-queue-toggle').checked;
-            localStorage.setItem('instaQueueState', isChecked);
+            saveSettings();
         }
 
         function adjustRuleVal(type, delta) {
@@ -798,6 +796,7 @@
             if (isVolumeOpen) return;
             soundEnabled = !soundEnabled;
             updateSoundUI();
+            saveSettings();
             vibrate(5);
         }
 
@@ -877,11 +876,11 @@
         function updateVolume(val) {
             volume = parseFloat(val);
             rollSound.volume = volume;
-            document.getElementById('vol-percent').innerText = Math.round(volume * 100) + '%';
             if (volume > 0 && !soundEnabled) {
                 soundEnabled = true;
                 updateSoundUI();
             }
+            saveSettings();
         }
 
         function playRollSound() {
@@ -1095,12 +1094,25 @@
             localStorage.setItem('crypto_roller_saved', JSON.stringify(engine.savedQueues));
         }
 
+        function saveSettings() {
+            localStorage.setItem('crypto_roller_settings', JSON.stringify({
+                soundEnabled: soundEnabled,
+                volume: volume,
+                instaQueue: document.getElementById('insta-queue-toggle').checked
+            }));
+        }
+
         function exportSettings() {
-            if (engine.savedQueues.length === 0) {
-                alert("Nothing to export!");
-                return;
-            }
-            const dataStr = JSON.stringify(engine.savedQueues, null, 2);
+            const exportData = {
+                queues: engine.savedQueues,
+                settings: {
+                    soundEnabled: soundEnabled,
+                    volume: volume,
+                    instaQueue: document.getElementById('insta-queue-toggle').checked
+                }
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
 
@@ -1121,13 +1133,23 @@
             reader.onload = function (e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    if (!Array.isArray(imported)) throw new Error("Invalid format");
+                    let importedQueues = [];
+                    let importedSettings = null;
 
-                    const mode = confirm("Import successful! \n\nClick OK to MERGE with current settings. \nClick CANCEL to OVERWRITE everything.") ? 'merge' : 'overwrite';
+                    if (Array.isArray(imported)) {
+                        importedQueues = imported;
+                    } else if (imported && typeof imported === 'object') {
+                        importedQueues = imported.queues || [];
+                        importedSettings = imported.settings;
+                    } else {
+                        throw new Error("Invalid format");
+                    }
+
+                    const mode = confirm("Import successful! \n\nClick OK to MERGE queues (settings will be overwritten). \nClick CANCEL to OVERWRITE everything.") ? 'merge' : 'overwrite';
 
                     if (mode === 'merge') {
                         const currentIds = new Set(engine.savedQueues.map(q => q.id));
-                        imported.forEach(item => {
+                        importedQueues.forEach(item => {
                             if (!currentIds.has(item.id)) {
                                 engine.savedQueues.push(item);
                             } else {
@@ -1136,12 +1158,29 @@
                             }
                         });
                     } else {
-                        engine.setSavedQueues(imported);
+                        engine.setSavedQueues(importedQueues);
+                    }
+
+                    if (importedSettings) {
+                        if (importedSettings.soundEnabled !== undefined) {
+                            soundEnabled = importedSettings.soundEnabled;
+                        }
+                        if (importedSettings.volume !== undefined) {
+                            volume = importedSettings.volume;
+                            rollSound.volume = volume;
+                            document.getElementById('volume-slider').value = volume;
+                        }
+                        if (importedSettings.instaQueue !== undefined) {
+                            document.getElementById('insta-queue-toggle').checked = importedSettings.instaQueue;
+                            saveInstaQueueState();
+                        }
+                        saveSettings();
+                        updateSoundUI();
                     }
 
                     persistSaved();
                     renderSavedQueues();
-                    alert(`Successfully imported ${imported.length} items!`);
+                    alert(`Successfully imported backup!`);
                 } catch (err) {
                     alert("Error importing file. Please ensure it's a valid Arsenal JSON backup.");
                 }
@@ -1299,9 +1338,29 @@
                 renderSavedQueues();
             }
 
-            const savedInstaQueue = localStorage.getItem('instaQueueState');
-            if (savedInstaQueue !== null) {
-                document.getElementById('insta-queue-toggle').checked = savedInstaQueue === 'true';
+            const savedSettingsStr = localStorage.getItem('crypto_roller_settings');
+            if (savedSettingsStr) {
+                try {
+                    const savedSettings = JSON.parse(savedSettingsStr);
+                    if (savedSettings.soundEnabled !== undefined) soundEnabled = savedSettings.soundEnabled;
+                    if (savedSettings.volume !== undefined) {
+                        volume = savedSettings.volume;
+                        rollSound.volume = volume;
+                        document.getElementById('volume-slider').value = volume;
+                    }
+                    if (savedSettings.instaQueue !== undefined) {
+                        document.getElementById('insta-queue-toggle').checked = savedSettings.instaQueue;
+                    }
+                    updateSoundUI();
+                } catch (e) {}
+            }
+
+            // Fallback for old instaQueueState if crypto_roller_settings doesn't have it
+            if (!savedSettingsStr || !JSON.parse(savedSettingsStr).hasOwnProperty('instaQueue')) {
+                const savedInstaQueue = localStorage.getItem('instaQueueState');
+                if (savedInstaQueue !== null) {
+                    document.getElementById('insta-queue-toggle').checked = savedInstaQueue === 'true';
+                }
             }
 
             runCustomStressTest();
