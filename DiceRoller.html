@@ -683,33 +683,27 @@
         </div>
     </div>
 
+    <script src="DiceEngine.js"></script>
     <script>
-        let rollingQueue = [];
-        let activeModifier = null;
-        let modifierLevel = 0;
-        let flatMod = 0;
+        const engine = new DiceEngine();
         let isRolling = false;
-        let savedQueues = [];
         let pickerTargetId = null;
+        let soundEnabled = true;
+        let volume = 0.5;
+        let soundTimer = null;
+        let isVolumeOpen = false;
+        let isDraggingVolume = false;
+        const rollSound = new Audio('Assets/353844__magnesus__dice8.flac');
+        rollSound.volume = volume;
+
         const COLOR_PALETTE = [
             '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981',
             '#06b6d4', '#38bdf8', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'
         ];
 
-        // Advanced Rules State
-        let rollRules = {
-            rerollOp: "", rerollVal: null,
-            explodeOp: "", explodeVal: null,
-            targetMode: "sum", targetOp: "", targetVal: null
-        };
-
         function toggleTargetMode() {
             const btn = document.getElementById('rule-target-mode');
-            if (btn.innerText === 'SUM') {
-                btn.innerText = 'COUNT';
-            } else {
-                btn.innerText = 'SUM';
-            }
+            btn.innerText = btn.innerText === 'SUM' ? 'COUNT' : 'SUM';
             updateRulesUI();
         }
 
@@ -759,32 +753,17 @@
                 }
             });
 
-            rollRules.rerollOp = document.getElementById('rule-reroll-op').value;
-            rollRules.rerollVal = parseInt(document.getElementById('rule-reroll-val').value) || null;
-            rollRules.explodeOp = document.getElementById('rule-explode-op').value;
-            rollRules.explodeVal = parseInt(document.getElementById('rule-explode-val').value) || null;
-            rollRules.targetMode = document.getElementById('rule-target-mode').innerText.toLowerCase();
-            rollRules.targetOp = document.getElementById('rule-target-op').value;
-            rollRules.targetVal = parseInt(document.getElementById('rule-target-val').value) || null;
+            engine.updateRules({
+                rerollOp: document.getElementById('rule-reroll-op').value,
+                rerollVal: parseInt(document.getElementById('rule-reroll-val').value) || null,
+                explodeOp: document.getElementById('rule-explode-op').value,
+                explodeVal: parseInt(document.getElementById('rule-explode-val').value) || null,
+                targetMode: document.getElementById('rule-target-mode').innerText.toLowerCase(),
+                targetOp: document.getElementById('rule-target-op').value,
+                targetVal: parseInt(document.getElementById('rule-target-val').value) || null
+            });
             updateUI();
         }
-
-        function checkCondition(val, op, target) {
-            if (!op || target === null || isNaN(target)) return false;
-            if (op === '>=') return val >= target;
-            if (op === '<=') return val <= target;
-            if (op === '=') return val === target;
-            return false;
-        }
-
-        // Sound State
-        let soundEnabled = true;
-        let volume = 0.5;
-        let soundTimer = null;
-        let isVolumeOpen = false;
-        let isDraggingVolume = false;
-        const rollSound = new Audio('Assets/353844__magnesus__dice8.flac');
-        rollSound.volume = volume;
 
         function toggleSound() {
             if (isVolumeOpen) return;
@@ -817,7 +796,6 @@
                 isDraggingVolume = true;
                 showVolumeSlider();
 
-                // Attach global listeners for the "drag-on-hold" interaction
                 window.addEventListener('mousemove', handleGlobalDrag);
                 window.addEventListener('touchmove', handleGlobalDrag, { passive: false });
                 window.addEventListener('mouseup', handleGlobalUp);
@@ -902,69 +880,31 @@
             if (navigator.vibrate) navigator.vibrate(ms);
         }
 
-        function getCryptoRoll(sides) {
-            const cryptoArray = new Uint32Array(1);
-            const maxVal = 2 ** 32;
-            const limit = maxVal - (maxVal % sides);
-            let val;
-            do {
-                window.crypto.getRandomValues(cryptoArray);
-                val = cryptoArray[0];
-            } while (val >= limit);
-            return (val % sides) + 1;
-        }
-
         function changeQueue(sides, delta) {
             vibrate(5);
-            const index = rollingQueue.findIndex(q => q.sides === sides);
-            if (index > -1) {
-                rollingQueue[index].count += delta;
-                if (rollingQueue[index].count <= 0) rollingQueue.splice(index, 1);
-            } else if (delta > 0) {
-                rollingQueue.push({ sides: sides, count: delta });
-            }
-
+            engine.changeQueue(sides, delta);
             updateUI();
         }
 
         function backspaceQueue() {
             vibrate(10);
-            if (activeModifier) {
-                activeModifier = null;
-                modifierLevel = 0;
-            } else if (flatMod !== 0) {
-                flatMod = 0;
-            } else if (rollingQueue.length > 0) {
-                rollingQueue.pop();
-            }
+            engine.backspaceQueue();
             updateUI();
         }
 
         function adjustFlatMod(val) {
-            flatMod += val;
+            engine.adjustFlatMod(val);
             updateUI();
         }
 
         function applyModifier(type) {
             vibrate(10);
-            if (rollingQueue.length === 0) return;
-            if (activeModifier === type) {
-                modifierLevel++;
-            } else if (activeModifier !== null) {
-                activeModifier = null;
-                modifierLevel = 0;
-            } else {
-                activeModifier = type;
-                modifierLevel = 1;
-            }
+            engine.applyModifier(type);
             updateUI();
         }
 
         function clearQueue() {
-            rollingQueue = [];
-            activeModifier = null;
-            modifierLevel = 0;
-            flatMod = 0;
+            engine.clearQueue();
             
             document.getElementById('rule-reroll-op').value = "";
             document.getElementById('rule-explode-op').value = "";
@@ -1002,104 +942,75 @@
             const modDisplay = document.getElementById('mod-val-display');
             const saveBtn = document.getElementById('save-queue-btn');
 
-            let parts = rollingQueue.map(q => `${q.count}d${q.sides}`);
-            if (flatMod !== 0) parts.push(`[${flatMod > 0 ? '+' : ''}${flatMod}]`);
+            let parts = engine.rollingQueue.map(q => `${q.count}d${q.sides}`);
+            if (engine.flatMod !== 0) parts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
 
-            let modifierText = activeModifier ? ` [${activeModifier}${modifierLevel > 1 ? '+' + (modifierLevel - 1) : ''}]` : "";
+            let modifierText = engine.activeModifier ? ` [${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}]` : "";
             
             let rulesText = "";
-            if (rollRules.rerollOp && rollRules.rerollVal !== null) rulesText += ` RR${rollRules.rerollOp}${rollRules.rerollVal}`;
-            if (rollRules.explodeOp && rollRules.explodeVal !== null) rulesText += ` EX${rollRules.explodeOp}${rollRules.explodeVal}`;
-            if (rollRules.targetMode === 'count') {
+            if (engine.rollRules.rerollOp && engine.rollRules.rerollVal !== null) rulesText += ` RR${engine.rollRules.rerollOp}${engine.rollRules.rerollVal}`;
+            if (engine.rollRules.explodeOp && engine.rollRules.explodeVal !== null) rulesText += ` EX${engine.rollRules.explodeOp}${engine.rollRules.explodeVal}`;
+            if (engine.rollRules.targetMode === 'count') {
                 rulesText += ` CT`;
-                if (rollRules.targetOp && rollRules.targetVal !== null) rulesText += `${rollRules.targetOp}${rollRules.targetVal}`;
+                if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) rulesText += `${engine.rollRules.targetOp}${engine.rollRules.targetVal}`;
             } else {
-                if (rollRules.targetOp && rollRules.targetVal !== null) rulesText += ` SUM${rollRules.targetOp}${rollRules.targetVal}`;
+                if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) rulesText += ` SUM${engine.rollRules.targetOp}${engine.rollRules.targetVal}`;
             }
 
             display.innerText = (parts.length > 0 || modifierText || rulesText) ? parts.join(" + ") + modifierText + rulesText : "EMPTY QUEUE";
 
-            modDisplay.innerText = flatMod;
+            modDisplay.innerText = engine.flatMod;
 
-            const hasDice = rollingQueue.length > 0;
+            const hasDice = engine.rollingQueue.length > 0;
             advBtn.disabled = !hasDice;
             disBtn.disabled = !hasDice;
 
-            if (!hasDice) {
-                activeModifier = null;
-                modifierLevel = 0;
-            }
+            advBtn.style.borderColor = engine.activeModifier === 'ADV' ? 'var(--accent-emerald)' : '';
+            disBtn.style.borderColor = engine.activeModifier === 'DIS' ? 'var(--accent-rose)' : '';
 
-            advBtn.style.borderColor = activeModifier === 'ADV' ? 'var(--accent-emerald)' : '';
-            disBtn.style.borderColor = activeModifier === 'DIS' ? 'var(--accent-rose)' : '';
+            advSub.innerText = !hasDice ? 'LOCKED' : (engine.activeModifier === 'ADV' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
+            disSub.innerText = !hasDice ? 'LOCKED' : (engine.activeModifier === 'DIS' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
 
-            advSub.innerText = !hasDice ? 'LOCKED' : (activeModifier === 'ADV' ? (modifierLevel > 1 ? `PLUS ${modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
-            disSub.innerText = !hasDice ? 'LOCKED' : (activeModifier === 'DIS' ? (modifierLevel > 1 ? `PLUS ${modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
-
-            saveBtn.disabled = !hasDice && flatMod === 0;
+            saveBtn.disabled = !hasDice && engine.flatMod === 0;
         }
 
-        // --- SAVED QUEUES LOGIC ---
-
         function saveCurrentQueue() {
-            if (rollingQueue.length === 0 && flatMod === 0) return;
-            const name = prompt("Name this configuration:", `Loadout ${savedQueues.length + 1}`);
+            const name = prompt("Name this configuration:", `Loadout ${engine.savedQueues.length + 1}`);
             if (!name) return;
-
-            const newSaved = {
-                id: Date.now(),
-                name: name,
-                color: COLOR_PALETTE[0],
-                queue: JSON.parse(JSON.stringify(rollingQueue)),
-                modifier: activeModifier,
-                modLevel: modifierLevel,
-                flat: flatMod,
-                rules: JSON.parse(JSON.stringify(rollRules))
-            };
-
-            savedQueues.push(newSaved);
-            persistSaved();
-            renderSavedQueues();
+            const newSaved = engine.saveQueue(name, COLOR_PALETTE[0]);
+            if (newSaved) {
+                persistSaved();
+                renderSavedQueues();
+            }
         }
 
         function loadQueue(id) {
-            const item = savedQueues.find(q => q.id === id);
-            if (!item) return;
-
-            rollingQueue = JSON.parse(JSON.stringify(item.queue));
-            activeModifier = item.modifier;
-            modifierLevel = item.modLevel;
-            flatMod = item.flat;
-            rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetMode: "sum", targetOp: "", targetVal: null };
-            if (!rollRules.targetMode) rollRules.targetMode = "sum";
-
-            // Update Rules UI to match
-            document.getElementById('rule-reroll-op').value = rollRules.rerollOp;
-            document.getElementById('rule-reroll-val').value = rollRules.rerollVal;
-            document.getElementById('rule-explode-op').value = rollRules.explodeOp;
-            document.getElementById('rule-explode-val').value = rollRules.explodeVal;
-            document.getElementById('rule-target-mode').innerText = rollRules.targetMode.toUpperCase();
-            document.getElementById('rule-target-op').value = rollRules.targetOp;
-            document.getElementById('rule-target-val').value = rollRules.targetVal;
-
+            engine.loadQueue(id);
+            document.getElementById('rule-reroll-op').value = engine.rollRules.rerollOp;
+            document.getElementById('rule-reroll-val').value = engine.rollRules.rerollVal;
+            document.getElementById('rule-explode-op').value = engine.rollRules.explodeOp;
+            document.getElementById('rule-explode-val').value = engine.rollRules.explodeVal;
+            document.getElementById('rule-target-mode').innerText = engine.rollRules.targetMode.toUpperCase();
+            document.getElementById('rule-target-op').value = engine.rollRules.targetOp;
+            document.getElementById('rule-target-val').value = engine.rollRules.targetVal;
             updateUI();
         }
 
         function deleteQueue(id, event) {
             event.stopPropagation();
             if (!confirm("Delete this saved configuration?")) return;
-            savedQueues = savedQueues.filter(q => q.id !== id);
+            engine.deleteQueue(id);
             persistSaved();
             renderSavedQueues();
         }
 
         function renameQueue(id, event) {
             event.stopPropagation();
-            const item = savedQueues.find(q => q.id === id);
+            const item = engine.savedQueues.find(q => q.id === id);
             if (!item) return;
             const newName = prompt("Rename configuration:", item.name);
             if (newName) {
-                item.name = newName;
+                engine.renameQueue(id, newName);
                 persistSaved();
                 renderSavedQueues();
             }
@@ -1134,42 +1045,33 @@
 
         function selectColor(color) {
             if (pickerTargetId === null) return;
-            const item = savedQueues.find(q => q.id === pickerTargetId);
-            if (item) {
-                item.color = color;
-                persistSaved();
-                renderSavedQueues();
-            }
+            engine.changeQueueColor(pickerTargetId, color);
+            persistSaved();
+            renderSavedQueues();
             closeColorPicker();
         }
 
         function updateSavedQueue(id, event) {
             event.stopPropagation();
-            const item = savedQueues.find(q => q.id === id);
+            const item = engine.savedQueues.find(q => q.id === id);
             if (!item) return;
-
             if (!confirm(`Overwrite "${item.name}" with the current active queue?`)) return;
-
-            item.queue = JSON.parse(JSON.stringify(rollingQueue));
-            item.modifier = activeModifier;
-            item.modLevel = modifierLevel;
-            item.flat = flatMod;
-            item.rules = JSON.parse(JSON.stringify(rollRules));
-
+            
+            engine.updateSavedQueue(id);
             persistSaved();
             renderSavedQueues();
         }
 
         function persistSaved() {
-            localStorage.setItem('crypto_roller_saved', JSON.stringify(savedQueues));
+            localStorage.setItem('crypto_roller_saved', JSON.stringify(engine.savedQueues));
         }
 
         function exportArsenal() {
-            if (savedQueues.length === 0) {
+            if (engine.savedQueues.length === 0) {
                 alert("Nothing to export!");
                 return;
             }
-            const dataStr = JSON.stringify(savedQueues, null, 2);
+            const dataStr = JSON.stringify(engine.savedQueues, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
 
@@ -1195,19 +1097,17 @@
                     const mode = confirm("Import successful! \n\nClick OK to MERGE with current arsenal. \nClick CANCEL to OVERWRITE everything.") ? 'merge' : 'overwrite';
 
                     if (mode === 'merge') {
-                        // Avoid duplicates by ID if they exist, or just append
-                        const currentIds = new Set(savedQueues.map(q => q.id));
+                        const currentIds = new Set(engine.savedQueues.map(q => q.id));
                         imported.forEach(item => {
                             if (!currentIds.has(item.id)) {
-                                savedQueues.push(item);
+                                engine.savedQueues.push(item);
                             } else {
-                                // If ID matches, give it a new ID to avoid conflict
                                 item.id = Date.now() + Math.random();
-                                savedQueues.push(item);
+                                engine.savedQueues.push(item);
                             }
                         });
                     } else {
-                        savedQueues = imported;
+                        engine.setSavedQueues(imported);
                     }
 
                     persistSaved();
@@ -1216,7 +1116,7 @@
                 } catch (err) {
                     alert("Error importing file. Please ensure it's a valid Arsenal JSON backup.");
                 }
-                event.target.value = ''; // Reset input
+                event.target.value = '';
             };
             reader.readAsText(file);
         }
@@ -1225,18 +1125,18 @@
             const lists = document.querySelectorAll('.saved-queues-list');
             const countDisplays = document.querySelectorAll('.saved-count');
 
-            const countText = `${savedQueues.length}/20`;
+            const countText = `${engine.savedQueues.length}/20`;
             countDisplays.forEach(el => el.innerText = countText);
 
             lists.forEach(list => {
                 list.innerHTML = '';
 
-                if (savedQueues.length === 0) {
+                if (engine.savedQueues.length === 0) {
                     list.innerHTML = '<div class="text-[10px] text-slate-600 italic px-1 py-8 text-center border-2 border-dashed border-white/5 rounded-[1.5rem] bg-white/[0.02] col-span-full">No saved loadouts yet.</div>';
                     return;
                 }
 
-                savedQueues.forEach(q => {
+                engine.savedQueues.forEach(q => {
                     const item = document.createElement('div');
                     item.className = 'saved-item p-3 rounded-xl flex items-center gap-3 cursor-pointer group relative overflow-hidden';
                     item.onclick = () => { loadQueue(q.id); resolveRolling(); };
@@ -1275,25 +1175,18 @@
             const affectsQueue = document.getElementById('insta-queue-toggle').checked;
 
             if (affectsQueue) {
-                const index = rollingQueue.findIndex(q => q.sides === sides);
-                if (index > -1) {
-                    rollingQueue[index].count++;
-                } else {
-                    rollingQueue.push({ sides: sides, count: 1 });
-                }
+                engine.changeQueue(sides, 1);
                 updateUI();
-                resolveRolling(); // Roll the full queue
+                resolveRolling();
             } else {
-                // Perform the visual roll for ONLY the die just clicked
                 resolveRolling([{ sides: sides, count: 1 }], true);
             }
         }
 
         async function resolveRolling(forcedQueue = null, isInstant = false) {
-            const activeQueue = forcedQueue || rollingQueue;
-            const activeFlat = isInstant ? 0 : flatMod; // Instant rolls don't include flat mod unless part of full roll
-
-            if ((activeQueue.length === 0 && activeFlat === 0) || isRolling) return;
+            if (isRolling) return;
+            if (!forcedQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
+            
             isRolling = true;
             vibrate(15);
             playRollSound();
@@ -1305,134 +1198,38 @@
                 await new Promise(r => setTimeout(r, 40));
             }
 
-            let total = 0;
-            let details = [];
-            let hasCritHit = false;
-            let hasCritFail = false;
-
-            activeQueue.forEach(group => {
-                let pool = [];
-                let rawRolls = [];
-                const rollsToTake = 1 + (activeModifier ? modifierLevel : 0);
-
-                for (let i = 0; i < group.count; i++) {
-                    let dieRolls = [];
-                    for (let j = 0; j < rollsToTake; j++) dieRolls.push(getCryptoRoll(group.sides));
-
-                    let kept = dieRolls[0];
-                    if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
-                    if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
-
-                    let dieLog = "";
-                    if (dieRolls.length > 1) {
-                        dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
-                    }
-                    dieLog += `${kept}`;
-
-                    // Reroll Logic
-                    let rerollCount = 0;
-                    while (checkCondition(kept, rollRules.rerollOp, rollRules.rerollVal) && rerollCount < 10) {
-                        kept = getCryptoRoll(group.sides);
-                        dieLog += `r->${kept}`;
-                        rerollCount++;
-                    }
-
-                    let totalValueForThisDie = kept;
-
-                    // Explode Logic
-                    let explodeCount = 0;
-                    let currentExplodeDie = kept;
-                    while (checkCondition(currentExplodeDie, rollRules.explodeOp, rollRules.explodeVal) && explodeCount < 10) {
-                        currentExplodeDie = getCryptoRoll(group.sides);
-                        totalValueForThisDie += currentExplodeDie;
-                        dieLog += `!->${currentExplodeDie}`;
-                        explodeCount++;
-                    }
-
-                    if (rollRules.targetOp || rollRules.targetMode === 'count') {
-                        pool.push(kept);
-                        if (explodeCount > 0) {
-                            let parts = dieLog.split('!->');
-                            for (let p = 1; p < parts.length; p++) {
-                                pool.push(parseInt(parts[p]));
-                            }
-                        }
-                    } else {
-                        pool.push(totalValueForThisDie);
-                    }
-
-                    rawRolls.push(dieLog);
-
-                    if (group.sides === 20 && !rollRules.targetOp && rollRules.targetMode === 'sum') {
-                        if (totalValueForThisDie === 20) hasCritHit = true;
-                        if (totalValueForThisDie === 1) hasCritFail = true;
-                    }
-                }
-
-                let sum = 0;
-                let filteredPool = pool;
-                if (rollRules.targetOp) {
-                    filteredPool = pool.filter(v => checkCondition(v, rollRules.targetOp, rollRules.targetVal));
-                }
-                
-                if (rollRules.targetMode === 'count') {
-                    sum = filteredPool.length;
-                } else {
-                    sum = filteredPool.reduce((a, b) => a + b, 0);
-                }
-                
-                let f = `${group.count}d${group.sides}`;
-                if (activeModifier === 'ADV') f += 'kh1';
-                if (activeModifier === 'DIS') f += 'kl1';
-                if (rollRules.rerollOp) f += `r${rollRules.rerollOp.replace('=', '')}${rollRules.rerollVal}`;
-                if (rollRules.explodeOp) f += `e${rollRules.explodeOp.replace('=', '')}${rollRules.explodeVal}`;
-                if (rollRules.targetMode === 'count') {
-                    f += 'c';
-                    if (rollRules.targetOp) f += `${rollRules.targetOp.replace('=', '')}${rollRules.targetVal}`;
-                } else {
-                    if (rollRules.targetOp) f += `s${rollRules.targetOp.replace('=', '')}${rollRules.targetVal}`;
-                }
-                f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
-
-                let groupLog = `<span><span class="text-sky-400 font-bold">${f}</span> [${rawRolls.join(', ')}] &rarr; <span class="text-white font-bold">${sum}</span>${rollRules.targetMode === 'count' ? ' ✓' : ''}</span>`;
-                
-                details.push(groupLog);
-                total += sum;
-            });
-
-            if (rollRules.targetMode !== 'count') {
-                total += activeFlat;
-                if (activeFlat !== 0) details.push(`<span><span class="text-sky-400 font-bold">Flat Mod</span> &rarr; <span class="text-white font-bold">${activeFlat > 0 ? '+' : ''}${activeFlat}</span></span>`);
+            const res = engine.calculateRoll(forcedQueue, isInstant);
+            
+            if (!res) {
+                isRolling = false;
+                return;
             }
 
-            // Target Mode UI tweaks
-            let finalDetailText = details.join("");
-            if (rollRules.targetMode === 'count') {
-                updateDisplay(total, finalDetailText, "stop");
-                if (total > 0) {
+            if (res.targetMode === 'count') {
+                updateDisplay(res.total, res.details, "stop");
+                if (res.total > 0) {
                     vibrate([40, 80, 40]);
-                    document.getElementById('final-result').innerHTML = `<span class="text-4xl block mb-1">${total}</span><span class="text-xl tracking-widest text-emerald-400">SUCCESSES</span>`;
+                    document.getElementById('final-result').innerHTML = `<span class="text-4xl block mb-1">${res.total}</span><span class="text-xl tracking-widest text-emerald-400">SUCCESSES</span>`;
                 } else {
                     vibrate(60);
                     document.getElementById('final-result').innerHTML = `<span class="text-4xl block mb-1">0</span><span class="text-xl tracking-widest text-rose-400">SUCCESSES</span>`;
                 }
             } else {
-                updateDisplay(total, finalDetailText, "stop");
-                if (hasCritHit) {
-                    updateDisplay(total, finalDetailText, "crit-hit");
+                updateDisplay(res.total, res.details, "stop");
+                if (res.hasCritHit) {
+                    updateDisplay(res.total, res.details, "crit-hit");
                     vibrate([40, 80, 40]);
-                } else if (hasCritFail) {
-                    updateDisplay(total, finalDetailText, "crit-fail");
+                } else if (res.hasCritFail) {
+                    updateDisplay(res.total, res.details, "crit-fail");
                     vibrate(60);
                 } else {
                     vibrate(25);
                 }
             }
 
-            // Strip HTML tags for history text
-            let historyText = finalDetailText.replace(/<[^>]*>?/gm, ' ');
-            if (rollRules.targetMode === 'count') historyText = `${total} SUCCESSES [ ${historyText} ]`;
-            addToHistory(total, historyText);
+            let historyText = res.details.replace(/<[^>]*>?/gm, ' ');
+            if (res.targetMode === 'count') historyText = `${res.total} SUCCESSES [ ${historyText} ]`;
+            addToHistory(res.total, historyText);
             isRolling = false;
         }
 
@@ -1456,7 +1253,7 @@
             const tallies = new Array(sides).fill(0);
             const chartArea = document.getElementById('chart-area');
             chartArea.innerHTML = '';
-            for (let i = 0; i < iterations; i++) tallies[getCryptoRoll(sides) - 1]++;
+            for (let i = 0; i < iterations; i++) tallies[engine.rng(sides) - 1]++;
             const max = Math.max(...tallies);
             tallies.forEach((t, i) => {
                 const bar = document.createElement('div');
@@ -1469,7 +1266,7 @@
         window.onload = () => {
             const stored = localStorage.getItem('crypto_roller_saved');
             if (stored) {
-                savedQueues = JSON.parse(stored);
+                engine.setSavedQueues(JSON.parse(stored));
                 renderSavedQueues();
             }
             
@@ -1480,6 +1277,7 @@
             
             runCustomStressTest();
         };
+
     </script>
 </body>
 

@@ -1,0 +1,24 @@
+{
+  "name": "staticdice",
+  "version": "1.0.0",
+  "description": "A TTRPG dice roller that uses hardware static noise to generate cryptographically secure pseudo-random numbers. High-fidelity math meets a frictionless, tactile interface.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seejaymcleod/StaticDice.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/seejaymcleod/StaticDice/issues"
+  },
+  "homepage": "https://github.com/seejaymcleod/StaticDice#readme",
+  "devDependencies": {
+    "jest": "^30.4.0"
+  }
+}
