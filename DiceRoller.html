@@ -431,7 +431,7 @@
                     class="final-result-val text-5xl font-black text-white leading-none tabular-nums tracking-tighter transition-all duration-300 drop-shadow-2xl">
                     0</div>
                 <div id="detail-text"
-                    class="detail-text-val text-[11px] mono text-slate-400 mt-2 text-center px-4 h-4 flex items-center justify-center opacity-60 leading-tight tracking-wide uppercase">
+                    class="detail-text-val text-[11px] mono text-slate-300 mt-3 text-center px-4 min-h-[20px] flex flex-col items-center justify-center opacity-90 leading-relaxed tracking-wide gap-1">
                     READY</div>
             </main>
         </div>
@@ -461,7 +461,14 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-2">
+            <!-- ROLL BUTTON -->
+            <button id="roll-button" onclick="resolveRolling()"
+                class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-3 rounded-xl text-xl shadow-[0_0_20px_rgba(56,189,248,0.2)] active:scale-[0.98] transition-all border-b-2 border-sky-700 uppercase tracking-widest mb-2">
+                ROLL
+            </button>
+
+            <!-- ADV DIS & EXTRA CONTROLS -->
+            <div class="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center">
                 <button id="adv-btn" onclick="applyModifier('ADV')" disabled
                     class="segmented-row justify-center items-center flex-col disabled:opacity-20 transition-all hover:bg-white/5 group !h-[2.5rem]">
                     <span id="adv-label"
@@ -474,22 +481,61 @@
                         class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-rose-400 transition-colors">Disadvantage</span>
                     <span id="dis-sub" class="text-[8px] font-bold text-slate-600 mono leading-none">LOCKED</span>
                 </button>
-                <div class="flex flex-col justify-center items-center !h-[2.5rem]">
-                    <span class="text-[7px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Roll
-                        to Queue</span>
-                    <div class="flex items-center">
-                        <label class="toggle-switch scale-[0.65] origin-center">
-                            <input type="checkbox" id="insta-queue-toggle" onchange="vibrate(5)">
+                
+                <div class="flex flex-col justify-center items-center !h-[2.5rem] px-1 border-l border-white/5 pl-2">
+                    <span class="text-[6px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1 text-center w-full">Roll to<br>Queue</span>
+                    <div class="flex items-center mt-[-2px]">
+                        <label class="toggle-switch scale-[0.55] origin-center">
+                            <input type="checkbox" id="insta-queue-toggle" onchange="saveInstaQueueState(); vibrate(5)">
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
                 </div>
-            </div>
 
-            <button id="roll-button" onclick="resolveRolling()"
-                class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-3 rounded-xl text-xl shadow-[0_0_20px_rgba(56,189,248,0.2)] active:scale-[0.98] transition-all border-b-2 border-sky-700 uppercase tracking-widest">
-                ROLL
-            </button>
+                <button id="adv-rules-toggle" onclick="toggleRulesPanel()" class="w-[2.5rem] h-[2.5rem] rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex flex-col items-center justify-center text-slate-400 hover:text-sky-400 transition-colors border border-white/5">
+                    <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="text-[5px] font-black uppercase tracking-widest">Rules</span>
+                </button>
+            </div>
+            
+            <!-- ADVANCED RULES PANEL -->
+            <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden mt-2" id="rules-panel">
+                <div class="p-3 space-y-3 bg-slate-900/40">
+                    <!-- Reroll -->
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest w-16">Reroll</span>
+                        <select id="rule-reroll-op" class="flex-1 bg-slate-950/50 text-sky-400 text-[10px] rounded-lg p-1.5 outline-none border border-white/5" onchange="updateRulesUI()">
+                            <option value="">None</option>
+                            <option value="<=">&le; (or less)</option>
+                            <option value="=">= (exact)</option>
+                            <option value=">=">&ge; (or more)</option>
+                        </select>
+                        <input type="number" id="rule-reroll-val" class="w-12 bg-slate-950/50 text-sky-400 text-[10px] rounded-lg p-1.5 outline-none border border-white/5 text-center" oninput="updateRulesUI()" placeholder="#">
+                    </div>
+                    <!-- Explode -->
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest w-16">Explode</span>
+                        <select id="rule-explode-op" class="flex-1 bg-slate-950/50 text-sky-400 text-[10px] rounded-lg p-1.5 outline-none border border-white/5" onchange="updateRulesUI()">
+                            <option value="">None</option>
+                            <option value=">=">&ge; (or more)</option>
+                            <option value="=">= (exact)</option>
+                            <option value="<=">&le; (or less)</option>
+                        </select>
+                        <input type="number" id="rule-explode-val" class="w-12 bg-slate-950/50 text-sky-400 text-[10px] rounded-lg p-1.5 outline-none border border-white/5 text-center" oninput="updateRulesUI()" placeholder="#">
+                    </div>
+                    <!-- Target -->
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest w-16">Target</span>
+                        <select id="rule-target-op" class="flex-1 bg-slate-950/50 text-emerald-400 text-[10px] rounded-lg p-1.5 outline-none border border-emerald-500/20" onchange="updateRulesUI()">
+                            <option value="">Sum All (Default)</option>
+                            <option value=">=">Count &ge;</option>
+                            <option value="=">Count =</option>
+                            <option value="<=">Count &le;</option>
+                        </select>
+                        <input type="number" id="rule-target-val" class="w-12 bg-slate-950/50 text-emerald-400 text-[10px] rounded-lg p-1.5 outline-none border border-emerald-500/20 text-center" oninput="updateRulesUI()" placeholder="#">
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section id="dice-section" class="section-dice space-y-3">
@@ -621,6 +667,50 @@
             '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981',
             '#06b6d4', '#38bdf8', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'
         ];
+
+        // Advanced Rules State
+        let rollRules = {
+            rerollOp: "", rerollVal: null,
+            explodeOp: "", explodeVal: null,
+            targetOp: "", targetVal: null
+        };
+
+        function toggleRulesPanel() {
+            const panel = document.getElementById('rules-panel');
+            const btn = document.getElementById('adv-rules-toggle');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+                btn.classList.remove('bg-slate-800/50', 'text-slate-400', 'border-white/5');
+            } else {
+                panel.classList.add('hidden');
+                btn.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+                btn.classList.add('bg-slate-800/50', 'text-slate-400', 'border-white/5');
+            }
+        }
+
+        function saveInstaQueueState() {
+            const isChecked = document.getElementById('insta-queue-toggle').checked;
+            localStorage.setItem('instaQueueState', isChecked);
+        }
+
+        function updateRulesUI() {
+            rollRules.rerollOp = document.getElementById('rule-reroll-op').value;
+            rollRules.rerollVal = parseInt(document.getElementById('rule-reroll-val').value) || null;
+            rollRules.explodeOp = document.getElementById('rule-explode-op').value;
+            rollRules.explodeVal = parseInt(document.getElementById('rule-explode-val').value) || null;
+            rollRules.targetOp = document.getElementById('rule-target-op').value;
+            rollRules.targetVal = parseInt(document.getElementById('rule-target-val').value) || null;
+            updateUI();
+        }
+
+        function checkCondition(val, op, target) {
+            if (!op || target === null || isNaN(target)) return false;
+            if (op === '>=') return val >= target;
+            if (op === '<=') return val <= target;
+            if (op === '=') return val === target;
+            return false;
+        }
 
         // Sound State
         let soundEnabled = true;
@@ -829,7 +919,7 @@
                     el.className = el.className.split(' ').filter(c => !c.startsWith('crit-')).join(' ');
                 }
             });
-            details.forEach(el => el.innerText = detail);
+            details.forEach(el => el.innerHTML = detail);
         }
 
         function updateUI() {
@@ -845,7 +935,13 @@
             if (flatMod !== 0) parts.push(`[${flatMod > 0 ? '+' : ''}${flatMod}]`);
 
             let modifierText = activeModifier ? ` [${activeModifier}${modifierLevel > 1 ? '+' + (modifierLevel - 1) : ''}]` : "";
-            display.innerText = parts.length > 0 || modifierText ? parts.join(" + ") + modifierText : "EMPTY QUEUE";
+            
+            let rulesText = "";
+            if (rollRules.rerollOp && rollRules.rerollVal !== null) rulesText += ` RR${rollRules.rerollOp}${rollRules.rerollVal}`;
+            if (rollRules.explodeOp && rollRules.explodeVal !== null) rulesText += ` EX${rollRules.explodeOp}${rollRules.explodeVal}`;
+            if (rollRules.targetOp && rollRules.targetVal !== null) rulesText += ` TGT${rollRules.targetOp}${rollRules.targetVal}`;
+
+            display.innerText = (parts.length > 0 || modifierText || rulesText) ? parts.join(" + ") + modifierText + rulesText : "EMPTY QUEUE";
 
             modDisplay.innerText = flatMod;
 
@@ -881,7 +977,8 @@
                 queue: JSON.parse(JSON.stringify(rollingQueue)),
                 modifier: activeModifier,
                 modLevel: modifierLevel,
-                flat: flatMod
+                flat: flatMod,
+                rules: JSON.parse(JSON.stringify(rollRules))
             };
 
             savedQueues.push(newSaved);
@@ -897,6 +994,15 @@
             activeModifier = item.modifier;
             modifierLevel = item.modLevel;
             flatMod = item.flat;
+            rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetOp: "", targetVal: null };
+
+            // Update Rules UI to match
+            document.getElementById('rule-reroll-op').value = rollRules.rerollOp;
+            document.getElementById('rule-reroll-val').value = rollRules.rerollVal;
+            document.getElementById('rule-explode-op').value = rollRules.explodeOp;
+            document.getElementById('rule-explode-val').value = rollRules.explodeVal;
+            document.getElementById('rule-target-op').value = rollRules.targetOp;
+            document.getElementById('rule-target-val').value = rollRules.targetVal;
 
             updateUI();
         }
@@ -970,6 +1076,7 @@
             item.modifier = activeModifier;
             item.modLevel = modifierLevel;
             item.flat = flatMod;
+            item.rules = JSON.parse(JSON.stringify(rollRules));
 
             persistSaved();
             renderSavedQueues();
@@ -1059,6 +1166,12 @@
                     let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
                     if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
                     if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
+                    
+                    if (q.rules) {
+                        if (q.rules.rerollOp && q.rules.rerollVal !== null) formula += ` RR${q.rules.rerollOp}${q.rules.rerollVal}`;
+                        if (q.rules.explodeOp && q.rules.explodeVal !== null) formula += ` EX${q.rules.explodeOp}${q.rules.explodeVal}`;
+                        if (q.rules.targetOp && q.rules.targetVal !== null) formula += ` TGT${q.rules.targetOp}${q.rules.targetVal}`;
+                    }
 
                     item.innerHTML = `
                         <div class="w-1 h-6 rounded-full shadow-[0_0_8px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>
@@ -1132,42 +1245,106 @@
                     if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
                     if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
 
-                    pool.push(kept);
-
+                    let dieLog = "";
                     if (dieRolls.length > 1) {
-                        rawRolls.push(`[${dieRolls.join(',')}]`);
-                    } else {
-                        rawRolls.push(dieRolls[0]);
+                        dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
+                    }
+                    dieLog += `${kept}`;
+
+                    // Reroll Logic
+                    let rerollCount = 0;
+                    while (checkCondition(kept, rollRules.rerollOp, rollRules.rerollVal) && rerollCount < 10) {
+                        kept = getCryptoRoll(group.sides);
+                        dieLog += `r->${kept}`;
+                        rerollCount++;
                     }
 
-                    if (group.sides === 20) {
-                        if (kept === 20) hasCritHit = true;
-                        if (kept === 1) hasCritFail = true;
+                    let totalValueForThisDie = kept;
+
+                    // Explode Logic
+                    let explodeCount = 0;
+                    let currentExplodeDie = kept;
+                    while (checkCondition(currentExplodeDie, rollRules.explodeOp, rollRules.explodeVal) && explodeCount < 10) {
+                        currentExplodeDie = getCryptoRoll(group.sides);
+                        totalValueForThisDie += currentExplodeDie;
+                        dieLog += `!->${currentExplodeDie}`;
+                        explodeCount++;
+                    }
+
+                    if (rollRules.targetOp) {
+                        pool.push(kept);
+                        if (explodeCount > 0) {
+                            let parts = dieLog.split('!->');
+                            for (let p = 1; p < parts.length; p++) {
+                                pool.push(parseInt(parts[p]));
+                            }
+                        }
+                    } else {
+                        pool.push(totalValueForThisDie);
+                    }
+
+                    rawRolls.push(dieLog);
+
+                    if (group.sides === 20 && !rollRules.targetOp) {
+                        if (totalValueForThisDie === 20) hasCritHit = true;
+                        if (totalValueForThisDie === 1) hasCritFail = true;
                     }
                 }
 
-                let sum = pool.reduce((a, b) => a + b, 0);
-                details.push(`${group.count}d${group.sides}(${rawRolls.join(',')})`);
+                let sum = 0;
+                if (rollRules.targetOp) {
+                    sum = pool.filter(v => checkCondition(v, rollRules.targetOp, rollRules.targetVal)).length;
+                } else {
+                    sum = pool.reduce((a, b) => a + b, 0);
+                }
+                
+                let f = `${group.count}d${group.sides}`;
+                if (activeModifier === 'ADV') f += 'kh1';
+                if (activeModifier === 'DIS') f += 'kl1';
+                if (rollRules.rerollOp) f += `r${rollRules.rerollOp.replace('=', '')}${rollRules.rerollVal}`;
+                if (rollRules.explodeOp) f += `e${rollRules.explodeOp.replace('=', '')}${rollRules.explodeVal}`;
+                if (rollRules.targetOp) f += `c${rollRules.targetOp.replace('=', '')}${rollRules.targetVal}`;
+                f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
+
+                let groupLog = `<span><span class="text-sky-400 font-bold">${f}</span> [${rawRolls.join(', ')}] &rarr; <span class="text-white font-bold">${sum}</span>${rollRules.targetOp ? ' ✓' : ''}</span>`;
+                
+                details.push(groupLog);
                 total += sum;
             });
 
-            total += activeFlat;
-            if (activeFlat !== 0) details.push(`Mod:${activeFlat}`);
-
-            updateDisplay(total, details.join(" + "), "stop");
-
-            // Prioritize Crit Hit over Fail if both exist in a pool
-            if (hasCritHit) {
-                updateDisplay(total, details.join(" + "), "crit-hit");
-                vibrate([40, 80, 40]);
-            } else if (hasCritFail) {
-                updateDisplay(total, details.join(" + "), "crit-fail");
-                vibrate(60);
-            } else {
-                vibrate(25);
+            if (!rollRules.targetOp) {
+                total += activeFlat;
+                if (activeFlat !== 0) details.push(`<span><span class="text-sky-400 font-bold">Flat Mod</span> &rarr; <span class="text-white font-bold">${activeFlat > 0 ? '+' : ''}${activeFlat}</span></span>`);
             }
 
-            addToHistory(total, details.join(" + "));
+            // Target Mode UI tweaks
+            let finalDetailText = details.join("");
+            if (rollRules.targetOp) {
+                updateDisplay(total, finalDetailText, "stop");
+                if (total > 0) {
+                    vibrate([40, 80, 40]);
+                    document.getElementById('final-result').innerHTML = `<span class="text-4xl block mb-1">${total}</span><span class="text-xl tracking-widest text-emerald-400">SUCCESSES</span>`;
+                } else {
+                    vibrate(60);
+                    document.getElementById('final-result').innerHTML = `<span class="text-4xl block mb-1">0</span><span class="text-xl tracking-widest text-rose-400">SUCCESSES</span>`;
+                }
+            } else {
+                updateDisplay(total, finalDetailText, "stop");
+                if (hasCritHit) {
+                    updateDisplay(total, finalDetailText, "crit-hit");
+                    vibrate([40, 80, 40]);
+                } else if (hasCritFail) {
+                    updateDisplay(total, finalDetailText, "crit-fail");
+                    vibrate(60);
+                } else {
+                    vibrate(25);
+                }
+            }
+
+            // Strip HTML tags for history text
+            let historyText = finalDetailText.replace(/<[^>]*>?/gm, ' ');
+            if (rollRules.targetOp) historyText = `${total} SUCCESSES [ ${historyText} ]`;
+            addToHistory(total, historyText);
             isRolling = false;
         }
 
@@ -1207,6 +1384,12 @@
                 savedQueues = JSON.parse(stored);
                 renderSavedQueues();
             }
+            
+            const savedInstaQueue = localStorage.getItem('instaQueueState');
+            if (savedInstaQueue !== null) {
+                document.getElementById('insta-queue-toggle').checked = savedInstaQueue === 'true';
+            }
+            
             runCustomStressTest();
         };
     </script>
