@@ -455,15 +455,19 @@
                     <!-- SETTINGS CONTROLS -->
                     <div class="flex items-center gap-1.5">
                         <button onclick="document.getElementById('import-input').click()"
-                            class="bg-slate-800/50 text-slate-400 h-8 w-8 flex items-center justify-center rounded-lg border border-white/5 transition-all hover:text-emerald-400 active:scale-95" title="Import Settings & Loadouts">
+                            class="bg-slate-800/50 text-slate-400 h-8 w-8 flex items-center justify-center rounded-lg border border-white/5 transition-all hover:text-emerald-400 active:scale-95"
+                            title="Import Settings & Loadouts">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
                         </button>
                         <button onclick="exportSettings()"
-                            class="bg-slate-800/50 text-slate-400 h-8 w-8 flex items-center justify-center rounded-lg border border-white/5 transition-all hover:text-sky-400 active:scale-95" title="Export Settings & Loadouts">
+                            class="bg-slate-800/50 text-slate-400 h-8 w-8 flex items-center justify-center rounded-lg border border-white/5 transition-all hover:text-sky-400 active:scale-95"
+                            title="Export Settings & Loadouts">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
                         </button>
                     </div>
@@ -564,10 +568,13 @@
                         class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">LOCKED</span>
                 </button>
 
-                <div class="segmented-row !h-[2.5rem] bg-slate-900 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                <div
+                    class="segmented-row !h-[2.5rem] bg-slate-900 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
                     <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
-                    <div class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
-                        <span class="text-[5px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
+                    <div
+                        class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
+                        <span
+                            class="text-[5px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
                         <input type="text" id="flat-mod-input"
                             class="w-full bg-transparent font-black text-[12px] text-sky-400 mono leading-none text-center outline-none hide-spinners"
                             value="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
@@ -754,16 +761,21 @@
                 </summary>
                 <div class="p-4 space-y-3 bg-black/20 rounded-b-2xl border-x border-b border-white/5">
                     <div class="flex items-center justify-between">
-                        <span id="stress-label" class="text-[10px] text-slate-500 mono">D20 Distribution (N=100,000)</span>
+                        <span id="stress-label" class="text-[10px] text-slate-500 mono">D20 Distribution
+                            (N=100,000)</span>
                         <button onclick="runCustomStressTest()"
                             class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-[10px] font-black hover:bg-sky-500 hover:text-slate-950 transition-all uppercase">Verify</button>
                     </div>
                     <div class="segmented-row !h-[2.2rem] w-full bg-slate-950/40">
-                        <button onclick="adjustStressCount(0.1)" class="segmented-btn btn-side text-[11px] font-black">÷10</button>
-                        <div class="segmented-btn btn-center cursor-default flex items-center justify-center border-x border-white/5">
-                            <span id="stress-count-display" class="font-black text-[11px] text-sky-400 mono">100,000</span>
+                        <button onclick="adjustStressCount(0.1)"
+                            class="segmented-btn btn-side text-[11px] font-black">÷10</button>
+                        <div
+                            class="segmented-btn btn-center cursor-default flex items-center justify-center border-x border-white/5">
+                            <span id="stress-count-display"
+                                class="font-black text-[11px] text-sky-400 mono">100,000</span>
                         </div>
-                        <button onclick="adjustStressCount(10)" class="segmented-btn btn-side text-[11px] font-black">×10</button>
+                        <button onclick="adjustStressCount(10)"
+                            class="segmented-btn btn-side text-[11px] font-black">×10</button>
                     </div>
                     <div id="chart-area"
                         class="h-12 flex items-end justify-between gap-0.5 border-b border-white/5 pb-1"></div>
@@ -794,7 +806,9 @@
     <!-- Generic Themed Modal -->
     <div id="modal-overlay" onclick="if(event.target === this) modalResolve(false)"
         class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-slate-950/80 backdrop-blur-sm">
-        <div id="modal-box" class="bg-slate-900 border p-6 rounded-[2rem] shadow-2xl w-full max-w-[300px] space-y-4 text-center" style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+        <div id="modal-box"
+            class="bg-slate-900 border p-6 rounded-[2rem] shadow-2xl w-full max-w-[300px] space-y-4 text-center"
+            style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
             <h3 id="modal-title" class="text-lg font-black text-white"></h3>
             <p id="modal-body" class="text-xs text-slate-400"></p>
             <div id="modal-buttons" class="flex gap-3 pt-2"></div>
@@ -818,7 +832,7 @@
         let customDice = [];
         let stressCount = 100000;
 
-        let modalResolve = () => {};
+        let modalResolve = () => { };
 
         function showModal({ title, body, confirmText = 'OK', cancelText = 'Cancel', danger = false, alertOnly = false, inputPrompt = false, defaultValue = '' }) {
             return new Promise(resolve => {
@@ -903,9 +917,9 @@
 
             allDice.forEach(cfg => {
                 const path = cfg.path || "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z";
-                
+
                 let minusButtonHtml = `<button onclick="changeQueue(${cfg.d}, -1)" class="segmented-btn btn-side">－</button>`;
-                
+
                 const isCustom = !defaultDice.some(d => d.d === cfg.d);
                 if (isCustom && deleteMode) {
                     minusButtonHtml = `
@@ -961,7 +975,7 @@
                     showModal({ title: 'Invalid Input', body: 'Number of sides must be greater than zero.', alertOnly: true, danger: true });
                     return;
                 }
-                
+
                 if (defaultDice.some(d => d.d === num) || customDice.some(d => d.d === num)) {
                     showModal({ title: 'Already Exists', body: 'A dice with that number of sides already exists.', alertOnly: true });
                     return;
@@ -1094,7 +1108,7 @@
             // Update target mode button styles
             const sumBtn = document.getElementById('target-mode-sum');
             const countBtn = document.getElementById('target-mode-count');
-            
+
             if (currentTargetMode === 'sum') {
                 sumBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase bg-sky-500 text-slate-950';
                 countBtn.className = 'text-[8px] font-black px-2 py-1 transition-all uppercase hover:bg-sky-500/10 border-l border-sky-500/20 text-sky-400';
