@@ -544,7 +544,7 @@
             </button>
 
             <!-- ADV DIS & EXTRA CONTROLS -->
-            <div class="grid grid-cols-[1fr_1fr_auto] gap-2 items-stretch">
+            <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-stretch">
                 <button id="adv-btn" onclick="applyModifier('ADV')" disabled
                     class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
                     <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
@@ -564,8 +564,19 @@
                         class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">LOCKED</span>
                 </button>
 
+                <div class="segmented-row !h-[2.5rem] bg-slate-900 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                    <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
+                    <div class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
+                        <span class="text-[5px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
+                        <input type="text" id="flat-mod-input"
+                            class="w-full bg-transparent font-black text-[12px] text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                            value="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
+                    </div>
+                    <button onclick="adjustFlatMod(1)" class="segmented-btn btn-side">＋</button>
+                </div>
+
                 <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
-                    class="row-span-2 w-[2.5rem] rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex flex-col items-center justify-center text-slate-400 hover:text-sky-400 transition-colors border border-white/5 h-full">
+                    class="w-[2.5rem] rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex flex-col items-center justify-center text-slate-400 hover:text-sky-400 transition-colors border border-white/5 h-[2.5rem]">
                     <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
@@ -573,28 +584,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <span class="text-[5px] font-black uppercase tracking-widest">Rules</span>
-                </button>
-
-                <button id="modded-quick-btn" onclick="toggleModdedQuick()"
-                    class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
-                    <div id="modded-quick-pip"
-                        class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
-                    <span
-                        class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-sky-400 transition-colors">Modded
-                        Quick</span>
-                    <span id="modded-quick-sub"
-                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">OFF</span>
-                </button>
-                <button id="insta-queue-btn" onclick="toggleInstaQueue()"
-                    class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
-                    <div id="insta-queue-pip"
-                        class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
-                    <span
-                        class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-sky-400 transition-colors">Roll
-                        to Queue</span>
-                    <span id="insta-queue-sub"
-                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">OFF</span>
+                    <span class="text-[4px] font-black uppercase tracking-widest">Advanced</span>
                 </button>
             </div>
 
@@ -602,6 +592,28 @@
             <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden mt-2"
                 id="rules-panel">
                 <div class="p-3 space-y-3 bg-slate-900/40">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="modded-quick-btn" onclick="toggleModdedQuick()"
+                            class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-slate-950/30">
+                            <div id="modded-quick-pip"
+                                class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
+                            <span
+                                class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-sky-400 transition-colors">Modded
+                                Quick</span>
+                            <span id="modded-quick-sub"
+                                class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">OFF</span>
+                        </button>
+                        <button id="insta-queue-btn" onclick="toggleInstaQueue()"
+                            class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-slate-950/30">
+                            <div id="insta-queue-pip"
+                                class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
+                            <span
+                                class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-sky-400 transition-colors">Roll
+                                to Queue</span>
+                            <span id="insta-queue-sub"
+                                class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">OFF</span>
+                        </button>
+                    </div>
                     <!-- Reroll -->
                     <div
                         class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
@@ -687,44 +699,8 @@
         </section>
 
         <section id="dice-section" class="section-dice space-y-3">
-            <div class="grid grid-cols-2 gap-3">
-                <script>
-                    const diceSet = [
-                        { d: 4, path: "M12 2L2 20h20L12 2z" },
-                        { d: 6, path: "M4 4h16v16H4z" },
-                        { d: 8, path: "M12 2l10 10-10 10-10-10L12 2z" },
-                        { d: 10, path: "M12 2l8 6-2 12-6 2-6-2-2-12 8-6z" },
-                        { d: 12, path: "M12 2l7 4v8l-7 4-7-4V6l7-4z" },
-                        { d: 20, path: "M12 2l9 5v10l-9 5-9-5V7l9-5z M12 2v20" },
-                        { d: 100, path: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" }
-                    ];
-
-                    diceSet.forEach(cfg => {
-                        document.write(`
-                            <div class="segmented-row">
-                                <button onclick="changeQueue(${cfg.d}, -1)" class="segmented-btn btn-side">－</button>
-                                <button onclick="instantRoll(${cfg.d})" class="segmented-btn btn-center group/dice">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <path d="${cfg.path}" />
-                                    </svg>
-                                    <span class="font-black text-base text-white z-10 mono">D${cfg.d}</span>
-                                </button>
-                                <button onclick="changeQueue(${cfg.d}, 1)" class="segmented-btn btn-side">＋</button>
-                            </div>
-                        `);
-                    });
-
-                    document.write(`
-                        <div class="segmented-row">
-                            <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
-                            <div class="segmented-btn btn-center cursor-default flex flex-col justify-center">
-                                <span class="text-[8px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
-                                <span id="mod-val-display" class="font-black text-xl text-sky-400 mono leading-none">0</span>
-                            </div>
-                            <button onclick="adjustFlatMod(1)" class="segmented-btn btn-side">＋</button>
-                        </div>
-                    `);
-                </script>
+            <div id="dice-grid" class="grid grid-cols-2 gap-3">
+                <!-- Dice injected here via JS -->
             </div>
         </section>
 
@@ -806,6 +782,16 @@
         </div>
     </div>
 
+    <!-- Generic Themed Modal -->
+    <div id="modal-overlay" onclick="if(event.target === this) modalResolve(false)"
+        class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-slate-950/80 backdrop-blur-sm">
+        <div id="modal-box" class="bg-slate-900 border p-6 rounded-[2rem] shadow-2xl w-full max-w-[300px] space-y-4 text-center" style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+            <h3 id="modal-title" class="text-lg font-black text-white"></h3>
+            <p id="modal-body" class="text-xs text-slate-400"></p>
+            <div id="modal-buttons" class="flex gap-3 pt-2"></div>
+        </div>
+    </div>
+
     <script src="DiceEngine.js"></script>
     <script>
         const engine = new DiceEngine();
@@ -820,6 +806,202 @@
 
         let isModdedQuick = false;
         let isInstaQueue = false;
+        let customDice = [];
+
+        let modalResolve = () => {};
+
+        function showModal({ title, body, confirmText = 'OK', cancelText = 'Cancel', danger = false, alertOnly = false, inputPrompt = false, defaultValue = '' }) {
+            return new Promise(resolve => {
+                const overlay = document.getElementById('modal-overlay');
+                const box = document.getElementById('modal-box');
+                const titleEl = document.getElementById('modal-title');
+                const bodyEl = document.getElementById('modal-body');
+                const btnsEl = document.getElementById('modal-buttons');
+
+                titleEl.innerHTML = title;
+                let bodyHtml = body || '';
+                if (inputPrompt) {
+                    bodyHtml += `<input type="text" id="modal-input" value="${defaultValue.replace(/"/g, '&quot;')}" class="w-full mt-3 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-bold text-center outline-none focus:border-sky-500 transition-colors" autocomplete="off">`;
+                }
+                bodyEl.innerHTML = bodyHtml;
+                bodyEl.style.display = (body || inputPrompt) ? '' : 'none';
+                box.style.borderColor = danger ? 'rgba(244, 63, 94, 0.3)' : 'rgba(56, 189, 248, 0.2)';
+
+                let btns = '';
+                if (alertOnly) {
+                    btns = `<button id="modal-ok-btn" class="flex-1 py-2 rounded-xl border border-sky-500/30 text-sky-400 font-bold text-xs hover:bg-sky-500 hover:text-white transition-colors">OK</button>`;
+                } else {
+                    const confirmClass = danger
+                        ? 'bg-rose-500/20 border border-rose-500/50 text-rose-400 hover:bg-rose-500 hover:text-white'
+                        : 'bg-sky-500/20 border border-sky-500/50 text-sky-400 hover:bg-sky-500 hover:text-white';
+                    btns = `
+                        <button id="modal-cancel-btn" class="flex-1 py-2 rounded-xl border border-white/10 text-slate-400 font-bold text-xs hover:bg-white/5 transition-colors">${cancelText}</button>
+                        <button id="modal-confirm-btn" class="flex-1 py-2 rounded-xl ${confirmClass} font-bold text-xs transition-colors">${confirmText}</button>
+                    `;
+                }
+                btnsEl.innerHTML = btns;
+
+                const getResult = (confirmed) => {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                    if (inputPrompt) {
+                        const inputEl = document.getElementById('modal-input');
+                        resolve(confirmed ? (inputEl ? inputEl.value : null) : null);
+                    } else {
+                        resolve(confirmed);
+                    }
+                };
+                modalResolve = (val) => getResult(val);
+
+                if (alertOnly) {
+                    document.getElementById('modal-ok-btn').onclick = () => getResult(true);
+                } else {
+                    document.getElementById('modal-cancel-btn').onclick = () => getResult(false);
+                    document.getElementById('modal-confirm-btn').onclick = () => getResult(true);
+                }
+
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+
+                if (inputPrompt) {
+                    setTimeout(() => {
+                        const inputEl = document.getElementById('modal-input');
+                        if (inputEl) { inputEl.focus(); inputEl.select(); }
+                    }, 50);
+                }
+            });
+        }
+
+        const defaultDice = [
+            { d: 4, path: "M12 2L2 20h20L12 2z" },
+            { d: 6, path: "M4 4h16v16H4z" },
+            { d: 8, path: "M12 2l10 10-10 10-10-10L12 2z" },
+            { d: 10, path: "M12 2l8 6-2 12-6 2-6-2-2-12 8-6z" },
+            { d: 12, path: "M12 2l7 4v8l-7 4-7-4V6l7-4z" },
+            { d: 20, path: "M12 2l9 5v10l-9 5-9-5V7l9-5z M12 2v20" },
+            { d: 100, path: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" }
+        ];
+
+        let deleteMode = false;
+        let pendingDeleteSides = null;
+
+        function renderDiceGrid() {
+            const grid = document.getElementById('dice-grid');
+            if (!grid) return;
+            let html = '';
+            const allDice = [...defaultDice, ...customDice];
+
+            allDice.forEach(cfg => {
+                const path = cfg.path || "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z";
+                
+                let minusButtonHtml = `<button onclick="changeQueue(${cfg.d}, -1)" class="segmented-btn btn-side">－</button>`;
+                
+                const isCustom = !defaultDice.some(d => d.d === cfg.d);
+                if (isCustom && deleteMode) {
+                    minusButtonHtml = `
+                        <button onclick="promptDeleteCustomDice(${cfg.d}, event)" class="segmented-btn btn-side text-rose-500 font-black text-xl hover:bg-rose-500/20 transition-colors delete-btn-active z-20 relative">
+                            ✕
+                        </button>
+                    `;
+                }
+
+                html += `
+                    <div class="segmented-row">
+                        ${minusButtonHtml}
+                        <button onclick="instantRoll(${cfg.d})" class="segmented-btn btn-center group/dice relative">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="${path}" />
+                            </svg>
+                            <span class="font-black text-base text-white z-10 mono">D${cfg.d}</span>
+                        </button>
+                        <button onclick="changeQueue(${cfg.d}, 1)" class="segmented-btn btn-side">＋</button>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div class="segmented-row">
+                    <button onclick="toggleDeleteMode(event)" class="segmented-btn btn-side ${deleteMode ? 'bg-white/10 text-rose-400' : ''}">－</button>
+                    <div class="segmented-btn btn-center group/dice cursor-default flex flex-col justify-center">
+                        <span class="font-black text-[10px] uppercase tracking-widest text-sky-400 mt-0.5 leading-none">Custom</span>
+                        <span class="font-black text-[8px] uppercase tracking-widest text-sky-400/60 mt-0.5 leading-none">Dice</span>
+                    </div>
+                    <button onclick="addCustomDice()" class="segmented-btn btn-side">＋</button>
+                </div>
+            `;
+            grid.innerHTML = html;
+        }
+
+        function addCustomDice() {
+            showModal({
+                title: 'Create Custom Dice',
+                body: 'Enter the number of sides:',
+                confirmText: 'Create',
+                inputPrompt: true,
+                defaultValue: ''
+            }).then(val => {
+                if (!val) return;
+                const num = parseInt(val);
+                if (isNaN(num) || num <= 0) return;
+                
+                if (defaultDice.some(d => d.d === num) || customDice.some(d => d.d === num)) {
+                    showModal({ title: 'Already Exists', body: 'A dice with that number of sides already exists.', alertOnly: true });
+                    return;
+                }
+                customDice.push({ d: num });
+                customDice.sort((a, b) => a.d - b.d);
+                saveSettings();
+                renderDiceGrid();
+            });
+        }
+
+        function toggleDeleteMode(e) {
+            if (e) e.stopPropagation();
+            if (customDice.length === 0) {
+                showModal({ title: 'No Custom Dice', body: 'There are no custom dice to delete.', alertOnly: true });
+                return;
+            }
+            deleteMode = !deleteMode;
+            renderDiceGrid();
+            if (deleteMode) {
+                setTimeout(() => {
+                    document.addEventListener('click', closeDeleteModeListener);
+                }, 10);
+            } else {
+                document.removeEventListener('click', closeDeleteModeListener);
+            }
+        }
+
+        function closeDeleteModeListener(e) {
+            if (deleteMode && !e.target.closest('.delete-btn-active')) {
+                deleteMode = false;
+                renderDiceGrid();
+                document.removeEventListener('click', closeDeleteModeListener);
+            }
+        }
+
+        function promptDeleteCustomDice(sides, e) {
+            if (e) e.stopPropagation();
+            pendingDeleteSides = sides;
+            showModal({
+                title: `Delete <span class="text-rose-400">D${sides}</span>?`,
+                body: 'This action cannot be undone.',
+                confirmText: 'Delete',
+                danger: true
+            }).then(confirmed => {
+                if (confirmed) {
+                    const idx = customDice.findIndex(d => d.d === pendingDeleteSides);
+                    if (idx > -1) {
+                        customDice.splice(idx, 1);
+                        saveSettings();
+                    }
+                }
+                pendingDeleteSides = null;
+                deleteMode = false;
+                renderDiceGrid();
+                document.removeEventListener('click', closeDeleteModeListener);
+            });
+        }
 
         function toggleModdedQuick() {
             isModdedQuick = !isModdedQuick;
@@ -1034,6 +1216,12 @@
             updateUI();
         }
 
+        function setFlatMod(val) {
+            const num = parseInt(val) || 0;
+            engine.flatMod = num;
+            updateUI();
+        }
+
         function applyModifier(type) {
             vibrate(10);
             engine.applyModifier(type);
@@ -1076,8 +1264,8 @@
             const disBtn = document.getElementById('dis-btn');
             const advSub = document.getElementById('adv-sub');
             const disSub = document.getElementById('dis-sub');
-            const modDisplay = document.getElementById('mod-val-display');
             const saveBtn = document.getElementById('save-queue-btn');
+            const modInput = document.getElementById('flat-mod-input');
 
             let parts = engine.rollingQueue.map(q => `${q.count}d${q.sides}`);
             if (engine.flatMod !== 0) parts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
@@ -1096,7 +1284,9 @@
 
             display.innerText = (parts.length > 0 || modifierText || rulesText) ? parts.join(" + ") + modifierText + rulesText : "EMPTY QUEUE";
 
-            modDisplay.innerText = engine.flatMod;
+            if (modInput && document.activeElement !== modInput) {
+                modInput.value = engine.flatMod > 0 ? `+${engine.flatMod}` : engine.flatMod;
+            }
 
             const hasDice = engine.rollingQueue.length > 0;
             const canMod = hasDice || isModdedQuick;
@@ -1167,13 +1357,20 @@
         }
 
         function saveCurrentQueue() {
-            const name = prompt("Name this configuration:", `Loadout ${engine.savedQueues.length + 1}`);
-            if (!name) return;
-            const newSaved = engine.saveQueue(name, COLOR_PALETTE[0]);
-            if (newSaved) {
-                persistSaved();
-                renderSavedQueues();
-            }
+            showModal({
+                title: 'Save Loadout',
+                body: 'Name this configuration:',
+                confirmText: 'Save',
+                inputPrompt: true,
+                defaultValue: `Loadout ${engine.savedQueues.length + 1}`
+            }).then(name => {
+                if (!name) return;
+                const newSaved = engine.saveQueue(name, COLOR_PALETTE[0]);
+                if (newSaved) {
+                    persistSaved();
+                    renderSavedQueues();
+                }
+            });
         }
 
         function loadQueue(id) {
@@ -1196,22 +1393,36 @@
             document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
             activeMenuId = null;
 
-            if (!confirm("Delete this saved configuration?")) return;
-            engine.deleteQueue(id);
-            persistSaved();
-            renderSavedQueues();
+            showModal({
+                title: 'Delete this loadout?',
+                body: 'This action cannot be undone.',
+                confirmText: 'Delete',
+                danger: true
+            }).then(confirmed => {
+                if (!confirmed) return;
+                engine.deleteQueue(id);
+                persistSaved();
+                renderSavedQueues();
+            });
         }
 
         function renameQueue(id, event) {
             event.stopPropagation();
             const item = engine.savedQueues.find(q => q.id === id);
             if (!item) return;
-            const newName = prompt("Rename configuration:", item.name);
-            if (newName) {
-                engine.renameQueue(id, newName);
-                persistSaved();
-                renderSavedQueues();
-            }
+            showModal({
+                title: 'Rename Loadout',
+                body: 'Enter a new name:',
+                confirmText: 'Rename',
+                inputPrompt: true,
+                defaultValue: item.name
+            }).then(newName => {
+                if (newName) {
+                    engine.renameQueue(id, newName);
+                    persistSaved();
+                    renderSavedQueues();
+                }
+            });
         }
 
         function openColorPicker(id, event) {
@@ -1265,12 +1476,18 @@
 
             const item = engine.savedQueues.find(q => q.id === id);
             if (!item) return;
-            if (!confirm(`Overwrite "${item.name}" with the current active queue?`)) return;
 
-            engine.updateSavedQueue(id);
-            persistSaved();
-            renderSavedQueues();
-            vibrate(5);
+            showModal({
+                title: `Overwrite <span class="text-sky-400">"${item.name}"</span>?`,
+                body: 'This will replace it with the current active queue.',
+                confirmText: 'Overwrite'
+            }).then(confirmed => {
+                if (!confirmed) return;
+                engine.updateSavedQueue(id);
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            });
         }
 
         function persistSaved() {
@@ -1282,7 +1499,8 @@
                 soundEnabled: soundEnabled,
                 volume: volume,
                 instaQueue: isInstaQueue,
-                moddedQuick: isModdedQuick
+                moddedQuick: isModdedQuick,
+                customDice: customDice
             }));
         }
 
@@ -1293,7 +1511,8 @@
                     soundEnabled: soundEnabled,
                     volume: volume,
                     instaQueue: isInstaQueue,
-                    moddedQuick: isModdedQuick
+                    moddedQuick: isModdedQuick,
+                    customDice: customDice
                 }
             };
 
@@ -1330,46 +1549,57 @@
                         throw new Error("Invalid format");
                     }
 
-                    const mode = confirm("Settings Import Detected!\n\nClick OK to MERGE loadouts (settings will be updated).\nClick CANCEL to OVERWRITE all loadouts and settings.") ? 'merge' : 'overwrite';
+                    showModal({
+                        title: 'Import Settings',
+                        body: 'Choose how to handle your loadouts.',
+                        confirmText: 'Merge',
+                        cancelText: 'Overwrite'
+                    }).then(mergeChosen => {
+                        const mode = mergeChosen ? 'merge' : 'overwrite';
 
-                    if (mode === 'merge') {
-                        const currentIds = new Set(engine.savedQueues.map(q => q.id));
-                        importedQueues.forEach(item => {
-                            if (!currentIds.has(item.id)) {
-                                engine.savedQueues.push(item);
-                            } else {
-                                item.id = Date.now() + Math.random();
-                                engine.savedQueues.push(item);
+                        if (mode === 'merge') {
+                            const currentIds = new Set(engine.savedQueues.map(q => q.id));
+                            importedQueues.forEach(item => {
+                                if (!currentIds.has(item.id)) {
+                                    engine.savedQueues.push(item);
+                                } else {
+                                    item.id = Date.now() + Math.random();
+                                    engine.savedQueues.push(item);
+                                }
+                            });
+                        } else {
+                            engine.setSavedQueues(importedQueues);
+                        }
+
+                        if (importedSettings) {
+                            if (importedSettings.soundEnabled !== undefined) {
+                                soundEnabled = importedSettings.soundEnabled;
                             }
-                        });
-                    } else {
-                        engine.setSavedQueues(importedQueues);
-                    }
+                            if (importedSettings.volume !== undefined) {
+                                volume = importedSettings.volume;
+                                rollSound.volume = volume;
+                                document.getElementById('volume-slider').value = volume;
+                            }
+                            if (importedSettings.instaQueue !== undefined) {
+                                isInstaQueue = importedSettings.instaQueue;
+                            }
+                            if (importedSettings.moddedQuick !== undefined) {
+                                isModdedQuick = importedSettings.moddedQuick;
+                            }
+                            if (importedSettings.customDice !== undefined) {
+                                customDice = importedSettings.customDice;
+                                renderDiceGrid();
+                            }
+                            saveSettings();
+                            updateSoundUI();
+                        }
 
-                    if (importedSettings) {
-                        if (importedSettings.soundEnabled !== undefined) {
-                            soundEnabled = importedSettings.soundEnabled;
-                        }
-                        if (importedSettings.volume !== undefined) {
-                            volume = importedSettings.volume;
-                            rollSound.volume = volume;
-                            document.getElementById('volume-slider').value = volume;
-                        }
-                        if (importedSettings.instaQueue !== undefined) {
-                            isInstaQueue = importedSettings.instaQueue;
-                        }
-                        if (importedSettings.moddedQuick !== undefined) {
-                            isModdedQuick = importedSettings.moddedQuick;
-                        }
-                        saveSettings();
-                        updateSoundUI();
-                    }
-
-                    persistSaved();
-                    renderSavedQueues();
-                    alert(`Settings and loadouts successfully imported!`);
+                        persistSaved();
+                        renderSavedQueues();
+                        showModal({ title: 'Import Complete', body: 'Settings and loadouts successfully imported!', alertOnly: true });
+                    });
                 } catch (err) {
-                    alert("Error importing file. Please ensure it's a valid StaticDice settings backup.");
+                    showModal({ title: 'Import Error', body: "Please ensure it's a valid StaticDice settings backup.", alertOnly: true, danger: true });
                 }
                 event.target.value = '';
             };
@@ -1419,13 +1649,20 @@
 
             const item = engine.savedQueues.find(q => q.id === id);
             if (!item) return;
-            const newName = prompt("Enter new name for this loadout:", item.name);
-            if (newName && newName.trim()) {
-                engine.renameQueue(id, newName.trim());
-                persistSaved();
-                renderSavedQueues();
-                vibrate(5);
-            }
+            showModal({
+                title: 'Rename Loadout',
+                body: 'Enter a new name:',
+                confirmText: 'Rename',
+                inputPrompt: true,
+                defaultValue: item.name
+            }).then(newName => {
+                if (newName && newName.trim()) {
+                    engine.renameQueue(id, newName.trim());
+                    persistSaved();
+                    renderSavedQueues();
+                    vibrate(5);
+                }
+            });
         }
 
         function renderSavedQueues() {
@@ -1636,6 +1873,9 @@
                     if (savedSettings.moddedQuick !== undefined) {
                         isModdedQuick = savedSettings.moddedQuick;
                     }
+                    if (savedSettings.customDice !== undefined) {
+                        customDice = savedSettings.customDice;
+                    }
                     updateUI();
                     updateSoundUI();
                 } catch (e) { }
@@ -1650,6 +1890,7 @@
             }
 
             runCustomStressTest();
+            renderDiceGrid();
         };
 
     </script>
