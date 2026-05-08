@@ -923,8 +923,8 @@
                 <div class="segmented-row">
                     <button onclick="toggleDeleteMode(event)" class="segmented-btn btn-side ${deleteMode ? 'bg-white/10 text-rose-400' : ''}">－</button>
                     <div class="segmented-btn btn-center group/dice cursor-default flex flex-col justify-center">
-                        <span class="font-black text-[10px] uppercase tracking-widest text-sky-400 mt-0.5 leading-none">Custom</span>
-                        <span class="font-black text-[8px] uppercase tracking-widest text-sky-400/60 mt-0.5 leading-none">Dice</span>
+                        <span class="font-black text-[10px] uppercase tracking-widest text-white mt-0.5 leading-none">Custom</span>
+                        <span class="font-black text-[8px] uppercase tracking-widest text-white/60 mt-0.5 leading-none">Dice</span>
                     </div>
                     <button onclick="addCustomDice()" class="segmented-btn btn-side">＋</button>
                 </div>
@@ -941,8 +941,16 @@
                 defaultValue: ''
             }).then(val => {
                 if (!val) return;
-                const num = parseInt(val);
-                if (isNaN(num) || num <= 0) return;
+                const trimmed = val.trim();
+                if (!/^\d+$/.test(trimmed)) {
+                    showModal({ title: 'Invalid Input', body: 'Please enter a positive whole number only (no letters or symbols).', alertOnly: true, danger: true });
+                    return;
+                }
+                const num = parseInt(trimmed, 10);
+                if (num <= 0) {
+                    showModal({ title: 'Invalid Input', body: 'Number of sides must be greater than zero.', alertOnly: true, danger: true });
+                    return;
+                }
                 
                 if (defaultDice.some(d => d.d === num) || customDice.some(d => d.d === num)) {
                     showModal({ title: 'Already Exists', body: 'A dice with that number of sides already exists.', alertOnly: true });
