@@ -366,9 +366,8 @@ class DiceEngine {
         else if (hasCritFail) heroClass = 'crit-fail';
 
         // Compute label and badges
-        const setsActive = this.rollRules.setsOp && this.rollRules.setsVal !== null;
-        let label = this._computeLabel(total, this.rollRules, allSetGroups, hasCritHit, hasCritFail);
-        let badges = this._computeBadges(this.rollRules, allSetGroups, hasCritHit, hasCritFail, totalRerolls, totalExplosions, label);
+        let labels = this._computeLabel(total, this.rollRules, allSetGroups, hasCritHit, hasCritFail);
+        let badges = this._computeBadges(this.rollRules, allSetGroups, hasCritHit, hasCritFail, totalRerolls, totalExplosions, labels);
 
         // Flat description for history log
         let flatDescription = breakdownRows.map(r => {
@@ -379,7 +378,8 @@ class DiceEngine {
         return {
             total,
             heroClass,
-            label,
+            labels,
+            label: labels.length > 0 ? labels[0] : null, // Backwards compatibility
             badges,
             breakdown: breakdownRows,
             targetMode: this.rollRules.targetMode,
@@ -402,29 +402,14 @@ class DiceEngine {
     }
 
     _computeLabel(total, rules, setGroups, hasCritHit, hasCritFail) {
-        // Priority 1: List mode
+        let labels = [];
+
+        // Priority 1: List mode (usually no labels)
         if (rules.targetMode === 'list') {
-            return null;
+            return [];
         }
 
-        // Priority 2: Sets
-        const setsActive = rules.setsOp && rules.setsVal !== null;
-        if (setsActive) {
-            const setEntries = Object.entries(setGroups);
-            const op = this._getDisplayOp(rules.setsOp);
-            
-            if (setEntries.length === 0) {
-                return { text: `0 DICE SETS ${op} ${rules.setsVal} ➔ FAIL`, color: 'rose' };
-            }
-            
-            // Generate details: (Count x Value's)
-            const details = setEntries.map(([val, count]) => `(${count} x ${val}'s)`).join(', ');
-            const matchingDiceCount = setEntries.reduce((sum, [_, count]) => sum + count, 0);
-            
-            return { text: `${matchingDiceCount} DICE SETS ${op} ${rules.setsVal} ➔ ${details}`, color: 'sky' };
-        }
-
-        // Priority 3: Count Mode logic
+        // Priority 2: Primary (Sum/Count) - Add this first so it's the top line
         if (rules.targetMode === 'count') {
             const hasThresh = rules.countThreshOp && rules.countThreshVal !== null;
             if (hasThresh) {
@@ -444,56 +429,67 @@ class DiceEngine {
                 const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
                 const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '0';
                 
-                return { text: `${total} ${dieOpDisplay} ${dieVal}, Target ${threshOpDisplay} ${displayThreshStr} ➔ ${status}`, color: color };
+                labels.push({ text: `${total} ${dieOpDisplay} ${dieVal}, Target ${threshOpDisplay} ${displayThreshStr} ➔ ${status}`, color: color });
             } else {
-                // "Any" case: Hide success/fail and target label
+                // "Any" case: Just show the count
                 const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
                 const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '0';
-                return { text: `${total} DICE ${dieOpDisplay} ${dieVal}`, color: 'slate' };
+                labels.push({ text: `${total} DICE ${dieOpDisplay} ${dieVal}`, color: 'slate' });
+            }
+        } else if (rules.targetMode === 'sum') {
+            if (rules.targetOp && rules.targetVal !== null && rules.targetVal !== '') {
+                let actualTarget = 0;
+                let displayTargetStr = rules.targetVal;
+                if (rules.targetVal === 'overall') {
+                    actualTarget = this.overallTarget !== null ? this.overallTarget : 0;
+                    displayTargetStr = actualTarget;
+                } else if (rules.targetVal === 'varX') {
+                    actualTarget = 0;
+                    displayTargetStr = 'VARIABLE X';
+                }
+                
+                const isSuccess = this.checkCondition(total, rules.targetOp, actualTarget);
+                const status = isSuccess ? 'SUCCESS' : 'FAIL';
+                const color = isSuccess ? 'emerald' : 'rose';
+                const opDisplay = this._getDisplayOp(rules.targetOp);
+                labels.push({ text: `${total} ${opDisplay} ${displayTargetStr} ➔ ${status}`, color: color });
+            } else if (this.overallTarget !== null && rules.targetOp !== "") {
+                const isSuccess = total >= this.overallTarget;
+                const status = isSuccess ? 'SUCCESS' : 'FAIL';
+                const color = isSuccess ? 'emerald' : 'rose';
+                labels.push({ text: `${total} ≥ ${this.overallTarget} ➔ ${status}`, color: color });
             }
         }
 
-        // Priority 4: Advanced Target (Sum mode)
-        if (rules.targetMode === 'sum' && rules.targetOp && rules.targetVal !== null && rules.targetVal !== '') {
-            let actualTarget = 0;
-            let displayTargetStr = rules.targetVal;
-            if (rules.targetVal === 'overall') {
-                actualTarget = this.overallTarget !== null ? this.overallTarget : 0;
-                displayTargetStr = actualTarget;
-            } else if (rules.targetVal === 'varX') {
-                actualTarget = 0;
-                displayTargetStr = 'VARIABLE X';
-            }
+        // Priority 3: Sets
+        const setsActive = rules.setsOp && rules.setsVal !== null;
+        if (setsActive) {
+            const setEntries = Object.entries(setGroups);
+            const op = this._getDisplayOp(rules.setsOp);
             
-            const isSuccess = this.checkCondition(total, rules.targetOp, actualTarget);
-            const status = isSuccess ? 'SUCCESS' : 'FAIL';
-            const color = isSuccess ? 'emerald' : 'rose';
-            const opDisplay = this._getDisplayOp(rules.targetOp);
-            return { text: `${total} ${opDisplay} ${displayTargetStr} ➔ ${status}`, color: color };
+            if (setEntries.length === 0) {
+                labels.push({ text: `0 DICE SETS ${op} ${rules.setsVal} ➔ FAIL`, color: 'rose' });
+            } else {
+                // Generate details: (Count x Value's)
+                const details = setEntries.map(([val, count]) => `(${count} x ${val}'s)`).join(', ');
+                const matchingDiceCount = setEntries.reduce((sum, [_, count]) => sum + count, 0);
+                labels.push({ text: `${matchingDiceCount} DICE SETS ${op} ${rules.setsVal} ➔ ${details}`, color: 'sky' });
+            }
         }
 
-        // Priority 5: Overall Target (Sum mode only)
-        // Skip if targetOp is explicitly empty (Any)
-        if (this.overallTarget !== null && rules.targetMode === 'sum' && rules.targetOp !== "") {
-            const isSuccess = total >= this.overallTarget;
-            const status = isSuccess ? 'SUCCESS' : 'FAIL';
-            const color = isSuccess ? 'emerald' : 'rose';
-            return { text: `${total} ≥ ${this.overallTarget} ➔ ${status}`, color: color };
-        }
+        // Priority 4: Crits
+        if (hasCritHit) labels.push({ text: 'NATURAL 20', color: 'emerald' });
+        if (hasCritFail) labels.push({ text: 'NATURAL 1', color: 'rose' });
 
-        // Priority 6: Crits
-        if (hasCritHit) return { text: 'NATURAL 20', color: 'emerald' };
-        if (hasCritFail) return { text: 'NATURAL 1', color: 'rose' };
-
-        return null;
+        return labels;
     }
 
-    _computeBadges(rules, setGroups, hasCritHit, hasCritFail, totalRerolls, totalExplosions, label) {
+    _computeBadges(rules, setGroups, hasCritHit, hasCritFail, totalRerolls, totalExplosions, labels) {
         let badges = [];
 
-        // Sets badge (when label is showing something else, e.g. count mode)
+        // Sets badge (when labels aren't showing detailed set info)
         const setsActive = rules.setsOp && rules.setsVal !== null;
-        const labelIsSetInfo = label && label.text.includes('DICE SETS');
+        const labelIsSetInfo = labels.some(l => l.text.includes('DICE SETS'));
         if (setsActive && !labelIsSetInfo) {
             const setEntries = Object.entries(setGroups);
             if (setEntries.length > 0) {
@@ -502,11 +498,11 @@ class DiceEngine {
             }
         }
 
-        // Crit badges (when label is showing something else)
-        if (hasCritHit && (!label || label.text !== 'NATURAL 20')) {
+        // Crit badges (when labels aren't showing NAT 20/1)
+        if (hasCritHit && !labels.some(l => l.text === 'NATURAL 20')) {
             badges.push({ icon: '⚡', text: 'NAT 20', color: 'emerald' });
         }
-        if (hasCritFail && (!label || label.text !== 'NATURAL 1')) {
+        if (hasCritFail && !labels.some(l => l.text === 'NATURAL 1')) {
             badges.push({ icon: '💀', text: 'NAT 1', color: 'rose' });
         }
 
