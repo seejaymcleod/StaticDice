@@ -446,7 +446,7 @@ class DiceEngine {
                 // "Any" case: Hide success/fail and target label
                 const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
                 const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '0';
-                return { text: `${total} DICE ${dieOpDisplay} ${dieVal}`, color: 'emerald' };
+                return { text: `${total} DICE ${dieOpDisplay} ${dieVal}`, color: 'slate' };
             }
         }
 
@@ -470,7 +470,8 @@ class DiceEngine {
         }
 
         // Priority 5: Overall Target (Sum mode only)
-        if (this.overallTarget !== null) {
+        // Skip if targetOp is explicitly empty (Any)
+        if (this.overallTarget !== null && rules.targetMode === 'sum' && rules.targetOp !== "") {
             const isSuccess = total >= this.overallTarget;
             const status = isSuccess ? 'SUCCESS' : 'FAIL';
             const color = isSuccess ? 'emerald' : 'rose';

@@ -523,6 +523,8 @@
         .label-emerald { color: #6ee7b7; text-shadow: 0 0 20px rgba(16,185,129,0.4); }
         .label-rose { color: #fda4af; text-shadow: 0 0 20px rgba(244,63,94,0.4); }
         .label-sky { color: #7dd3fc; text-shadow: 0 0 20px rgba(56,189,248,0.4); }
+        .label-slate { color: #94a3b8; text-shadow: 0 0 20px rgba(148, 163, 184, 0.4); }
+        .label-white { color: #f8fafc; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
     </style>
 </head>
 
@@ -1619,7 +1621,8 @@
 
             if (engine.overallTarget !== null) {
                 const isCountAny = engine.rollRules.targetMode === 'count' && !engine.rollRules.countThreshOp;
-                if (!isCountAny) {
+                const isSumAny = engine.rollRules.targetMode === 'sum' && !engine.rollRules.targetOp;
+                if (!isCountAny && !isSumAny) {
                     rulesText += ` TARGET≥${engine.overallTarget}`;
                 }
             }
