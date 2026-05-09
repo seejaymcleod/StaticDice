@@ -102,6 +102,8 @@ class DiceEngine {
         if (!op || target === null || isNaN(target)) return false;
         if (op === '>=') return val >= target;
         if (op === '<=') return val <= target;
+        if (op === '>') return val > target;
+        if (op === '<') return val < target;
         if (op === '=') return val === target;
         return false;
     }
@@ -292,8 +294,8 @@ class DiceEngine {
             let f = `${group.count}d${group.sides}`;
             if (this.activeModifier === 'ADV') f += 'kh1';
             if (this.activeModifier === 'DIS') f += 'kl1';
-            if (this.rollRules.rerollOp) f += `r${this.rollRules.rerollOp.replace('=', '')}${this.rollRules.rerollVal}`;
-            if (this.rollRules.explodeOp) f += `e${this.rollRules.explodeOp.replace('=', '')}${this.rollRules.explodeVal}`;
+            if (this.rollRules.rerollOp && this.rollRules.rerollVal !== null) f += `r${this.rollRules.rerollOp.replace('=', '')}${this.rollRules.rerollVal}`;
+            if (this.rollRules.explodeOp && this.rollRules.explodeVal !== null) f += `e${this.rollRules.explodeOp.replace('=', '')}${this.rollRules.explodeVal}`;
             if (this.rollRules.targetMode === 'count' || this.rollRules.targetMode === 'sum') {
                 if (this.rollRules.targetOp && this.rollRules.targetVal !== null && this.rollRules.targetVal !== '') {
                     if (this.rollRules.targetMode === 'count') f += 'c';
@@ -305,7 +307,7 @@ class DiceEngine {
                     f += `${this.rollRules.targetOp.replace('=', '')}${valStr}`;
                 }
             }
-            if (this.rollRules.setsOp) f += `set${this.rollRules.setsOp.replace('=', '')}${this.rollRules.setsVal}`;
+            if (this.rollRules.setsOp && this.rollRules.setsVal !== null) f += `set${this.rollRules.setsOp.replace('=', '')}${this.rollRules.setsVal}`;
             f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
 
             // Highlight sets in the roll log
@@ -394,7 +396,12 @@ class DiceEngine {
     }
 
     _computeLabel(total, rules, setGroups, hasCritHit, hasCritFail) {
-        // Priority 1: Sets
+        // Priority 1: List mode
+        if (rules.targetMode === 'list') {
+            return null;
+        }
+
+        // Priority 2: Sets
         const setsActive = rules.setsOp && rules.setsVal !== null;
         if (setsActive) {
             const setEntries = Object.entries(setGroups);
@@ -411,13 +418,13 @@ class DiceEngine {
             return { text: `${matchingDiceCount} DICE SETS ${op} ${rules.setsVal} ➔ ${details}`, color: 'sky' };
         }
 
-        // Priority 2: Advanced Target (Sum mode)
+        // Priority 3: Advanced Target (Sum mode)
         if (rules.targetMode === 'sum' && rules.targetOp && rules.targetVal !== null && rules.targetVal !== '') {
             let actualTarget = 0;
             let displayTargetStr = rules.targetVal;
             if (rules.targetVal === 'overall') {
                 actualTarget = this.overallTarget !== null ? this.overallTarget : 0;
-                displayTargetStr = 'TARGET';
+                displayTargetStr = actualTarget;
             } else if (rules.targetVal === 'varX') {
                 actualTarget = 0;
                 displayTargetStr = 'VARIABLE X';
@@ -427,10 +434,10 @@ class DiceEngine {
             const status = isSuccess ? 'SUCCESS' : 'FAIL';
             const color = isSuccess ? 'emerald' : 'rose';
             const opDisplay = this._getDisplayOp(rules.targetOp);
-            return { text: `TOTAL ${opDisplay} ${displayTargetStr} ➔ ${status}`, color: color };
+            return { text: `${total} ${opDisplay} ${displayTargetStr} ➔ ${status}`, color: color };
         }
 
-        // Priority 3: Overall Target
+        // Priority 4: Overall Target
         if (this.overallTarget !== null) {
             const isSuccess = total >= this.overallTarget;
             const status = isSuccess ? 'SUCCESS' : 'FAIL';
@@ -439,18 +446,13 @@ class DiceEngine {
             if (rules.targetMode === 'count') {
                 return { text: `${total} SUCCESSES ≥ ${this.overallTarget} ➔ ${status}`, color: color };
             } else {
-                return { text: `RESULT ≥ ${this.overallTarget} ➔ ${status}`, color: color };
+                return { text: `${total} ≥ ${this.overallTarget} ➔ ${status}`, color: color };
             }
         }
 
-        // Priority 3: Default Count Label (No target op)
+        // Priority 5: Default Count Label (No target op)
         if (rules.targetMode === 'count') {
             return { text: `${total} SUCCESS${total !== 1 ? 'ES' : ''}`, color: 'emerald' };
-        }
-
-        // Priority 4: List mode
-        if (rules.targetMode === 'list') {
-            return { text: 'DICE LIST', color: 'sky' };
         }
 
         // Priority 5: Crits

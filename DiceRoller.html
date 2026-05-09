@@ -1303,19 +1303,24 @@
                 targetVal = document.getElementById('rule-sum-val').value;
             } else if (currentTargetMode === 'count') {
                 targetOp = document.getElementById('rule-count-op').value;
-                targetVal = parseInt(document.getElementById('rule-count-val').value) || 5;
+                let parsed = parseInt(document.getElementById('rule-count-val').value);
+                targetVal = isNaN(parsed) ? 5 : parsed;
             }
+
+            let rVal = parseInt(document.getElementById('rule-reroll-val').value);
+            let eVal = parseInt(document.getElementById('rule-explode-val').value);
+            let sVal = parseInt(document.getElementById('rule-sets-val').value);
 
             engine.updateRules({
                 rerollOp: document.getElementById('rule-reroll-op').value,
-                rerollVal: parseInt(document.getElementById('rule-reroll-val').value) || null,
+                rerollVal: isNaN(rVal) ? null : rVal,
                 explodeOp: document.getElementById('rule-explode-op').value,
-                explodeVal: parseInt(document.getElementById('rule-explode-val').value) || null,
+                explodeVal: isNaN(eVal) ? null : eVal,
                 targetMode: currentTargetMode,
                 targetOp: targetOp,
                 targetVal: targetVal,
                 setsOp: document.getElementById('rule-sets-op').value,
-                setsVal: parseInt(document.getElementById('rule-sets-val').value) || null
+                setsVal: isNaN(sVal) ? null : sVal
             });
             updateUI();
         }
