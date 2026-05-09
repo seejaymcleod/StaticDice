@@ -736,7 +736,7 @@
                     <div class="flex items-center justify-between px-1 mb-1">
                         <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest w-14 text-center">Rule</span>
                         <div class="flex-1"></div>
-                        <div class="w-[132px] text-center border-b border-white/5 pb-1">
+                        <div class="w-1/2 text-center border-b border-white/5 pb-1">
                             <span class="text-[8px] font-black text-sky-400 uppercase tracking-widest">Target</span>
                         </div>
                     </div>
@@ -753,7 +753,7 @@
                             </div>
                         </div>
 
-                        <div class="w-[132px] flex items-center justify-end border-l border-white/5 pl-2 min-h-[24px]">
+                        <div class="w-1/2 flex items-center justify-end border-l border-white/5 pl-2 min-h-[24px]">
                             <!-- SUM container -->
                             <div id="sum-target-inputs" class="flex gap-2 w-full">
                                 <select id="rule-sum-op" class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
@@ -771,18 +771,38 @@
                             </div>
 
                             <!-- COUNT container -->
-                            <div id="count-target-inputs" class="flex gap-2 w-full hidden">
-                                <select id="rule-count-op" class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
-                                    <option value=">=">&ge;</option>
-                                    <option value=">">&gt;</option>
-                                    <option value="=">=</option>
-                                    <option value="<">&lt;</option>
-                                    <option value="<=">&le;</option>
-                                </select>
-                                <div id="rule-count-input-container" class="w-[80px] flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all">
-                                    <button onclick="adjustRuleVal('count', -1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
-                                    <input type="number" id="rule-count-val" class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors" placeholder="#" oninput="updateRulesUI(true)">
-                                    <button onclick="adjustRuleVal('count', 1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                            <div id="count-target-inputs" class="flex flex-col gap-1 w-full hidden">
+                                <!-- Row 1: Die face condition -->
+                                <div class="flex gap-1 items-center w-full">
+                                    <span class="text-[7px] font-black text-slate-600 uppercase tracking-widest w-6 shrink-0 text-right">Die</span>
+                                    <select id="rule-count-op" class="w-[38px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
+                                        <option value=">=">&ge;</option>
+                                        <option value=">">&gt;</option>
+                                        <option value="=">=</option>
+                                        <option value="<">&lt;</option>
+                                        <option value="<=">&le;</option>
+                                    </select>
+                                    <div id="rule-count-input-container" class="flex-1 flex items-center bg-slate-900 rounded border border-white/5 overflow-hidden transition-all">
+                                        <button onclick="adjustRuleVal('count', -1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">-</button>
+                                        <input type="number" id="rule-count-val" class="w-8 bg-transparent text-sky-400 text-[10px] font-bold text-center outline-none hide-spinners focus:bg-white/5 transition-colors" placeholder="#" oninput="updateRulesUI(true)">
+                                        <button onclick="adjustRuleVal('count', 1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white bg-white/5 active:bg-white/10 transition-colors">+</button>
+                                    </div>
+                                </div>
+                                <!-- Row 2: Success threshold -->
+                                <div class="flex gap-1 items-center w-full">
+                                    <span class="text-[7px] font-black text-slate-600 uppercase tracking-widest w-6 shrink-0 text-right">Need</span>
+                                    <select id="rule-count-thresh-op" class="w-[38px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
+                                        <option value="">Any</option>
+                                        <option value=">=">&ge;</option>
+                                        <option value=">">&gt;</option>
+                                        <option value="=">=</option>
+                                        <option value="<">&lt;</option>
+                                        <option value="<=">&le;</option>
+                                    </select>
+                                    <select id="rule-count-thresh-val" class="flex-1 bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center transition-all opacity-30 pointer-events-none" onchange="updateRulesUI()">
+                                        <option value="overall">Target</option>
+                                        <option value="varX">Variable X</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -798,7 +818,7 @@
                     <div class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
                         <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Sets</span>
                         <div class="flex-1"></div>
-                        <div class="w-[132px] flex gap-2 items-center justify-end border-l border-white/5 pl-2">
+                        <div class="w-1/2 flex gap-2 items-center justify-end border-l border-white/5 pl-2">
                             <select id="rule-sets-op" class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
                                 <option value="">Off</option>
                                 <option value=">=">&ge;</option>
@@ -817,7 +837,7 @@
                     <div class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
                         <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Reroll</span>
                         <div class="flex-1"></div>
-                        <div class="w-[132px] flex gap-2 items-center justify-end border-l border-white/5 pl-2">
+                        <div class="w-1/2 flex gap-2 items-center justify-end border-l border-white/5 pl-2">
                             <select id="rule-reroll-op" class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
                                 <option value="">Off</option>
                                 <option value="<=">&le;</option>
@@ -836,7 +856,7 @@
                     <div class="flex items-center justify-between gap-2 bg-slate-950/30 p-1.5 rounded-lg border border-white/5">
                         <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest w-14 text-center">Explode</span>
                         <div class="flex-1"></div>
-                        <div class="w-[132px] flex gap-2 items-center justify-end border-l border-white/5 pl-2">
+                        <div class="w-1/2 flex gap-2 items-center justify-end border-l border-white/5 pl-2">
                             <select id="rule-explode-op" class="w-[44px] bg-slate-900 text-sky-400 text-[10px] font-bold rounded p-1 outline-none border border-white/5 text-center" onchange="updateRulesUI()">
                                 <option value="">Off</option>
                                 <option value=">=">&ge;</option>
@@ -1222,11 +1242,17 @@
 
 
         function adjustRuleVal(type, delta) {
-            const opSelect = document.getElementById(`rule-${type}-op`);
-            if (!opSelect.value) return;
+            let input, opSelect;
+            if (type === 'countThresh') {
+                opSelect = document.getElementById('rule-count-thresh-op');
+                input = document.getElementById('rule-count-thresh-val');
+            } else {
+                opSelect = document.getElementById(`rule-${type}-op`);
+                input = document.getElementById(`rule-${type}-val`);
+            }
+            if (!opSelect || !opSelect.value) return;
 
-            const input = document.getElementById(`rule-${type}-val`);
-            let val = parseInt(input.value) || (type === 'target' ? 5 : 1);
+            let val = parseInt(input.value) || 1;
             val += delta;
             if (val < 1) val = 1;
             input.value = val;
@@ -1234,7 +1260,7 @@
         }
 
         function updateRulesUI(fromInput = false) {
-            ['reroll', 'explode', 'count', 'sets'].forEach(type => {
+            ['reroll', 'explode', 'sets'].forEach(type => {
                 const opEl = document.getElementById(`rule-${type}-op`);
                 if (!opEl) return;
                 const op = opEl.value;
@@ -1243,12 +1269,21 @@
 
                 if (op) {
                     if (container) container.classList.remove('opacity-30', 'pointer-events-none');
-                    if (input && !fromInput && !input.value) input.value = type === 'count' ? '5' : (type === 'sets' ? '2' : '1');
+                    if (input && !fromInput && !input.value) input.value = type === 'sets' ? '2' : '1';
                 } else {
                     if (container) container.classList.add('opacity-30', 'pointer-events-none');
                     if (input && !fromInput) input.value = '';
                 }
             });
+
+            // Count threshold: gate the val select based on whether op is set
+            const threshOp = document.getElementById('rule-count-thresh-op')?.value;
+            const threshValEl = document.getElementById('rule-count-thresh-val');
+            if (threshOp) {
+                if (threshValEl) threshValEl.classList.remove('opacity-30', 'pointer-events-none');
+            } else {
+                if (threshValEl) threshValEl.classList.add('opacity-30', 'pointer-events-none');
+            }
 
             // Update target mode button styles and containers
             const sumBtn = document.getElementById('target-mode-sum');
@@ -1298,6 +1333,8 @@
 
             let targetOp = '';
             let targetVal = null;
+            let countThreshOp = '';
+            let countThreshVal = null;
             if (currentTargetMode === 'sum') {
                 targetOp = document.getElementById('rule-sum-op').value;
                 targetVal = document.getElementById('rule-sum-val').value;
@@ -1305,6 +1342,9 @@
                 targetOp = document.getElementById('rule-count-op').value;
                 let parsed = parseInt(document.getElementById('rule-count-val').value);
                 targetVal = isNaN(parsed) ? 5 : parsed;
+                countThreshOp = document.getElementById('rule-count-thresh-op').value;
+                // countThreshVal is now a select (string: 'overall' | 'varX')
+                countThreshVal = document.getElementById('rule-count-thresh-val').value || null;
             }
 
             let rVal = parseInt(document.getElementById('rule-reroll-val').value);
@@ -1319,6 +1359,8 @@
                 targetMode: currentTargetMode,
                 targetOp: targetOp,
                 targetVal: targetVal,
+                countThreshOp: countThreshOp,
+                countThreshVal: countThreshVal,
                 setsOp: document.getElementById('rule-sets-op').value,
                 setsVal: isNaN(sVal) ? null : sVal
             });
@@ -1491,6 +1533,9 @@
             document.getElementById('rule-explode-op').value = "";
             document.getElementById('rule-sum-op').value = "";
             document.getElementById('rule-count-op').value = ">=";
+            document.getElementById('rule-count-val').value = "";
+            document.getElementById('rule-count-thresh-op').value = "";
+            document.getElementById('rule-count-thresh-val').value = "";
             document.getElementById('rule-sets-op').value = "";
             updateRulesUI();
 
@@ -1656,19 +1701,23 @@
         function loadQueue(id) {
             engine.loadQueue(id);
             document.getElementById('rule-reroll-op').value = engine.rollRules.rerollOp;
-            document.getElementById('rule-reroll-val').value = engine.rollRules.rerollVal || '';
+            document.getElementById('rule-reroll-val').value = engine.rollRules.rerollVal ?? '';
             document.getElementById('rule-explode-op').value = engine.rollRules.explodeOp;
-            document.getElementById('rule-explode-val').value = engine.rollRules.explodeVal || '';
+            document.getElementById('rule-explode-val').value = engine.rollRules.explodeVal ?? '';
             
-            currentTargetMode = engine.rollRules.targetMode;
+            currentTargetMode = engine.rollRules.targetMode || 'sum';
             if (currentTargetMode === 'sum') {
                 document.getElementById('rule-sum-op').value = engine.rollRules.targetOp || '';
                 document.getElementById('rule-sum-val').value = engine.rollRules.targetVal || 'overall';
                 document.getElementById('rule-count-op').value = '>=';
                 document.getElementById('rule-count-val').value = '';
+                document.getElementById('rule-count-thresh-op').value = '';
+                document.getElementById('rule-count-thresh-val').value = '';
             } else if (currentTargetMode === 'count') {
                 document.getElementById('rule-count-op').value = engine.rollRules.targetOp || '>=';
-                document.getElementById('rule-count-val').value = engine.rollRules.targetVal || '';
+                document.getElementById('rule-count-val').value = engine.rollRules.targetVal ?? '';
+                document.getElementById('rule-count-thresh-op').value = engine.rollRules.countThreshOp || '';
+                document.getElementById('rule-count-thresh-val').value = engine.rollRules.countThreshVal ?? '';
                 document.getElementById('rule-sum-op').value = '';
                 document.getElementById('rule-sum-val').value = 'overall';
             } else {
@@ -1676,10 +1725,13 @@
                 document.getElementById('rule-sum-val').value = 'overall';
                 document.getElementById('rule-count-op').value = '>=';
                 document.getElementById('rule-count-val').value = '';
+                document.getElementById('rule-count-thresh-op').value = '';
+                document.getElementById('rule-count-thresh-val').value = '';
             }
             
             document.getElementById('rule-sets-op').value = engine.rollRules.setsOp || "";
-            document.getElementById('rule-sets-val').value = engine.rollRules.setsVal || "";
+            document.getElementById('rule-sets-val').value = engine.rollRules.setsVal ?? "";
+            updateRulesUI();
             updateUI();
         }
 

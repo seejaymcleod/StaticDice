@@ -8,6 +8,7 @@ class DiceEngine {
             rerollOp: "", rerollVal: null,
             explodeOp: "", explodeVal: null,
             targetMode: "sum", targetOp: "", targetVal: null,
+            countThreshOp: "", countThreshVal: null,
             setsOp: "", setsVal: null
         };
         this.savedQueues = [];
@@ -89,6 +90,8 @@ class DiceEngine {
         this.rollRules.rerollOp = "";
         this.rollRules.explodeOp = "";
         this.rollRules.targetOp = "";
+        this.rollRules.countThreshOp = "";
+        this.rollRules.countThreshVal = null;
         this.rollRules.setsOp = "";
         
         this.overallTarget = null;
@@ -133,8 +136,10 @@ class DiceEngine {
         this.activeModifier = item.modifier;
         this.modifierLevel = item.modLevel;
         this.flatMod = item.flat;
-        this.rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetMode: "sum", targetOp: "", targetVal: null, setsOp: "", setsVal: null };
+        this.rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetMode: "sum", targetOp: "", targetVal: null, countThreshOp: "", countThreshVal: null, setsOp: "", setsVal: null };
         if (!this.rollRules.targetMode) this.rollRules.targetMode = "sum";
+        if (this.rollRules.countThreshOp === undefined) this.rollRules.countThreshOp = "";
+        if (this.rollRules.countThreshVal === undefined) this.rollRules.countThreshVal = null;
     }
 
     deleteQueue(id) {
@@ -450,8 +455,26 @@ class DiceEngine {
             }
         }
 
-        // Priority 5: Default Count Label (No target op)
+        // Priority 5: Default Count Label (No threshold set)
         if (rules.targetMode === 'count') {
+            const hasThresh = rules.countThreshOp && rules.countThreshVal !== null;
+            if (hasThresh) {
+                // Resolve 'overall' / 'varX' the same way Sum mode does
+                let actualThresh = rules.countThreshVal;
+                let displayThreshStr = rules.countThreshVal;
+                if (rules.countThreshVal === 'overall') {
+                    actualThresh = this.overallTarget !== null ? this.overallTarget : 0;
+                    displayThreshStr = actualThresh;
+                } else if (rules.countThreshVal === 'varX') {
+                    actualThresh = 0;
+                    displayThreshStr = 'VARIABLE X';
+                }
+                const isSuccess = this.checkCondition(total, rules.countThreshOp, actualThresh);
+                const status = isSuccess ? 'SUCCESS' : 'FAIL';
+                const color = isSuccess ? 'emerald' : 'rose';
+                const opDisplay = this._getDisplayOp(rules.countThreshOp);
+                return { text: `${total} ${opDisplay} ${displayThreshStr} SUCCESSES ➔ ${status}`, color: color };
+            }
             return { text: `${total} SUCCESS${total !== 1 ? 'ES' : ''}`, color: 'emerald' };
         }
 
