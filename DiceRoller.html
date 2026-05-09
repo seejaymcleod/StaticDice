@@ -1249,9 +1249,9 @@
             }
             if (!opSelect || !opSelect.value) return;
 
-            let val = parseInt(input.value) || 1;
+            let val = parseInt(input.value) || 0;
             val += delta;
-            if (val < 1) val = 1;
+            if (val < 0) val = 0;
             input.value = val;
             updateRulesUI();
         }
@@ -1266,7 +1266,7 @@
 
                 if (op) {
                     if (container) container.classList.remove('opacity-30', 'pointer-events-none');
-                    if (input && !fromInput && !input.value) input.value = type === 'sets' ? '2' : '1';
+                    if (input && !fromInput && !input.value) input.value = '0';
                 } else {
                     if (container) container.classList.add('opacity-30', 'pointer-events-none');
                     if (input && !fromInput) input.value = '';
@@ -1338,7 +1338,7 @@
             } else if (currentTargetMode === 'count') {
                 targetOp = document.getElementById('rule-count-op').value;
                 let parsed = parseInt(document.getElementById('rule-count-val').value);
-                targetVal = isNaN(parsed) ? 5 : parsed;
+                targetVal = isNaN(parsed) ? 0 : parsed;
                 countThreshOp = document.getElementById('rule-count-thresh-op').value;
                 // countThreshVal is now a select (string: 'overall' | 'varX')
                 countThreshVal = document.getElementById('rule-count-thresh-val').value || null;
@@ -1525,17 +1525,22 @@
 
         function clearQueue() {
             engine.clearQueue();
+            currentTargetMode = 'sum';
 
             document.getElementById('rule-reroll-op').value = "";
+            document.getElementById('rule-reroll-val').value = "";
             document.getElementById('rule-explode-op').value = "";
+            document.getElementById('rule-explode-val').value = "";
             document.getElementById('rule-sum-op').value = "";
+            document.getElementById('rule-sum-val').value = "overall";
             document.getElementById('rule-count-op').value = ">=";
             document.getElementById('rule-count-val').value = "";
             document.getElementById('rule-count-thresh-op').value = "";
             document.getElementById('rule-count-thresh-val').value = "";
             document.getElementById('rule-sets-op').value = "";
+            document.getElementById('rule-sets-val').value = "";
+            
             updateRulesUI();
-
             resetDisplayToIdle();
             updateUI();
         }
@@ -1588,19 +1593,38 @@
             let modifierText = engine.activeModifier ? ` [${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}]` : "";
 
             let rulesText = "";
-            if (engine.rollRules.rerollOp && engine.rollRules.rerollVal !== null) rulesText += ` RR${engine.rollRules.rerollOp}${engine.rollRules.rerollVal}`;
-            if (engine.rollRules.explodeOp && engine.rollRules.explodeVal !== null) rulesText += ` EX${engine.rollRules.explodeOp}${engine.rollRules.explodeVal}`;
-            if (engine.rollRules.targetMode === 'count') {
-                rulesText += ` CT`;
-                if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) rulesText += `${engine.rollRules.targetOp}${engine.rollRules.targetVal}`;
-            } else if (engine.rollRules.targetMode === 'list') {
-                rulesText += ` LIST`;
-            } else {
-                rulesText += ` SUM`;
-            }
-            if (engine.overallTarget !== null) rulesText += ` TARGET≥${engine.overallTarget}`;
+            const rrActive = engine.rollRules.rerollOp && engine.rollRules.rerollVal !== null;
+            const exActive = engine.rollRules.explodeOp && engine.rollRules.explodeVal !== null;
+            const setsActive = engine.rollRules.setsOp && engine.rollRules.setsVal !== null;
 
-            display.innerText = (parts.length > 0 || modifierText || rulesText) ? parts.join(" + ") + modifierText + rulesText : "EMPTY QUEUE";
+            if (rrActive) rulesText += ` RR${engine.rollRules.rerollOp}${engine.rollRules.rerollVal}`;
+            if (exActive) rulesText += ` EX${engine.rollRules.explodeOp}${engine.rollRules.explodeVal}`;
+            if (setsActive) rulesText += ` SET${engine.rollRules.setsOp}${engine.rollRules.setsVal}`;
+
+            const hasBaseContent = parts.length > 0 || modifierText !== "" || engine.overallTarget !== null;
+            const hasRules = rrActive || exActive || setsActive;
+
+            if (hasBaseContent || hasRules) {
+                if (engine.rollRules.targetMode === 'count') {
+                    rulesText += ` CT`;
+                    if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) {
+                        rulesText += `${engine.rollRules.targetOp}${engine.rollRules.targetVal}`;
+                    }
+                } else if (engine.rollRules.targetMode === 'list') {
+                    rulesText += ` LIST`;
+                } else {
+                    rulesText += ` SUM`;
+                }
+            }
+
+            if (engine.overallTarget !== null) {
+                const isCountAny = engine.rollRules.targetMode === 'count' && !engine.rollRules.countThreshOp;
+                if (!isCountAny) {
+                    rulesText += ` TARGET≥${engine.overallTarget}`;
+                }
+            }
+
+            display.innerText = (hasBaseContent || hasRules) ? parts.join(" + ") + modifierText + rulesText : "EMPTY QUEUE";
 
             if (modInput && document.activeElement !== modInput) {
                 modInput.value = engine.flatMod > 0 ? `+${engine.flatMod}` : engine.flatMod;

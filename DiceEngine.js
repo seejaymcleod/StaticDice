@@ -87,12 +87,13 @@ class DiceEngine {
         this.modifierLevel = 0;
         this.flatMod = 0;
         
-        this.rollRules.rerollOp = "";
-        this.rollRules.explodeOp = "";
-        this.rollRules.targetOp = "";
-        this.rollRules.countThreshOp = "";
-        this.rollRules.countThreshVal = null;
-        this.rollRules.setsOp = "";
+        this.rollRules = {
+            rerollOp: "", rerollVal: null,
+            explodeOp: "", explodeVal: null,
+            targetMode: "sum", targetOp: "", targetVal: null,
+            countThreshOp: "", countThreshVal: null,
+            setsOp: "", setsVal: null
+        };
         
         this.overallTarget = null;
     }
@@ -423,7 +424,33 @@ class DiceEngine {
             return { text: `${matchingDiceCount} DICE SETS ${op} ${rules.setsVal} ➔ ${details}`, color: 'sky' };
         }
 
-        // Priority 3: Advanced Target (Sum mode)
+        // Priority 3: Count Mode logic
+        if (rules.targetMode === 'count') {
+            const hasThresh = rules.countThreshOp && rules.countThreshVal !== null;
+            if (hasThresh) {
+                let actualThresh = rules.countThreshVal;
+                let displayThreshStr = rules.countThreshVal;
+                if (rules.countThreshVal === 'overall') {
+                    actualThresh = this.overallTarget !== null ? this.overallTarget : 0;
+                    displayThreshStr = actualThresh;
+                } else if (rules.countThreshVal === 'varX') {
+                    actualThresh = 0;
+                    displayThreshStr = 'VARIABLE X';
+                }
+                const isSuccess = this.checkCondition(total, rules.countThreshOp, actualThresh);
+                const status = isSuccess ? 'SUCCESS' : 'FAIL';
+                const color = isSuccess ? 'emerald' : 'rose';
+                const opDisplay = this._getDisplayOp(rules.countThreshOp);
+                return { text: `${total} ${opDisplay} ${displayThreshStr} SUCCESSES ➔ ${status}`, color: color };
+            } else {
+                // "Any" case: Hide success/fail and target label
+                const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
+                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '0';
+                return { text: `${total} DICE ${dieOpDisplay} ${dieVal}`, color: 'emerald' };
+            }
+        }
+
+        // Priority 4: Advanced Target (Sum mode)
         if (rules.targetMode === 'sum' && rules.targetOp && rules.targetVal !== null && rules.targetVal !== '') {
             let actualTarget = 0;
             let displayTargetStr = rules.targetVal;
@@ -442,45 +469,15 @@ class DiceEngine {
             return { text: `${total} ${opDisplay} ${displayTargetStr} ➔ ${status}`, color: color };
         }
 
-        // Priority 4: Overall Target
+        // Priority 5: Overall Target (Sum mode only)
         if (this.overallTarget !== null) {
             const isSuccess = total >= this.overallTarget;
             const status = isSuccess ? 'SUCCESS' : 'FAIL';
             const color = isSuccess ? 'emerald' : 'rose';
-            
-            if (rules.targetMode === 'count') {
-                const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
-                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '?';
-                return { text: `${total} Dice ${dieOpDisplay} ${dieVal}, Target ${this.overallTarget} ➔ ${status}`, color: color };
-            } else {
-                return { text: `${total} ≥ ${this.overallTarget} ➔ ${status}`, color: color };
-            }
+            return { text: `${total} ≥ ${this.overallTarget} ➔ ${status}`, color: color };
         }
 
-        // Priority 5: Default Count Label (No threshold set)
-        if (rules.targetMode === 'count') {
-            const hasThresh = rules.countThreshOp && rules.countThreshVal !== null;
-            if (hasThresh) {
-                // Resolve 'overall' / 'varX' the same way Sum mode does
-                let actualThresh = rules.countThreshVal;
-                let displayThreshStr = rules.countThreshVal;
-                if (rules.countThreshVal === 'overall') {
-                    actualThresh = this.overallTarget !== null ? this.overallTarget : 0;
-                    displayThreshStr = actualThresh;
-                } else if (rules.countThreshVal === 'varX') {
-                    actualThresh = 0;
-                    displayThreshStr = 'VARIABLE X';
-                }
-                const isSuccess = this.checkCondition(total, rules.countThreshOp, actualThresh);
-                const status = isSuccess ? 'SUCCESS' : 'FAIL';
-                const color = isSuccess ? 'emerald' : 'rose';
-                const opDisplay = this._getDisplayOp(rules.countThreshOp);
-                return { text: `${total} ${opDisplay} ${displayThreshStr} SUCCESSES ➔ ${status}`, color: color };
-            }
-            return { text: `${total} SUCCESS${total !== 1 ? 'ES' : ''}`, color: 'emerald' };
-        }
-
-        // Priority 5: Crits
+        // Priority 6: Crits
         if (hasCritHit) return { text: 'NATURAL 20', color: 'emerald' };
         if (hasCritFail) return { text: 'NATURAL 1', color: 'rose' };
 
