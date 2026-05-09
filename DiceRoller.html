@@ -691,7 +691,7 @@
                     <div
                         class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
                         <span
-                            class="text-[7px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
+                            class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
                         <input type="text" id="flat-mod-input"
                             class="w-full bg-transparent font-black text-[14px] text-sky-400 mono leading-none text-center outline-none hide-spinners"
                             value="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
@@ -705,11 +705,10 @@
                     <button onclick="adjustOverallTarget(-1)" class="segmented-btn btn-side">－</button>
                     <div
                         class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
-                        <span
-                            class="text-[7px] font-black text-sky-400/40 uppercase tracking-[0.2em] mb-0.5">Target</span>
+                        <span class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">Target</span>
                         <input type="number" id="overall-target-input"
-                            class="w-full bg-transparent font-black text-[14px] text-sky-400 mono leading-none text-center outline-none hide-spinners"
-                            value="" placeholder="-" oninput="setOverallTarget(this.value)" onblur="updateUI()">
+                            class="w-full bg-transparent font-black text-[14px] text-sky-400 placeholder-sky-400 placeholder-opacity-100 mono leading-none text-center outline-none hide-spinners"
+                            value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
                     </div>
                     <button onclick="adjustOverallTarget(1)" class="segmented-btn btn-side">＋</button>
                 </div>
