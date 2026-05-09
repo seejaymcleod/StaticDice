@@ -440,8 +440,11 @@ class DiceEngine {
                 const isSuccess = this.checkCondition(total, rules.countThreshOp, actualThresh);
                 const status = isSuccess ? 'SUCCESS' : 'FAIL';
                 const color = isSuccess ? 'emerald' : 'rose';
-                const opDisplay = this._getDisplayOp(rules.countThreshOp);
-                return { text: `${total} ${opDisplay} ${displayThreshStr} SUCCESSES ➔ ${status}`, color: color };
+                const threshOpDisplay = this._getDisplayOp(rules.countThreshOp);
+                const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
+                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '0';
+                
+                return { text: `${total} ${dieOpDisplay} ${dieVal}, Target ${threshOpDisplay} ${displayThreshStr} ➔ ${status}`, color: color };
             } else {
                 // "Any" case: Hide success/fail and target label
                 const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
