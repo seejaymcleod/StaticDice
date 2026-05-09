@@ -294,9 +294,16 @@ class DiceEngine {
             if (this.activeModifier === 'DIS') f += 'kl1';
             if (this.rollRules.rerollOp) f += `r${this.rollRules.rerollOp.replace('=', '')}${this.rollRules.rerollVal}`;
             if (this.rollRules.explodeOp) f += `e${this.rollRules.explodeOp.replace('=', '')}${this.rollRules.explodeVal}`;
-            if (this.rollRules.targetMode === 'count') {
-                f += 'c';
-                if (this.rollRules.targetOp) f += `${this.rollRules.targetOp.replace('=', '')}${this.rollRules.targetVal}`;
+            if (this.rollRules.targetMode === 'count' || this.rollRules.targetMode === 'sum') {
+                if (this.rollRules.targetOp && this.rollRules.targetVal !== null && this.rollRules.targetVal !== '') {
+                    if (this.rollRules.targetMode === 'count') f += 'c';
+                    let valStr = this.rollRules.targetVal;
+                    if (this.rollRules.targetMode === 'sum') {
+                        if (valStr === 'overall') valStr = 'TGT';
+                        else if (valStr === 'varX') valStr = 'VARX';
+                    }
+                    f += `${this.rollRules.targetOp.replace('=', '')}${valStr}`;
+                }
             }
             if (this.rollRules.setsOp) f += `set${this.rollRules.setsOp.replace('=', '')}${this.rollRules.setsVal}`;
             f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
@@ -404,14 +411,33 @@ class DiceEngine {
             return { text: `${matchingDiceCount} DICE SETS ${op} ${rules.setsVal} ➔ ${details}`, color: 'sky' };
         }
 
-        // Priority 2: Overall Target
+        // Priority 2: Advanced Target (Sum mode)
+        if (rules.targetMode === 'sum' && rules.targetOp && rules.targetVal !== null && rules.targetVal !== '') {
+            let actualTarget = 0;
+            let displayTargetStr = rules.targetVal;
+            if (rules.targetVal === 'overall') {
+                actualTarget = this.overallTarget !== null ? this.overallTarget : 0;
+                displayTargetStr = 'TARGET';
+            } else if (rules.targetVal === 'varX') {
+                actualTarget = 0;
+                displayTargetStr = 'VARIABLE X';
+            }
+            
+            const isSuccess = this.checkCondition(total, rules.targetOp, actualTarget);
+            const status = isSuccess ? 'SUCCESS' : 'FAIL';
+            const color = isSuccess ? 'emerald' : 'rose';
+            const opDisplay = this._getDisplayOp(rules.targetOp);
+            return { text: `TOTAL ${opDisplay} ${displayTargetStr} ➔ ${status}`, color: color };
+        }
+
+        // Priority 3: Overall Target
         if (this.overallTarget !== null) {
             const isSuccess = total >= this.overallTarget;
             const status = isSuccess ? 'SUCCESS' : 'FAIL';
             const color = isSuccess ? 'emerald' : 'rose';
             
             if (rules.targetMode === 'count') {
-                return { text: `${total} DICE ≥ ${this.overallTarget} ➔ ${status}`, color: color };
+                return { text: `${total} SUCCESSES ≥ ${this.overallTarget} ➔ ${status}`, color: color };
             } else {
                 return { text: `RESULT ≥ ${this.overallTarget} ➔ ${status}`, color: color };
             }
