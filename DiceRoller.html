@@ -2123,7 +2123,7 @@
 
             // Log to history immediately
             let historyText = res.flatDescription;
-            if (res.targetMode === 'count') historyText = `${res.total} SUCCESSES | ${historyText}`;
+            if (res.targetMode === 'count') historyText = `${res.total} Dice | ${historyText}`;
             addToHistory(res.total, historyText);
 
             // Start cosmetic animation, then reveal result

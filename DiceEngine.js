@@ -449,7 +449,9 @@ class DiceEngine {
             const color = isSuccess ? 'emerald' : 'rose';
             
             if (rules.targetMode === 'count') {
-                return { text: `${total} SUCCESSES ≥ ${this.overallTarget} ➔ ${status}`, color: color };
+                const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
+                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '?';
+                return { text: `${total} Dice ${dieOpDisplay} ${dieVal}, Target ${this.overallTarget} ➔ ${status}`, color: color };
             } else {
                 return { text: `${total} ≥ ${this.overallTarget} ➔ ${status}`, color: color };
             }
