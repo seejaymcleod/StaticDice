@@ -4,8 +4,10 @@ A TTRPG dice roller that uses hardware static noise to generate cryptographicall
 * vars as targets
 * maybe a dice checker built in.. or a character sheet sister tool
 * dcc dice 
-* highlight sets
 * tables 
 * effects
-* ignore mod button or settings for things like crit and fumble
 
+
+SISTER APPS 
+Multiplayer Rooms
+Character sheets
