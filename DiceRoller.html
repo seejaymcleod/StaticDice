@@ -101,8 +101,12 @@
         }
 
         .segmented-btn:active:not(:disabled) {
-            background: rgba(0, 212, 255, 0.15); /* Azure charge on click */
-            transform: scale(0.98);
+            background: #00d4ff !important;
+            color: #020617 !important;
+            transform: scale(0.96);
+            box-shadow: 0 0 35px #00d4ff;
+            z-index: 50;
+            position: relative;
         }
 
         button:focus, button:active {
@@ -168,12 +172,17 @@
             50% {
                 filter: drop-shadow(0 0 30px var(--accent-azure));
                 transform: scale(1.15);
+                opacity: 1;
             }
-
             100% {
                 filter: drop-shadow(0 0 10px var(--accent-azure));
                 transform: scale(1);
             }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(0deg); }
+            100% { transform: translateX(100%) rotate(0deg); }
         }
 
         .crit-hit {
@@ -233,6 +242,16 @@
             box-shadow: 
                 0 0 20px rgba(0, 212, 255, 0.15),
                 inset 0 0 15px rgba(0, 212, 255, 0.05);
+        }
+
+        .saved-item:active {
+            transform: scale(0.97);
+            box-shadow: 0 0 40px var(--item-color, #00d4ff);
+            background: var(--item-color, #00d4ff) !important;
+        }
+
+        .saved-item:active * {
+            color: #020617 !important;
         }
 
         #color-picker-overlay {
@@ -676,8 +695,9 @@
         <section class="section-controls space-y-3">
             <!-- ROLL BUTTON -->
             <button id="roll-button" onclick="resolveRolling()"
-                class="w-full bg-[#00d4ff] hover:bg-[#33e0ff] text-[#020617] font-black py-3 rounded-xl text-xl shadow-[0_0_30px_rgba(0,212,255,0.4)] active:scale-[0.98] transition-all border-b-2 border-[#00a8cc] uppercase tracking-widest mb-3">
-                ROLL
+                class="w-full bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black py-4 rounded-xl text-2xl shadow-[0_0_25px_rgba(0,212,255,0.15)] active:scale-[0.95] active:shadow-[0_0_60px_#00d4ff] active:bg-[#00d4ff] active:text-[#020617] active:z-50 transition-all border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] mb-4 relative overflow-hidden group">
+                <span class="relative z-10">ROLL</span>
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
             </button>
 
             <div class="flex gap-2">
@@ -2174,6 +2194,7 @@
 
                     const item = document.createElement('div');
                     item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
+                    item.style.setProperty('--item-color', q.color);
                     item.onclick = () => { loadQueue(q.id); resolveRolling(); };
 
                     let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
