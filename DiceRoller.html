@@ -104,9 +104,11 @@
             background: #00d4ff !important;
             color: #020617 !important;
             transform: scale(0.96);
-            box-shadow: 0 0 35px #00d4ff;
+            box-shadow: 0 0 50px #00d4ff;
+            border-color: #00d4ff !important;
             z-index: 50;
             position: relative;
+            transition: all 0.075s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         button:focus, button:active {
@@ -246,8 +248,10 @@
 
         .saved-item:active {
             transform: scale(0.97);
-            box-shadow: 0 0 40px var(--item-color, #00d4ff);
+            box-shadow: 0 0 50px var(--item-color, #00d4ff);
             background: var(--item-color, #00d4ff) !important;
+            border-color: var(--item-color, #00d4ff) !important;
+            transition: all 0.075s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .saved-item:active * {
@@ -381,10 +385,25 @@
 
         .section-sticky {
             order: 0;
+            z-index: 40;
         }
 
         .section-controls {
             order: 1;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-dice {
+            order: 2;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-arsenal {
+            order: 3;
+            position: relative;
+            z-index: 10;
         }
 
         .section-bottom {
@@ -610,10 +629,10 @@
 
         <!-- STICKY TOP -->
         <div
-            class="section-sticky sticky top-0 z-40 bg-[#020617]/80 backdrop-blur-md -mx-4 px-4 py-3 space-y-4 shadow-xl border-b border-white/5">
+            class="section-sticky sticky top-0 z-40 -mx-4 px-4 py-3 space-y-4 pointer-events-none">
             <input type="file" id="import-input" class="hidden" accept=".json" onchange="importSettings(event)">
             <!-- HEADER -->
-            <header class="flex justify-between items-center px-2">
+            <header class="flex justify-between items-center px-2 pointer-events-auto">
                 <div class="flex flex-col">
                     <h1 class="text-xl font-black text-[#e2e8f0] tracking-tighter leading-none">STATIC<span
                             class="text-[#00d4ff]">DICE</span></h1>
@@ -674,7 +693,7 @@
 
             <!-- MAIN DISPLAY -->
             <main
-                class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center min-h-[90px] relative overflow-hidden shrink-0 result-shimmer">
+                class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center min-h-[90px] relative overflow-hidden shrink-0 result-shimmer pointer-events-auto">
                 <div
                     class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none">
                 </div>
@@ -695,7 +714,7 @@
         <section class="section-controls space-y-3">
             <!-- ROLL BUTTON -->
             <button id="roll-button" onclick="resolveRolling()"
-                class="w-full bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black py-4 rounded-xl text-2xl shadow-[0_0_25px_rgba(0,212,255,0.15)] active:scale-[0.95] active:shadow-[0_0_60px_#00d4ff] active:bg-[#00d4ff] active:text-[#020617] active:z-50 transition-all border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] mb-4 relative overflow-hidden group">
+                class="w-full bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black py-4 rounded-xl text-2xl shadow-[0_0_25px_rgba(0,212,255,0.15)] active:scale-[0.95] active:shadow-[0_0_60px_#00d4ff] active:bg-[#00d4ff] active:text-[#020617] active:border-[#00d4ff] active:z-50 transition-all duration-75 border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] mb-4 relative overflow-hidden group">
                 <span class="relative z-10">ROLL</span>
                 <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
             </button>
