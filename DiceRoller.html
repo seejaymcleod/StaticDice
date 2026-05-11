@@ -1830,7 +1830,7 @@
                 const modHtml = engine.activeModifier ? `<span class="text-indigo-400 opacity-80 ml-1 whitespace-nowrap">[${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}]</span>` : "";
                 const rulesHtml = rulesParts.length > 0 ? `<span class="text-slate-500 text-[10px] ml-1.5 opacity-80 whitespace-nowrap">${rulesParts.join(" ")}</span>` : "";
                 const modeHtml = `<span class="bg-sky-500/10 text-sky-400 text-[9px] px-1.5 py-0.5 rounded border border-sky-500/20 font-black ml-2 whitespace-nowrap opacity-80">${modeLabel}</span>`;
-                
+
                 display.innerHTML = `
                     <div class="flex items-center justify-center gap-1 overflow-hidden">
                         ${diceHtml} ${modHtml} ${rulesHtml} ${modeHtml}
@@ -2703,6 +2703,11 @@
         };
 
     </script>
+    <footer class="py-12 text-center w-full">
+        <p class="text-[9px] font-medium text-slate-400 uppercase tracking-[0.15em] opacity-30">
+            © 2026 SeeJayMcLeod.<br>This tool is free software released under the GNU GPLv3.
+        </p>
+    </footer>
 </body>
 
 </html>
