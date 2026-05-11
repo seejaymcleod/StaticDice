@@ -788,8 +788,7 @@
                     <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
                     <div
                         class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
-                        <span
-                            class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">Modifier</span>
+                        <span class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">MOD</span>
                         <input type="text" id="flat-mod-input"
                             class="w-full bg-transparent font-black text-[14px] text-sky-400 mono leading-none text-center outline-none hide-spinners"
                             value="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
@@ -803,7 +802,7 @@
                     <button onclick="adjustOverallTarget(-1)" class="segmented-btn btn-side">－</button>
                     <div
                         class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
-                        <span class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">Target</span>
+                        <span class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">TARGET</span>
                         <input type="number" id="overall-target-input"
                             class="w-full bg-transparent font-black text-[14px] text-sky-400 placeholder-sky-400 placeholder-opacity-100 mono leading-none text-center outline-none hide-spinners"
                             value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
@@ -1829,7 +1828,7 @@
                 const diceHtml = `<span class="text-sky-400 whitespace-nowrap">${diceParts.join(" + ")}</span>`;
                 const modHtml = engine.activeModifier ? `<span class="text-indigo-400 opacity-80 ml-1 whitespace-nowrap">[${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}]</span>` : "";
                 const rulesHtml = rulesParts.length > 0 ? `<span class="text-slate-500 text-[10px] ml-1.5 opacity-80 whitespace-nowrap">${rulesParts.join(" ")}</span>` : "";
-                const modeHtml = `<span class="bg-sky-500/10 text-sky-400 text-[9px] px-1.5 py-0.5 rounded border border-sky-500/20 font-black ml-2 whitespace-nowrap opacity-80">${modeLabel}</span>`;
+                const modeHtml = `<span class="bg-sky-500/10 text-sky-400 text-[12px] px-1.5 py-0.5 rounded border border-sky-500/20 font-black ml-2 whitespace-nowrap opacity-80">${modeLabel}</span>`;
 
                 display.innerHTML = `
                     <div class="flex items-center justify-center gap-1 overflow-hidden">
