@@ -11,7 +11,8 @@
 
         :root {
             --bg-deep: #020617;
-            --bg-card: rgba(0, 212, 255, 0.05); /* Lighter Azure tint */
+            --bg-card: rgba(0, 212, 255, 0.05);
+            /* Lighter Azure tint */
             --accent-azure: #00d4ff;
             --accent-glow: rgba(0, 212, 255, 0.5);
             --accent-violet: #6366f1;
@@ -68,8 +69,10 @@
         }
 
         .segmented-row {
-            background: rgba(15, 23, 42, 0.4); /* Deeper glass base */
-            border: 1px solid rgba(0, 212, 255, 0.15); /* Sharp Azure glass edge */
+            background: rgba(15, 23, 42, 0.4);
+            /* Deeper glass base */
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            /* Sharp Azure glass edge */
             border-radius: 0.8rem;
             display: flex;
             align-items: stretch;
@@ -80,9 +83,10 @@
         }
 
         .segmented-row:hover {
-            border-color: rgba(0, 212, 255, 0.45); /* Sharper Azure edge */
+            border-color: rgba(0, 212, 255, 0.45);
+            /* Sharper Azure edge */
             background: rgba(15, 23, 42, 0.6);
-            box-shadow: 
+            box-shadow:
                 0 0 20px rgba(0, 212, 255, 0.12),
                 inset 0 0 15px rgba(0, 212, 255, 0.05);
         }
@@ -111,7 +115,8 @@
             transition: all 0.075s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        button:focus, button:active {
+        button:focus,
+        button:active {
             outline: none !important;
             -webkit-tap-highlight-color: transparent;
         }
@@ -176,6 +181,7 @@
                 transform: scale(1.15);
                 opacity: 1;
             }
+
             100% {
                 filter: drop-shadow(0 0 10px var(--accent-azure));
                 transform: scale(1);
@@ -183,8 +189,13 @@
         }
 
         @keyframes shimmer {
-            0% { transform: translateX(-100%) rotate(0deg); }
-            100% { transform: translateX(100%) rotate(0deg); }
+            0% {
+                transform: translateX(-100%) rotate(0deg);
+            }
+
+            100% {
+                transform: translateX(100%) rotate(0deg);
+            }
         }
 
         .crit-hit {
@@ -241,7 +252,7 @@
             background: rgba(0, 212, 255, 0.08);
             border-color: rgba(0, 212, 255, 0.5);
             transform: translateY(-1.5px);
-            box-shadow: 
+            box-shadow:
                 0 0 20px rgba(0, 212, 255, 0.15),
                 inset 0 0 15px rgba(0, 212, 255, 0.05);
         }
@@ -621,6 +632,43 @@
             box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
             text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
         }
+
+        /* CHARGE STATES */
+        .is-charging main {
+            box-shadow: inset 0 0 50px rgba(0, 212, 255, 0.4) !important;
+            border-color: #00d4ff !important;
+        }
+
+        .is-charging-btn {
+            background: #00d4ff !important;
+            color: #020617 !important;
+            transform: scale(0.96) !important;
+            border-color: #00d4ff !important;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6) !important;
+            z-index: 50;
+        }
+
+        .is-charging-btn * {
+            color: #020617 !important;
+        }
+
+        .is-resolved #result-hero {
+            animation: sd-text-snap 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            color: #00d4ff !important;
+            text-shadow: 0 0 20px #00d4ff;
+        }
+
+        @keyframes sd-text-snap {
+            0% {
+                transform: scale(1.4);
+                filter: blur(4px);
+            }
+
+            100% {
+                transform: scale(1);
+                filter: blur(0);
+            }
+        }
     </style>
 </head>
 
@@ -628,8 +676,7 @@
     <div id="main-container" class="w-full max-w-md p-4 space-y-3 flex flex-col min-h-screen mode-dice">
 
         <!-- STICKY TOP -->
-        <div
-            class="section-sticky sticky top-0 z-40 -mx-4 px-4 py-3 space-y-4 pointer-events-none"
+        <div class="section-sticky sticky top-0 z-40 -mx-4 px-4 py-3 space-y-4 pointer-events-none"
             style="background: #020617; backdrop-filter: blur(20px); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%); mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);">
             <input type="file" id="import-input" class="hidden" accept=".json" onchange="importSettings(event)">
             <!-- HEADER -->
@@ -714,10 +761,12 @@
         <!-- CONTROLS -->
         <section class="section-controls space-y-3">
             <!-- ROLL BUTTON -->
-            <button id="roll-button" onclick="resolveRolling()"
+            <button id="roll-button" onmousedown="startCharge(event)" ontouchstart="startCharge(event)"
                 class="w-full bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black py-4 rounded-xl text-2xl shadow-[0_0_25px_rgba(0,212,255,0.15)] active:scale-[0.95] active:shadow-[0_0_60px_#00d4ff] active:bg-[#00d4ff] active:text-[#020617] active:border-[#00d4ff] active:z-50 transition-all duration-75 border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] mb-4 relative overflow-hidden group">
                 <span class="relative z-10">ROLL</span>
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                <div
+                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]">
+                </div>
             </button>
 
             <div class="flex gap-2">
@@ -789,7 +838,8 @@
                             class="w-full bg-transparent font-black text-[14px] text-sky-400 placeholder-sky-400 placeholder-opacity-100 mono leading-none text-center outline-none hide-spinners"
                             value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
                     </div>
-                    <button onclick="adjustOverallTarget(1)" class="segmented-btn btn-side hover:text-[#6366f1]">＋</button>
+                    <button onclick="adjustOverallTarget(1)"
+                        class="segmented-btn btn-side hover:text-[#6366f1]">＋</button>
                 </div>
 
                 <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
@@ -1143,6 +1193,15 @@
         let customDice = [];
         let stressCount = 100000;
 
+        let isCharging = false;
+        let chargeTimer;
+        let activeChargeButton = null;
+
+        // Global listeners for release ensures it catches even if dragged off button
+        window.addEventListener('mouseup', releaseCharge);
+        window.addEventListener('touchend', releaseCharge);
+        window.addEventListener('touchcancel', releaseCharge);
+
         let modalResolve = () => { };
 
         function showModal({ title, body, confirmText = 'OK', cancelText = 'Cancel', danger = false, alertOnly = false, inputPrompt = false, defaultValue = '' }) {
@@ -1243,7 +1302,7 @@
                 html += `
                     <div class="segmented-row">
                         ${minusButtonHtml}
-                        <button onclick="instantRoll(${cfg.d})" class="segmented-btn btn-center group/dice relative">
+                        <button onmousedown="instantRoll(${cfg.d}, event)" ontouchstart="instantRoll(${cfg.d}, event)" class="segmented-btn btn-center group/dice relative">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="${path}" />
                             </svg>
@@ -1736,8 +1795,14 @@
             const disBtn = document.getElementById('dis-btn');
             const advSub = document.getElementById('adv-sub');
             const disSub = document.getElementById('dis-sub');
-            const saveBtn = document.getElementById('save-queue-btn');
             const modInput = document.getElementById('flat-mod-input');
+            const rollBtn = document.getElementById('roll-button');
+
+            const canRoll = engine.rollingQueue.length > 0 || engine.flatMod !== 0;
+            rollBtn.disabled = !canRoll;
+            rollBtn.style.opacity = canRoll ? '1' : '0.4';
+            rollBtn.style.filter = canRoll ? 'none' : 'grayscale(1)';
+            rollBtn.style.pointerEvents = canRoll ? 'auto' : 'none';
 
             let parts = engine.rollingQueue.map(q => `${q.count}d${q.sides}`);
             if (engine.flatMod !== 0) parts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
@@ -2215,7 +2280,8 @@
                     const item = document.createElement('div');
                     item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                     item.style.setProperty('--item-color', q.color);
-                    item.onclick = () => { loadQueue(q.id); resolveRolling(); };
+                    item.onmousedown = (e) => startCharge(e, { id: q.id });
+                    item.ontouchstart = (e) => startCharge(e, { id: q.id });
 
                     let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
                     if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
@@ -2269,21 +2335,97 @@
             });
         }
 
-        function instantRoll(sides) {
-            vibrate(10);
-
+        function instantRoll(sides, e = null) {
             if (isInstaQueue) {
+                vibrate(10);
                 engine.changeQueue(sides, 1);
                 updateUI();
                 resolveRolling();
             } else {
-                resolveRolling([{ sides: sides, count: 1 }], !isModdedQuick);
+                startCharge(e, [{ sides: sides, count: 1 }]);
             }
         }
 
         let rollGeneration = 0;
+        let activeChargeQueue = null;
 
-        function resolveRolling(forcedQueue = null, isInstant = false) {
+        function startCharge(e, forcedQueue = null) {
+            if (e && e.cancelable) e.preventDefault();
+            if (isCharging) return;
+
+            activeChargeQueue = forcedQueue;
+            // Don't start if nothing to roll (and no forced queue)
+            if (!activeChargeQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
+
+            isCharging = true;
+            activeChargeButton = e ? e.currentTarget : document.getElementById('roll-button');
+
+            document.getElementById('main-container').classList.add('is-charging');
+            document.getElementById('main-container').classList.remove('is-resolved');
+
+            // Apply charging style to the specific button
+            activeChargeButton.classList.add('is-charging-btn');
+
+            const btnText = activeChargeButton.querySelector('span');
+            if (btnText) {
+                activeChargeButton._originalText = btnText.innerText;
+                btnText.innerText = "...";
+            }
+
+            document.getElementById('result-breakdown').innerHTML = '<span class="text-[11px] text-[#00d4ff] font-black tracking-[0.2em] animate-pulse">GATHERING ENTROPY</span>';
+
+            vibrate(10);
+            playRollSound();
+
+            // Fast visual scramble
+            chargeTimer = setInterval(() => {
+                updateDisplay(Math.floor(Math.random() * 20) + 1);
+            }, 40);
+        }
+
+        function releaseCharge(e) {
+            if (!isCharging) return;
+            isCharging = false;
+            clearInterval(chargeTimer);
+
+            const container = document.getElementById('main-container');
+            container.classList.remove('is-charging');
+            container.classList.add('is-resolved');
+
+            if (activeChargeButton) {
+                activeChargeButton.classList.remove('is-charging-btn');
+                const btnText = activeChargeButton.querySelector('span');
+                if (btnText && activeChargeButton._originalText) {
+                    btnText.innerText = activeChargeButton._originalText;
+                    activeChargeButton._originalText = null;
+                }
+            }
+
+            document.getElementById('result-breakdown').innerHTML = '<span class="text-[11px] text-[#00d4ff] font-black tracking-[0.2em]">DISCHARGED</span>';
+
+            // Resolve
+            if (activeChargeQueue && activeChargeQueue.id) {
+                // Arsenal loadout
+                loadQueue(activeChargeQueue.id);
+                resolveRolling(null, false, true);
+            } else if (activeChargeQueue) {
+                // Single die roll from grid
+                resolveRolling(activeChargeQueue, !isModdedQuick, true);
+            } else {
+                // Main roll
+                resolveRolling(null, false, true);
+            }
+
+            activeChargeQueue = null;
+            activeChargeButton = null;
+
+            // Reset UI back to clean idle after impact settles
+            setTimeout(() => {
+                container.classList.remove('is-resolved');
+            }, 800);
+        }
+
+        function resolveRolling(forcedQueue = null, isInstant = false, isImmediate = false) {
             if (!forcedQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
 
             // Increment generation to cancel any in-progress animation
@@ -2302,6 +2444,11 @@
             addToHistory(res.total, historyText);
 
             // Start cosmetic animation, then reveal result
+            if (isImmediate) {
+                showResult(res);
+                return;
+            }
+
             updateDisplay("...", "rolling");
 
             let frame = 0;
