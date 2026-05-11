@@ -228,20 +228,22 @@
         }
 
         #color-picker-overlay {
-            background: rgba(2, 6, 23, 0.85);
-            backdrop-filter: blur(16px);
+            background: rgba(2, 6, 23, 0.96);
+            backdrop-filter: blur(24px);
             z-index: 100;
         }
 
         /* Arsenal Action Menu */
         .arsenal-menu {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
+            background: rgba(2, 6, 23, 0.98);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 1.25rem;
-            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+            box-shadow: 
+                0 20px 40px -10px rgba(0, 0, 0, 0.7),
+                0 0 20px rgba(0, 212, 255, 0.05);
             z-index: 100;
-            min-width: 160px;
+            min-width: 170px;
             padding: 0.6rem;
             transform-origin: top right;
             animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -263,16 +265,16 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.6rem 0.8rem;
-            border-radius: 0.75rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 0.8rem;
             font-size: 11px;
-            font-weight: 700;
-            color: #94a3b8;
+            font-weight: 800;
+            color: #cbd5e1;
             transition: all 0.2s ease;
             width: 100%;
             text-align: left;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
         }
 
         .menu-item:hover {
@@ -430,8 +432,8 @@
             top: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(16px);
+            background: rgba(2, 6, 23, 0.98);
+            backdrop-filter: blur(24px);
             border: 1px solid var(--glass-border);
             padding: 8px 16px;
             border-radius: 1rem;
@@ -1131,9 +1133,9 @@
 
     <!-- Generic Themed Modal -->
     <div id="modal-overlay" onclick="if(event.target === this) modalResolve(false)"
-        class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-[#020617]/80 backdrop-blur-sm">
+        class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-[#020617]/95 backdrop-blur-md">
         <div id="modal-box"
-            class="bg-[#020617] border p-6 rounded-[2rem] shadow-2xl w-full max-w-[300px] space-y-4 text-center"
+            class="bg-[#020617] border border-white/10 p-6 rounded-[2rem] shadow-2xl w-full max-w-[300px] space-y-4 text-center"
             style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
             <h3 id="modal-title" class="text-lg font-black text-[#e2e8f0]"></h3>
             <p id="modal-body" class="text-xs text-[#94a3b8]"></p>
