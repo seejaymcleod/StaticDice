@@ -734,8 +734,9 @@
                 <div
                     class="flex-1 glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[2.75rem] border-white/5 overflow-hidden">
                     <div id="queue-display"
-                        class="text-[14px] font-bold text-sky-400 mono text-center leading-relaxed uppercase truncate">
-                        EMPTY</div>
+                        class="w-full flex items-center justify-center gap-2 font-bold mono uppercase overflow-hidden">
+                        <span class="text-[14px] text-sky-400/40">EMPTY QUEUE</span>
+                    </div>
                 </div>
                 <div class="flex gap-1.5">
                     <button onclick="backspaceQueue()"
@@ -1794,45 +1795,54 @@
             rollBtn.style.filter = canRoll ? 'none' : 'grayscale(1)';
             rollBtn.style.pointerEvents = canRoll ? 'auto' : 'none';
 
-            let parts = engine.rollingQueue.map(q => `${q.count}d${q.sides}`);
-            if (engine.flatMod !== 0) parts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
+            // 1. Build Dice Parts
+            let diceParts = engine.rollingQueue.map(q => `${q.count}d${q.sides}`);
+            if (engine.flatMod !== 0) diceParts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
 
-            let modifierText = engine.activeModifier ? ` [${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}]` : "";
-
-            let rulesText = "";
+            // 2. Build Rules (RR, EX, SET)
+            let rulesParts = [];
             const rrActive = engine.rollRules.rerollOp && engine.rollRules.rerollVal !== null;
             const exActive = engine.rollRules.explodeOp && engine.rollRules.explodeVal !== null;
             const setsActive = engine.rollRules.setsOp && engine.rollRules.setsVal !== null;
+            if (rrActive) rulesParts.push(`RR${engine.rollRules.rerollOp.replace('=', '')}${engine.rollRules.rerollVal}`);
+            if (exActive) rulesParts.push(`EX${engine.rollRules.explodeOp.replace('=', '')}${engine.rollRules.explodeVal}`);
+            if (setsActive) rulesParts.push(`SET${engine.rollRules.setsOp.replace('=', '')}${engine.rollRules.setsVal}`);
 
-            if (rrActive) rulesText += ` RR${engine.rollRules.rerollOp}${engine.rollRules.rerollVal}`;
-            if (exActive) rulesText += ` EX${engine.rollRules.explodeOp}${engine.rollRules.explodeVal}`;
-            if (setsActive) rulesText += ` SET${engine.rollRules.setsOp}${engine.rollRules.setsVal}`;
-
-            const hasBaseContent = parts.length > 0 || modifierText !== "" || engine.overallTarget !== null;
-            const hasRules = rrActive || exActive || setsActive;
-
-            if (hasBaseContent || hasRules) {
-                if (engine.rollRules.targetMode === 'count') {
-                    rulesText += ` CT`;
-                    if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) {
-                        rulesText += `${engine.rollRules.targetOp}${engine.rollRules.targetVal}`;
-                    }
-                } else if (engine.rollRules.targetMode === 'list') {
-                    rulesText += ` LIST`;
-                } else {
-                    rulesText += ` SUM`;
+            // 3. Build Mode & Target
+            let modeLabel = "";
+            if (engine.rollRules.targetMode === 'count') {
+                modeLabel = "COUNT";
+                if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) {
+                    modeLabel += `${engine.rollRules.targetOp.replace('=', '')}${engine.rollRules.targetVal}`;
                 }
+            } else if (engine.rollRules.targetMode === 'list') {
+                modeLabel = "LIST";
+            } else {
+                modeLabel = "SUM";
             }
-
             if (engine.overallTarget !== null) {
                 const isCountAny = engine.rollRules.targetMode === 'count' && !engine.rollRules.countThreshOp;
                 const isSumAny = engine.rollRules.targetMode === 'sum' && !engine.rollRules.targetOp;
-                if (!isCountAny && !isSumAny) {
-                    rulesText += ` TARGET≥${engine.overallTarget}`;
-                }
+                if (!isCountAny && !isSumAny) modeLabel += ` ≥${engine.overallTarget}`;
             }
 
-            display.innerText = (hasBaseContent || hasRules) ? parts.join(" + ") + modifierText + rulesText : "EMPTY QUEUE";
+            const hasBaseContent = diceParts.length > 0 || engine.activeModifier !== null || engine.overallTarget !== null;
+            const hasRules = rrActive || exActive || setsActive;
+
+            if (hasBaseContent || hasRules) {
+                const diceHtml = `<span class="text-sky-400 whitespace-nowrap">${diceParts.join(" + ")}</span>`;
+                const modHtml = engine.activeModifier ? `<span class="text-indigo-400 opacity-80 ml-1 whitespace-nowrap">[${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}]</span>` : "";
+                const rulesHtml = rulesParts.length > 0 ? `<span class="text-slate-500 text-[10px] ml-1.5 opacity-80 whitespace-nowrap">${rulesParts.join(" ")}</span>` : "";
+                const modeHtml = `<span class="bg-sky-500/10 text-sky-400 text-[9px] px-1.5 py-0.5 rounded border border-sky-500/20 font-black ml-2 whitespace-nowrap opacity-80">${modeLabel}</span>`;
+                
+                display.innerHTML = `
+                    <div class="flex items-center justify-center gap-1 overflow-hidden">
+                        ${diceHtml} ${modHtml} ${rulesHtml} ${modeHtml}
+                    </div>
+                `;
+            } else {
+                display.innerHTML = '<span class="text-sky-400/20">EMPTY QUEUE</span>';
+            }
 
             if (modInput && document.activeElement !== modInput) {
                 modInput.value = engine.flatMod > 0 ? `+${engine.flatMod}` : engine.flatMod;
