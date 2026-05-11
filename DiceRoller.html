@@ -104,24 +104,10 @@
             position: relative;
         }
 
-        .segmented-btn:active:not(:disabled) {
-            background: #00d4ff !important;
-            color: #020617 !important;
-            transform: scale(0.96);
-            box-shadow: 0 0 50px #00d4ff;
-            border-color: #00d4ff !important;
-            z-index: 50;
-            position: relative;
-            transition: all 0.075s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        button:focus,
-        button:active {
-            outline: none !important;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         .segmented-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -212,25 +198,9 @@
             transition: all 0.3s ease;
         }
 
-        @keyframes roll-blur {
-            0% {
-                filter: blur(0) brightness(1);
-                transform: translateY(0);
-            }
-
-            50% {
-                filter: blur(6px) brightness(1.2);
-                transform: translateY(-4px);
-            }
-
-            100% {
-                filter: blur(0) brightness(1);
-                transform: translateY(0);
-            }
-        }
-
         .is-rolling {
-            animation: roll-blur 0.1s infinite;
+            /* Blur removed as requested to avoid 'hold' look */
+            opacity: 0.9;
         }
 
         .bar {
@@ -255,18 +225,6 @@
             box-shadow:
                 0 0 20px rgba(0, 212, 255, 0.15),
                 inset 0 0 15px rgba(0, 212, 255, 0.05);
-        }
-
-        .saved-item:active {
-            transform: scale(0.97);
-            box-shadow: 0 0 50px var(--item-color, #00d4ff);
-            background: var(--item-color, #00d4ff) !important;
-            border-color: var(--item-color, #00d4ff) !important;
-            transition: all 0.075s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .saved-item:active * {
-            color: #020617 !important;
         }
 
         #color-picker-overlay {
@@ -642,9 +600,9 @@
         .is-charging-btn {
             background: #00d4ff !important;
             color: #020617 !important;
-            transform: scale(0.96) !important;
+            transform: scale(0.95) !important;
             border-color: #00d4ff !important;
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6) !important;
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.8) !important;
             z-index: 50;
         }
 
@@ -741,7 +699,7 @@
 
             <!-- MAIN DISPLAY -->
             <main
-                class="p-4 rounded-2xl flex flex-col items-center justify-center min-h-[115px] relative overflow-hidden shrink-0 result-shimmer pointer-events-auto">
+                class="p-4 rounded-2xl flex flex-col items-center justify-start pt-8 min-h-[160px] relative overflow-hidden shrink-0 result-shimmer pointer-events-auto transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
                 <div
                     class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none">
                 </div>
@@ -752,7 +710,7 @@
                     class="text-sm font-black uppercase tracking-widest mt-1 transition-all duration-300 hidden"></div>
                 <div id="result-badges" class="flex flex-wrap gap-1.5 justify-center mt-2 hidden"></div>
                 <div id="result-breakdown"
-                    class="detail-text-val w-full mt-3 mono text-center px-2 min-h-[24px] max-h-[64px] overflow-y-auto custom-scroll opacity-90">
+                    class="detail-text-val w-full mt-3 mono text-center px-2 h-[64px] min-h-[64px] overflow-y-auto custom-scroll opacity-90 flex flex-col justify-center">
                     <span class="text-[11px] text-slate-300 tracking-wide">READY</span>
                 </div>
             </main>
@@ -761,8 +719,8 @@
         <!-- CONTROLS -->
         <section class="section-controls space-y-3">
             <!-- ROLL BUTTON -->
-            <button id="roll-button" onmousedown="startCharge(event)" ontouchstart="startCharge(event)"
-                class="w-full bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black py-4 rounded-xl text-2xl shadow-[0_0_25px_rgba(0,212,255,0.15)] active:scale-[0.95] active:shadow-[0_0_60px_#00d4ff] active:bg-[#00d4ff] active:text-[#020617] active:border-[#00d4ff] active:z-50 transition-all duration-75 border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] mb-4 relative overflow-hidden group">
+            <button id="roll-button" onpointerdown="triggerRoll(event)"
+                class="w-full bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black py-4 rounded-xl text-2xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] mb-4 relative overflow-hidden group">
                 <span class="relative z-10">ROLL</span>
                 <div
                     class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]">
@@ -1197,11 +1155,6 @@
         let chargeTimer;
         let activeChargeButton = null;
 
-        // Global listeners for release ensures it catches even if dragged off button
-        window.addEventListener('mouseup', releaseCharge);
-        window.addEventListener('touchend', releaseCharge);
-        window.addEventListener('touchcancel', releaseCharge);
-
         let modalResolve = () => { };
 
         function showModal({ title, body, confirmText = 'OK', cancelText = 'Cancel', danger = false, alertOnly = false, inputPrompt = false, defaultValue = '' }) {
@@ -1302,7 +1255,7 @@
                 html += `
                     <div class="segmented-row">
                         ${minusButtonHtml}
-                        <button onmousedown="instantRoll(${cfg.d}, event)" ontouchstart="instantRoll(${cfg.d}, event)" class="segmented-btn btn-center group/dice relative">
+                        <button onpointerdown="triggerRoll(event, { sides: ${cfg.d}, count: 1, isInstant: !isModdedQuick })" class="segmented-btn btn-center group/dice relative">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="${path}" />
                             </svg>
@@ -1762,10 +1715,6 @@
             hero.innerText = val;
             if (classAction === 'rolling') {
                 hero.classList.add('is-rolling');
-                // Hide secondary zones during animation
-                document.getElementById('result-label').classList.add('hidden');
-                document.getElementById('result-badges').classList.add('hidden');
-                document.getElementById('result-breakdown').innerHTML = '<span class="text-[11px] text-slate-300 tracking-wide">ROLLING</span>';
             } else if (classAction === 'stop') {
                 hero.classList.remove('is-rolling');
             } else if (classAction) {
@@ -2280,8 +2229,8 @@
                     const item = document.createElement('div');
                     item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                     item.style.setProperty('--item-color', q.color);
-                    item.onmousedown = (e) => startCharge(e, { id: q.id });
-                    item.ontouchstart = (e) => startCharge(e, { id: q.id });
+                    item.dataset.id = q.id;
+                    item.onpointerdown = (e) => triggerRoll(e, { arsenalId: q.id });
 
                     let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
                     if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
@@ -2335,141 +2284,133 @@
             });
         }
 
-        function instantRoll(sides, e = null) {
-            if (isInstaQueue) {
-                vibrate(10);
-                engine.changeQueue(sides, 1);
-                updateUI();
-                resolveRolling();
-            } else {
-                startCharge(e, [{ sides: sides, count: 1 }]);
-            }
-        }
+        let isRolling = false;
 
-        let rollGeneration = 0;
-        let activeChargeQueue = null;
-
-        function startCharge(e, forcedQueue = null) {
+        function triggerRoll(e, options = {}) {
             if (e && e.cancelable) e.preventDefault();
-            if (isCharging) return;
+            if (isRolling) return;
 
-            activeChargeQueue = forcedQueue;
-            // Don't start if nothing to roll (and no forced queue)
-            if (!activeChargeQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
+            // 1. Prepare Data
+            let forcedQueue = null;
+            let isInstant = false;
 
-            isCharging = true;
-            activeChargeButton = e ? e.currentTarget : document.getElementById('roll-button');
-
-            document.getElementById('main-container').classList.add('is-charging');
-            document.getElementById('main-container').classList.remove('is-resolved');
-
-            // Apply charging style to the specific button
-            activeChargeButton.classList.add('is-charging-btn');
-
-            const btnText = activeChargeButton.querySelector('span');
-            if (btnText) {
-                activeChargeButton._originalText = btnText.innerText;
-                btnText.innerText = "...";
+            if (options.arsenalId) {
+                loadQueue(options.arsenalId);
+                forcedQueue = engine.rollingQueue; 
+                isInstant = false;
+            } else if (options.sides) {
+                forcedQueue = [{ sides: options.sides, count: options.count || 1 }];
+                isInstant = options.isInstant || false;
             }
 
-            document.getElementById('result-breakdown').innerHTML = '<span class="text-[11px] text-[#00d4ff] font-black tracking-[0.2em] animate-pulse">GATHERING ENTROPY</span>';
+            // 2. Start Roll Process
+            isRolling = true;
+            
+            // For Arsenal clicks, the button element is replaced in the DOM during loadQueue,
+            // so we must re-find it using the ID to ensure the animation is visible.
+            let btn;
+            if (options.arsenalId) {
+                btn = document.querySelector(`.saved-item[data-id="${options.arsenalId}"]`) || (e ? e.currentTarget : document.getElementById('roll-button'));
+            } else {
+                btn = e ? e.currentTarget : document.getElementById('roll-button');
+            }
+            
+            btn.classList.add('is-charging-btn');
+            const container = document.getElementById('main-container');
+            container.classList.add('is-charging');
+            container.classList.remove('is-resolved');
 
             vibrate(10);
-            playRollSound();
+            try { playRollSound(); } catch(err) {}
 
-            // Fast visual scramble
-            chargeTimer = setInterval(() => {
-                updateDisplay(Math.floor(Math.random() * 20) + 1);
-            }, 40);
-        }
-
-        function releaseCharge(e) {
-            if (!isCharging) return;
-            isCharging = false;
-            clearInterval(chargeTimer);
-
-            const container = document.getElementById('main-container');
-            container.classList.remove('is-charging');
-            container.classList.add('is-resolved');
-
-            if (activeChargeButton) {
-                activeChargeButton.classList.remove('is-charging-btn');
-                const btnText = activeChargeButton.querySelector('span');
-                if (btnText && activeChargeButton._originalText) {
-                    btnText.innerText = activeChargeButton._originalText;
-                    activeChargeButton._originalText = null;
+            try {
+                // 3. Calculate Result IMMEDIATELY
+                const res = engine.calculateRoll(forcedQueue, isInstant);
+                if (!res) {
+                    isRolling = false;
+                    btn.classList.remove('is-charging-btn');
+                    container.classList.remove('is-charging');
+                    return;
                 }
+
+                // 4. Scramble Animation (Fixed 0.3s)
+                updateDisplay("...", "rolling");
+                
+                let frame = 0;
+                const totalFrames = 8;
+                const scrambleTimer = setInterval(() => {
+                    try {
+                        updateDisplay(Math.floor(Math.random() * 20) + 1);
+                        frame++;
+                        
+                        if (frame >= totalFrames) {
+                            clearInterval(scrambleTimer);
+                            
+                            // 5. Finalize and Show Result
+                            btn.classList.remove('is-charging-btn');
+                            container.classList.remove('is-charging');
+                            container.classList.add('is-resolved');
+                            
+                            showResult(res);
+                            
+                            // Log to history
+                            let historyText = res.flatDescription;
+                            if (res.targetMode === 'count') historyText = `${res.total} Dice | ${historyText}`;
+                            addToHistory(res.total, historyText);
+
+                            isRolling = false;
+                            
+                            setTimeout(() => {
+                                if (container.classList.contains('is-resolved')) {
+                                    container.classList.remove('is-resolved');
+                                }
+                            }, 800);
+                        }
+                    } catch (err) {
+                        clearInterval(scrambleTimer);
+                        isRolling = false;
+                        btn.classList.remove('is-charging-btn');
+                        container.classList.remove('is-charging');
+                    }
+                }, 35);
+            } catch (err) {
+                console.error("Roll failed:", err);
+                isRolling = false;
+                btn.classList.remove('is-charging-btn');
+                container.classList.remove('is-charging');
             }
-
-            document.getElementById('result-breakdown').innerHTML = '<span class="text-[11px] text-[#00d4ff] font-black tracking-[0.2em]">DISCHARGED</span>';
-
-            // Resolve
-            if (activeChargeQueue && activeChargeQueue.id) {
-                // Arsenal loadout
-                loadQueue(activeChargeQueue.id);
-                resolveRolling(null, false, true);
-            } else if (activeChargeQueue) {
-                // Single die roll from grid
-                resolveRolling(activeChargeQueue, !isModdedQuick, true);
-            } else {
-                // Main roll
-                resolveRolling(null, false, true);
-            }
-
-            activeChargeQueue = null;
-            activeChargeButton = null;
-
-            // Reset UI back to clean idle after impact settles
-            setTimeout(() => {
-                container.classList.remove('is-resolved');
-            }, 800);
         }
 
         function resolveRolling(forcedQueue = null, isInstant = false, isImmediate = false) {
+            // This function is now mostly a fallback for when triggerRoll isn't used (e.g. InstaQueue toggle)
             if (!forcedQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
-
-            // Increment generation to cancel any in-progress animation
-            const thisGen = ++rollGeneration;
-
+            
             vibrate(15);
             playRollSound();
 
-            // Compute result immediately (synchronous)
             const res = engine.calculateRoll(forcedQueue, isInstant);
             if (!res) return;
 
-            // Log to history immediately
             let historyText = res.flatDescription;
             if (res.targetMode === 'count') historyText = `${res.total} Dice | ${historyText}`;
             addToHistory(res.total, historyText);
 
-            // Start cosmetic animation, then reveal result
             if (isImmediate) {
                 showResult(res);
                 return;
             }
 
             updateDisplay("...", "rolling");
-
             let frame = 0;
             const totalFrames = 8;
-            const frameDelay = 40;
-
-            function animateFrame() {
-                // If a newer roll has started, stop this animation
-                if (rollGeneration !== thisGen) return;
-
-                if (frame < totalFrames) {
-                    updateDisplay(Math.floor(Math.random() * 20) + 1);
-                    frame++;
-                    setTimeout(animateFrame, frameDelay);
-                } else {
-                    // Animation done — show the real result
+            const scrambleTimer = setInterval(() => {
+                updateDisplay(Math.floor(Math.random() * 20) + 1);
+                frame++;
+                if (frame >= totalFrames) {
+                    clearInterval(scrambleTimer);
                     showResult(res);
                 }
-            }
-
-            setTimeout(animateFrame, frameDelay);
+            }, 40);
         }
 
         function showResult(res) {
