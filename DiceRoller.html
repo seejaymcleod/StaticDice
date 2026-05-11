@@ -108,8 +108,9 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-            opacity: 0.5;
-            cursor: not-allowed;
+
+        opacity: 0.5;
+        cursor: not-allowed;
         }
 
         .btn-side {
@@ -239,7 +240,7 @@
             backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 1.25rem;
-            box-shadow: 
+            box-shadow:
                 0 20px 40px -10px rgba(0, 0, 0, 0.7),
                 0 0 20px rgba(0, 212, 255, 0.05);
             z-index: 100;
@@ -759,18 +760,16 @@
                     <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
                     </div>
                     <span id="adv-label"
-                        class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">Advantage</span>
-                    <span id="adv-sub"
-                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
+                        class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">ADV</span>
+                    <span id="adv-sub" class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
                 </button>
                 <button id="dis-btn" onclick="applyModifier('DIS')" disabled
                     class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
                     <div id="dis-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
                     </div>
                     <span id="dis-label"
-                        class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">Disadvantage</span>
-                    <span id="dis-sub"
-                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
+                        class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">DIS</span>
+                    <span id="dis-sub" class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
                 </button>
 
                 <div
@@ -1744,11 +1743,11 @@
             hero.innerText = '0';
             hero.classList.remove('is-rolling');
             hero.className = hero.className.split(' ').filter(c => !c.startsWith('crit-')).join(' ');
-            
+
             const label = document.getElementById('result-label');
             label.classList.add('hidden');
             label.innerHTML = '';
-            
+
             document.getElementById('result-badges').classList.add('hidden');
             document.getElementById('result-badges').innerHTML = '';
             document.getElementById('result-breakdown').innerHTML = '<span class="text-[11px] text-slate-300 tracking-wide">READY</span>';
@@ -1865,6 +1864,23 @@
                 disPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#6366f1]/30';
                 disLabel.classList.remove('text-white');
                 disLabel.classList.add('text-slate-500');
+            }
+
+            // Update Dynamic Tooltips
+            const advLevel = engine.activeModifier === 'ADV' ? engine.modifierLevel : 0;
+            const disLevel = engine.activeModifier === 'DIS' ? engine.modifierLevel : 0;
+            const advDesc = advLevel > 1 ? `Plus ${advLevel - 1}` : "";
+            const disDesc = disLevel > 1 ? `Plus ${disLevel - 1}` : "";
+            const rollsAdv = 1 + (advLevel || 1);
+            const rollsDis = 1 + (disLevel || 1);
+
+            advBtn.title = `Advantage ${advDesc}: Roll ${rollsAdv} dice and take the highest result.`.replace('  ', ' ');
+            disBtn.title = `Disadvantage ${disDesc}: Roll ${rollsDis} dice and take the lowest result.`.replace('  ', ' ');
+            document.getElementById('adv-rules-toggle').title = "Advanced Rules & Settings";
+
+            if (!canMod) {
+                advBtn.title = "Advantage (Locked): Add dice to the queue to enable.";
+                disBtn.title = "Disadvantage (Locked): Add dice to the queue to enable.";
             }
 
             const mqBtn = document.getElementById('modded-quick-btn');
@@ -2384,7 +2400,7 @@
 
             // 2. Start Roll Process
             isRolling = true;
-            
+
             // For Arsenal clicks, the button element is replaced in the DOM during loadQueue,
             // so we must re-find it using the ID to ensure the animation is visible.
             let btn;
@@ -2393,14 +2409,14 @@
             } else {
                 btn = e ? e.currentTarget : document.getElementById('roll-button');
             }
-            
+
             btn.classList.add('is-charging-btn');
             const container = document.getElementById('main-container');
             container.classList.add('is-charging');
             container.classList.remove('is-resolved');
 
             vibrate(10);
-            try { playRollSound(); } catch(err) {}
+            try { playRollSound(); } catch (err) { }
 
             try {
                 // 3. Calculate Result IMMEDIATELY
@@ -2414,31 +2430,31 @@
 
                 // 4. Scramble Animation (Fixed 0.3s)
                 updateDisplay("...", "rolling");
-                
+
                 let frame = 0;
                 const totalFrames = 8;
                 const scrambleTimer = setInterval(() => {
                     try {
                         updateDisplay(Math.floor(Math.random() * 20) + 1);
                         frame++;
-                        
+
                         if (frame >= totalFrames) {
                             clearInterval(scrambleTimer);
-                            
+
                             // 5. Finalize and Show Result
                             btn.classList.remove('is-charging-btn');
                             container.classList.remove('is-charging');
                             container.classList.add('is-resolved');
-                            
+
                             showResult(res);
-                            
+
                             // Log to history
                             let historyText = res.flatDescription;
                             if (res.targetMode === 'count') historyText = `${res.total} Dice | ${historyText}`;
                             addToHistory(res.total, historyText);
 
                             isRolling = false;
-                            
+
                             setTimeout(() => {
                                 if (container.classList.contains('is-resolved')) {
                                     container.classList.remove('is-resolved');
@@ -2463,7 +2479,7 @@
         function resolveRolling(forcedQueue = null, isInstant = false, isImmediate = false) {
             // This function is now mostly a fallback for when triggerRoll isn't used (e.g. InstaQueue toggle)
             if (!forcedQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
-            
+
             vibrate(15);
             playRollSound();
 
