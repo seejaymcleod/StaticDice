@@ -178,13 +178,19 @@ class DiceEngine {
     }
 
     // ROLL LOGIC
-    calculateRoll(forcedQueue = null, isInstant = false) {
+    calculateRoll(forcedQueue = null, isInstant = false, overrides = null) {
         const activeQueue = forcedQueue || this.rollingQueue;
-        const activeFlat = isInstant ? 0 : this.flatMod;
+        
+        // Context Variables (from overrides or engine state)
+        const activeModifier = (overrides && overrides.modifier !== undefined) ? overrides.modifier : this.activeModifier;
+        const activeModLevel = (overrides && overrides.modLevel !== undefined) ? overrides.modLevel : this.modifierLevel;
+        const activeFlat = (overrides && overrides.flat !== undefined) ? overrides.flat : (isInstant ? 0 : this.flatMod);
+        const activeRules = (overrides && overrides.rules !== undefined) ? overrides.rules : this.rollRules;
+        const activeOverallTarget = (overrides && overrides.overallTarget !== undefined) ? overrides.overallTarget : this.overallTarget;
 
         if ((activeQueue.length === 0 && activeFlat === 0)) return null;
 
-        const isListMode = this.rollRules.targetMode === 'list';
+        const isListMode = activeRules.targetMode === 'list';
         let total = isListMode ? [] : 0;
         let breakdownRows = [];
         let hasCritHit = false;
@@ -198,25 +204,25 @@ class DiceEngine {
             let rawRolls = [];
             let groupRerolls = 0;
             let groupExplosions = 0;
-            const rollsToTake = 1 + (this.activeModifier ? this.modifierLevel : 0);
+            const rollsToTake = 1 + (activeModifier ? activeModLevel : 0);
 
             for (let i = 0; i < group.count; i++) {
                 let dieRolls = [];
                 for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(group.sides));
 
                 let kept = dieRolls[0];
-                if (this.activeModifier === 'ADV') kept = Math.max(...dieRolls);
-                if (this.activeModifier === 'DIS') kept = Math.min(...dieRolls);
+                if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
+                if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
 
                 let dieLog = "";
                 if (dieRolls.length > 1) {
-                    dieLog += `(${dieRolls.join(', ')})${this.activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
+                    dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
                 }
                 dieLog += `${kept}`;
 
                 // Reroll Logic
                 let rerollCount = 0;
-                while (this.checkCondition(kept, this.rollRules.rerollOp, this.rollRules.rerollVal) && rerollCount < 10) {
+                while (this.checkCondition(kept, activeRules.rerollOp, activeRules.rerollVal) && rerollCount < 10) {
                     kept = this.rng(group.sides);
                     dieLog += `r->${kept}`;
                     rerollCount++;
@@ -228,7 +234,7 @@ class DiceEngine {
                 // Explode Logic
                 let explodeCount = 0;
                 let currentExplodeDie = kept;
-                while (this.checkCondition(currentExplodeDie, this.rollRules.explodeOp, this.rollRules.explodeVal) && explodeCount < 10) {
+                while (this.checkCondition(currentExplodeDie, activeRules.explodeOp, activeRules.explodeVal) && explodeCount < 10) {
                     currentExplodeDie = this.rng(group.sides);
                     totalValueForThisDie += currentExplodeDie;
                     dieLog += `!->${currentExplodeDie}`;
@@ -236,7 +242,7 @@ class DiceEngine {
                 }
                 groupExplosions += explodeCount;
 
-                if (this.rollRules.targetOp || this.rollRules.targetMode === 'count') {
+                if (activeRules.targetOp || activeRules.targetMode === 'count') {
                     pool.push(kept);
                     if (explodeCount > 0) {
                         let parts = dieLog.split('!->');
@@ -250,7 +256,7 @@ class DiceEngine {
 
                 rawRolls.push(dieLog);
 
-                if (group.sides === 20 && !this.rollRules.targetOp && this.rollRules.targetMode === 'sum') {
+                if (group.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
                     if (totalValueForThisDie === 20) hasCritHit = true;
                     if (totalValueForThisDie === 1) hasCritFail = true;
                 }
@@ -260,18 +266,18 @@ class DiceEngine {
             let filteredPool = pool;
             
             // 1. Apply Target Condition (Only for COUNT mode)
-            if (this.rollRules.targetOp && this.rollRules.targetMode === 'count') {
-                filteredPool = pool.filter(v => this.checkCondition(v, this.rollRules.targetOp, this.rollRules.targetVal));
+            if (activeRules.targetOp && activeRules.targetMode === 'count') {
+                filteredPool = pool.filter(v => this.checkCondition(v, activeRules.targetOp, activeRules.targetVal));
             }
 
             // 2. Apply Sets Condition
             let setGroups = {};
-            if (this.rollRules.setsOp && this.rollRules.setsVal !== null) {
+            if (activeRules.setsOp && activeRules.setsVal !== null) {
                 const counts = {};
                 filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
                 
                 Object.keys(counts).forEach(v => {
-                    if (this.checkCondition(counts[v], this.rollRules.setsOp, this.rollRules.setsVal)) {
+                    if (this.checkCondition(counts[v], activeRules.setsOp, activeRules.setsVal)) {
                         setGroups[v] = counts[v];
                     }
                 });
@@ -286,9 +292,9 @@ class DiceEngine {
             totalRerolls += groupRerolls;
             totalExplosions += groupExplosions;
             
-            if (this.rollRules.targetMode === 'count') {
+            if (activeRules.targetMode === 'count') {
                 sum = filteredPool.length;
-            } else if (this.rollRules.targetMode === 'list') {
+            } else if (activeRules.targetMode === 'list') {
                 // Sort each die type individually
                 filteredPool.sort((a, b) => a - b);
                 sum = filteredPool.join(', ');
@@ -298,22 +304,22 @@ class DiceEngine {
             
             // Build formula string
             let f = `${group.count}d${group.sides}`;
-            if (this.activeModifier === 'ADV') f += 'kh1';
-            if (this.activeModifier === 'DIS') f += 'kl1';
-            if (this.rollRules.rerollOp && this.rollRules.rerollVal !== null) f += `r${this.rollRules.rerollOp.replace('=', '')}${this.rollRules.rerollVal}`;
-            if (this.rollRules.explodeOp && this.rollRules.explodeVal !== null) f += `e${this.rollRules.explodeOp.replace('=', '')}${this.rollRules.explodeVal}`;
-            if (this.rollRules.targetMode === 'count' || this.rollRules.targetMode === 'sum') {
-                if (this.rollRules.targetOp && this.rollRules.targetVal !== null && this.rollRules.targetVal !== '') {
-                    if (this.rollRules.targetMode === 'count') f += 'c';
-                    let valStr = this.rollRules.targetVal;
-                    if (this.rollRules.targetMode === 'sum') {
+            if (activeModifier === 'ADV') f += 'kh1';
+            if (activeModifier === 'DIS') f += 'kl1';
+            if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
+            if (activeRules.explodeOp && activeRules.explodeVal !== null) f += `e${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
+            if (activeRules.targetMode === 'count' || activeRules.targetMode === 'sum') {
+                if (activeRules.targetOp && activeRules.targetVal !== null && activeRules.targetVal !== '') {
+                    if (activeRules.targetMode === 'count') f += 'c';
+                    let valStr = activeRules.targetVal;
+                    if (activeRules.targetMode === 'sum') {
                         if (valStr === 'overall') valStr = 'TGT';
                         else if (valStr === 'varX') valStr = 'VARX';
                     }
-                    f += `${this.rollRules.targetOp.replace('=', '')}${valStr}`;
+                    f += `${activeRules.targetOp.replace('=', '')}${valStr}`;
                 }
             }
-            if (this.rollRules.setsOp && this.rollRules.setsVal !== null) f += `set${this.rollRules.setsOp.replace('=', '')}${this.rollRules.setsVal}`;
+            if (activeRules.setsOp && activeRules.setsVal !== null) f += `set${activeRules.setsOp.replace('=', '')}${activeRules.setsVal}`;
             f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
 
             // Highlight sets in the roll log
@@ -322,7 +328,7 @@ class DiceEngine {
                 const lastPart = parts[parts.length - 1];
                 const val = parseInt(lastPart.split('!')[0]);
                 
-                if (this.rollRules.setsOp && this.rollRules.setsVal !== null) {
+                if (activeRules.setsOp && activeRules.setsVal !== null) {
                     if (setGroups[val] !== undefined) {
                         return `<span class="set-match" data-val="${val}">${dieStr}</span>`;
                     } else {
@@ -349,7 +355,7 @@ class DiceEngine {
             total = total.join(', ') || '0';
         }
 
-        if (this.rollRules.targetMode !== 'count' && !isListMode) {
+        if (activeRules.targetMode !== 'count' && !isListMode) {
             total += activeFlat;
             if (activeFlat !== 0) {
                 breakdownRows.push({
@@ -366,8 +372,8 @@ class DiceEngine {
         else if (hasCritFail) heroClass = 'crit-fail';
 
         // Compute label and badges
-        let labels = this._computeLabel(total, this.rollRules, allSetGroups, hasCritHit, hasCritFail);
-        let badges = this._computeBadges(this.rollRules, allSetGroups, hasCritHit, hasCritFail, totalRerolls, totalExplosions, labels);
+        let labels = this._computeLabel(total, activeRules, allSetGroups, hasCritHit, hasCritFail, activeOverallTarget);
+        let badges = this._computeBadges(activeRules, allSetGroups, hasCritHit, hasCritFail, totalRerolls, totalExplosions, labels);
 
         // Flat description for history log
         let flatDescription = breakdownRows.map(r => {
@@ -382,7 +388,7 @@ class DiceEngine {
             label: labels.length > 0 ? labels[0] : null, // Backwards compatibility
             badges,
             breakdown: breakdownRows,
-            targetMode: this.rollRules.targetMode,
+            targetMode: activeRules.targetMode,
             flatDescription
         };
     }
@@ -401,7 +407,7 @@ class DiceEngine {
         return op.replace(/>=/g, '≥').replace(/<=/g, '≤').replace(/==/g, '=').replace(/=/g, '=');
     }
 
-    _computeLabel(total, rules, setGroups, hasCritHit, hasCritFail) {
+    _computeLabel(total, rules, setGroups, hasCritHit, hasCritFail, overallTarget) {
         let labels = [];
 
         // Priority 1: List mode (usually no labels)
@@ -416,7 +422,7 @@ class DiceEngine {
                 let actualThresh = rules.countThreshVal;
                 let displayThreshStr = rules.countThreshVal;
                 if (rules.countThreshVal === 'overall') {
-                    actualThresh = this.overallTarget !== null ? this.overallTarget : 0;
+                    actualThresh = overallTarget !== null ? overallTarget : 0;
                     displayThreshStr = actualThresh;
                 } else if (rules.countThreshVal === 'varX') {
                     actualThresh = 0;
@@ -441,7 +447,7 @@ class DiceEngine {
                 let actualTarget = 0;
                 let displayTargetStr = rules.targetVal;
                 if (rules.targetVal === 'overall') {
-                    actualTarget = this.overallTarget !== null ? this.overallTarget : 0;
+                    actualTarget = overallTarget !== null ? overallTarget : 0;
                     displayTargetStr = actualTarget;
                 } else if (rules.targetVal === 'varX') {
                     actualTarget = 0;
@@ -453,11 +459,11 @@ class DiceEngine {
                 const color = isSuccess ? 'emerald' : 'rose';
                 const opDisplay = this._getDisplayOp(rules.targetOp);
                 labels.push({ text: `${total} ${opDisplay} ${displayTargetStr} ➔ ${status}`, color: color });
-            } else if (this.overallTarget !== null && rules.targetOp !== "") {
-                const isSuccess = total >= this.overallTarget;
+            } else if (overallTarget !== null && rules.targetOp !== "") {
+                const isSuccess = total >= overallTarget;
                 const status = isSuccess ? 'SUCCESS' : 'FAIL';
                 const color = isSuccess ? 'emerald' : 'rose';
-                labels.push({ text: `${total} ≥ ${this.overallTarget} ➔ ${status}`, color: color });
+                labels.push({ text: `${total} ≥ ${overallTarget} ➔ ${status}`, color: color });
             }
         }
 

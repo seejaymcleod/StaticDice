@@ -698,8 +698,8 @@
             </header>
 
             <!-- MAIN DISPLAY -->
-            <main
-                class="p-4 rounded-2xl flex flex-col items-center justify-start pt-8 min-h-[160px] relative overflow-hidden shrink-0 result-shimmer pointer-events-auto transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
+            <main id="result-main"
+                class="p-4 rounded-2xl flex flex-col items-center justify-start pt-8 min-h-[160px] relative overflow-hidden shrink-0 result-shimmer pointer-events-auto transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
                 <div
                     class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none">
                 </div>
@@ -817,26 +817,33 @@
             <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden mt-2"
                 id="rules-panel">
                 <div class="p-3 space-y-3 bg-[#020617]/40">
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-3 gap-1.5">
                         <button id="modded-quick-btn" onclick="toggleModdedQuick()"
                             class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
                             <div id="modded-quick-pip"
                                 class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
                             <span
-                                class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-sky-400 transition-colors">Mod
-                                Quick Rolls</span>
+                                class="text-[7px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Mod<br>Quick</span>
                             <span id="modded-quick-sub"
-                                class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">OFF</span>
+                                class="text-[7px] font-bold text-slate-600 mono leading-none mt-1">OFF</span>
                         </button>
                         <button id="insta-queue-btn" onclick="toggleInstaQueue()"
                             class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
                             <div id="insta-queue-pip"
                                 class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
                             <span
-                                class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-sky-400 transition-colors">Quick
-                                Rolls Queued</span>
+                                class="text-[7px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Quick<br>Queued</span>
                             <span id="insta-queue-sub"
-                                class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">OFF</span>
+                                class="text-[7px] font-bold text-slate-600 mono leading-none mt-1">OFF</span>
+                        </button>
+                        <button id="arsenal-queue-btn" onclick="toggleArsenalQueue()"
+                            class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
+                            <div id="arsenal-queue-pip"
+                                class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
+                            <span
+                                class="text-[7px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Arsenal<br>Queued</span>
+                            <span id="arsenal-queue-sub"
+                                class="text-[7px] font-bold text-slate-600 mono leading-none mt-1">OFF</span>
                         </button>
                     </div>
                     <!-- Header Row -->
@@ -1148,6 +1155,7 @@
 
         let isModdedQuick = false;
         let isInstaQueue = false;
+        let isArsenalQueue = false;
         let customDice = [];
         let stressCount = 100000;
 
@@ -1367,6 +1375,13 @@
 
         function toggleInstaQueue() {
             isInstaQueue = !isInstaQueue;
+            saveSettings();
+            updateUI();
+            vibrate(5);
+        }
+
+        function toggleArsenalQueue() {
+            isArsenalQueue = !isArsenalQueue;
             saveSettings();
             updateUI();
             vibrate(5);
@@ -1726,16 +1741,33 @@
         }
 
         function resetDisplayToIdle() {
+            const main = document.getElementById('result-main');
+            const oldHeight = main.offsetHeight;
+            main.style.height = oldHeight + 'px';
+
             const hero = document.getElementById('result-hero');
             hero.innerText = '0';
             hero.classList.remove('is-rolling');
             hero.className = hero.className.split(' ').filter(c => !c.startsWith('crit-')).join(' ');
+            
             const label = document.getElementById('result-label');
             label.classList.add('hidden');
             label.innerHTML = '';
+            
             document.getElementById('result-badges').classList.add('hidden');
             document.getElementById('result-badges').innerHTML = '';
             document.getElementById('result-breakdown').innerHTML = '<span class="text-[11px] text-slate-300 tracking-wide">READY</span>';
+
+            // Animate height back to idle
+            requestAnimationFrame(() => {
+                main.style.transition = 'none';
+                main.style.height = 'auto';
+                const newHeight = main.offsetHeight;
+                main.style.height = oldHeight + 'px';
+                main.offsetHeight; // reflow
+                main.style.transition = '';
+                main.style.height = newHeight + 'px';
+            });
         }
 
         function updateUI() {
@@ -1862,6 +1894,23 @@
                 iqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
                 iqSub.innerText = 'OFF';
                 iqSub.classList.remove('text-[#00d4ff]');
+            }
+
+            const aqBtn = document.getElementById('arsenal-queue-btn');
+            const aqPip = document.getElementById('arsenal-queue-pip');
+            const aqSub = document.getElementById('arsenal-queue-sub');
+            if (isArsenalQueue) {
+                aqBtn.style.borderColor = '#00d4ff';
+                aqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
+                aqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
+                aqSub.innerText = 'ACTIVE';
+                aqSub.classList.add('text-[#00d4ff]');
+            } else {
+                aqBtn.style.borderColor = '';
+                aqBtn.style.boxShadow = '';
+                aqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
+                aqSub.innerText = 'OFF';
+                aqSub.classList.remove('text-[#00d4ff]');
             }
 
             advSub.innerText = !canMod ? 'LOCKED' : (engine.activeModifier === 'ADV' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
@@ -2038,6 +2087,7 @@
                 soundEnabled: soundEnabled,
                 volume: volume,
                 instaQueue: isInstaQueue,
+                arsenalQueue: isArsenalQueue,
                 moddedQuick: isModdedQuick,
                 customDice: customDice,
                 currentTargetMode: currentTargetMode
@@ -2051,6 +2101,7 @@
                     soundEnabled: soundEnabled,
                     volume: volume,
                     instaQueue: isInstaQueue,
+                    arsenalQueue: isArsenalQueue,
                     moddedQuick: isModdedQuick,
                     customDice: customDice
                 }
@@ -2122,6 +2173,9 @@
                             }
                             if (importedSettings.instaQueue !== undefined) {
                                 isInstaQueue = importedSettings.instaQueue;
+                            }
+                            if (importedSettings.arsenalQueue !== undefined) {
+                                isArsenalQueue = importedSettings.arsenalQueue;
                             }
                             if (importedSettings.moddedQuick !== undefined) {
                                 isModdedQuick = importedSettings.moddedQuick;
@@ -2294,12 +2348,31 @@
             // 1. Prepare Data
             let forcedQueue = null;
             let isInstant = false;
+            let rollOverrides = null;
 
             if (options.arsenalId) {
-                loadQueue(options.arsenalId);
-                forcedQueue = engine.rollingQueue; 
-                isInstant = false;
+                const item = engine.savedQueues.find(q => q.id === options.arsenalId);
+                if (item) {
+                    if (isArsenalQueue) {
+                        loadQueue(options.arsenalId);
+                        return; // Loaded into queue, exit triggerRoll
+                    } else {
+                        // "Fire-and-forget": Roll using item settings without touching engine queue
+                        forcedQueue = item.queue;
+                        isInstant = false;
+                        rollOverrides = {
+                            modifier: item.modifier,
+                            modLevel: item.modLevel,
+                            flat: item.flat,
+                            rules: item.rules
+                        };
+                    }
+                }
             } else if (options.sides) {
+                if (isInstaQueue) {
+                    changeQueue(options.sides, 1);
+                    return; // Added to queue, exit triggerRoll
+                }
                 forcedQueue = [{ sides: options.sides, count: options.count || 1 }];
                 isInstant = options.isInstant || false;
             }
@@ -2326,7 +2399,7 @@
 
             try {
                 // 3. Calculate Result IMMEDIATELY
-                const res = engine.calculateRoll(forcedQueue, isInstant);
+                const res = engine.calculateRoll(forcedQueue, isInstant, rollOverrides);
                 if (!res) {
                     isRolling = false;
                     btn.classList.remove('is-charging-btn');
@@ -2415,6 +2488,10 @@
         }
 
         function showResult(res) {
+            const main = document.getElementById('result-main');
+            const oldHeight = main.offsetHeight;
+            main.style.height = oldHeight + 'px';
+
             const hero = document.getElementById('result-hero');
             const label = document.getElementById('result-label');
             const badges = document.getElementById('result-badges');
@@ -2476,6 +2553,17 @@
             } else {
                 breakdown.innerHTML = '';
             }
+
+            // Animate height change with overshoot bounce
+            requestAnimationFrame(() => {
+                main.style.transition = 'none';
+                main.style.height = 'auto';
+                const newHeight = main.offsetHeight;
+                main.style.height = oldHeight + 'px';
+                main.offsetHeight; // reflow
+                main.style.transition = '';
+                main.style.height = newHeight + 'px';
+            });
         }
 
         function addToHistory(val, desc) {
@@ -2541,6 +2629,9 @@
                     }
                     if (savedSettings.instaQueue !== undefined) {
                         isInstaQueue = savedSettings.instaQueue;
+                    }
+                    if (savedSettings.arsenalQueue !== undefined) {
+                        isArsenalQueue = savedSettings.arsenalQueue;
                     }
                     if (savedSettings.moddedQuick !== undefined) {
                         isModdedQuick = savedSettings.moddedQuick;
