@@ -630,7 +630,7 @@
         <!-- STICKY TOP -->
         <div
             class="section-sticky sticky top-0 z-40 -mx-4 px-4 py-3 space-y-4 pointer-events-none"
-            style="background: linear-gradient(to bottom, #020617 0%, #020617 60%, rgba(2, 6, 23, 0.8) 80%, transparent 100%);">
+            style="background: #020617; backdrop-filter: blur(20px); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%); mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);">
             <input type="file" id="import-input" class="hidden" accept=".json" onchange="importSettings(event)">
             <!-- HEADER -->
             <header class="flex justify-between items-center px-2 pointer-events-auto">
@@ -694,7 +694,7 @@
 
             <!-- MAIN DISPLAY -->
             <main
-                class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center min-h-[115px] relative overflow-hidden shrink-0 result-shimmer pointer-events-auto">
+                class="p-4 rounded-2xl flex flex-col items-center justify-center min-h-[115px] relative overflow-hidden shrink-0 result-shimmer pointer-events-auto">
                 <div
                     class="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-rose-500/5 pointer-events-none">
                 </div>
