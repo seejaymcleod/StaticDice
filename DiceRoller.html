@@ -759,18 +759,18 @@
                     <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
                     </div>
                     <span id="adv-label"
-                        class="text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">Advantage</span>
+                        class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">Advantage</span>
                     <span id="adv-sub"
-                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">LOCKED</span>
+                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
                 </button>
                 <button id="dis-btn" onclick="applyModifier('DIS')" disabled
                     class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
                     <div id="dis-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
                     </div>
                     <span id="dis-label"
-                        class="text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">Disadvantage</span>
+                        class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">Disadvantage</span>
                     <span id="dis-sub"
-                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5">LOCKED</span>
+                        class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
                 </button>
 
                 <div
@@ -803,15 +803,14 @@
                 </div>
 
                 <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
-                    class="w-[2.5rem] rounded-lg bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 flex flex-col items-center justify-center text-[#94a3b8] hover:text-[#00d4ff] transition-colors border border-[#00d4ff]/10 h-[2.5rem]">
-                    <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="w-[2.5rem] rounded-lg bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 flex items-center justify-center text-[#94a3b8] hover:text-[#00d4ff] transition-colors border border-[#00d4ff]/10 h-[2.5rem]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
                         </path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <span class="text-[4px] font-black uppercase tracking-widest">Advanced</span>
                 </button>
             </div>
 
@@ -1837,25 +1836,35 @@
             disBtn.disabled = !canMod;
 
             const advPip = document.getElementById('adv-pip');
+            const advLabel = document.getElementById('adv-label');
             if (engine.activeModifier === 'ADV') {
                 advBtn.style.borderColor = '#00d4ff';
                 advBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
                 advPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
+                advLabel.classList.add('text-white');
+                advLabel.classList.remove('text-slate-500');
             } else {
                 advBtn.style.borderColor = '';
                 advBtn.style.boxShadow = '';
                 advPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
+                advLabel.classList.remove('text-white');
+                advLabel.classList.add('text-slate-500');
             }
 
             const disPip = document.getElementById('dis-pip');
+            const disLabel = document.getElementById('dis-label');
             if (engine.activeModifier === 'DIS') {
                 disBtn.style.borderColor = '#6366f1'; /* DIS is traditionally a different 'charge' */
                 disBtn.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.3)';
                 disPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#6366f1] shadow-[0_0_12px_rgba(99, 102, 241, 0.6)] transition-all duration-300';
+                disLabel.classList.add('text-white');
+                disLabel.classList.remove('text-slate-500');
             } else {
                 disBtn.style.borderColor = '';
                 disBtn.style.boxShadow = '';
                 disPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#6366f1]/30';
+                disLabel.classList.remove('text-white');
+                disLabel.classList.add('text-slate-500');
             }
 
             const mqBtn = document.getElementById('modded-quick-btn');
@@ -1909,8 +1918,8 @@
                 aqLabel.classList.add('text-slate-500');
             }
 
-            advSub.innerText = !canMod ? 'LOCKED' : (engine.activeModifier === 'ADV' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
-            disSub.innerText = !canMod ? 'LOCKED' : (engine.activeModifier === 'DIS' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
+            advSub.innerText = (canMod && engine.activeModifier === 'ADV' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
+            disSub.innerText = (canMod && engine.activeModifier === 'DIS' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
 
             saveBtn.disabled = !hasDice && engine.flatMod === 0;
         }
