@@ -732,23 +732,37 @@
 
             <div class="flex gap-2">
                 <div
-                    class="flex-1 glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[40px] border-white/5 overflow-hidden">
+                    class="flex-1 glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[2.75rem] border-white/5 overflow-hidden">
                     <div id="queue-display"
-                        class="text-[12px] font-bold text-sky-400 mono text-center leading-relaxed uppercase truncate">
+                        class="text-[14px] font-bold text-sky-400 mono text-center leading-relaxed uppercase truncate">
                         EMPTY</div>
                 </div>
                 <div class="flex gap-1.5">
                     <button onclick="backspaceQueue()"
-                        class="bg-[#00d4ff]/05 text-[#94a3b8] px-2.5 py-1.5 rounded-lg border border-[#00d4ff]/10 font-black text-[9px] active:bg-[#00d4ff]/20 transition-all uppercase hover:text-[#00d4ff]">
-                        ⌫
+                        class="w-[2.5rem] h-[2.5rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                        title="Backspace">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414A2 2 0 0010.828 19H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
+                        </svg>
                     </button>
                     <button id="clear-btn" onclick="clearQueue()"
-                        class="bg-[#00d4ff]/10 text-[#00d4ff] px-3 py-1.5 rounded-lg border border-[#00d4ff]/40 font-black text-[9px] active:bg-[#00d4ff] active:text-[#020617] active:shadow-[0_0_25px_#00d4ff] transition-all uppercase hover:bg-[#00d4ff]/20 hover:border-[#00d4ff]/60 tracking-wider">
-                        Clear
+                        class="w-[2.5rem] h-[2.5rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                        title="Clear Queue">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
                     <button id="save-queue-btn" onclick="saveCurrentQueue()" disabled
-                        class="bg-[#00d4ff]/10 text-[#00d4ff]/50 px-2.5 py-1.5 rounded-lg border border-[#00d4ff]/20 font-black text-[9px] transition-all uppercase disabled:opacity-50 hover:bg-[#00d4ff]/20 hover:text-[#00d4ff]">
-                        Save
+                        class="w-[2.5rem] h-[2.5rem] bg-[#00d4ff]/05 text-[#94a3b8]/50 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all disabled:opacity-50 hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                        title="Save Current Queue">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
                     </button>
                 </div>
             </div>
