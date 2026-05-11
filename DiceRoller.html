@@ -824,28 +824,22 @@
                             class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
                             <div id="modded-quick-pip"
                                 class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
-                            <span
-                                class="text-[7px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Mod<br>Quick</span>
-                            <span id="modded-quick-sub"
-                                class="text-[7px] font-bold text-slate-600 mono leading-none mt-1">OFF</span>
+                            <span id="modded-quick-label"
+                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Mod<br>Quick</span>
                         </button>
                         <button id="insta-queue-btn" onclick="toggleInstaQueue()"
                             class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
                             <div id="insta-queue-pip"
                                 class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
-                            <span
-                                class="text-[7px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Quick<br>Queued</span>
-                            <span id="insta-queue-sub"
-                                class="text-[7px] font-bold text-slate-600 mono leading-none mt-1">OFF</span>
+                            <span id="insta-queue-label"
+                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Quick<br>Queued</span>
                         </button>
                         <button id="arsenal-queue-btn" onclick="toggleArsenalQueue()"
                             class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
                             <div id="arsenal-queue-pip"
                                 class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
-                            <span
-                                class="text-[7px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Arsenal<br>Queued</span>
-                            <span id="arsenal-queue-sub"
-                                class="text-[7px] font-bold text-slate-600 mono leading-none mt-1">OFF</span>
+                            <span id="arsenal-queue-label"
+                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Arsenal<br>Queued</span>
                         </button>
                     </div>
                     <!-- Header Row -->
@@ -1866,53 +1860,53 @@
 
             const mqBtn = document.getElementById('modded-quick-btn');
             const mqPip = document.getElementById('modded-quick-pip');
-            const mqSub = document.getElementById('modded-quick-sub');
+            const mqLabel = document.getElementById('modded-quick-label');
             if (isModdedQuick) {
                 mqBtn.style.borderColor = '#00d4ff';
                 mqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
                 mqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
-                mqSub.innerText = 'ACTIVE';
-                mqSub.classList.add('text-[#00d4ff]');
+                mqLabel.classList.add('text-white');
+                mqLabel.classList.remove('text-slate-500');
             } else {
                 mqBtn.style.borderColor = '';
                 mqBtn.style.boxShadow = '';
                 mqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
-                mqSub.innerText = 'OFF';
-                mqSub.classList.remove('text-[#00d4ff]');
+                mqLabel.classList.remove('text-white');
+                mqLabel.classList.add('text-slate-500');
             }
 
             const iqBtn = document.getElementById('insta-queue-btn');
             const iqPip = document.getElementById('insta-queue-pip');
-            const iqSub = document.getElementById('insta-queue-sub');
+            const iqLabel = document.getElementById('insta-queue-label');
             if (isInstaQueue) {
                 iqBtn.style.borderColor = '#00d4ff';
                 iqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
                 iqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
-                iqSub.innerText = 'ACTIVE';
-                iqSub.classList.add('text-[#00d4ff]');
+                iqLabel.classList.add('text-white');
+                iqLabel.classList.remove('text-slate-500');
             } else {
                 iqBtn.style.borderColor = '';
                 iqBtn.style.boxShadow = '';
                 iqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
-                iqSub.innerText = 'OFF';
-                iqSub.classList.remove('text-[#00d4ff]');
+                iqLabel.classList.remove('text-white');
+                iqLabel.classList.add('text-slate-500');
             }
 
             const aqBtn = document.getElementById('arsenal-queue-btn');
             const aqPip = document.getElementById('arsenal-queue-pip');
-            const aqSub = document.getElementById('arsenal-queue-sub');
+            const aqLabel = document.getElementById('arsenal-queue-label');
             if (isArsenalQueue) {
                 aqBtn.style.borderColor = '#00d4ff';
                 aqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
                 aqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
-                aqSub.innerText = 'ACTIVE';
-                aqSub.classList.add('text-[#00d4ff]');
+                aqLabel.classList.add('text-white');
+                aqLabel.classList.remove('text-slate-500');
             } else {
                 aqBtn.style.borderColor = '';
                 aqBtn.style.boxShadow = '';
                 aqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
-                aqSub.innerText = 'OFF';
-                aqSub.classList.remove('text-[#00d4ff]');
+                aqLabel.classList.remove('text-white');
+                aqLabel.classList.add('text-slate-500');
             }
 
             advSub.innerText = !canMod ? 'LOCKED' : (engine.activeModifier === 'ADV' ? (engine.modifierLevel > 1 ? `PLUS ${engine.modifierLevel - 1}` : 'ACTIVE') : 'NEUTRAL');
