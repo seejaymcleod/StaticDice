@@ -1157,7 +1157,7 @@
                         <canvas id="auditor-chart"></canvas>
                     </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 pt-2">
                         <div class="bg-black/20 p-3 rounded-xl border border-white/5">
                             <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block mb-1">Mean (Math)</span>
                             <span id="auditor-avg-math" class="text-sm font-black text-rose-400 mono">-</span>
@@ -1173,6 +1173,10 @@
                         <div class="bg-black/20 p-3 rounded-xl border border-white/5">
                             <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block mb-1">Max Deviation</span>
                             <span id="auditor-max-dev" class="text-sm font-black text-amber-400 mono">-</span>
+                        </div>
+                        <div class="bg-black/20 p-3 rounded-xl border border-white/5">
+                            <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block mb-1">Sample Size</span>
+                            <span id="auditor-samples" class="text-sm font-black text-sky-500 mono">-</span>
                         </div>
                         <div class="bg-black/20 p-3 rounded-xl border border-white/5">
                             <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block mb-1">Min Value</span>
@@ -2032,10 +2036,10 @@
 
             saveBtn.disabled = !hasDice && engine.flatMod === 0;
 
-            // Update Auditor if panel is open
+            // Update Auditor if panel is open (Fast 10k preview)
             const auditorDetails = document.getElementById('auditor-details');
             if (auditorDetails && auditorDetails.open) {
-                runAuditor();
+                runAuditor(10000);
             }
         }
 
@@ -2754,15 +2758,19 @@
         let auditorStopFlag = false;
         let auditorIsRunning = false;
 
-        async function runAuditor() {
+        async function runAuditor(iterationsOverride = null) {
             if (auditorIsRunning) {
+                // Don't interrupt a manual run with an auto-update
+                if (iterationsOverride) return;
+                
                 auditorStopFlag = true;
                 return;
             }
 
             auditorIsRunning = true;
             auditorStopFlag = false;
-            const iterations = stressCount;
+            const iterations = iterationsOverride || stressCount;
+            const isPreview = !!iterationsOverride;
             const queue = engine.rollingQueue.length > 0 ? engine.rollingQueue : [{ sides: 20, count: 1 }];
             const flatMod = engine.flatMod;
             const modType = engine.activeModifier;
@@ -2780,12 +2788,14 @@
             const progress = document.getElementById('audit-progress-bar');
             const etaLabel = document.getElementById('audit-eta');
 
-            btn.classList.remove('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
-            btn.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
-            icon.classList.add('animate-spin');
-            text.innerText = 'Stop';
-            progress.style.transform = 'translateX(-100%)';
-            etaLabel.classList.remove('opacity-0');
+            if (!isPreview) {
+                btn.classList.remove('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
+                btn.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+                icon.classList.add('animate-spin');
+                text.innerText = 'Stop';
+                progress.style.transform = 'translateX(-100%)';
+                etaLabel.classList.remove('opacity-0');
+            }
 
             const actualTallies = {};
             const sampleResults = [];
@@ -2816,10 +2826,10 @@
                 const elapsed = (performance.now() - startTime) / 1000;
                 const totalEstimated = (elapsed / processed) * iterations;
                 const remaining = Math.max(0, totalEstimated - elapsed);
-                etaLabel.innerText = `ETA: ${remaining.toFixed(1)}s`;
+                if (!isPreview) etaLabel.innerText = `ETA: ${remaining.toFixed(1)}s`;
 
                 // ETA Warning (Check after 2 chunks to have stable estimation)
-                if (processed >= chunkSize * 2 && totalEstimated > 10 && !hasWarned) {
+                if (!isPreview && processed >= chunkSize * 2 && totalEstimated > 10 && !hasWarned) {
                     hasWarned = true;
                     const proceed = await showModal({
                         title: 'Long Audit Warning',
@@ -2879,6 +2889,7 @@
             document.getElementById('auditor-avg-actual').innerText = actualMean.toFixed(2);
             document.getElementById('auditor-stddev').innerText = actualStdDev.toFixed(2);
             document.getElementById('auditor-max-dev').innerText = (maxDeviation * 100).toFixed(2) + '%';
+            document.getElementById('auditor-samples').innerText = finalSampleCount >= 1000000 ? (finalSampleCount / 1000000).toFixed(1) + 'M' : finalSampleCount.toLocaleString();
 
             // 5. Render Chart
             const ctx = document.getElementById('auditor-chart').getContext('2d');
@@ -2948,11 +2959,13 @@
                 }
             });
 
-            btn.classList.remove('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
-            btn.classList.add('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
-            icon.classList.remove('animate-spin');
-            text.innerText = 'Run';
-            etaLabel.classList.add('opacity-0');
+            if (!isPreview) {
+                btn.classList.remove('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+                btn.classList.add('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
+                icon.classList.remove('animate-spin');
+                text.innerText = 'Run';
+                etaLabel.classList.add('opacity-0');
+            }
             auditorIsRunning = false;
         }
 
