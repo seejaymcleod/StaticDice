@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Static Dice</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
@@ -169,6 +170,19 @@
                 filter: drop-shadow(0 0 10px var(--accent-azure));
                 transform: scale(1);
             }
+        }
+
+        .auditor-card {
+            background: rgba(2, 6, 23, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+            overflow: hidden;
+        }
+
+        .auditor-chart-container {
+            height: 300px;
+            width: 100%;
+            position: relative;
         }
 
         @keyframes shimmer {
@@ -1079,36 +1093,89 @@
                 </div>
             </div>
 
-            <details class="group">
+            <details class="group" id="auditor-details" ontoggle="if(this.open) runAuditor()">
                 <summary
                     class="list-none cursor-pointer flex items-center justify-between glass-panel p-4 rounded-2xl border-white/5">
-                    <h3 class="text-[10px] font-black text-[#94a3b8] uppercase tracking-[0.2em]">Entropy Verification
-                    </h3>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-[10px] font-black text-[#94a3b8] uppercase tracking-[0.2em]">Static Auditor</h3>
+                        <div id="auditor-status-pip" class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                    </div>
                     <svg class="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </summary>
-                <div class="p-4 space-y-3 bg-black/20 rounded-b-2xl border-x border-b border-white/5">
-                    <div class="flex items-center justify-between">
-                        <span id="stress-label" class="text-[10px] text-slate-500 mono">D20 Distribution
-                            (N=100,000)</span>
-                        <button onclick="runCustomStressTest()"
-                            class="bg-[#00d4ff]/10 text-[#00d4ff] px-3 py-1 rounded-lg text-[10px] font-black hover:bg-[#00d4ff] hover:text-[#020617] transition-all uppercase">Verify</button>
-                    </div>
-                    <div class="segmented-row !h-[2.2rem] w-full bg-[#020617]/40">
-                        <button onclick="adjustStressCount(0.1)"
-                            class="segmented-btn btn-side text-[11px] font-black">÷10</button>
-                        <div
-                            class="segmented-btn btn-center cursor-default flex items-center justify-center border-x border-white/5">
-                            <span id="stress-count-display"
-                                class="font-black text-[11px] text-sky-400 mono">100,000</span>
+                <div class="p-6 space-y-4 bg-black/40 rounded-b-2xl border-x border-b border-white/5">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex flex-col gap-1">
+                            <h4 id="auditor-formula-label" class="text-lg font-black text-white tracking-tight">D20 Probability Curve</h4>
+                            <div class="flex items-center gap-2">
+                                <p id="auditor-sample-label" class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Comparing math vs 100k samples</p>
+                                <span class="text-slate-700 text-[9px]">•</span>
+                                <div class="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                                    <span class="text-[8px] font-black text-slate-600 uppercase">Seed:</span>
+                                    <input id="auditor-seed" type="text" value="888" oninput="runAuditor()" 
+                                        class="bg-transparent text-[9px] font-black text-sky-400 mono outline-none w-16 text-center">
+                                </div>
+                            </div>
                         </div>
-                        <button onclick="adjustStressCount(10)"
-                            class="segmented-btn btn-side text-[11px] font-black">×10</button>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex bg-[#020617]/80 rounded-xl p-0.5 border border-white/5">
+                                <button onclick="setAuditorMode('percent')" id="auditor-mode-percent" 
+                                    class="px-3 py-1 rounded-lg text-[9px] font-black transition-all bg-sky-500 text-[#020617] shadow-lg">%</button>
+                                <button onclick="setAuditorMode('fraction')" id="auditor-mode-fraction" 
+                                    class="px-3 py-1 rounded-lg text-[9px] font-black transition-all text-slate-500 hover:text-slate-300">1/x</button>
+                            </div>
+                            <div class="segmented-row !h-[2.2rem] bg-[#020617]/60 w-32">
+                                <button onclick="adjustStressCount(0.1)"
+                                    class="segmented-btn btn-side text-[11px] font-black hover:bg-white/5">÷10</button>
+                                <div
+                                    class="segmented-btn btn-center cursor-default flex items-center justify-center border-x border-white/10">
+                                    <span id="stress-count-display"
+                                        class="font-black text-[11px] text-sky-400 mono">100k</span>
+                                </div>
+                                <button onclick="adjustStressCount(10)"
+                                    class="segmented-btn btn-side text-[11px] font-black hover:bg-white/5">×10</button>
+                            </div>
+                            <button onclick="runAuditor()"
+                                class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-4 py-1.5 rounded-xl text-[10px] font-black hover:bg-sky-500 hover:text-[#020617] transition-all uppercase flex items-center gap-2">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Refresh
+                            </button>
+                        </div>
                     </div>
-                    <div id="chart-area"
-                        class="h-12 flex items-end justify-between gap-0.5 border-b border-white/5 pb-1"></div>
+
+                    <div class="flex gap-4 mb-2">
+                       <div class="flex items-center gap-2 text-[9px] font-bold text-slate-500 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                          <div class="w-1.5 h-1.5 bg-rose-500 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.5)]"></div> MATH
+                       </div>
+                       <div class="flex items-center gap-2 text-[9px] font-bold text-slate-500 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                          <div class="w-1.5 h-1.5 bg-sky-500 rounded-sm shadow-[0_0_8px_rgba(56,189,248,0.5)]"></div> STATIC SEED
+                       </div>
+                    </div>
+
+                    <div class="auditor-chart-container">
+                        <canvas id="auditor-chart"></canvas>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                        <div class="bg-black/20 p-3 rounded-xl border border-white/5">
+                            <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block">Min Value</span>
+                            <span id="auditor-min" class="text-sm font-black text-sky-400 mono">-</span>
+                        </div>
+                        <div class="bg-black/20 p-3 rounded-xl border border-white/5">
+                            <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block">Max Value</span>
+                            <span id="auditor-max" class="text-sm font-black text-sky-400 mono">-</span>
+                        </div>
+                        <div class="bg-black/20 p-3 rounded-xl border border-white/5">
+                            <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block">Avg (Math)</span>
+                            <span id="auditor-avg-math" class="text-sm font-black text-rose-400 mono">-</span>
+                        </div>
+                        <div class="bg-black/20 p-3 rounded-xl border border-white/5">
+                            <span class="text-[8px] text-slate-500 uppercase font-black tracking-widest block">Avg (Actual)</span>
+                            <span id="auditor-avg-actual" class="text-sm font-black text-sky-400 mono">-</span>
+                        </div>
+                    </div>
                 </div>
             </details>
         </section>
@@ -1957,6 +2024,12 @@
             disSub.innerText = (canMod && engine.activeModifier === 'DIS' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
 
             saveBtn.disabled = !hasDice && engine.flatMod === 0;
+
+            // Update Auditor if panel is open
+            const auditorDetails = document.getElementById('auditor-details');
+            if (auditorDetails && auditorDetails.open) {
+                runAuditor();
+            }
         }
 
         function saveCurrentQueue() {
@@ -2620,34 +2693,241 @@
             document.getElementById('history-log').innerHTML = '<p class="text-[9px] text-slate-700 italic px-1">No history yet...</p>';
         }
 
-        function runCustomStressTest() {
+        let auditorChart = null;
+        let auditorMode = 'percent';
+
+        function setAuditorMode(mode) {
+            auditorMode = mode;
+            const pBtn = document.getElementById('auditor-mode-percent');
+            const fBtn = document.getElementById('auditor-mode-fraction');
+            if (mode === 'percent') {
+                pBtn.className = 'px-3 py-1 rounded-lg text-[9px] font-black transition-all bg-sky-500 text-[#020617] shadow-lg';
+                fBtn.className = 'px-3 py-1 rounded-lg text-[9px] font-black transition-all text-slate-500 hover:text-slate-300';
+            } else {
+                fBtn.className = 'px-3 py-1 rounded-lg text-[9px] font-black transition-all bg-sky-500 text-[#020617] shadow-lg';
+                pBtn.className = 'px-3 py-1 rounded-lg text-[9px] font-black transition-all text-slate-500 hover:text-slate-300';
+            }
+            runAuditor();
+        }
+
+        // PRNG for auditor simulation
+        function mulberry32(a) {
+            return function() {
+                let t = a += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            }
+        }
+
+        function getTheoreticalDistribution(queue, mod, modifierType, modifierLevel) {
+            // Simplified: Handle each die group's distribution
+            // P(X=x) for one die
+            const getDieDist = (sides, modType, modLvl) => {
+                let dist = {};
+                const rollsToTake = 1 + (modType ? modLvl : 0);
+                const totalOutcomes = Math.pow(sides, rollsToTake);
+                
+                for (let v = 1; v <= sides; v++) {
+                    if (modType === 'ADV') {
+                        // kh1: P(X=v) = (v^n - (v-1)^n) / S^n
+                        dist[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / totalOutcomes;
+                    } else if (modType === 'DIS') {
+                        // kl1: P(X=v) = ((S-v+1)^n - (S-v)^n) / S^n
+                        dist[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / totalOutcomes;
+                    } else {
+                        dist[v] = 1 / sides;
+                    }
+                }
+                return dist;
+            };
+
+            const convolve = (d1, d2) => {
+                let res = {};
+                for (let v1 in d1) {
+                    for (let v2 in d2) {
+                        const s = parseInt(v1) + parseInt(v2);
+                        res[s] = (res[s] || 0) + d1[v1] * d2[v2];
+                    }
+                }
+                return res;
+            };
+
+            let finalDist = { 0: 1 };
+            queue.forEach(group => {
+                const dieDist = getDieDist(group.sides, modifierType, modifierLevel);
+                for (let i = 0; i < group.count; i++) {
+                    finalDist = convolve(finalDist, dieDist);
+                }
+            });
+
+            // Apply flat mod
+            let shiftedDist = {};
+            for (let v in finalDist) {
+                shiftedDist[parseInt(v) + mod] = finalDist[v];
+            }
+            return shiftedDist;
+        }
+
+        function runAuditor() {
             const iterations = stressCount;
-            const sides = 20;
-            const tallies = new Array(sides).fill(0);
-            const chartArea = document.getElementById('chart-area');
-            if (!chartArea) return;
-            chartArea.innerHTML = '';
-            for (let i = 0; i < iterations; i++) tallies[engine.rng(sides) - 1]++;
-            const max = Math.max(...tallies);
-            tallies.forEach((t, i) => {
-                const bar = document.createElement('div');
-                bar.className = 'bar flex-1';
-                bar.style.height = `${(t / max) * 100}%`;
-                chartArea.appendChild(bar);
+            const queue = engine.rollingQueue.length > 0 ? engine.rollingQueue : [{ sides: 20, count: 1 }];
+            const flatMod = engine.flatMod;
+            const modType = engine.activeModifier;
+            const modLvl = engine.modifierLevel;
+            const seedStr = document.getElementById('auditor-seed').value || "888";
+
+            // Hash the seed string to a number
+            let numericSeed = 0;
+            for (let i = 0; i < seedStr.length; i++) {
+                numericSeed = (numericSeed << 5) - numericSeed + seedStr.charCodeAt(i);
+                numericSeed |= 0;
+            }
+            const seededRng = mulberry32(numericSeed);
+
+            // Update Labels
+            let formulaStr = queue.map(q => `${q.count}d${q.sides}`).join(" + ");
+            if (flatMod !== 0) formulaStr += ` ${flatMod > 0 ? '+' : ''}${flatMod}`;
+            if (modType) formulaStr += ` [${modType}${modLvl > 1 ? '+' + (modLvl - 1) : ''}]`;
+            document.getElementById('auditor-formula-label').innerText = `${formulaStr} Probability`;
+            document.getElementById('auditor-sample-label').innerText = `Comparing math vs ${iterations.toLocaleString()} samples`;
+
+            // 1. Calculate Theoretical
+            const theoretical = getTheoreticalDistribution(queue, flatMod, modType, modLvl);
+            
+            // 2. Run Actual Samples using Seeded PRNG
+            const actualTallies = {};
+            const sampleResults = [];
+            
+            // Temporary engine with seeded RNG for calculation
+            const tempEngine = new DiceEngine();
+            tempEngine.setRng((s) => Math.floor(seededRng() * s) + 1);
+
+            for (let i = 0; i < iterations; i++) {
+                const res = tempEngine.calculateRoll(queue, false, { 
+                    modifier: modType, 
+                    modLevel: modLvl, 
+                    flat: flatMod,
+                    rules: { targetMode: 'sum', targetOp: '', targetVal: null }
+                });
+                actualTallies[res.total] = (actualTallies[res.total] || 0) + 1;
+                sampleResults.push(res.total);
+            }
+
+            // 3. Prepare Chart Data
+            const allValues = [...new Set([...Object.keys(theoretical), ...Object.keys(actualTallies)])]
+                .map(Number).sort((a, b) => a - b);
+
+            // Denominator for fractions
+            let totalComb = 1;
+            queue.forEach(g => totalComb *= Math.pow(g.sides, 1 + (modType ? modLvl : 0) * g.count)); 
+            // Wait, combinations is actually prod(S^(count * (1+L)))
+            // Simple sum combinations: prod(S^count) for no mod.
+            // With Adv/Dis, it's (S^(1+L))^count.
+            
+            const labels = allValues;
+            const mathData = allValues.map(v => theoretical[v] || 0);
+            const actualData = allValues.map(v => (actualTallies[v] || 0) / iterations);
+
+            // 4. Stats
+            const minVal = allValues[0];
+            const maxVal = allValues[allValues.length - 1];
+            let mathSum = 0;
+            for (let v in theoretical) mathSum += v * theoretical[v];
+            const actualSum = sampleResults.reduce((a, b) => a + b, 0) / iterations;
+
+            document.getElementById('auditor-min').innerText = minVal;
+            document.getElementById('auditor-max').innerText = maxVal;
+            document.getElementById('auditor-avg-math').innerText = mathSum.toFixed(2);
+            document.getElementById('auditor-avg-actual').innerText = actualSum.toFixed(2);
+
+            // 5. Render Chart
+            const ctx = document.getElementById('auditor-chart').getContext('2d');
+            if (auditorChart) auditorChart.destroy();
+
+            const formatVal = (v) => {
+                if (auditorMode === 'percent') return (v * 100).toFixed(2) + '%';
+                return (v * iterations).toFixed(0) + '/' + iterations.toLocaleString();
+            };
+
+            auditorChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Static Seed',
+                            data: actualData,
+                            backgroundColor: 'rgba(56, 189, 248, 0.4)',
+                            borderColor: 'rgba(56, 189, 248, 0.8)',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            order: 2
+                        },
+                        {
+                            label: 'Mathematical',
+                            data: mathData,
+                            type: 'line',
+                            borderColor: '#f43f5e',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.4,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#64748b', font: { size: 10, family: 'JetBrains Mono' } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                            ticks: { 
+                                color: '#64748b', 
+                                font: { size: 10, family: 'JetBrains Mono' },
+                                callback: (val) => auditorMode === 'percent' ? (val * 100).toFixed(1) + '%' : (val * iterations).toLocaleString()
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#020617',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: (context) => ` ${context.dataset.label}: ${formatVal(context.raw)}`
+                            }
+                        }
+                    }
+                }
             });
         }
 
         function adjustStressCount(factor) {
-            stressCount = Math.min(1000000000, Math.max(1, Math.round(stressCount * factor)));
+            stressCount = Math.min(1000000, Math.max(1, Math.round(stressCount * factor)));
             updateStressUI();
             vibrate(5);
         }
 
         function updateStressUI() {
             const display = document.getElementById('stress-count-display');
-            if (display) display.innerText = stressCount.toLocaleString();
-            const label = document.getElementById('stress-label');
-            if (label) label.innerText = `D20 Distribution (N=${stressCount.toLocaleString()})`;
+            if (display) {
+                let text = stressCount;
+                if (stressCount >= 1000000) text = (stressCount / 1000000).toFixed(0) + 'M';
+                else if (stressCount >= 1000) text = (stressCount / 1000).toFixed(0) + 'k';
+                display.innerText = text;
+            }
         }
 
         window.onload = () => {
@@ -2696,7 +2976,8 @@
             }
 
             updateStressUI();
-            runCustomStressTest();
+            // Initial audit run on load
+            setTimeout(() => runAuditor(), 500);
             renderDiceGrid();
             updateRulesUI();
         };
