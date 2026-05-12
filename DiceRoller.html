@@ -1132,11 +1132,15 @@
                                 </div>
                             </div>
                             
-                            <button onclick="runAuditor()" id="run-audit-btn"
-                                class="ml-auto bg-sky-500/10 text-sky-400 border border-sky-500/20 px-6 py-2 rounded-xl text-[10px] font-black hover:bg-sky-500 hover:text-[#020617] transition-all uppercase flex items-center gap-2 h-fit">
-                                <svg id="run-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                Run
-                            </button>
+                            <div class="flex flex-col gap-1.5 relative group/run">
+                                <button onclick="runAuditor()" id="run-audit-btn"
+                                    class="ml-auto bg-sky-500/10 text-sky-400 border border-sky-500/20 px-6 py-2 rounded-xl text-[10px] font-black hover:bg-sky-500 hover:text-[#020617] transition-all uppercase flex items-center gap-2 h-fit overflow-hidden relative">
+                                    <div id="audit-progress-bar" class="absolute inset-0 bg-sky-500/20 translate-x-[-100%] transition-transform duration-300"></div>
+                                    <svg id="run-icon" class="w-3.5 h-3.5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <span id="run-text" class="relative z-10">Run</span>
+                                </button>
+                                <span id="audit-eta" class="absolute top-full right-0 mt-1 text-[7px] font-bold text-slate-600 uppercase tracking-tighter opacity-0 transition-opacity">Estimated: --s</span>
+                            </div>
                         </div>
                     </div>
 
@@ -2696,7 +2700,6 @@
             document.getElementById('history-log').innerHTML = '<p class="text-[9px] text-slate-700 italic px-1">No history yet...</p>';
         }
 
-        let auditorChart = null;
 
         function getTheoreticalDistribution(queue, mod, modifierType, modifierLevel) {
             // Simplified: Handle each die group's distribution
@@ -2747,7 +2750,18 @@
             return shiftedDist;
         }
 
-        function runAuditor() {
+        let auditorChart = null;
+        let auditorStopFlag = false;
+        let auditorIsRunning = false;
+
+        async function runAuditor() {
+            if (auditorIsRunning) {
+                auditorStopFlag = true;
+                return;
+            }
+
+            auditorIsRunning = true;
+            auditorStopFlag = false;
             const iterations = stressCount;
             const queue = engine.rollingQueue.length > 0 ? engine.rollingQueue : [{ sides: 20, count: 1 }];
             const flatMod = engine.flatMod;
@@ -2762,19 +2776,28 @@
 
             const btn = document.getElementById('run-audit-btn');
             const icon = document.getElementById('run-icon');
-            btn.classList.add('opacity-50', 'pointer-events-none');
-            icon.classList.add('animate-spin');
+            const text = document.getElementById('run-text');
+            const progress = document.getElementById('audit-progress-bar');
+            const etaLabel = document.getElementById('audit-eta');
 
-            // Use setTimeout to allow UI to show "Running" state if it's a long calculation
-            setTimeout(() => {
-                // 1. Calculate Theoretical
-                const theoretical = getTheoreticalDistribution(queue, flatMod, modType, modLvl);
-                
-                // 2. Run Actual Samples using Real Engine RNG
-                const actualTallies = {};
-                const sampleResults = [];
-                
-                for (let i = 0; i < iterations; i++) {
+            btn.classList.remove('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
+            btn.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+            icon.classList.add('animate-spin');
+            text.innerText = 'Stop';
+            progress.style.transform = 'translateX(-100%)';
+            etaLabel.classList.remove('opacity-0');
+
+            const actualTallies = {};
+            const sampleResults = [];
+            const chunkSize = 50000;
+            let processed = 0;
+            let startTime = performance.now();
+            let hasWarned = false;
+
+            // Run in chunks to prevent UI hang
+            while (processed < iterations && !auditorStopFlag) {
+                const currentBatch = Math.min(chunkSize, iterations - processed);
+                for (let i = 0; i < currentBatch; i++) {
                     const res = engine.calculateRoll(queue, false, { 
                         modifier: modType, 
                         modLevel: modLvl, 
@@ -2784,112 +2807,153 @@
                     actualTallies[res.total] = (actualTallies[res.total] || 0) + 1;
                     sampleResults.push(res.total);
                 }
-
-                // 3. Prepare Chart Data
-                const allValues = [...new Set([...Object.keys(theoretical), ...Object.keys(actualTallies)])]
-                    .map(Number).sort((a, b) => a - b);
+                processed += currentBatch;
                 
-                const labels = allValues;
-                const mathData = allValues.map(v => theoretical[v] || 0);
-                const actualData = allValues.map(v => (actualTallies[v] || 0) / iterations);
-
-                // 4. Stats Calculation
-                const minVal = allValues[0];
-                const maxVal = allValues[allValues.length - 1];
+                // Progress & ETA
+                const percent = (processed / iterations) * 100;
+                progress.style.transform = `translateX(${percent - 100}%)`;
                 
-                let mathMean = 0;
-                let mathVariance = 0;
-                for (let v in theoretical) mathMean += v * theoretical[v];
-                for (let v in theoretical) mathVariance += Math.pow(v - mathMean, 2) * theoretical[v];
-                const mathStdDev = Math.sqrt(mathVariance);
+                const elapsed = (performance.now() - startTime) / 1000;
+                const totalEstimated = (elapsed / processed) * iterations;
+                const remaining = Math.max(0, totalEstimated - elapsed);
+                etaLabel.innerText = `ETA: ${remaining.toFixed(1)}s`;
 
-                let actualMean = sampleResults.reduce((a, b) => a + b, 0) / iterations;
-                let actualVariance = sampleResults.reduce((sum, v) => sum + Math.pow(v - actualMean, 2), 0) / iterations;
-                const actualStdDev = Math.sqrt(actualVariance);
+                // ETA Warning (Check after 2 chunks to have stable estimation)
+                if (processed >= chunkSize * 2 && totalEstimated > 10 && !hasWarned) {
+                    hasWarned = true;
+                    const proceed = await showModal({
+                        title: 'Long Audit Warning',
+                        body: `This high-confidence audit is estimated to take <b>${totalEstimated.toFixed(0)} seconds</b> on your current hardware. Continue?`,
+                        confirmText: 'Continue',
+                        cancelText: 'Stop Now'
+                    });
+                    if (!proceed) {
+                        auditorStopFlag = true;
+                        break;
+                    }
+                    // Reset startTime to exclude modal time
+                    startTime = performance.now() - elapsed * 1000;
+                }
 
-                let maxDeviation = 0;
-                allValues.forEach(v => {
-                    const dev = Math.abs((theoretical[v] || 0) - ((actualTallies[v] || 0) / iterations));
-                    if (dev > maxDeviation) maxDeviation = dev;
-                });
+                // Yield to UI
+                await new Promise(r => requestAnimationFrame(r));
+            }
 
-                document.getElementById('auditor-min').innerText = minVal;
-                document.getElementById('auditor-max').innerText = maxVal;
-                document.getElementById('auditor-avg-math').innerText = mathMean.toFixed(2);
-                document.getElementById('auditor-avg-actual').innerText = actualMean.toFixed(2);
-                document.getElementById('auditor-stddev').innerText = actualStdDev.toFixed(2);
-                document.getElementById('auditor-max-dev').innerText = (maxDeviation * 100).toFixed(2) + '%';
+            // finalize iterations for math
+            const finalSampleCount = processed;
 
-                // 5. Render Chart
-                const ctx = document.getElementById('auditor-chart').getContext('2d');
-                if (auditorChart) auditorChart.destroy();
+            // 1. Calculate Theoretical
+            const theoretical = getTheoreticalDistribution(queue, flatMod, modType, modLvl);
+            
+            // 3. Prepare Chart Data
+            const allValues = [...new Set([...Object.keys(theoretical), ...Object.keys(actualTallies)])]
+                .map(Number).sort((a, b) => a - b);
+            
+            const labels = allValues;
+            const mathData = allValues.map(v => theoretical[v] || 0);
+            const actualData = allValues.map(v => (actualTallies[v] || 0) / finalSampleCount);
 
-                auditorChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Rolls',
-                                data: actualData,
-                                backgroundColor: 'rgba(56, 189, 248, 0.4)',
-                                borderColor: 'rgba(56, 189, 248, 0.8)',
-                                borderWidth: 1,
-                                borderRadius: 4,
-                                order: 2
-                            },
-                            {
-                                label: 'Mathematical',
-                                data: mathData,
-                                type: 'line',
-                                borderColor: '#f43f5e',
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                fill: false,
-                                tension: 0.4,
-                                order: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: { mode: 'index', intersect: false },
-                        scales: {
-                            x: {
-                                grid: { display: false, drawBorder: false },
-                                ticks: { color: '#64748b', font: { size: 10, family: 'JetBrains Mono' } }
-                            },
-                            y: {
-                                grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
-                                ticks: { 
-                                    color: '#64748b', 
-                                    font: { size: 10, family: 'JetBrains Mono' },
-                                    callback: (val) => (val * 100).toFixed(1) + '%'
-                                }
-                            }
+            // 4. Stats Calculation
+            const minVal = allValues.length > 0 ? allValues[0] : 0;
+            const maxVal = allValues.length > 0 ? allValues[allValues.length - 1] : 0;
+            
+            let mathMean = 0;
+            let mathVariance = 0;
+            for (let v in theoretical) mathMean += v * theoretical[v];
+            for (let v in theoretical) mathVariance += Math.pow(v - mathMean, 2) * theoretical[v];
+            const mathStdDev = Math.sqrt(mathVariance);
+
+            let actualMean = finalSampleCount > 0 ? sampleResults.reduce((a, b) => a + b, 0) / finalSampleCount : 0;
+            let actualVariance = finalSampleCount > 0 ? sampleResults.reduce((sum, v) => sum + Math.pow(v - actualMean, 2), 0) / finalSampleCount : 0;
+            const actualStdDev = Math.sqrt(actualVariance);
+
+            let maxDeviation = 0;
+            allValues.forEach(v => {
+                const dev = Math.abs((theoretical[v] || 0) - ((actualTallies[v] || 0) / finalSampleCount));
+                if (dev > maxDeviation) maxDeviation = dev;
+            });
+
+            document.getElementById('auditor-min').innerText = minVal;
+            document.getElementById('auditor-max').innerText = maxVal;
+            document.getElementById('auditor-avg-math').innerText = mathMean.toFixed(2);
+            document.getElementById('auditor-avg-actual').innerText = actualMean.toFixed(2);
+            document.getElementById('auditor-stddev').innerText = actualStdDev.toFixed(2);
+            document.getElementById('auditor-max-dev').innerText = (maxDeviation * 100).toFixed(2) + '%';
+
+            // 5. Render Chart
+            const ctx = document.getElementById('auditor-chart').getContext('2d');
+            if (auditorChart) auditorChart.destroy();
+
+            auditorChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Rolls',
+                            data: actualData,
+                            backgroundColor: 'rgba(56, 189, 248, 0.4)',
+                            borderColor: 'rgba(56, 189, 248, 0.8)',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            order: 2
                         },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                backgroundColor: '#020617',
-                                titleColor: '#f8fafc',
-                                bodyColor: '#94a3b8',
-                                borderColor: 'rgba(255, 255, 255, 0.1)',
-                                borderWidth: 1,
-                                padding: 12,
-                                cornerRadius: 8,
-                                callbacks: {
-                                    label: (context) => ` ${context.dataset.label}: ${(context.raw * 100).toFixed(2)}%`
-                                }
+                        {
+                            label: 'Mathematical',
+                            data: mathData,
+                            type: 'line',
+                            borderColor: '#f43f5e',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.4,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 }, // Disable chart animation for instant feedback after calculation
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#64748b', font: { size: 10, family: 'JetBrains Mono' } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                            ticks: { 
+                                color: '#64748b', 
+                                font: { size: 10, family: 'JetBrains Mono' },
+                                callback: (val) => (val * 100).toFixed(1) + '%'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#020617',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: (context) => ` ${context.dataset.label}: ${(context.raw * 100).toFixed(2)}%`
                             }
                         }
                     }
-                });
+                }
+            });
 
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                icon.classList.remove('animate-spin');
-            }, 100);
+            btn.classList.remove('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+            btn.classList.add('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
+            icon.classList.remove('animate-spin');
+            text.innerText = 'Run';
+            etaLabel.classList.add('opacity-0');
+            auditorIsRunning = false;
         }
 
         function adjustStressCount(factor) {
