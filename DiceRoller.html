@@ -2871,10 +2871,29 @@
             }
 
             // Update Labels
-            let formulaStr = queue.map(q => `${q.count}d${q.sides}`).join("+");
-            if (flatMod !== 0) formulaStr += `${flatMod > 0 ? '+' : ''}${flatMod}`;
-            if (modType) formulaStr += ` [${modType}${modLvl > 1 ? '+' + (modLvl - 1) : ''}]`;
-            document.getElementById('auditor-formula-label').innerText = formulaStr;
+            let diceStr = queue.map(q => `${q.count}d${q.sides}`).join("+");
+            if (flatMod !== 0) diceStr += `${flatMod > 0 ? '+' : ''}${flatMod}`;
+            if (modType) diceStr += ` [${modType}${modLvl > 1 ? '+' + (modLvl - 1) : ''}]`;
+            
+            let ruleStr = "";
+            if (activeRules.rerollOp) ruleStr += ` RR${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
+            if (activeRules.explodeOp) ruleStr += ` EX${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
+            
+            let modeStr = "";
+            if (activeRules.targetMode === 'count') {
+                modeStr = "COUNT";
+                if (activeRules.targetOp) modeStr += `${activeRules.targetOp.replace('=', '')}${activeRules.targetVal}`;
+            } else {
+                modeStr = "SUM";
+            }
+            if (engine.overallTarget !== null) modeStr += ` ≥${engine.overallTarget}`;
+
+            document.getElementById('auditor-formula-label').innerHTML = `
+                <div class="flex items-baseline gap-3">
+                    <span class="text-3xl font-black text-white tracking-tighter">${diceStr}</span>
+                    <span class="text-sm font-black text-sky-400/60 uppercase tracking-widest">${modeStr}${ruleStr}</span>
+                </div>
+            `;
 
             const btn = document.getElementById('run-audit-btn');
             const icon = document.getElementById('run-icon');
