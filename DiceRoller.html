@@ -2036,9 +2036,16 @@
 
             saveBtn.disabled = !hasDice && engine.flatMod === 0;
 
+            const runAuditBtn = document.getElementById('run-audit-btn');
+            if (runAuditBtn) {
+                runAuditBtn.disabled = !canRoll;
+                runAuditBtn.style.opacity = canRoll ? '1' : '0.4';
+                runAuditBtn.style.pointerEvents = canRoll ? 'auto' : 'none';
+            }
+
             // Update Auditor if panel is open (Fast 10k preview)
             const auditorDetails = document.getElementById('auditor-details');
-            if (auditorDetails && auditorDetails.open) {
+            if (auditorDetails && auditorDetails.open && canRoll) {
                 runAuditor(10000);
             }
         }
@@ -2705,26 +2712,78 @@
         }
 
 
-        function getTheoreticalDistribution(queue, mod, modifierType, modifierLevel) {
-            // Simplified: Handle each die group's distribution
-            // P(X=x) for one die
-            const getDieDist = (sides, modType, modLvl) => {
-                let dist = {};
+        function getTheoreticalDistribution(queue, mod, modifierType, modifierLevel, rules = {}) {
+            // Helper to get PMF for a single die with advanced rules
+            const getDiePMF = (sides, modType, modLvl, rules) => {
+                let pmf = {};
                 const rollsToTake = 1 + (modType ? modLvl : 0);
-                const totalOutcomes = Math.pow(sides, rollsToTake);
                 
+                // 1. Base distribution (with Adv/Dis)
                 for (let v = 1; v <= sides; v++) {
                     if (modType === 'ADV') {
-                        // kh1: P(X=v) = (v^n - (v-1)^n) / S^n
-                        dist[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / totalOutcomes;
+                        pmf[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / Math.pow(sides, rollsToTake);
                     } else if (modType === 'DIS') {
-                        // kl1: P(X=v) = ((S-v+1)^n - (S-v)^n) / S^n
-                        dist[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / totalOutcomes;
+                        pmf[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / Math.pow(sides, rollsToTake);
                     } else {
-                        dist[v] = 1 / sides;
+                        pmf[v] = 1 / sides;
                     }
                 }
-                return dist;
+
+                // 2. Apply Reroll Logic (until non-matching, up to engine limit)
+                const rerollOp = rules.rerollOp;
+                const rerollVal = rules.rerollVal;
+                if (rerollOp && rerollVal !== null) {
+                    let rerollFaces = [];
+                    for (let v = 1; v <= sides; v++) {
+                        if (engine.checkCondition(v, rerollOp, rerollVal)) rerollFaces.push(v);
+                    }
+
+                    if (rerollFaces.length > 0 && rerollFaces.length < sides) {
+                        let rerollMass = rerollFaces.reduce((sum, f) => sum + pmf[f], 0);
+                        let keepMass = 1 - rerollMass;
+                        
+                        // Redistribute mass proportionally (limit to 10 iterations like engine)
+                        // Mathematically: P'(x) = P(x) / (1 - P(reroll))
+                        rerollFaces.forEach(f => pmf[f] = 0);
+                        for (let v in pmf) {
+                            if (pmf[v] > 0) pmf[v] /= keepMass;
+                        }
+                    }
+                }
+
+                // 3. Apply Exploding Logic (Recursive)
+                const explodeOp = rules.explodeOp;
+                const explodeVal = rules.explodeVal;
+                if (explodeOp && explodeVal !== null) {
+                    let explodeFaces = [];
+                    for (let v = 1; v <= sides; v++) {
+                        if (engine.checkCondition(v, explodeOp, explodeVal)) explodeFaces.push(v);
+                    }
+
+                    if (explodeFaces.length > 0 && explodeFaces.length < sides) {
+                        let newPmf = {};
+                        let explodeMass = explodeFaces.reduce((sum, f) => sum + pmf[f], 0);
+                        
+                        // Probability of exactly k explosions: (explodeMass^k) * (1 - explodeMass)
+                        // We convolve the non-exploding part with shifted versions of itself
+                        let nonExplodePmf = { ...pmf };
+                        explodeFaces.forEach(f => nonExplodePmf[f] = 0);
+                        
+                        // Truncate at 10 explosions or < 1e-7 probability
+                        for (let k = 0; k <= 10; k++) {
+                            let p_k = Math.pow(explodeMass, k);
+                            if (p_k < 1e-7) break;
+                            
+                            for (let v in nonExplodePmf) {
+                                if (nonExplodePmf[v] === 0) continue;
+                                let finalVal = parseInt(v) + (k * sides);
+                                newPmf[finalVal] = (newPmf[finalVal] || 0) + (nonExplodePmf[v] * p_k);
+                            }
+                        }
+                        pmf = newPmf;
+                    }
+                }
+                return pmf;
             };
 
             const convolve = (d1, d2) => {
@@ -2738,15 +2797,42 @@
                 return res;
             };
 
+            // SUCCESS COUNT MODE MATH
+            if (rules.targetMode === 'count') {
+                let finalDist = { 0: 1 };
+                queue.forEach(group => {
+                    const pmf = getDiePMF(group.sides, modifierType, modifierLevel, rules);
+                    // Probability of success for ONE die
+                    let pSuccess = 0;
+                    for (let v in pmf) {
+                        if (engine.checkCondition(parseInt(v), rules.targetOp, rules.targetVal)) pSuccess += pmf[v];
+                    }
+                    
+                    // Binomial Distribution for this group
+                    for (let i = 0; i < group.count; i++) {
+                        let nextDist = {};
+                        for (let successes in finalDist) {
+                            let s = parseInt(successes);
+                            // Fail
+                            nextDist[s] = (nextDist[s] || 0) + finalDist[s] * (1 - pSuccess);
+                            // Success
+                            nextDist[s + 1] = (nextDist[s + 1] || 0) + finalDist[s] * pSuccess;
+                        }
+                        finalDist = nextDist;
+                    }
+                });
+                return finalDist;
+            }
+
+            // SUM MODE MATH
             let finalDist = { 0: 1 };
             queue.forEach(group => {
-                const dieDist = getDieDist(group.sides, modifierType, modifierLevel);
+                const pmf = getDiePMF(group.sides, modifierType, modifierLevel, rules);
                 for (let i = 0; i < group.count; i++) {
-                    finalDist = convolve(finalDist, dieDist);
+                    finalDist = convolve(finalDist, pmf);
                 }
             });
 
-            // Apply flat mod
             let shiftedDist = {};
             for (let v in finalDist) {
                 shiftedDist[parseInt(v) + mod] = finalDist[v];
@@ -2771,10 +2857,18 @@
             auditorStopFlag = false;
             const iterations = iterationsOverride || stressCount;
             const isPreview = !!iterationsOverride;
-            const queue = engine.rollingQueue.length > 0 ? engine.rollingQueue : [{ sides: 20, count: 1 }];
+
+            const queue = engine.rollingQueue;
             const flatMod = engine.flatMod;
             const modType = engine.activeModifier;
             const modLvl = engine.modifierLevel;
+            const activeRules = engine.rollRules;
+
+            if (queue.length === 0 && flatMod === 0) {
+                auditorIsRunning = false;
+                document.getElementById('auditor-formula-label').innerText = "EMPTY";
+                return;
+            }
 
             // Update Labels
             let formulaStr = queue.map(q => `${q.count}d${q.sides}`).join("+");
@@ -2812,7 +2906,7 @@
                         modifier: modType, 
                         modLevel: modLvl, 
                         flat: flatMod,
-                        rules: { targetMode: 'sum', targetOp: '', targetVal: null }
+                        rules: activeRules
                     });
                     actualTallies[res.total] = (actualTallies[res.total] || 0) + 1;
                     sampleResults.push(res.total);
@@ -2853,7 +2947,7 @@
             const finalSampleCount = processed;
 
             // 1. Calculate Theoretical
-            const theoretical = getTheoreticalDistribution(queue, flatMod, modType, modLvl);
+            const theoretical = getTheoreticalDistribution(queue, flatMod, modType, modLvl, activeRules);
             
             // 3. Prepare Chart Data
             const allValues = [...new Set([...Object.keys(theoretical), ...Object.keys(actualTallies)])]
