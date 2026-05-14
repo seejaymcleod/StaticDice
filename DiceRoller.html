@@ -1466,6 +1466,7 @@
             isArsenalQueue = !isArsenalQueue;
             saveSettings();
             updateUI();
+            renderSavedQueues();
             vibrate(5);
         }
 
@@ -2017,16 +2018,21 @@
             const aqBtn = document.getElementById('arsenal-queue-btn');
             const aqPip = document.getElementById('arsenal-queue-pip');
             const aqLabel = document.getElementById('arsenal-queue-label');
+            
+            // Signage / Tooltips
+            iqBtn.title = isInstaQueue ? "Quick rolls are added to the queue without rolling." : "Quick rolls fire immediately and do not touch your active queue.";
+            aqBtn.title = isArsenalQueue ? "Clicking an arsenal rolls it AND replaces your active queue." : "Clicking an arsenal rolls it WITHOUT changing your active queue.";
+
             if (isArsenalQueue) {
-                aqBtn.style.borderColor = '#00d4ff';
-                aqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
-                aqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
+                aqBtn.style.borderColor = '#6366f1';
+                aqBtn.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.3)';
+                aqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#6366f1] shadow-[0_0_12px_rgba(99, 102, 241, 0.6)] transition-all duration-300';
                 aqLabel.classList.add('text-white');
                 aqLabel.classList.remove('text-slate-500');
             } else {
                 aqBtn.style.borderColor = '';
                 aqBtn.style.boxShadow = '';
-                aqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
+                aqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#6366f1]/30';
                 aqLabel.classList.remove('text-white');
                 aqLabel.classList.add('text-slate-500');
             }
@@ -2067,7 +2073,16 @@
             });
         }
 
-        function loadQueue(id) {
+        function closeAllArsenalMenus() {
+            document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+            activeMenuId = null;
+        }
+
+        function loadQueue(id, event) {
+            if (event) event.stopPropagation();
+            closeAllArsenalMenus();
+
             engine.loadQueue(id);
             document.getElementById('rule-reroll-op').value = engine.rollRules.rerollOp;
             document.getElementById('rule-reroll-val').value = engine.rollRules.rerollVal ?? '';
@@ -2102,15 +2117,19 @@
             document.getElementById('rule-sets-val').value = engine.rollRules.setsVal ?? "";
             updateRulesUI();
             updateUI();
+            vibrate(5);
+
+            // Switch to dice mode to see the loaded queue
+            const container = document.getElementById('main-container');
+            if (container) {
+                container.classList.remove('mode-arsenal');
+                container.classList.add('mode-dice');
+            }
         }
 
         function deleteQueue(id, event) {
             if (event) event.stopPropagation();
-
-            // Close arsenal menus
-            document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
-            document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
-            activeMenuId = null;
+            closeAllArsenalMenus();
 
             showModal({
                 title: 'Delete this loadout?',
@@ -2369,11 +2388,7 @@
 
         function renameSavedQueue(id, e) {
             if (e) e.stopPropagation();
-
-            // Close arsenal menus
-            document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
-            document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
-            activeMenuId = null;
+            closeAllArsenalMenus();
 
             const item = engine.savedQueues.find(q => q.id === id);
             if (!item) return;
@@ -2431,7 +2446,18 @@
                     item.innerHTML = `
                         <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>
                         <div class="flex-grow min-w-0 pl-6">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            <div class="flex items-center gap-1.5">
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                                ${isArsenalQueue ? `
+                                    <div class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 text-indigo-400" title="Roll & Queue">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 1 1 2.12 9.36L1 14"/></svg>
+                                    </div>
+                                ` : `
+                                    <div class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-sky-500/20 text-sky-400" title="Roll Only">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" class="w-2.5 h-2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                                    </div>
+                                `}
+                            </div>
                             <div class="text-[10px] mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
                         </div>
                     `;
@@ -2444,6 +2470,11 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                         <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden">
+                            <button onclick="loadQueue(${q.id}, event)" class="menu-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>Edit Loadout</span>
+                            </button>
+                            <div class="h-px bg-white/5 my-1"></div>
                             <button onclick="updateSavedQueue(${q.id}, event)" class="menu-item">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                                 <span>Overwrite</span>
@@ -2486,18 +2517,16 @@
                 if (item) {
                     if (isArsenalQueue) {
                         loadQueue(options.arsenalId);
-                        return; // Loaded into queue, exit triggerRoll
-                    } else {
-                        // "Fire-and-forget": Roll using item settings without touching engine queue
-                        forcedQueue = item.queue;
-                        isInstant = false;
-                        rollOverrides = {
-                            modifier: item.modifier,
-                            modLevel: item.modLevel,
-                            flat: item.flat,
-                            rules: item.rules
-                        };
                     }
+                    // "Fire-and-forget": Roll using item settings 
+                    forcedQueue = item.queue;
+                    isInstant = false;
+                    rollOverrides = {
+                        modifier: item.modifier,
+                        modLevel: item.modLevel,
+                        flat: item.flat,
+                        rules: item.rules
+                    };
                 }
             } else if (options.sides) {
                 if (isInstaQueue) {
