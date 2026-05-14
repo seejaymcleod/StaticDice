@@ -1978,32 +1978,16 @@
             const mqBtn = document.getElementById('modded-quick-btn');
             const mqLabel = document.getElementById('modded-quick-label');
             if (isModdedQuick) {
-                mqBtn.style.borderColor = '#00d4ff';
-                mqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
-                mqLabel.classList.add('text-white');
-                mqLabel.classList.remove('text-slate-500');
                 mqLabel.innerHTML = 'Quick Dice<br>Uses Mod';
             } else {
-                mqBtn.style.borderColor = '';
-                mqBtn.style.boxShadow = '';
-                mqLabel.classList.remove('text-white');
-                mqLabel.classList.add('text-slate-500');
                 mqLabel.innerHTML = 'Quick Dice<br>Ignores Mod';
             }
 
             const iqBtn = document.getElementById('insta-queue-btn');
             const iqLabel = document.getElementById('insta-queue-label');
             if (isInstaQueue) {
-                iqBtn.style.borderColor = '#00d4ff';
-                iqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
-                iqLabel.classList.add('text-white');
-                iqLabel.classList.remove('text-slate-500');
                 iqLabel.innerHTML = 'Quick Dice<br>Queue Only';
             } else {
-                iqBtn.style.borderColor = '';
-                iqBtn.style.boxShadow = '';
-                iqLabel.classList.remove('text-white');
-                iqLabel.classList.add('text-slate-500');
                 iqLabel.innerHTML = 'Quick Dice<br>Roll Only';
             }
 
@@ -2015,16 +1999,8 @@
             aqBtn.title = isArsenalQueue ? "Clicking an arsenal rolls it AND replaces your active queue." : "Clicking an arsenal rolls it WITHOUT changing your active queue.";
 
             if (isArsenalQueue) {
-                aqBtn.style.borderColor = '#6366f1';
-                aqBtn.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.3)';
-                aqLabel.classList.add('text-white');
-                aqLabel.classList.remove('text-slate-500');
                 aqLabel.innerHTML = 'Arsenal<br>Roll & Queue';
             } else {
-                aqBtn.style.borderColor = '';
-                aqBtn.style.boxShadow = '';
-                aqLabel.classList.remove('text-white');
-                aqLabel.classList.add('text-slate-500');
                 aqLabel.innerHTML = 'Arsenal<br>Roll Only';
             }
 
