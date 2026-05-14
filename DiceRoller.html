@@ -844,24 +844,18 @@
                     <div class="grid grid-cols-3 gap-1.5">
                         <button id="modded-quick-btn" onclick="toggleModdedQuick()"
                             class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
-                            <div id="modded-quick-pip"
-                                class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
                             <span id="modded-quick-label"
-                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Mod<br>Quick</span>
+                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Quick Dice<br>Ignores Mod</span>
                         </button>
                         <button id="insta-queue-btn" onclick="toggleInstaQueue()"
                             class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
-                            <div id="insta-queue-pip"
-                                class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
                             <span id="insta-queue-label"
-                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Quick<br>Queued</span>
+                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Quick Dice<br>Roll Only</span>
                         </button>
                         <button id="arsenal-queue-btn" onclick="toggleArsenalQueue()"
                             class="toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem] bg-[#020617]/30">
-                            <div id="arsenal-queue-pip"
-                                class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300"></div>
                             <span id="arsenal-queue-label"
-                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Arsenal<br>Queued</span>
+                                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.05em] group-hover:text-sky-400 transition-colors text-center leading-tight">Arsenal<br>Roll Only</span>
                         </button>
                     </div>
                     <!-- Header Row -->
@@ -1982,59 +1976,56 @@
             }
 
             const mqBtn = document.getElementById('modded-quick-btn');
-            const mqPip = document.getElementById('modded-quick-pip');
             const mqLabel = document.getElementById('modded-quick-label');
             if (isModdedQuick) {
                 mqBtn.style.borderColor = '#00d4ff';
                 mqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
-                mqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
                 mqLabel.classList.add('text-white');
                 mqLabel.classList.remove('text-slate-500');
+                mqLabel.innerHTML = 'Quick Dice<br>Uses Mod';
             } else {
                 mqBtn.style.borderColor = '';
                 mqBtn.style.boxShadow = '';
-                mqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
                 mqLabel.classList.remove('text-white');
                 mqLabel.classList.add('text-slate-500');
+                mqLabel.innerHTML = 'Quick Dice<br>Ignores Mod';
             }
 
             const iqBtn = document.getElementById('insta-queue-btn');
-            const iqPip = document.getElementById('insta-queue-pip');
             const iqLabel = document.getElementById('insta-queue-label');
             if (isInstaQueue) {
                 iqBtn.style.borderColor = '#00d4ff';
                 iqBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
-                iqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
                 iqLabel.classList.add('text-white');
                 iqLabel.classList.remove('text-slate-500');
+                iqLabel.innerHTML = 'Quick Dice<br>Queue Only';
             } else {
                 iqBtn.style.borderColor = '';
                 iqBtn.style.boxShadow = '';
-                iqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#00d4ff]/30';
                 iqLabel.classList.remove('text-white');
                 iqLabel.classList.add('text-slate-500');
+                iqLabel.innerHTML = 'Quick Dice<br>Roll Only';
             }
 
             const aqBtn = document.getElementById('arsenal-queue-btn');
-            const aqPip = document.getElementById('arsenal-queue-pip');
             const aqLabel = document.getElementById('arsenal-queue-label');
             
-            // Signage / Tooltips
+            // Tooltips
             iqBtn.title = isInstaQueue ? "Quick rolls are added to the queue without rolling." : "Quick rolls fire immediately and do not touch your active queue.";
             aqBtn.title = isArsenalQueue ? "Clicking an arsenal rolls it AND replaces your active queue." : "Clicking an arsenal rolls it WITHOUT changing your active queue.";
 
             if (isArsenalQueue) {
                 aqBtn.style.borderColor = '#6366f1';
                 aqBtn.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.3)';
-                aqPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#6366f1] shadow-[0_0_12px_rgba(99, 102, 241, 0.6)] transition-all duration-300';
                 aqLabel.classList.add('text-white');
                 aqLabel.classList.remove('text-slate-500');
+                aqLabel.innerHTML = 'Arsenal<br>Roll & Queue';
             } else {
                 aqBtn.style.borderColor = '';
                 aqBtn.style.boxShadow = '';
-                aqPip.className = 'absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300 group-hover:bg-[#6366f1]/30';
                 aqLabel.classList.remove('text-white');
                 aqLabel.classList.add('text-slate-500');
+                aqLabel.innerHTML = 'Arsenal<br>Roll Only';
             }
 
             advSub.innerText = (canMod && engine.activeModifier === 'ADV' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
