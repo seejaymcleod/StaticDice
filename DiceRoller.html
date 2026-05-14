@@ -648,7 +648,7 @@
 
         <!-- STICKY TOP -->
         <div class="section-sticky sticky top-0 z-40 -mx-4 px-4 py-3 space-y-4 pointer-events-none"
-            style="background: #020617; backdrop-filter: blur(20px); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%); mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);">
+            style="background: #020617; backdrop-filter: blur(20px); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 95%, transparent 100%); mask-image: linear-gradient(to bottom, black 0%, black 95%, transparent 100%);">
             <input type="file" id="import-input" class="hidden" accept=".json" onchange="importSettings(event)">
             <!-- HEADER -->
             <header class="flex justify-between items-center px-2 pointer-events-auto">
@@ -727,20 +727,18 @@
                     <span class="text-[11px] text-slate-300 tracking-wide">READY</span>
                 </div>
             </main>
-        </div>
 
-        <!-- CONTROLS -->
-        <section class="section-controls space-y-3">
-            <!-- ROLL BUTTON -->
+            <!-- ROLL BUTTON (MOVED) -->
             <button id="roll-button" onpointerdown="triggerRoll(event)"
-                class="w-full bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black py-4 rounded-xl text-2xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] mb-4 relative overflow-hidden group">
+                class="w-full bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black py-4 rounded-xl text-2xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group pointer-events-auto">
                 <span class="relative z-10">ROLL</span>
                 <div
                     class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]">
                 </div>
             </button>
 
-            <div class="flex gap-2">
+            <!-- QUEUE ROW (MOVED) -->
+            <div class="flex gap-2 pointer-events-auto">
                 <div
                     class="flex-1 glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[2.75rem] border-white/5 overflow-hidden">
                     <div id="queue-display"
@@ -778,8 +776,8 @@
                 </div>
             </div>
 
-            <!-- ADV DIS & EXTRA CONTROLS -->
-            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-stretch">
+            <!-- ADV DIS & EXTRA CONTROLS (MOVED) -->
+            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-stretch pointer-events-auto">
                 <button id="adv-btn" onclick="applyModifier('ADV')" disabled
                     class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
                     <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
@@ -836,7 +834,9 @@
                     </svg>
                 </button>
             </div>
+        </div>
 
+        <section class="section-controls space-y-3">
             <!-- ADVANCED RULES PANEL -->
             <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden mt-2"
                 id="rules-panel">
