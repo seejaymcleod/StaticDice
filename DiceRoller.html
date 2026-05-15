@@ -910,13 +910,13 @@
                 <!-- ADVANCED RULES PANEL -->
                 <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden"
                     id="rules-panel">
-                    <div class="p-3 space-y-3 bg-[#020617]/40">
+                    <div class="p-2 space-y-2 bg-[#020617]/40">
                         <!-- Advanced Toggles moved to section headers -->
                         <!-- Header Row -->
-                        <div class="grid grid-cols-12 gap-2 px-1 mb-1 items-center">
+                        <div class="flex gap-2 px-1 mb-0.5 items-center">
                             <span
-                                class="col-span-2 text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Rule</span>
-                            <div class="col-span-10 text-center">
+                                class="w-14 text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 shrink-0">Rule</span>
+                            <div class="flex-1 text-left pl-3">
                                 <span
                                     class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Configuration</span>
                             </div>
@@ -924,27 +924,26 @@
 
                         <!-- 1. Roll Target -->
                         <div id="rule-target-container"
-                            class="grid grid-cols-12 gap-2 bg-[#020617]/30 p-2 rounded-lg border border-white/5 items-center transition-all">
+                            class="flex gap-2 bg-[#020617]/30 p-1.5 rounded-lg border border-white/5 items-center transition-all">
 
                             <span
-                                class="col-span-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 leading-tight">ROLL<br>TYPE</span>
-
-                            <div class="col-span-2 flex justify-center">
-                                <div
-                                    class="flex flex-col gap-px bg-[#00d4ff]/20 rounded border border-[#00d4ff]/20 overflow-hidden w-full max-w-[64px]">
-                                    <button id="target-mode-sum" onclick="setTargetMode('sum')"
-                                        class="text-[9px] font-black py-1 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff]">SUM</button>
-                                    <button id="target-mode-count" onclick="setTargetMode('count')"
-                                        class="text-[9px] font-black py-1 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">COUNT</button>
-                                    <button id="target-mode-list" onclick="setTargetMode('list')"
-                                        class="text-[9px] font-black py-1 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">LIST</button>
-                                </div>
-                            </div>
+                                class="w-14 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 leading-tight shrink-0">ROLL<br>TYPE</span>
 
                             <div
-                                class="col-span-8 flex items-center justify-end border-l border-white/10 pl-2 min-h-[54px]">
+                                class="flex-1 flex items-center border-l border-white/10 pl-2.5 gap-3 min-h-[48px]">
+                                <div
+                                    class="flex flex-col gap-px bg-[#00d4ff]/20 rounded border border-[#00d4ff]/20 overflow-hidden w-14 shrink-0">
+                                    <button id="target-mode-sum" onclick="setTargetMode('sum')"
+                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff]">SUM</button>
+                                    <button id="target-mode-count" onclick="setTargetMode('count')"
+                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">COUNT</button>
+                                    <button id="target-mode-list" onclick="setTargetMode('list')"
+                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">LIST</button>
+                                </div>
+
+                                <div class="flex-1 flex items-center">
                                 <!-- SUM container -->
-                                <div id="sum-target-inputs" class="flex gap-2 w-full justify-end items-center">
+                                <div id="sum-target-inputs" class="flex gap-2 w-full justify-start items-center">
                                     <select id="rule-sum-op"
                                         class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                         onchange="updateRulesUI()">
@@ -965,7 +964,7 @@
 
                                 <!-- COUNT container -->
                                 <div id="count-target-inputs" class="flex flex-col gap-1 w-full hidden">
-                                    <div class="flex gap-2 items-center justify-end">
+                                    <div class="flex gap-2 items-center justify-start">
                                         <span
                                             class="text-[9px] font-black text-slate-600 uppercase tracking-widest w-8 text-right">Die</span>
                                         <select id="rule-count-op"
@@ -978,7 +977,7 @@
                                             <option value="<=">&le;</option>
                                         </select>
                                         <div id="rule-count-input-container"
-                                            class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-32 focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)] transition-all">
+                                            class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-28 focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)] transition-all">
                                             <button onclick="adjustRuleVal('count', -1)"
                                                 class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
                                             <div class="flex-1 flex flex-col items-center justify-center min-w-0">
@@ -990,7 +989,7 @@
                                                 class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
                                         </div>
                                     </div>
-                                    <div class="flex gap-2 items-center justify-end">
+                                    <div class="flex gap-2 items-center justify-start">
                                         <span
                                             class="text-[9px] font-black text-slate-600 uppercase tracking-widest w-12 text-right">TARGET</span>
                                         <select id="rule-count-thresh-op"
@@ -1013,17 +1012,17 @@
                                 </div>
 
                                 <!-- LIST container -->
-                                <div id="list-target-inputs"
-                                    class="flex gap-2 w-full hidden opacity-30 pointer-events-none"></div>
+                                <div id="list-target-inputs" class="flex gap-2 w-full hidden opacity-30 pointer-events-none"></div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- 2. Sets -->
                         <div
-                            class="grid grid-cols-12 gap-2 bg-[#020617]/30 p-2 rounded-lg border border-white/5 items-center">
+                            class="flex gap-2 bg-[#020617]/30 p-1.5 rounded-lg border border-white/5 items-center">
                             <span
-                                class="col-span-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Sets</span>
-                            <div class="col-span-10 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
+                                class="w-14 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 shrink-0">Sets</span>
+                            <div class="flex-1 flex gap-2 items-center justify-start border-l border-white/10 pl-2.5">
                                 <select id="rule-sets-op"
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
@@ -1035,7 +1034,7 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-sets-input-container"
-                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-32 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
+                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('sets', -1)"
                                         class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
                                     <div class="flex-1 flex flex-col items-center justify-center min-w-0">
@@ -1051,10 +1050,10 @@
 
                         <!-- 3. Reroll -->
                         <div
-                            class="grid grid-cols-12 gap-2 bg-[#020617]/30 p-2 rounded-lg border border-white/5 items-center">
+                            class="flex gap-2 bg-[#020617]/30 p-1.5 rounded-lg border border-white/5 items-center">
                             <span
-                                class="col-span-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Reroll</span>
-                            <div class="col-span-10 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
+                                class="w-14 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 shrink-0">Reroll</span>
+                            <div class="col-span-10 flex-1 flex gap-2 items-center justify-start border-l border-white/10 pl-2.5">
                                 <select id="rule-reroll-op"
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
@@ -1066,7 +1065,7 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-reroll-input-container"
-                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-32 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
+                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('reroll', -1)"
                                         class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
                                     <div class="flex-1 flex flex-col items-center justify-center min-w-0">
@@ -1082,10 +1081,10 @@
 
                         <!-- 4. Explode -->
                         <div
-                            class="grid grid-cols-12 gap-2 bg-[#020617]/30 p-2 rounded-lg border border-white/5 items-center">
+                            class="flex gap-2 bg-[#020617]/30 p-1.5 rounded-lg border border-white/5 items-center">
                             <span
-                                class="col-span-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Explode</span>
-                            <div class="col-span-10 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
+                                class="w-14 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 shrink-0">Explode</span>
+                            <div class="col-span-10 flex-1 flex gap-2 items-center justify-start border-l border-white/10 pl-2.5">
                                 <select id="rule-explode-op"
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
@@ -1097,7 +1096,7 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-explode-input-container"
-                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-32 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
+                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('explode', -1)"
                                         class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
                                     <div class="flex-1 flex flex-col items-center justify-center min-w-0">
