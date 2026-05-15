@@ -2875,9 +2875,11 @@
 
                 // Aggregate probability mass ensuring precision preservation
                 let final_group_pmf = {};
-                for (let u = 0; u <= N; u++) {
-                    if (!dp[u]) continue;
-                    for (let s in dp[u]) final_group_pmf[s] = (final_group_pmf[s] || 0) + dp[u][s];
+                // Precision: only sum the cases where all N dice were processed
+                if (dp[N]) {
+                    for (let s in dp[N]) {
+                        if (dp[N][s] > 1e-18) final_group_pmf[s] = dp[N][s];
+                    }
                 }
                 let group_pmf = Object.keys(final_group_pmf).length > 0 ? final_group_pmf : { 0: 1 };
 
@@ -3053,8 +3055,10 @@
             const theoretical = getTheoreticalDistribution(queue, flatMod, modType, modLvl, activeRules);
             
             // 3. Prepare Chart Data
-            const allValues = [...new Set([...Object.keys(theoretical), ...Object.keys(actualTallies)])]
-                .map(Number).sort((a, b) => a - b);
+            const allValues = [...new Set([
+                ...Object.keys(theoretical).filter(k => theoretical[k] > 1e-15),
+                ...Object.keys(actualTallies)
+            ])].map(Number).sort((a, b) => a - b);
             
             const labels = allValues;
             const mathData = allValues.map(v => theoretical[v] || 0);
