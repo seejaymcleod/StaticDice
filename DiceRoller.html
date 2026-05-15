@@ -799,74 +799,7 @@
                     </div>
                 </div>
 
-                <!-- ROW 1: ROLL, ADV, DIS -->
-                <div class="grid grid-cols-12 gap-2.5">
-
-                    <button id="roll-button" onpointerdown="triggerRoll(event)"
-                        class="col-span-6 !h-[3.25rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group">
-
-                        <span class="relative z-10">ROLL</span>
-                        <div
-                            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]">
-                        </div>
-                    </button>
-
-                    <button id="adv-btn" onclick="applyModifier('ADV')" disabled
-                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3.25rem]">
-
-                        <div id="adv-pip"
-                            class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
-                        </div>
-                        <span id="adv-label"
-                            class="text-sm font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">ADV</span>
-                        <span id="adv-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
-                    </button>
-                    <button id="dis-btn" onclick="applyModifier('DIS')" disabled
-                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3.25rem]">
-
-                        <div id="dis-pip"
-                            class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
-                        </div>
-                        <span id="dis-label"
-                            class="text-sm font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">DIS</span>
-                        <span id="dis-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
-                    </button>
-                </div>
-
-                <!-- ROW 2: MOD & TARGET STEPPERS SIDE-BY-SIDE -->
-                <div class="flex gap-2.5">
-                    <!-- MOD STEPPER -->
-                    <div
-                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-1 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
-                        <button onclick="adjustFlatMod(-1)"
-                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">－</button>
-                        <div class="flex-1 flex flex-col items-center justify-center min-w-0">
-                            <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">MOD</span>
-                            <input type="number" id="flat-mod-input"
-                                class="w-full bg-transparent font-black text-base text-sky-400 mono leading-none text-center outline-none hide-spinners"
-                                value="0" placeholder="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
-                        </div>
-                        <button onclick="adjustFlatMod(1)"
-                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">＋</button>
-                    </div>
-
-                    <!-- TARGET STEPPER -->
-                    <div id="overall-target-container"
-                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-1 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
-                        <button onclick="adjustOverallTarget(-1)"
-                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">－</button>
-                        <div class="flex-1 flex flex-col items-center justify-center min-w-0">
-                            <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">TARGET</span>
-                            <input type="number" id="overall-target-input"
-                                class="w-full bg-transparent font-black text-base text-sky-400 placeholder-sky-400/30 mono leading-none text-center outline-none hide-spinners"
-                                value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
-                        </div>
-                        <button onclick="adjustOverallTarget(1)"
-                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">＋</button>
-                    </div>
-                </div>
-
-                <!-- ROW 3: UTILITY STRIP -->
+                <!-- ROW 1: UTILITY STRIP -->
                 <div class="grid grid-cols-4 gap-2.5">
                     <button onclick="backspaceQueue()"
                         class="h-[3.25rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
@@ -903,6 +836,73 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
+                    </button>
+                </div>
+
+                <!-- ROW 2: MOD & TARGET STEPPERS SIDE-BY-SIDE -->
+                <div class="flex gap-2.5">
+                    <!-- MOD STEPPER -->
+                    <div
+                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-1 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        <button onclick="adjustFlatMod(-1)"
+                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">－</button>
+                        <div class="flex-1 flex flex-col items-center justify-center min-w-0">
+                            <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">MOD</span>
+                            <input type="text" id="flat-mod-input" inputmode="numeric"
+                                class="w-full bg-transparent font-black text-base text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                                value="0" placeholder="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
+                        </div>
+                        <button onclick="adjustFlatMod(1)"
+                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">＋</button>
+                    </div>
+
+                    <!-- TARGET STEPPER -->
+                    <div id="overall-target-container"
+                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-1 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        <button onclick="adjustOverallTarget(-1)"
+                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">－</button>
+                        <div class="flex-1 flex flex-col items-center justify-center min-w-0">
+                            <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">TARGET</span>
+                            <input type="text" id="overall-target-input" inputmode="numeric"
+                                class="w-full bg-transparent font-black text-base text-sky-400 placeholder-sky-400/30 mono leading-none text-center outline-none hide-spinners"
+                                value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
+                        </div>
+                        <button onclick="adjustOverallTarget(1)"
+                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">＋</button>
+                    </div>
+                </div>
+
+                <!-- ROW 3: ROLL, ADV, DIS -->
+                <div class="grid grid-cols-12 gap-2.5">
+
+                    <button id="roll-button" onpointerdown="triggerRoll(event)"
+                        class="col-span-6 !h-[3.25rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group">
+
+                        <span class="relative z-10">ROLL</span>
+                        <div
+                            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]">
+                        </div>
+                    </button>
+
+                    <button id="adv-btn" onclick="applyModifier('ADV')" disabled
+                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3.25rem]">
+
+                        <div id="adv-pip"
+                            class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
+                        </div>
+                        <span id="adv-label"
+                            class="text-sm font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">ADV</span>
+                        <span id="adv-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
+                    </button>
+                    <button id="dis-btn" onclick="applyModifier('DIS')" disabled
+                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3.25rem]">
+
+                        <div id="dis-pip"
+                            class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
+                        </div>
+                        <span id="dis-label"
+                            class="text-sm font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">DIS</span>
+                        <span id="dis-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
                     </button>
                 </div>
 
@@ -2052,7 +2052,7 @@
             }
 
             if (modInput && document.activeElement !== modInput) {
-                modInput.value = engine.flatMod > 0 ? `+${engine.flatMod}` : engine.flatMod;
+                modInput.value = engine.flatMod > 0 ? `+${engine.flatMod}` : (engine.flatMod === 0 ? "0" : engine.flatMod);
             }
             const overallTargetInput = document.getElementById('overall-target-input');
             if (overallTargetInput && document.activeElement !== overallTargetInput) {
