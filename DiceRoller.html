@@ -750,111 +750,113 @@
                 </div>
             </main>
 
-            <!-- ROLL BUTTON (MOVED) -->
-            <button id="roll-button" onpointerdown="triggerRoll(event)"
-                class="w-full h-[2.75rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-lg shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group pointer-events-auto">
-                <span class="relative z-10">ROLL</span>
-                <div
-                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]">
-                </div>
-            </button>
-
-            <!-- QUEUE ROW (MOVED) -->
-            <div class="flex gap-2 pointer-events-auto">
-                <div
-                    class="flex-1 glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[2.75rem] border-white/5 overflow-hidden">
-                    <div id="queue-display"
-                        class="w-full flex items-center justify-center gap-2 font-bold mono uppercase overflow-hidden">
+            <!-- ACTION GROUP CONTAINER -->
+            <div class="bg-[#0f172a]/60 rounded-2xl p-2 border border-[#00d4ff]/10 flex flex-col gap-2 pointer-events-auto shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+                <!-- QUEUE DISPLAY (FULL WIDTH, TOP) -->
+                <div class="glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[2.75rem] border-white/5 w-full pointer-events-auto">
+                    <div id="queue-display" class="w-full flex flex-wrap items-center justify-center gap-2 font-bold mono uppercase">
                         <span class="text-[14px] text-sky-400/40">EMPTY QUEUE</span>
                     </div>
                 </div>
-                <div class="flex gap-1.5">
-                    <button onclick="backspaceQueue()"
-                        class="w-[2.75rem] h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
-                        title="Backspace">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414A2 2 0 0010.828 19H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
-                        </svg>
+
+                <!-- ROLL AND HELPER BUTTONS -->
+                <div class="flex gap-2">
+                    <button id="roll-button" onpointerdown="triggerRoll(event)"
+                        class="flex-1 h-[2.75rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-lg shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group">
+                        <span class="relative z-10">ROLL</span>
+                        <div
+                            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]">
+                        </div>
                     </button>
-                    <button id="clear-btn" onclick="clearQueue()"
-                        class="w-[2.75rem] h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
-                        title="Clear Queue">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                    <button id="save-queue-btn" onclick="saveCurrentQueue()" disabled
-                        class="w-[2.75rem] h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8]/50 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all disabled:opacity-50 hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
-                        title="Save Current Queue">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                            <polyline points="17 21 17 13 7 13 7 21" />
-                            <polyline points="7 3 7 8 15 8" />
-                        </svg>
-                    </button>
+                    
+                    <div class="flex gap-1.5 shrink-0">
+                        <button onclick="backspaceQueue()"
+                            class="w-[2.75rem] h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                            title="Backspace">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414A2 2 0 0010.828 19H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
+                            </svg>
+                        </button>
+                        <button id="clear-btn" onclick="clearQueue()"
+                            class="w-[2.75rem] h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                            title="Clear Queue">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <button id="save-queue-btn" onclick="saveCurrentQueue()" disabled
+                            class="w-[2.75rem] h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8]/50 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all disabled:opacity-50 hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                            title="Save Current Queue">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- ADV DIS & EXTRA CONTROLS (MOVED) -->
-            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-stretch pointer-events-auto">
-                <button id="adv-btn" onclick="applyModifier('ADV')" disabled
-                    class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
-                    <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
-                    </div>
-                    <span id="adv-label"
-                        class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">ADV</span>
-                    <span id="adv-sub" class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
-                </button>
-                <button id="dis-btn" onclick="applyModifier('DIS')" disabled
-                    class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
-                    <div id="dis-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
-                    </div>
-                    <span id="dis-label"
-                        class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">DIS</span>
-                    <span id="dis-sub" class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
-                </button>
+                <!-- ADV DIS & EXTRA CONTROLS -->
+                <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-stretch">
+                    <button id="adv-btn" onclick="applyModifier('ADV')" disabled
+                        class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
+                        <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
+                        </div>
+                        <span id="adv-label"
+                            class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">ADV</span>
+                        <span id="adv-sub" class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
+                    </button>
+                    <button id="dis-btn" onclick="applyModifier('DIS')" disabled
+                        class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[2.5rem]">
+                        <div id="dis-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
+                        </div>
+                        <span id="dis-label"
+                            class="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">DIS</span>
+                        <span id="dis-sub" class="text-[8px] font-bold text-slate-600 mono leading-none mt-0.5"></span>
+                    </button>
 
-                <div
-                    class="segmented-row !h-[2.5rem] bg-[#020617] focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
-                    <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
                     <div
-                        class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
-                        <span class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">MOD</span>
-                        <input type="text" id="flat-mod-input"
-                            class="w-full bg-transparent font-black text-[14px] text-sky-400 mono leading-none text-center outline-none hide-spinners"
-                            value="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
+                        class="segmented-row !h-[2.5rem] bg-[#020617] focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        <button onclick="adjustFlatMod(-1)" class="segmented-btn btn-side">－</button>
+                        <div
+                            class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
+                            <span class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">MOD</span>
+                            <input type="text" id="flat-mod-input"
+                                class="w-full bg-transparent font-black text-[14px] text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                                value="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
+                        </div>
+                        <button onclick="adjustFlatMod(1)" class="segmented-btn btn-side">＋</button>
                     </div>
-                    <button onclick="adjustFlatMod(1)" class="segmented-btn btn-side">＋</button>
-                </div>
 
-                <!-- OVERALL TARGET -->
-                <div id="overall-target-container"
-                    class="segmented-row !h-[2.5rem] bg-[#020617] focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
-                    <button onclick="adjustOverallTarget(-1)" class="segmented-btn btn-side">－</button>
-                    <div
-                        class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
-                        <span class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">TARGET</span>
-                        <input type="number" id="overall-target-input"
-                            class="w-full bg-transparent font-black text-[14px] text-sky-400 placeholder-sky-400 placeholder-opacity-100 mono leading-none text-center outline-none hide-spinners"
-                            value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
+                    <!-- OVERALL TARGET -->
+                    <div id="overall-target-container"
+                        class="segmented-row !h-[2.5rem] bg-[#020617] focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        <button onclick="adjustOverallTarget(-1)" class="segmented-btn btn-side">－</button>
+                        <div
+                            class="segmented-btn btn-center cursor-default flex flex-col justify-center border-x border-glass-border">
+                            <span class="text-[7px] font-black text-sky-400 uppercase tracking-[0.2em] mb-0.5">TARGET</span>
+                            <input type="number" id="overall-target-input"
+                                class="w-full bg-transparent font-black text-[14px] text-sky-400 placeholder-sky-400 placeholder-opacity-100 mono leading-none text-center outline-none hide-spinners"
+                                value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
+                        </div>
+                        <button onclick="adjustOverallTarget(1)"
+                            class="segmented-btn btn-side hover:text-[#6366f1]">＋</button>
                     </div>
-                    <button onclick="adjustOverallTarget(1)"
-                        class="segmented-btn btn-side hover:text-[#6366f1]">＋</button>
-                </div>
 
-                <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
-                    class="w-[2.5rem] rounded-lg bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 flex items-center justify-center text-[#94a3b8] hover:text-[#00d4ff] transition-colors border border-[#00d4ff]/10 h-[2.5rem]">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                        </path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                </button>
+                    <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
+                        class="w-[2.5rem] rounded-lg bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 flex items-center justify-center text-[#94a3b8] hover:text-[#00d4ff] transition-colors border border-[#00d4ff]/10 h-[2.5rem]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1931,7 +1933,7 @@
                 const modeHtml = `<span class="bg-sky-500/10 text-sky-400 text-[12px] px-1.5 py-0.5 rounded border border-sky-500/20 font-black ml-2 whitespace-nowrap opacity-80">${modeLabel}</span>`;
 
                 display.innerHTML = `
-                    <div class="flex items-center justify-center gap-1 overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-center gap-1">
                         ${diceHtml} ${modHtml} ${rulesHtml} ${modeHtml}
                     </div>
                 `;
