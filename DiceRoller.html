@@ -467,21 +467,29 @@
 
         .volume-slider-overlay {
             position: absolute;
-            top: 40px;
+            top: 52px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(2, 6, 23, 0.98);
+            background: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
-            padding: 8px 16px;
+            border: 1px solid rgba(0, 212, 255, 0.25);
+            padding: 0 16px;
             border-radius: 1rem;
             z-index: 100;
             display: none;
             flex-direction: row;
             align-items: center;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            box-shadow: 
+                0 20px 40px -10px rgba(0, 0, 0, 0.8),
+                0 0 30px rgba(0, 212, 255, 0.1);
             width: 180px;
-            height: 40px;
+            height: 48px;
+            animation: volume-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes volume-pop {
+            from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.9); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
         }
 
         .volume-slider-overlay.show {
@@ -492,21 +500,40 @@
             flex-grow: 1;
             height: 6px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
+            border-radius: 10px;
             outline: none;
             appearance: none;
             margin: 0;
             width: 100%;
+            cursor: pointer;
         }
 
         .horizontal-range::-webkit-slider-thumb {
             appearance: none;
-            width: 14px;
-            height: 14px;
-            background: var(--accent-sky);
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border: 3px solid var(--accent-azure);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 10px var(--accent-glow);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .horizontal-range::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+        }
+
+        .horizontal-range::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border: 3px solid var(--accent-azure);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+            border: none;
         }
 
         .set-match {
@@ -1718,6 +1745,13 @@
         function updateVolume(val) {
             volume = parseFloat(val);
             rollSound.volume = volume;
+
+            const slider = document.getElementById('volume-slider');
+            if (slider) {
+                const percent = volume * 100;
+                slider.style.background = `linear-gradient(to right, var(--accent-azure) ${percent}%, rgba(255,255,255,0.1) ${percent}%)`;
+            }
+
             if (volume > 0 && !soundEnabled) {
                 soundEnabled = true;
                 updateSoundUI();
@@ -2322,7 +2356,7 @@
                             }
                             if (importedSettings.volume !== undefined) {
                                 volume = importedSettings.volume;
-                                rollSound.volume = volume;
+                                updateVolume(volume);
                                 document.getElementById('volume-slider').value = volume;
                             }
                             if (importedSettings.instaQueue !== undefined) {
@@ -3177,7 +3211,7 @@
                     if (savedSettings.soundEnabled !== undefined) soundEnabled = savedSettings.soundEnabled;
                     if (savedSettings.volume !== undefined) {
                         volume = savedSettings.volume;
-                        rollSound.volume = volume;
+                        updateVolume(volume);
                         document.getElementById('volume-slider').value = volume;
                     }
                     if (savedSettings.instaQueue !== undefined) {
@@ -3209,7 +3243,7 @@
             }
 
             updateStressUI();
-            // Initial audit run on load removed for performance
+            updateVolume(volume);
             renderDiceGrid();
             updateRulesUI();
         };
