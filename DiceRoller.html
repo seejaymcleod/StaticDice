@@ -1111,18 +1111,12 @@
 
             <details class="group" id="auditor-details">
                 <summary
-                    class="list-none cursor-pointer flex items-center justify-between glass-panel p-3 rounded-2xl border-white/5">
-                    <div id="entropy-header" class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                    class="list-none cursor-pointer flex items-center justify-between glass-panel px-4 py-2 rounded-xl border-white/5 min-h-[2.75rem]">
                     <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"></div>
-                        <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Entropy Check</h2>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="engine.loadLotsTest(); updateUI(); updateRulesUI();" class="text-[9px] font-bold text-sky-400/60 hover:text-sky-400 px-2 py-1 rounded border border-sky-500/10 hover:border-sky-500/30 transition-all uppercase tracking-widest">Load Test (Lots)</button>
-                        <div class="h-4 w-px bg-white/5 mx-2"></div>
+                        <div class="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"></div>
+                        <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Entropy Check</h2>
                         <div id="auditor-formula-label" class="flex items-center gap-2"></div>
                     </div>
-                </div>
                     <svg class="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -2992,18 +2986,17 @@
             const progress = document.getElementById('audit-progress-bar');
             const etaLabel = document.getElementById('audit-eta');
 
-            if (!isPreview) {
-                btn.classList.remove('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
-                btn.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
-                icon.classList.add('animate-spin');
-                text.innerText = 'Stop';
-                progress.style.transform = 'translateX(-100%)';
-                etaLabel.classList.remove('opacity-0');
-            }
+            btn.classList.remove('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
+            btn.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+            icon.classList.add('animate-spin');
+            text.innerText = 'Stop';
+            progress.style.transform = 'translateX(-100%)';
+            etaLabel.classList.remove('opacity-0');
+            etaLabel.innerText = 'Est: --s';
 
             const actualTallies = {};
             const sampleResults = [];
-            const chunkSize = 50000;
+            const chunkSize = 10000;
             let processed = 0;
             let startTime = performance.now();
             let hasWarned = false;
@@ -3030,10 +3023,10 @@
                 const elapsed = (performance.now() - startTime) / 1000;
                 const totalEstimated = (elapsed / processed) * iterations;
                 const remaining = Math.max(0, totalEstimated - elapsed);
-                if (!isPreview) etaLabel.innerText = `ETA: ${remaining.toFixed(1)}s`;
+                etaLabel.innerText = `ETA: ${remaining.toFixed(1)}s`;
 
-                // ETA Warning (Check after 2 chunks to have stable estimation)
-                if (!isPreview && processed >= chunkSize * 2 && totalEstimated > 10 && !hasWarned) {
+                // ETA Warning (Check after 1 chunk to have stable estimation)
+                if (!isPreview && processed >= chunkSize && totalEstimated > 5 && !hasWarned) {
                     hasWarned = true;
                     const proceed = await showModal({
                         title: 'Long Audit Warning',
@@ -3163,13 +3156,11 @@
                 }
             });
 
-            if (!isPreview) {
-                btn.classList.remove('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
-                btn.classList.add('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
-                icon.classList.remove('animate-spin');
-                text.innerText = 'Run';
-                etaLabel.classList.add('opacity-0');
-            }
+            btn.classList.remove('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+            btn.classList.add('bg-sky-500/10', 'text-sky-400', 'border-sky-500/20');
+            icon.classList.remove('animate-spin');
+            text.innerText = 'Run';
+            etaLabel.classList.add('opacity-0');
             auditorIsRunning = false;
         }
 
