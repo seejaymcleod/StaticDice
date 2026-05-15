@@ -1109,13 +1109,20 @@
                 </div>
             </div>
 
-            <details class="group" id="auditor-details" ontoggle="if(this.open) runAuditor()">
+            <details class="group" id="auditor-details">
                 <summary
                     class="list-none cursor-pointer flex items-center justify-between glass-panel p-3 rounded-2xl border-white/5">
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-[10px] font-black text-[#94a3b8] uppercase tracking-[0.2em]">Entropy Check</h3>
-                        <div id="auditor-status-pip" class="w-1 h-1 rounded-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>
+                    <div id="entropy-header" class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"></div>
+                        <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Entropy Check</h2>
                     </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="engine.loadLotsTest(); updateUI(); updateRulesUI();" class="text-[9px] font-bold text-sky-400/60 hover:text-sky-400 px-2 py-1 rounded border border-sky-500/10 hover:border-sky-500/30 transition-all uppercase tracking-widest">Load Test (Lots)</button>
+                        <div class="h-4 w-px bg-white/5 mx-2"></div>
+                        <div id="auditor-formula-label" class="flex items-center gap-2"></div>
+                    </div>
+                </div>
                     <svg class="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -1761,6 +1768,11 @@
             updateUI();
         }
 
+        function clearQueue() {
+            engine.rollingQueue = [];
+            updateUI();
+        }
+
         function adjustFlatMod(val) {
             engine.adjustFlatMod(val);
             updateUI();
@@ -1861,6 +1873,11 @@
             });
         }
 
+        function fmtOp(op) {
+            if (!op) return "";
+            return op.replace('>=', '≥').replace('<=', '≤').replace('==', '=');
+        }
+
         function updateUI() {
             const display = document.getElementById('queue-display');
             const advBtn = document.getElementById('adv-btn');
@@ -1883,29 +1900,29 @@
 
             // 2. Build Rules (RR, EX, SET)
             let rulesParts = [];
-            const rrActive = engine.rollRules.rerollOp && engine.rollRules.rerollVal !== null;
-            const exActive = engine.rollRules.explodeOp && engine.rollRules.explodeVal !== null;
-            const setsActive = engine.rollRules.setsOp && engine.rollRules.setsVal !== null;
-            if (rrActive) rulesParts.push(`RR${engine.rollRules.rerollOp.replace('=', '')}${engine.rollRules.rerollVal}`);
-            if (exActive) rulesParts.push(`EX${engine.rollRules.explodeOp.replace('=', '')}${engine.rollRules.explodeVal}`);
-            if (setsActive) rulesParts.push(`SET${engine.rollRules.setsOp.replace('=', '')}${engine.rollRules.setsVal}`);
+            const rules = engine.rollRules;
+            const rrActive = rules.rerollOp && rules.rerollVal !== null;
+            const exActive = rules.explodeOp && rules.explodeVal !== null;
+            const setsActive = rules.setsOp && rules.setsVal !== null;
+
+            if (rrActive) rulesParts.push(`RR${fmtOp(rules.rerollOp)}${rules.rerollVal}`);
+            if (exActive) rulesParts.push(`EX${fmtOp(rules.explodeOp)}${rules.explodeVal}`);
+            if (setsActive) rulesParts.push(`SET${fmtOp(rules.setsOp)}${rules.setsVal}`);
 
             // 3. Build Mode & Target
             let modeLabel = "";
-            if (engine.rollRules.targetMode === 'count') {
-                modeLabel = "COUNT";
-                if (engine.rollRules.targetOp && engine.rollRules.targetVal !== null) {
-                    modeLabel += `${engine.rollRules.targetOp.replace('=', '')}${engine.rollRules.targetVal}`;
-                }
-            } else if (engine.rollRules.targetMode === 'list') {
+            if (rules.targetMode === 'list') {
                 modeLabel = "LIST";
+            } else if (rules.targetMode === 'count') {
+                modeLabel = "COUNT";
+                if (rules.targetOp) modeLabel += `${fmtOp(rules.targetOp)}${rules.targetVal}`;
+                if (setsActive) modeLabel += ` SET${fmtOp(rules.setsOp)}${rules.setsVal}`;
             } else {
                 modeLabel = "SUM";
+                if (rules.targetOp) modeLabel += `${fmtOp(rules.targetOp)}${rules.targetVal}`;
             }
             if (engine.overallTarget !== null) {
-                const isCountAny = engine.rollRules.targetMode === 'count' && !engine.rollRules.countThreshOp;
-                const isSumAny = engine.rollRules.targetMode === 'sum' && !engine.rollRules.targetOp;
-                if (!isCountAny && !isSumAny) modeLabel += ` ≥${engine.overallTarget}`;
+                modeLabel += ` ≥${engine.overallTarget}`;
             }
 
             const hasBaseContent = diceParts.length > 0 || engine.activeModifier !== null || engine.overallTarget !== null;
@@ -2032,9 +2049,7 @@
 
             // Update Auditor if panel is open (Fast 10k preview)
             const auditorDetails = document.getElementById('auditor-details');
-            if (auditorDetails && auditorDetails.open && canRoll) {
-                runAuditor(10000);
-            }
+            // Auditor no longer auto-runs
         }
 
         function saveCurrentQueue() {
@@ -2721,133 +2736,193 @@
             document.getElementById('history-log').innerHTML = '<p class="text-[9px] text-slate-700 italic px-1">No history yet...</p>';
         }
 
-
         function getTheoreticalDistribution(queue, mod, modifierType, modifierLevel, rules = {}) {
-            // Helper to get PMF for a single die with advanced rules
-            const getDiePMF = (sides, modType, modLvl, rules) => {
-                let pmf = {};
-                const rollsToTake = 1 + (modType ? modLvl : 0);
-                
-                // 1. Base distribution (with Adv/Dis)
-                for (let v = 1; v <= sides; v++) {
-                    if (modType === 'ADV') {
-                        pmf[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / Math.pow(sides, rollsToTake);
-                    } else if (modType === 'DIS') {
-                        pmf[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / Math.pow(sides, rollsToTake);
-                    } else {
-                        pmf[v] = 1 / sides;
-                    }
-                }
-
-                // 2. Apply Reroll Logic (until non-matching, up to engine limit)
-                const rerollOp = rules.rerollOp;
-                const rerollVal = rules.rerollVal;
-                if (rerollOp && rerollVal !== null) {
-                    let rerollFaces = [];
-                    for (let v = 1; v <= sides; v++) {
-                        if (engine.checkCondition(v, rerollOp, rerollVal)) rerollFaces.push(v);
-                    }
-
-                    if (rerollFaces.length > 0 && rerollFaces.length < sides) {
-                        let rerollMass = rerollFaces.reduce((sum, f) => sum + pmf[f], 0);
-                        let keepMass = 1 - rerollMass;
-                        
-                        // Redistribute mass proportionally (limit to 10 iterations like engine)
-                        // Mathematically: P'(x) = P(x) / (1 - P(reroll))
-                        rerollFaces.forEach(f => pmf[f] = 0);
-                        for (let v in pmf) {
-                            if (pmf[v] > 0) pmf[v] /= keepMass;
-                        }
-                    }
-                }
-
-                // 3. Apply Exploding Logic (Recursive)
-                const explodeOp = rules.explodeOp;
-                const explodeVal = rules.explodeVal;
-                if (explodeOp && explodeVal !== null) {
-                    let explodeFaces = [];
-                    for (let v = 1; v <= sides; v++) {
-                        if (engine.checkCondition(v, explodeOp, explodeVal)) explodeFaces.push(v);
-                    }
-
-                    if (explodeFaces.length > 0 && explodeFaces.length < sides) {
-                        let newPmf = {};
-                        let explodeMass = explodeFaces.reduce((sum, f) => sum + pmf[f], 0);
-                        
-                        // Probability of exactly k explosions: (explodeMass^k) * (1 - explodeMass)
-                        // We convolve the non-exploding part with shifted versions of itself
-                        let nonExplodePmf = { ...pmf };
-                        explodeFaces.forEach(f => nonExplodePmf[f] = 0);
-                        
-                        // Truncate at 10 explosions or < 1e-7 probability
-                        for (let k = 0; k <= 10; k++) {
-                            let p_k = Math.pow(explodeMass, k);
-                            if (p_k < 1e-7) break;
-                            
-                            for (let v in nonExplodePmf) {
-                                if (nonExplodePmf[v] === 0) continue;
-                                let finalVal = parseInt(v) + (k * sides);
-                                newPmf[finalVal] = (newPmf[finalVal] || 0) + (nonExplodePmf[v] * p_k);
-                            }
-                        }
-                        pmf = newPmf;
-                    }
-                }
-                return pmf;
+            const isCount = rules.targetMode === 'count';
+            const isSum = rules.targetMode === 'sum';
+            const hasSets = rules.setsOp && rules.setsVal !== null;
+            
+            // Local Math-safe rule evaluator
+            const check = (val, op, target) => {
+                if (!op || target === null || isNaN(target)) return true; // Standard logic: no constraints means everything counts
+                if (op === '>=') return val >= target;
+                if (op === '<=') return val <= target;
+                if (op === '>') return val > target;
+                if (op === '<') return val < target;
+                if (op === '=') return val === target;
+                return true;
             };
+
+            const isSucc = (v) => check(v, rules.targetOp, rules.targetVal);
+            const isExp = (v) => rules.explodeOp && rules.explodeVal !== null && check(v, rules.explodeOp, rules.explodeVal);
+            const isRR = (v) => rules.rerollOp && rules.rerollVal !== null && check(v, rules.rerollOp, rules.rerollVal);
 
             const convolve = (d1, d2) => {
                 let res = {};
                 for (let v1 in d1) {
+                    let p1 = d1[v1];
                     for (let v2 in d2) {
                         const s = parseInt(v1) + parseInt(v2);
-                        res[s] = (res[s] || 0) + d1[v1] * d2[v2];
+                        const p = p1 * d2[v2];
+                        if (p > 1e-20) res[s] = (res[s] || 0) + p;
                     }
                 }
                 return res;
             };
 
-            // SUCCESS COUNT MODE MATH
-            if (rules.targetMode === 'count') {
-                let finalDist = { 0: 1 };
-                queue.forEach(group => {
-                    const pmf = getDiePMF(group.sides, modifierType, modifierLevel, rules);
-                    // Probability of success for ONE die
-                    let pSuccess = 0;
-                    for (let v in pmf) {
-                        if (engine.checkCondition(parseInt(v), rules.targetOp, rules.targetVal)) pSuccess += pmf[v];
-                    }
-                    
-                    // Binomial Distribution for this group
-                    for (let i = 0; i < group.count; i++) {
-                        let nextDist = {};
-                        for (let successes in finalDist) {
-                            let s = parseInt(successes);
-                            // Fail
-                            nextDist[s] = (nextDist[s] || 0) + finalDist[s] * (1 - pSuccess);
-                            // Success
-                            nextDist[s + 1] = (nextDist[s + 1] || 0) + finalDist[s] * pSuccess;
-                        }
-                        finalDist = nextDist;
-                    }
-                });
-                return finalDist;
-            }
+            const facts = [1];
+            for (let i = 1; i <= 170; i++) facts[i] = facts[i - 1] * i;
+            const nCr = (n, r) => (n < r || r < 0) ? 0 : facts[n] / (facts[r] * facts[n - r]);
 
-            // SUM MODE MATH
-            let finalDist = { 0: 1 };
-            queue.forEach(group => {
-                const pmf = getDiePMF(group.sides, modifierType, modifierLevel, rules);
-                for (let i = 0; i < group.count; i++) {
-                    finalDist = convolve(finalDist, pmf);
+            const getGroupDistribution = (group) => {
+                const sides = group.sides;
+                const N = group.count;
+
+                // 1. Calculate Face Probabilities
+                let p_adv = {};
+                let p_norm = {};
+                const rollsToTake = 1 + (modifierType ? modifierLevel : 0);
+                for (let v = 1; v <= sides; v++) {
+                    p_norm[v] = 1 / sides;
+                    if (modifierType === 'ADV') p_adv[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / Math.pow(sides, rollsToTake);
+                    else if (modifierType === 'DIS') p_adv[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / Math.pow(sides, rollsToTake);
+                    else p_adv[v] = 1 / sides;
                 }
+
+                // 2. Apply Rerolls
+                let rrFaces = [];
+                for (let v = 1; v <= sides; v++) if (isRR(v)) rrFaces.push(v);
+                if (rrFaces.length > 0 && rrFaces.length < sides) {
+                    let mass_adv = rrFaces.reduce((s, f) => s + (p_adv[f] || 0), 0);
+                    let mass_norm = rrFaces.reduce((s, f) => s + (p_norm[f] || 0), 0);
+                    for (let v = 1; v <= sides; v++) {
+                        if (isRR(v)) {
+                            p_adv[v] = 0;
+                            p_norm[v] = 0;
+                        } else {
+                            p_adv[v] = p_adv[v] + mass_adv * (p_norm[v] / (1 - mass_norm));
+                            p_norm[v] = p_norm[v] + mass_norm * (p_norm[v] / (1 - mass_norm));
+                        }
+                    }
+                }
+
+                // 3. Pre-Calculate Explosion Variables
+                const E_adv = Object.keys(p_adv).reduce((s, v) => s + (isExp(v) ? p_adv[v] : 0), 0);
+                const E_norm = Object.keys(p_norm).reduce((s, v) => s + (isExp(v) ? p_norm[v] : 0), 0);
+                const P_stop_norm = 1 - E_norm;
+                if (P_stop_norm <= 0) return { 0: 1 };
+
+                // 4. Explosion Contribution (Independent Negative Binomial)
+                let explode_pmfs = {}; 
+                for (let v = 1; v <= sides; v++) {
+                    if (!isExp(v)) continue;
+                    let p_v_adv = p_adv[v] || 0;
+                    let p_v_norm = p_norm[v] || 0;
+                    let p_geom = P_stop_norm / (P_stop_norm + p_v_norm);
+                    
+                    let single_die_exp_pmf = {};
+                    for (let k = 0; k <= 12; k++) {
+                        let pk = Math.pow(1 - p_geom, k) * p_geom;
+                        single_die_exp_pmf[1 + k] = (single_die_exp_pmf[1 + k] || 0) + p_v_adv * pk;
+                        single_die_exp_pmf[k] = (single_die_exp_pmf[k] || 0) + (E_adv - p_v_adv) * pk;
+                    }
+                    single_die_exp_pmf[0] = (single_die_exp_pmf[0] || 0) + (1 - E_adv);
+
+                    let total_exp_pmf = { 0: 1 };
+                    for (let i = 0; i < N; i++) {
+                        let next = {};
+                        for (let c1 in total_exp_pmf) for (let c2 in single_die_exp_pmf) {
+                            let c = parseInt(c1) + parseInt(c2);
+                            if (c <= 30) next[c] = (next[c] || 0) + total_exp_pmf[c1] * single_die_exp_pmf[c2];
+                        }
+                        total_exp_pmf = next;
+                    }
+                    explode_pmfs[v] = total_exp_pmf;
+                }
+
+                // 5. Main Distribution logic (Multinomial DP for Stop Faces)
+                let dp = { 0: { 0: 1 } }; 
+                let stopVals = [];
+                for (let v = 1; v <= sides; v++) if (!isExp(v)) stopVals.push(v);
+                
+                let p_rem_s = 1.0;
+                for (let v of stopVals) {
+                    let p_v_stop = (p_adv[v] || 0) + E_adv * ((p_norm[v] || 0) / P_stop_norm);
+                    let p_ratio = Math.max(0, Math.min(1.0, p_v_stop / Math.max(1e-15, p_rem_s)));
+                    let is_v_succ = isSucc(v);
+                    
+                    let next = {};
+                    for (let used = 0; used <= N; used++) {
+                        if (!dp[used]) continue;
+                        let rem = N - used;
+                        for (let k = 0; k <= rem; k++) {
+                            let p_k = nCr(rem, k) * Math.pow(p_ratio, k) * Math.pow(Math.max(0, 1 - p_ratio), rem - k);
+                            if (p_k < 1e-18) continue;
+                            
+                            let score = 0;
+                            if (is_v_succ) {
+                                if (hasSets) {
+                                    if (check(k, rules.setsOp, rules.setsVal)) score = isCount ? k : k * v;
+                                } else {
+                                    score = isCount ? k : k * v;
+                                }
+                            }
+                            
+                            for (let s in dp[used]) {
+                                let ns = parseInt(s) + score;
+                                let nu = used + k;
+                                if (!next[nu]) next[nu] = {};
+                                next[nu][ns] = (next[nu][ns] || 0) + dp[used][s] * p_k;
+                            }
+                        }
+                    }
+                    dp = next;
+                    p_rem_s -= p_v_stop;
+                }
+
+                // Aggregate probability mass ensuring precision preservation
+                let final_group_pmf = {};
+                for (let u = 0; u <= N; u++) {
+                    if (!dp[u]) continue;
+                    for (let s in dp[u]) final_group_pmf[s] = (final_group_pmf[s] || 0) + dp[u][s];
+                }
+                let group_pmf = Object.keys(final_group_pmf).length > 0 ? final_group_pmf : { 0: 1 };
+
+                // 6. Integrate Explosion independent probabilities
+                for (let v in explode_pmfs) {
+                    const val = parseInt(v);
+                    const exp_pmf = explode_pmfs[v];
+                    let is_v_succ = isSucc(val);
+                    
+                    let score_v_pmf = {};
+                    for (let k_str in exp_pmf) {
+                        const k = parseInt(k_str);
+                        let score = 0;
+                        if (is_v_succ) {
+                            if (hasSets) {
+                                if (check(k, rules.setsOp, rules.setsVal)) score = isCount ? k : k * val;
+                            } else {
+                                score = isCount ? k : k * val;
+                            }
+                        }
+                        score_v_pmf[score] = (score_v_pmf[score] || 0) + exp_pmf[k_str];
+                    }
+                    group_pmf = convolve(group_pmf, score_v_pmf);
+                }
+
+                return group_pmf;
+            };
+
+            let finalDist = { 0: 1 };
+            queue.forEach((group) => {
+                finalDist = convolve(finalDist, getGroupDistribution(group));
             });
 
-            let shiftedDist = {};
-            for (let v in finalDist) {
-                shiftedDist[parseInt(v) + mod] = finalDist[v];
+            if (isSum) {
+                let shifted = {};
+                for (let s in finalDist) shifted[parseInt(s) + mod] = finalDist[s];
+                return shifted;
             }
-            return shiftedDist;
+            return finalDist;
         }
 
         let auditorChart = null;
@@ -2887,15 +2962,17 @@
             if (modType) diceStr += ` [${modType}${modLvl > 1 ? '+' + (modLvl - 1) : ''}]`;
             
             let ruleStr = "";
-            if (activeRules.rerollOp) ruleStr += ` RR${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
-            if (activeRules.explodeOp) ruleStr += ` EX${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
+            if (activeRules.rerollOp) ruleStr += ` RR${fmtOp(activeRules.rerollOp)}${activeRules.rerollVal}`;
+            if (activeRules.explodeOp) ruleStr += ` EX${fmtOp(activeRules.explodeOp)}${activeRules.explodeVal}`;
+            if (activeRules.setsOp && activeRules.setsVal !== null) ruleStr += ` SET${fmtOp(activeRules.setsOp)}${activeRules.setsVal}`;
             
             let modeStr = "";
             if (activeRules.targetMode === 'count') {
                 modeStr = "COUNT";
-                if (activeRules.targetOp) modeStr += `${activeRules.targetOp.replace('=', '')}${activeRules.targetVal}`;
+                if (activeRules.targetOp) modeStr += `${fmtOp(activeRules.targetOp)}${activeRules.targetVal}`;
             } else {
                 modeStr = "SUM";
+                if (activeRules.targetOp) modeStr += `${fmtOp(activeRules.targetOp)}${activeRules.targetVal}`;
             }
             if (engine.overallTarget !== null) modeStr += ` ≥${engine.overallTarget}`;
 
@@ -3042,9 +3119,9 @@
                             type: 'line',
                             borderColor: '#f43f5e',
                             borderWidth: 2,
-                            pointRadius: 0,
-                            fill: false,
-                            tension: 0.4,
+                            tension: 0,
+                            pointRadius: 2,
+                            pointBackgroundColor: '#f43f5e',
                             order: 1
                         }
                     ]
@@ -3158,8 +3235,7 @@
             }
 
             updateStressUI();
-            // Initial audit run on load
-            setTimeout(() => runAuditor(), 500);
+            // Initial audit run on load removed for performance
             renderDiceGrid();
             updateRulesUI();
         };
