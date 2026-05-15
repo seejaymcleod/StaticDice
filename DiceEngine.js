@@ -355,7 +355,7 @@ class DiceEngine {
                     if (activeRules.targetMode === 'count') f += 'c';
                     let valStr = activeRules.targetVal;
                     if (activeRules.targetMode === 'sum') {
-                        if (valStr === 'overall') valStr = 'TGT';
+                        if (valStr === 'overall') valStr = 'TARGET';
                         else if (valStr === 'varX') valStr = 'VARX';
                     }
                     f += `${activeRules.targetOp.replace('=', '')}${valStr}`;

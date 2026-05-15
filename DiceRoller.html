@@ -113,7 +113,7 @@
         }
 
         .btn-side {
-            width: 35%; 
+            width: 33.33%; 
             min-width: 44px;
             padding: 0.5rem 0;
             flex-shrink: 0;
@@ -135,9 +135,9 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            opacity: 0.08;
-            width: 2.5rem;
-            height: 2.5rem;
+            opacity: 0.12;
+            width: 90%;
+            height: 90%;
             pointer-events: none;
             transition: all 0.3s ease;
         }
@@ -840,7 +840,7 @@
                 <!-- ADV DIS & EXTRA CONTROLS -->
                 <div class="grid grid-cols-4 gap-2 items-stretch">
                     <button id="adv-btn" onclick="applyModifier('ADV')" disabled
-                        class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[4.5rem]">
+                        class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3.25rem]">
                         <div id="adv-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
                         </div>
                         <span id="adv-label"
@@ -848,7 +848,7 @@
                         <span id="adv-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
                     </button>
                     <button id="dis-btn" onclick="applyModifier('DIS')" disabled
-                        class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[4.5rem]">
+                        class="toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3.25rem]">
                         <div id="dis-pip" class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
                         </div>
                         <span id="dis-label"
@@ -857,13 +857,13 @@
                     </button>
 
                     <div
-                        class="segmented-row !h-[4.5rem] bg-[#020617] flex-col focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        class="segmented-row !h-[3.25rem] bg-[#020617] flex-col focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
                         <!-- Top: Label & Input -->
                         <div class="flex-1 flex items-center justify-between px-3 border-b border-white/5">
-                            <span class="text-[10px] font-black text-sky-400/70 uppercase tracking-widest">MOD</span>
-                            <input type="text" id="flat-mod-input"
-                                class="w-12 bg-transparent font-black text-base text-sky-400 mono leading-none text-right outline-none hide-spinners"
-                                value="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
+                            <span class="text-[9px] font-black text-sky-400/70 uppercase tracking-tighter">MOD</span>
+                            <input type="number" id="flat-mod-input"
+                                class="w-10 bg-transparent font-black text-sm text-sky-400 mono leading-none text-right outline-none hide-spinners"
+                                value="0" placeholder="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
                         </div>
                         <!-- Bottom: Buttons -->
                         <div class="flex h-1/2">
@@ -874,12 +874,12 @@
 
                     <!-- OVERALL TARGET -->
                     <div id="overall-target-container"
-                        class="segmented-row !h-[4.5rem] bg-[#020617] flex-col focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        class="segmented-row !h-[3.25rem] bg-[#020617] flex-col focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
                         <!-- Top: Label & Input -->
                         <div class="flex-1 flex items-center justify-between px-3 border-b border-white/5">
-                            <span class="text-[10px] font-black text-sky-400/70 uppercase tracking-widest">TGT</span>
+                            <span class="text-[9px] font-black text-sky-400/70 uppercase tracking-tighter">TARGET</span>
                             <input type="number" id="overall-target-input"
-                                class="w-12 bg-transparent font-black text-base text-sky-400 placeholder-sky-400/30 mono leading-none text-right outline-none hide-spinners"
+                                class="w-10 bg-transparent font-black text-sm text-sky-400 placeholder-sky-400/30 mono leading-none text-right outline-none hide-spinners"
                                 value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
                         </div>
                         <!-- Bottom: Buttons -->
@@ -966,7 +966,7 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-2 items-center justify-end">
-                                        <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest w-8 text-right">Goal</span>
+                                        <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest w-12 text-right">TARGET</span>
                                         <select id="rule-count-thresh-op"
                                             class="min-w-[3rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center"
                                             onchange="updateRulesUI()">
@@ -980,7 +980,7 @@
                                         <select id="rule-count-thresh-val"
                                             class="w-24 bg-[#020617] text-sky-400 text-[11px] font-black rounded p-1 outline-none border border-white/10 text-center transition-all opacity-30 pointer-events-none"
                                             onchange="updateRulesUI()">
-                                            <option value="overall">TGT</option>
+                                            <option value="overall">TARGET</option>
                                             <option value="varX">VAR X</option>
                                         </select>
                                     </div>
@@ -1002,9 +1002,11 @@
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
                                     <option value="">Off</option>
+                                    <option value=">">&gt;</option>
                                     <option value=">=">&ge;</option>
                                     <option value="=">=</option>
                                     <option value="<=">&le;</option>
+                                    <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-sets-input-container"
                                     class="flex items-center bg-[#020617] rounded border border-white/10 overflow-hidden w-28 transition-all opacity-30 pointer-events-none">
@@ -1029,9 +1031,11 @@
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
                                     <option value="">Off</option>
-                                    <option value="<=">&le;</option>
-                                    <option value="=">=</option>
+                                    <option value=">">&gt;</option>
                                     <option value=">=">&ge;</option>
+                                    <option value="=">=</option>
+                                    <option value="<=">&le;</option>
+                                    <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-reroll-input-container"
                                     class="flex items-center bg-[#020617] rounded border border-white/10 overflow-hidden w-28 transition-all opacity-30 pointer-events-none">
@@ -1056,9 +1060,11 @@
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
                                     <option value="">Off</option>
+                                    <option value=">">&gt;</option>
                                     <option value=">=">&ge;</option>
                                     <option value="=">=</option>
                                     <option value="<=">&le;</option>
+                                    <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-explode-input-container"
                                     class="flex items-center bg-[#020617] rounded border border-white/10 overflow-hidden w-28 transition-all opacity-30 pointer-events-none">
@@ -1388,8 +1394,7 @@
                 <div class="segmented-row">
                     <button onclick="toggleDeleteMode(event)" class="segmented-btn btn-side ${deleteMode ? 'bg-white/10 text-rose-400' : ''}">－</button>
                     <div class="segmented-btn btn-center group/dice cursor-default flex flex-col justify-center">
-                        <span class="font-black text-sm uppercase tracking-widest text-[#e2e8f0] mt-0.5 leading-none">Custom</span>
-                        <span class="font-black text-xs uppercase tracking-widest text-[#e2e8f0]/60 mt-0.5 leading-none">Dice</span>
+                        <span class="font-black text-lg uppercase tracking-widest text-[#e2e8f0] leading-none">D?</span>
                     </div>
                     <button onclick="addCustomDice()" class="segmented-btn btn-side">＋</button>
                 </div>
@@ -2489,7 +2494,7 @@
                     if (q.rules) {
                         if (q.rules.rerollOp && q.rules.rerollVal !== null) formula += ` RR${q.rules.rerollOp}${q.rules.rerollVal}`;
                         if (q.rules.explodeOp && q.rules.explodeVal !== null) formula += ` EX${q.rules.explodeOp}${q.rules.explodeVal}`;
-                        if (q.rules.targetOp && q.rules.targetVal !== null) formula += ` TGT${q.rules.targetOp}${q.rules.targetVal}`;
+                        if (q.rules.targetOp && q.rules.targetVal !== null) formula += ` TARGET${q.rules.targetOp}${q.rules.targetVal}`;
                     }
 
                     item.innerHTML = `
