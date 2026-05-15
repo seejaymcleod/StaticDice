@@ -1513,16 +1513,31 @@
 
         function toggleRulesPanel() {
             const panel = document.getElementById('rules-panel');
-            const btn = document.getElementById('adv-rules-toggle');
             if (panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden');
-                btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
-                btn.classList.remove('bg-slate-800/50', 'text-[#94a3b8]', 'border-white/5');
+                openRulesPanel();
             } else {
-                panel.classList.add('hidden');
-                btn.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
-                btn.classList.add('bg-slate-800/50', 'text-[#94a3b8]', 'border-white/5');
+                closeRulesPanel();
             }
+        }
+
+        function openRulesPanel() {
+            const panel = document.getElementById('rules-panel');
+            const btn = document.getElementById('adv-rules-toggle');
+            panel.classList.remove('hidden');
+            btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+            // Align with actual HTML classes from line 828
+            btn.classList.remove('bg-[#00d4ff]/05', 'text-[#94a3b8]', 'border-[#00d4ff]/10');
+            vibrate(5);
+        }
+
+        function closeRulesPanel() {
+            const panel = document.getElementById('rules-panel');
+            const btn = document.getElementById('adv-rules-toggle');
+            if (panel.classList.contains('hidden')) return;
+            
+            panel.classList.add('hidden');
+            btn.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+            btn.classList.add('bg-[#00d4ff]/05', 'text-[#94a3b8]', 'border-[#00d4ff]/10');
         }
 
 
@@ -2407,10 +2422,16 @@
         }
 
         window.addEventListener('click', (e) => {
+            // Close arsenal menus
             if (!e.target.closest('.arsenal-menu') && !e.target.closest('.gear-btn')) {
                 document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
                 document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
                 activeMenuId = null;
+            }
+
+            // Close advanced rules panel if open and clicking outside
+            if (!e.target.closest('#rules-panel') && !e.target.closest('#adv-rules-toggle')) {
+                closeRulesPanel();
             }
         });
 
