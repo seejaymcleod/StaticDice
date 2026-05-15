@@ -915,8 +915,8 @@
                         <!-- Header Row -->
                         <div class="grid grid-cols-12 gap-2 px-1 mb-1 items-center">
                             <span
-                                class="col-span-3 text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Rule</span>
-                            <div class="col-span-9 text-center">
+                                class="col-span-2 text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Rule</span>
+                            <div class="col-span-10 text-center">
                                 <span
                                     class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Configuration</span>
                             </div>
@@ -927,23 +927,22 @@
                             class="grid grid-cols-12 gap-2 bg-[#020617]/30 p-2 rounded-lg border border-white/5 items-center transition-all">
 
                             <span
-                                class="col-span-3 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Roll
-                                Type</span>
+                                class="col-span-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 leading-tight">ROLL<br>TYPE</span>
 
-                            <div class="col-span-2 flex justify-center px-1">
+                            <div class="col-span-2 flex justify-center">
                                 <div
-                                    class="flex flex-col gap-px bg-[#00d4ff]/20 rounded border border-[#00d4ff]/20 overflow-hidden w-full max-w-[70px]">
+                                    class="flex flex-col gap-px bg-[#00d4ff]/20 rounded border border-[#00d4ff]/20 overflow-hidden w-full max-w-[64px]">
                                     <button id="target-mode-sum" onclick="setTargetMode('sum')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff]">SUM</button>
+                                        class="text-[9px] font-black py-1 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff]">SUM</button>
                                     <button id="target-mode-count" onclick="setTargetMode('count')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">COUNT</button>
+                                        class="text-[9px] font-black py-1 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">COUNT</button>
                                     <button id="target-mode-list" onclick="setTargetMode('list')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">LIST</button>
+                                        class="text-[9px] font-black py-1 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">LIST</button>
                                 </div>
                             </div>
 
                             <div
-                                class="col-span-7 flex items-center justify-end border-l border-white/10 pl-2 min-h-[54px]">
+                                class="col-span-8 flex items-center justify-end border-l border-white/10 pl-2 min-h-[54px]">
                                 <!-- SUM container -->
                                 <div id="sum-target-inputs" class="flex gap-2 w-full justify-end items-center">
                                     <select id="rule-sum-op"
@@ -979,14 +978,16 @@
                                             <option value="<=">&le;</option>
                                         </select>
                                         <div id="rule-count-input-container"
-                                            class="flex items-center bg-[#020617] rounded border border-white/10 overflow-hidden w-24">
+                                            class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-32 focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)] transition-all">
                                             <button onclick="adjustRuleVal('count', -1)"
-                                                class="w-7 h-7 flex items-center justify-center text-[#94a3b8] hover:text-[#e2e8f0] bg-white/5 active:bg-white/10 transition-colors">-</button>
-                                            <input type="number" id="rule-count-val"
-                                                class="flex-1 min-w-0 bg-transparent text-sky-400 text-xs font-black text-center outline-none hide-spinners focus:bg-white/5"
-                                                placeholder="#" oninput="updateRulesUI(true)">
+                                                class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
+                                            <div class="flex-1 flex flex-col items-center justify-center min-w-0">
+                                                <input type="text" id="rule-count-val" inputmode="numeric"
+                                                    class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                                                    placeholder="0" oninput="updateRulesUI(true)">
+                                            </div>
                                             <button onclick="adjustRuleVal('count', 1)"
-                                                class="w-7 h-7 flex items-center justify-center text-[#94a3b8] hover:text-[#e2e8f0] bg-white/5 active:bg-white/10 transition-colors">+</button>
+                                                class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
                                         </div>
                                     </div>
                                     <div class="flex gap-2 items-center justify-end">
@@ -1021,9 +1022,8 @@
                         <div
                             class="grid grid-cols-12 gap-2 bg-[#020617]/30 p-2 rounded-lg border border-white/5 items-center">
                             <span
-                                class="col-span-3 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Sets</span>
-                            <div class="col-span-2"></div>
-                            <div class="col-span-7 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
+                                class="col-span-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Sets</span>
+                            <div class="col-span-10 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
                                 <select id="rule-sets-op"
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
@@ -1035,14 +1035,16 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-sets-input-container"
-                                    class="flex items-center bg-[#020617] rounded border border-white/10 overflow-hidden w-28 transition-all opacity-30 pointer-events-none">
+                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-32 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('sets', -1)"
-                                        class="w-7 h-7 flex items-center justify-center text-[#94a3b8] hover:text-[#e2e8f0] bg-white/5 active:bg-white/10 transition-colors">-</button>
-                                    <input type="number" id="rule-sets-val"
-                                        class="flex-1 bg-transparent text-sky-400 text-xs font-black text-center outline-none hide-spinners focus:bg-white/5"
-                                        placeholder="#" oninput="updateRulesUI(true)">
+                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
+                                    <div class="flex-1 flex flex-col items-center justify-center min-w-0">
+                                        <input type="text" id="rule-sets-val" inputmode="numeric"
+                                            class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                                            placeholder="0" oninput="updateRulesUI(true)">
+                                    </div>
                                     <button onclick="adjustRuleVal('sets', 1)"
-                                        class="w-7 h-7 flex items-center justify-center text-[#94a3b8] hover:text-[#e2e8f0] bg-white/5 active:bg-white/10 transition-colors">+</button>
+                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
                                 </div>
                             </div>
                         </div>
@@ -1051,9 +1053,8 @@
                         <div
                             class="grid grid-cols-12 gap-2 bg-[#020617]/30 p-2 rounded-lg border border-white/5 items-center">
                             <span
-                                class="col-span-3 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Reroll</span>
-                            <div class="col-span-2"></div>
-                            <div class="col-span-7 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
+                                class="col-span-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Reroll</span>
+                            <div class="col-span-10 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
                                 <select id="rule-reroll-op"
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
@@ -1065,14 +1066,16 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-reroll-input-container"
-                                    class="flex items-center bg-[#020617] rounded border border-white/10 overflow-hidden w-28 transition-all opacity-30 pointer-events-none">
+                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-32 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('reroll', -1)"
-                                        class="w-7 h-7 flex items-center justify-center text-[#94a3b8] hover:text-[#e2e8f0] bg-white/5 active:bg-white/10 transition-colors">-</button>
-                                    <input type="number" id="rule-reroll-val"
-                                        class="flex-1 bg-transparent text-sky-400 text-xs font-black text-center outline-none hide-spinners focus:bg-white/5"
-                                        placeholder="#" oninput="updateRulesUI(true)">
+                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
+                                    <div class="flex-1 flex flex-col items-center justify-center min-w-0">
+                                        <input type="text" id="rule-reroll-val" inputmode="numeric"
+                                            class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                                            placeholder="0" oninput="updateRulesUI(true)">
+                                    </div>
                                     <button onclick="adjustRuleVal('reroll', 1)"
-                                        class="w-7 h-7 flex items-center justify-center text-[#94a3b8] hover:text-[#e2e8f0] bg-white/5 active:bg-white/10 transition-colors">+</button>
+                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
                                 </div>
                             </div>
                         </div>
@@ -1081,9 +1084,8 @@
                         <div
                             class="grid grid-cols-12 gap-2 bg-[#020617]/30 p-2 rounded-lg border border-white/5 items-center">
                             <span
-                                class="col-span-3 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Explode</span>
-                            <div class="col-span-2"></div>
-                            <div class="col-span-7 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
+                                class="col-span-2 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1">Explode</span>
+                            <div class="col-span-10 flex gap-2 items-center justify-end border-l border-white/10 pl-2">
                                 <select id="rule-explode-op"
                                     class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
                                     onchange="updateRulesUI()">
@@ -1095,14 +1097,16 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-explode-input-container"
-                                    class="flex items-center bg-[#020617] rounded border border-white/10 overflow-hidden w-28 transition-all opacity-30 pointer-events-none">
+                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-32 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('explode', -1)"
-                                        class="w-7 h-7 flex items-center justify-center text-[#94a3b8] hover:text-[#e2e8f0] bg-white/5 active:bg-white/10 transition-colors">-</button>
-                                    <input type="number" id="rule-explode-val"
-                                        class="flex-1 bg-transparent text-sky-400 text-xs font-black text-center outline-none hide-spinners focus:bg-white/5"
-                                        placeholder="#" oninput="updateRulesUI(true)">
+                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
+                                    <div class="flex-1 flex flex-col items-center justify-center min-w-0">
+                                        <input type="text" id="rule-explode-val" inputmode="numeric"
+                                            class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                                            placeholder="0" oninput="updateRulesUI(true)">
+                                    </div>
                                     <button onclick="adjustRuleVal('explode', 1)"
-                                        class="w-7 h-7 flex items-center justify-center text-[#94a3b8] hover:text-[#e2e8f0] bg-white/5 active:bg-white/10 transition-colors">+</button>
+                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
                                 </div>
                             </div>
                         </div>
