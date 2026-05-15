@@ -1114,8 +1114,10 @@
                     class="list-none cursor-pointer flex items-center justify-between glass-panel px-4 py-2 rounded-xl border-white/5 min-h-[2.75rem]">
                     <div class="flex items-center gap-3">
                         <div class="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"></div>
-                        <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Entropy Check</h2>
-                        <div id="auditor-formula-label" class="flex items-center gap-2"></div>
+                        <div class="flex flex-col">
+                            <h2 id="auditor-title" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Entropy Check</h2>
+                            <div id="auditor-context-label" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1 opacity-80">EMPTY QUEUE</div>
+                        </div>
                     </div>
                     <svg class="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
@@ -2041,9 +2043,24 @@
                 runAuditBtn.style.pointerEvents = canRoll ? 'auto' : 'none';
             }
 
-            // Update Auditor if panel is open (Fast 10k preview)
-            const auditorDetails = document.getElementById('auditor-details');
-            // Auditor no longer auto-runs
+            syncAuditorLabels();
+        }
+
+        function syncAuditorLabels() {
+            const title = document.getElementById('auditor-title');
+            const context = document.getElementById('auditor-context-label');
+            const display = document.getElementById('queue-display');
+            if (!title || !context || !display) return;
+
+            title.innerText = "Entropy Check";
+            context.innerHTML = display.innerHTML;
+            
+            // Adjust styles for the mirrored content to fit the header
+            const container = context.querySelector('div');
+            if (container) {
+                container.classList.remove('justify-center');
+                container.classList.add('justify-start');
+            }
         }
 
         function saveCurrentQueue() {
@@ -2945,42 +2962,7 @@
             const modLvl = engine.modifierLevel;
             const activeRules = engine.rollRules;
 
-            if (queue.length === 0 && flatMod === 0) {
-                auditorIsRunning = false;
-                const label = document.getElementById('auditor-formula-label');
-                if (label) label.innerText = "EMPTY";
-                return;
-            }
-
-            // Update Labels
-            let diceStr = queue.map(q => `${q.count}d${q.sides}`).join("+");
-            if (flatMod !== 0) diceStr += `${flatMod > 0 ? '+' : ''}${flatMod}`;
-            if (modType) diceStr += ` [${modType}${modLvl > 1 ? '+' + (modLvl - 1) : ''}]`;
-            
-            let ruleStr = "";
-            if (activeRules.rerollOp) ruleStr += ` RR${fmtOp(activeRules.rerollOp)}${activeRules.rerollVal}`;
-            if (activeRules.explodeOp) ruleStr += ` EX${fmtOp(activeRules.explodeOp)}${activeRules.explodeVal}`;
-            if (activeRules.setsOp && activeRules.setsVal !== null) ruleStr += ` SET${fmtOp(activeRules.setsOp)}${activeRules.setsVal}`;
-            
-            let modeStr = "";
-            if (activeRules.targetMode === 'count') {
-                modeStr = "COUNT";
-                if (activeRules.targetOp) modeStr += `${fmtOp(activeRules.targetOp)}${activeRules.targetVal}`;
-            } else {
-                modeStr = "SUM";
-                if (activeRules.targetOp) modeStr += `${fmtOp(activeRules.targetOp)}${activeRules.targetVal}`;
-            }
-            if (engine.overallTarget !== null) modeStr += ` ≥${engine.overallTarget}`;
-
-            const label = document.getElementById('auditor-formula-label');
-            if (label) {
-                label.innerHTML = `
-                    <div class="flex items-baseline gap-3">
-                        <span class="text-3xl font-black text-white tracking-tighter">${diceStr}</span>
-                        <span class="text-sm font-black text-sky-400/60 uppercase tracking-widest">${modeStr}${ruleStr}</span>
-                    </div>
-                `;
-            }
+            syncAuditorLabels();
 
             const btn = document.getElementById('run-audit-btn');
             const icon = document.getElementById('run-icon');
