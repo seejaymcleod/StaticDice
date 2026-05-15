@@ -682,9 +682,8 @@
                     <h1 class="text-xl font-black text-[#e2e8f0] tracking-tighter leading-none">STATIC<span
                             class="text-[#00d4ff]">DICE</span></h1>
                     <span
-                        class="text-xs font-bold uppercase tracking-[0.15em] leading-none mt-1 bg-gradient-to-r from-slate-400 to-slate-600 bg-clip-text text-transparent"
-                        style="-webkit-background-clip: text; -webkit-text-fill-color: transparent;">Harnessing raw
-                        electrical entropy</span>
+                        class="text-[10px] font-bold uppercase tracking-[0.12em] leading-none mt-1 bg-gradient-to-r from-slate-400 to-slate-600 bg-clip-text text-transparent"
+                        style="-webkit-background-clip: text; -webkit-text-fill-color: transparent;">Harnessing raw electrical entropy</span>
                 </div>
                 <div class="flex items-center gap-1.5 sm:gap-3">
                     <!-- SETTINGS CONTROLS -->
@@ -1076,6 +1075,9 @@
         </section>
 
         <section id="dice-section" class="section-dice space-y-3">
+            <div class="flex justify-between items-center px-2">
+                <h3 class="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Quick Dice</h3>
+            </div>
             <div id="dice-grid" class="grid grid-cols-2 gap-3">
                 <!-- Dice injected here via JS -->
             </div>
@@ -1085,14 +1087,6 @@
         <section id="arsenal-section" class="section-arsenal space-y-3">
             <div class="flex justify-between items-center px-2">
                 <h3 class="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Dice Arsenal</h3>
-                <button onclick="toggleMode()"
-                    class="bg-[#00d4ff]/10 text-[#00d4ff] px-2 py-0.5 rounded-lg text-xs font-bold border border-[#00d4ff]/20 uppercase transition-all flex items-center gap-1 hover:bg-[#00d4ff]/20">
-                    <span id="mode-label">Arsenal</span>
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                    </svg>
-                </button>
             </div>
             <div class="saved-queues-list grid grid-cols-1 gap-3">
                 <!-- Items injected here -->
@@ -1739,15 +1733,15 @@
 
         function toggleMode() {
             const container = document.getElementById('main-container');
-            const label = document.getElementById('mode-label');
+            const labels = document.querySelectorAll('.mode-label');
             if (container.classList.contains('mode-dice')) {
                 container.classList.remove('mode-dice');
                 container.classList.add('mode-arsenal');
-                label.innerText = 'Dice';
+                labels.forEach(l => l.innerText = 'Dice');
             } else {
                 container.classList.remove('mode-arsenal');
                 container.classList.add('mode-dice');
-                label.innerText = 'Arsenal';
+                labels.forEach(l => l.innerText = 'Arsenal');
             }
             vibrate(10);
         }
