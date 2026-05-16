@@ -662,6 +662,19 @@
             text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
         }
 
+        /* Header Toggle Styles */
+        .header-hidden header {
+            display: none !important;
+        }
+        
+        #header-chevron {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header-hidden #header-chevron {
+            transform: rotate(180deg);
+        }
+
         /* CHARGE STATES */
         .is-charging main {
             box-shadow: inset 0 0 50px rgba(0, 212, 255, 0.4) !important;
@@ -725,6 +738,18 @@
             <!-- MAIN DISPLAY -->
             <main id="result-main"
                 class="p-4 rounded-2xl flex flex-col items-center justify-start pt-4 min-h-[100px] relative overflow-hidden shrink-0 result-shimmer pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]">
+                
+                <!-- HEADER TOGGLE -->
+                <div class="absolute top-2 left-2 flex items-center z-20">
+                    <button id="toggle-header-btn" onclick="toggleHeader()"
+                        class="text-[#94a3b8]/40 h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:text-[#00d4ff]/70 active:scale-95 bg-transparent border-none"
+                        title="Toggle Title Bar">
+                        <svg id="header-chevron" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                        </svg>
+                    </button>
+                </div>
+
                 <!-- SOUND CONTROL -->
                 <div class="absolute top-2 right-2 flex items-center z-20">
                     <button id="sound-btn" onclick="toggleSound()" onmousedown="handleSoundStart(event)"
@@ -1156,7 +1181,7 @@
                 <div class="flex justify-between items-center px-1">
                     <h3 class="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">History</h3>
                     <button onclick="clearHistory()"
-                        class="w-[2.75rem] h-[2.75rem] flex items-center justify-center bg-rose-500/10 text-rose-500/70 hover:text-rose-400 hover:bg-rose-500/20 transition-all rounded-lg border border-rose-500/20"
+                        class="w-[2.75rem] h-[2.75rem] flex items-center justify-center bg-[#00d4ff]/05 text-[#94a3b8] hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 transition-all rounded-xl border border-[#00d4ff]/10"
                         title="Clear History">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1330,6 +1355,7 @@
         let pickerTargetId = null;
         let soundEnabled = true;
         let volume = 0.5;
+        let headerHidden = false;
         let soundTimer = null;
         let isVolumeOpen = false;
         let isDraggingVolume = false;
@@ -1763,6 +1789,13 @@
                 btn.classList.add('text-slate-600');
                 btn.classList.remove('text-[#94a3b8]');
             }
+        }
+
+        function toggleHeader() {
+            headerHidden = !headerHidden;
+            document.body.classList.toggle('header-hidden', headerHidden);
+            saveSettings();
+            vibrate(5);
         }
 
         function handleSoundStart(e) {
@@ -2355,7 +2388,8 @@
                 arsenalQueue: isArsenalQueue,
                 moddedQuick: isModdedQuick,
                 customDice: customDice,
-                currentTargetMode: currentTargetMode
+                currentTargetMode: currentTargetMode,
+                headerHidden: headerHidden
             }));
         }
 
@@ -2587,7 +2621,7 @@
                     const gearContainer = document.createElement('div');
                     gearContainer.className = 'shrink-0 relative';
                     gearContainer.innerHTML = `
-                        <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-10 h-10 flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
+                        <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-[3.5rem] h-[3.5rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                         <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden">
@@ -2851,8 +2885,8 @@
             const log = document.getElementById('history-log');
             if (log.innerHTML.includes('Log is empty') || log.innerHTML.includes('No history')) log.innerHTML = '';
             const item = document.createElement('div');
-            item.className = 'history-item flex items-center justify-between bg-slate-800/10 p-1.5 rounded-lg border border-slate-800/40';
-            item.innerHTML = `<span class="text-xs text-slate-500 mono truncate">${desc}</span><span class="font-black text-sky-400 mono text-sm">${val}</span>`;
+            item.className = 'history-item flex items-center justify-between bg-slate-800/10 p-1.5 rounded-lg border border-slate-800/40 min-h-[2.75rem] gap-2';
+            item.innerHTML = `<span class="text-xs text-slate-500 mono whitespace-normal break-words flex-grow leading-normal">${desc}</span><span class="font-black text-sky-400 mono text-sm shrink-0">${val}</span>`;
             log.prepend(item);
             if (log.children.length > 20) log.removeChild(log.lastChild);
         }
@@ -3311,6 +3345,10 @@
                     }
                     if (savedSettings.currentTargetMode !== undefined) {
                         currentTargetMode = savedSettings.currentTargetMode;
+                    }
+                    if (savedSettings.headerHidden !== undefined) {
+                        headerHidden = savedSettings.headerHidden;
+                        document.body.classList.toggle('header-hidden', headerHidden);
                     }
                     updateUI();
                     updateSoundUI();
