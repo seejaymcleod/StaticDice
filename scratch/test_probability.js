@@ -1,5 +1,5 @@
 
-const DiceEngine = require('./DiceEngine.js');
+const DiceEngine = require('../DiceEngine.js');
 
 // Replicate the math logic for testing
 function checkCondition(val, op, target) {
@@ -120,32 +120,32 @@ function assertApprox(val, expected, msg) {
 console.log("Running Probability Unit Tests...");
 
 // Case 1: 1d6
-let d6 = getTheoreticalDistribution([{sides: 6, count: 1}], 0, null, 0, {targetMode: 'sum'});
-assertApprox(d6[1], 1/6, "1d6 - Probability of 1");
-assertApprox(d6[6], 1/6, "1d6 - Probability of 6");
+let d6 = getTheoreticalDistribution([{ sides: 6, count: 1 }], 0, null, 0, { targetMode: 'sum' });
+assertApprox(d6[1], 1 / 6, "1d6 - Probability of 1");
+assertApprox(d6[6], 1 / 6, "1d6 - Probability of 6");
 
 // Case 2: 2d6
-let d2d6 = getTheoreticalDistribution([{sides: 6, count: 2}], 0, null, 0, {targetMode: 'sum'});
-assertApprox(d2d6[7], 6/36, "2d6 - Probability of 7");
-assertApprox(d2d6[2], 1/36, "2d6 - Probability of 2");
+let d2d6 = getTheoreticalDistribution([{ sides: 6, count: 2 }], 0, null, 0, { targetMode: 'sum' });
+assertApprox(d2d6[7], 6 / 36, "2d6 - Probability of 7");
+assertApprox(d2d6[2], 1 / 36, "2d6 - Probability of 2");
 
 // Case 3: 1d20 ADV
-let d20adv = getTheoreticalDistribution([{sides: 20, count: 1}], 0, 'ADV', 1, {targetMode: 'sum'});
-assertApprox(d20adv[1], 1/400, "1d20 ADV - Probability of 1");
-assertApprox(d20adv[20], 39/400, "1d20 ADV - Probability of 20");
+let d20adv = getTheoreticalDistribution([{ sides: 20, count: 1 }], 0, 'ADV', 1, { targetMode: 'sum' });
+assertApprox(d20adv[1], 1 / 400, "1d20 ADV - Probability of 1");
+assertApprox(d20adv[20], 39 / 400, "1d20 ADV - Probability of 20");
 
 // Case 4: 1d6 Reroll 1s
-let d6rr1 = getTheoreticalDistribution([{sides: 6, count: 1}], 0, null, 0, {rerollOp: '=', rerollVal: 1, targetMode: 'sum'});
+let d6rr1 = getTheoreticalDistribution([{ sides: 6, count: 1 }], 0, null, 0, { rerollOp: '=', rerollVal: 1, targetMode: 'sum' });
 assertApprox(d6rr1[1] || 0, 0, "1d6 RR=1 - Probability of 1 should be 0");
 assertApprox(d6rr1[2], 0.2, "1d6 RR=1 - Probability of 2 should be 20%");
 
 // Case 5: 1d6 Explode 6s
-let d6ex6 = getTheoreticalDistribution([{sides: 6, count: 1}], 0, null, 0, {explodeOp: '=', explodeVal: 6, targetMode: 'sum'});
+let d6ex6 = getTheoreticalDistribution([{ sides: 6, count: 1 }], 0, null, 0, { explodeOp: '=', explodeVal: 6, targetMode: 'sum' });
 assertApprox(d6ex6[6] || 0, 0, "1d6 EX=6 - Probability of exactly 6 should be 0");
-assertApprox(d6ex6[7], 1/36, "1d6 EX=6 - Probability of 7 (6+1)");
+assertApprox(d6ex6[7], 1 / 36, "1d6 EX=6 - Probability of 7 (6+1)");
 
 // Case 6: 2d6 Count >= 4
-let d2d6count = getTheoreticalDistribution([{sides: 6, count: 2}], 0, null, 0, {targetMode: 'count', targetOp: '>=', targetVal: 4});
+let d2d6count = getTheoreticalDistribution([{ sides: 6, count: 2 }], 0, null, 0, { targetMode: 'count', targetOp: '>=', targetVal: 4 });
 assertApprox(d2d6count[0], 0.25, "2d6 Count >= 4 - Probability of 0 successes (0.5 * 0.5)");
 assertApprox(d2d6count[1], 0.5, "2d6 Count >= 4 - Probability of 1 success (2 * 0.5 * 0.5)");
 assertApprox(d2d6count[2], 0.25, "2d6 Count >= 4 - Probability of 2 successes (0.5 * 0.5)");
