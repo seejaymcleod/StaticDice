@@ -742,19 +742,86 @@
             }
         }
 
-        /* Hardware-accelerated physical click compression feedback */
-        button:active:not(:disabled):not(.cursor-default),
-        button.is-pressed:not(:disabled):not(.cursor-default),
-        .btn-interactive:active:not(:disabled):not(.cursor-default),
-        .btn-interactive.is-pressed:not(:disabled):not(.cursor-default),
-        .segmented-btn:active:not(:disabled):not(.cursor-default),
-        .segmented-btn.is-pressed:not(:disabled):not(.cursor-default),
-        .menu-item:active:not(:disabled):not(.cursor-default),
-        .menu-item.is-pressed:not(:disabled):not(.cursor-default),
-        .gear-btn:active:not(:disabled):not(.cursor-default),
-        .gear-btn.is-pressed:not(:disabled):not(.cursor-default) {
+        /* Hardware-accelerated physical click compression feedback & satisfying neon flash */
+        button:active:not(:disabled):not(.cursor-default):not(.color-option),
+        button.is-pressed:not(:disabled):not(.cursor-default):not(.color-option),
+        .btn-interactive:active:not(:disabled):not(.cursor-default):not(.color-option),
+        .btn-interactive.is-pressed:not(:disabled):not(.cursor-default):not(.color-option),
+        .segmented-btn:active:not(:disabled):not(.cursor-default):not(.color-option),
+        .segmented-btn.is-pressed:not(:disabled):not(.cursor-default):not(.color-option),
+        .menu-item:active:not(:disabled):not(.cursor-default):not(.color-option),
+        .menu-item.is-pressed:not(:disabled):not(.cursor-default):not(.color-option),
+        .gear-btn:active:not(:disabled):not(.cursor-default):not(.color-option),
+        .gear-btn.is-pressed:not(:disabled):not(.cursor-default):not(.color-option) {
             transform: scale(0.94) translateY(0px) !important;
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5), 0 0 0px transparent !important;
+            background-color: var(--accent-azure) !important;
+            color: var(--bg-deep) !important;
+            border-color: var(--accent-azure) !important;
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.75), inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+            z-index: 50;
+        }
+
+        /* Ensure child icons, SVGs, and text inside active standard buttons transition to contrast deep blue correctly */
+        button:active:not(:disabled):not(.color-option) *,
+        button.is-pressed:not(:disabled):not(.color-option) *,
+        .btn-interactive:active:not(:disabled):not(.color-option) *,
+        .btn-interactive.is-pressed:not(:disabled):not(.color-option) *,
+        .segmented-btn:active:not(:disabled):not(.color-option) *,
+        .segmented-btn.is-pressed:not(:disabled):not(.color-option) * {
+            color: var(--bg-deep) !important;
+            fill: var(--bg-deep) !important;
+            stroke: var(--bg-deep) !important;
+        }
+
+        /* Danger / Delete button visual flash: Warnings ignite in vibrant Crimson Rose instead of Cyan */
+        #clear-btn:active:not(:disabled),
+        #clear-btn.is-pressed:not(:disabled),
+        .text-rose-500:active:not(:disabled),
+        .text-rose-500.is-pressed:not(:disabled),
+        .delete-btn-active:active:not(:disabled),
+        .delete-btn-active.is-pressed:not(:disabled),
+        .danger:active:not(:disabled),
+        .danger.is-pressed:not(:disabled) {
+            background-color: #f43f5e !important;
+            color: var(--bg-deep) !important;
+            border-color: #f43f5e !important;
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.8), inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* Ensure child content for active danger buttons matches deep theme contrast */
+        #clear-btn:active:not(:disabled) *,
+        #clear-btn.is-pressed:not(:disabled) *,
+        .text-rose-500:active:not(:disabled) *,
+        .text-rose-500.is-pressed:not(:disabled) *,
+        .delete-btn-active:active:not(:disabled) *,
+        .delete-btn-active.is-pressed:not(:disabled) *,
+        .danger:active:not(:disabled) *,
+        .danger.is-pressed:not(:disabled) * {
+            color: var(--bg-deep) !important;
+            fill: var(--bg-deep) !important;
+            stroke: var(--bg-deep) !important;
+        }
+
+        /* Color option buttons: Scale nicely but preserve their designated color dots */
+        button.color-option:active:not(:disabled),
+        button.color-option.is-pressed:not(:disabled) {
+            transform: scale(0.9) !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* Unified rounded corners for segmented row children to prevent ugly boxy corners when scaling down */
+        .segmented-row > button:first-child,
+        .segmented-row > .btn-side:first-child,
+        .segmented-row > .segmented-btn:first-child {
+            border-top-left-radius: 0.8rem !important;
+            border-bottom-left-radius: 0.8rem !important;
+        }
+
+        .segmented-row > button:last-child,
+        .segmented-row > .btn-side:last-child,
+        .segmented-row > .segmented-btn:last-child {
+            border-top-right-radius: 0.8rem !important;
+            border-bottom-right-radius: 0.8rem !important;
         }
     </style>
 </head>
