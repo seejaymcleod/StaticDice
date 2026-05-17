@@ -847,9 +847,9 @@
                 <div class="flex gap-2.5">
                     <!-- MOD STEPPER -->
                     <div
-                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-1 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
                         <button onclick="adjustFlatMod(-1)"
-                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">－</button>
+                            class="w-[3.25rem] h-[3.25rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">－</button>
                         <div class="flex-1 flex flex-col items-center justify-center min-w-0">
                             <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">MOD</span>
                             <input type="text" id="flat-mod-input" inputmode="numeric"
@@ -857,14 +857,14 @@
                                 value="0" placeholder="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
                         </div>
                         <button onclick="adjustFlatMod(1)"
-                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">＋</button>
+                            class="w-[3.25rem] h-[3.25rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">＋</button>
                     </div>
 
                     <!-- TARGET STEPPER -->
                     <div id="overall-target-container"
-                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-1 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
                         <button onclick="adjustOverallTarget(-1)"
-                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">－</button>
+                            class="w-[3.25rem] h-[3.25rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">－</button>
                         <div class="flex-1 flex flex-col items-center justify-center min-w-0">
                             <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">TARGET</span>
                             <input type="text" id="overall-target-input" inputmode="numeric"
@@ -872,7 +872,7 @@
                                 value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
                         </div>
                         <button onclick="adjustOverallTarget(1)"
-                            class="w-[2.75rem] h-[2.75rem] aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-lg text-xl font-bold">＋</button>
+                            class="w-[3.25rem] h-[3.25rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">＋</button>
                     </div>
                 </div>
 
