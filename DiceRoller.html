@@ -879,7 +879,7 @@
                 <!-- ROW 3: ROLL, ADV, DIS -->
                 <div class="grid grid-cols-12 gap-2.5">
 
-                    <button id="roll-button" onpointerdown="triggerRoll(event)"
+                    <button id="roll-button" onclick="triggerRoll(event)"
                         class="col-span-6 !h-[3.25rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group">
 
                         <span class="relative z-10">ROLL</span>
@@ -1472,7 +1472,7 @@
                 html += `
                     <div class="segmented-row">
                         ${minusButtonHtml}
-                        <button onpointerdown="triggerRoll(event, { sides: ${cfg.d}, count: 1, isInstant: !isModdedQuick })" class="segmented-btn btn-center group/dice relative">
+                        <button onclick="triggerRoll(event, { sides: ${cfg.d}, count: 1, isInstant: !isModdedQuick })" class="segmented-btn btn-center group/dice relative">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="${path}" />
                             </svg>
@@ -2586,7 +2586,7 @@
                     item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                     item.style.setProperty('--item-color', q.color);
                     item.dataset.id = q.id;
-                    item.onpointerdown = (e) => triggerRoll(e, { arsenalId: q.id });
+                    item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
 
                     let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
                     if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
