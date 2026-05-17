@@ -711,6 +711,51 @@
                 filter: blur(0);
             }
         }
+
+        /* ------------------------------------------------------------- */
+        /* INTERACTION LAYERS: HARDWARE-ACCELERATED HAPTIC & VISUALS     */
+        /* ------------------------------------------------------------- */
+
+        /* Core Interactive Target States with buttery-smooth transitions */
+        button,
+        .btn-interactive,
+        .segmented-btn,
+        .menu-item,
+        .gear-btn {
+            transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), 
+                        background-color 0.12s ease-in-out,
+                        border-color 0.12s ease-in-out,
+                        box-shadow 0.12s ease-in-out,
+                        color 0.12s ease-in-out;
+            will-change: transform;
+        }
+
+        /* Hover states with subtle lifting effect for high refresh displays on fine pointer devices */
+        @media (hover: hover) and (pointer: fine) {
+            button:hover:not(:disabled):not(.cursor-default),
+            .btn-interactive:hover:not(:disabled):not(.cursor-default),
+            .segmented-btn:hover:not(:disabled):not(.cursor-default),
+            .menu-item:hover:not(:disabled):not(.cursor-default),
+            .gear-btn:hover:not(:disabled):not(.cursor-default) {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 212, 255, 0.15);
+            }
+        }
+
+        /* Hardware-accelerated physical click compression feedback */
+        button:active:not(:disabled):not(.cursor-default),
+        button.is-pressed:not(:disabled):not(.cursor-default),
+        .btn-interactive:active:not(:disabled):not(.cursor-default),
+        .btn-interactive.is-pressed:not(:disabled):not(.cursor-default),
+        .segmented-btn:active:not(:disabled):not(.cursor-default),
+        .segmented-btn.is-pressed:not(:disabled):not(.cursor-default),
+        .menu-item:active:not(:disabled):not(.cursor-default),
+        .menu-item.is-pressed:not(:disabled):not(.cursor-default),
+        .gear-btn:active:not(:disabled):not(.cursor-default),
+        .gear-btn.is-pressed:not(:disabled):not(.cursor-default) {
+            transform: scale(0.94) translateY(0px) !important;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5), 0 0 0px transparent !important;
+        }
     </style>
 </head>
 
@@ -1351,6 +1396,71 @@
 
     <script src="DiceEngine.js"></script>
     <script>
+        // =========================================================================
+        // Haptic & Visual Interaction Layer
+        // =========================================================================
+        let lastVibrateTime = 0;
+        
+        // Cooldown-safe vibration utility to prevent muddy double-vibrations
+        function vibrate(ms = 10) {
+            const now = Date.now();
+            if (now - lastVibrateTime < 100) return;
+            
+            try {
+                if (navigator.vibrate) {
+                    navigator.vibrate(ms);
+                    lastVibrateTime = now;
+                }
+            } catch (e) {
+                // Fail silently on restricted or unsupported environments
+            }
+        }
+
+        const haptics = {
+            // Crisp mechanical micro-switch tick (subtle standard tap)
+            tap: () => {
+                vibrate(15);
+            },
+            // Heavier thud for core rolls or important actions
+            thud: () => {
+                vibrate(40);
+            },
+            // Error pattern (buzz, pause, buzz) for invalid states/warning/deletion
+            error: () => {
+                vibrate([45, 50, 45]);
+            }
+        };
+
+        // Pointer event delegation for unified touch-target feedback
+        document.addEventListener('pointerdown', (e) => {
+            const btn = e.target.closest('button, .btn-interactive, .segmented-btn, .menu-item, .gear-btn');
+            if (!btn || btn.disabled || btn.classList.contains('cursor-default')) return;
+
+            // 1. Add instant visual state compression
+            btn.classList.add('is-pressed');
+
+            // 2. Trigger tactile hardware haptics tailored by action context
+            if (btn.id === 'roll-button') {
+                haptics.thud();
+            } else if (
+                btn.id === 'clear-btn' || 
+                btn.classList.contains('text-rose-500') || 
+                btn.classList.contains('danger') ||
+                btn.classList.contains('delete-btn-active')
+            ) {
+                haptics.error();
+            } else {
+                haptics.tap();
+            }
+        });
+
+        // Safe release handler to reset visual active compression
+        const handleGlobalRelease = () => {
+            document.querySelectorAll('.is-pressed').forEach(el => el.classList.remove('is-pressed'));
+        };
+        document.addEventListener('pointerup', handleGlobalRelease);
+        document.addEventListener('pointercancel', handleGlobalRelease);
+
         const engine = new DiceEngine();
         let pickerTargetId = null;
         let soundEnabled = true;
@@ -1889,10 +1999,6 @@
                 labels.forEach(l => l.innerText = 'Arsenal');
             }
             vibrate(10);
-        }
-
-        function vibrate(ms = 10) {
-            if (navigator.vibrate) navigator.vibrate(ms);
         }
 
         function changeQueue(sides, delta) {
