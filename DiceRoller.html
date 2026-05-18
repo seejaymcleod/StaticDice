@@ -1126,6 +1126,13 @@
                                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
                                 </button>
+                                <button onclick="restoreDefaults()"
+                                    class="bg-[#ff003c]/10 text-[#94a3b8] h-8 w-8 flex items-center justify-center rounded-lg border border-[#ff003c]/10 transition-all hover:text-[#ff003c] hover:border-[#ff003c]/30 active:scale-95"
+                                    title="Restore Default Settings">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
 
@@ -1748,10 +1755,15 @@
         // =========================================================================
         // CHARACTER & GROUP MANAGEMENT STATE
         // =========================================================================
-        let characters = [{ id: 'primary', name: 'Primary' }];
-        let groups = [{ id: 'main', name: 'Main', color: '#00d4ff', characterId: 'primary' }];
+        let characters = [{ id: 'primary', name: 'Primary Character' }];
+        let groups = [
+            { id: 'grp_stats_1', name: 'Stats', color: '#00d4ff', characterId: 'primary' },
+            { id: 'grp_attacks_1', name: 'Attacks', color: '#ff003c', characterId: 'primary' },
+            { id: 'grp_spells_1', name: 'Spells', color: '#a855f7', characterId: 'primary' },
+            { id: 'grp_items_1', name: 'Items', color: '#ffea00', characterId: 'primary' }
+        ];
         let activeCharacterId = 'primary';
-        let activeGroupId = 'main';
+        let activeGroupId = 'grp_stats_1';
 
         let modalResolve = () => { };
 
@@ -2937,16 +2949,133 @@
             }));
         }
 
+        function restoreDefaults() {
+            showModal({
+                title: 'Restore Defaults?',
+                body: 'This will restore all default settings, clear all custom dice, delete all characters/groups, and erase your saved loadouts. This action cannot be undone.',
+                confirmText: 'Restore',
+                danger: true
+            }).then(ok => {
+                if (!ok) return;
+
+                // Clear storage
+                localStorage.removeItem('crypto_roller_settings');
+                localStorage.removeItem('crypto_roller_saved');
+                localStorage.removeItem('crypto_roller_arsenal');
+                localStorage.removeItem('instaQueueState');
+
+                // Reset state variables to factory defaults
+                soundEnabled = true;
+                volume = 0.5;
+                headerHidden = false;
+                isModdedQuick = false;
+                isInstaQueue = false;
+                isArsenalQueue = false;
+                customDice = [];
+                currentTargetMode = 'sum';
+                engine.setSavedQueues([]);
+
+                // Re-initialize default character and groups
+                const baseTime = Date.now();
+                characters = [{ id: 'primary', name: 'Primary Character' }];
+                groups = [
+                    { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: 'primary' },
+                    { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: 'primary' },
+                    { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: 'primary' },
+                    { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: 'primary' }
+                ];
+                activeCharacterId = 'primary';
+                activeGroupId = groups[0].id;
+
+                // Apply defaults to DOM
+                document.body.classList.remove('header-hidden');
+                
+                // Clear overall target and flat mod inputs in DOM
+                const oTarget = document.getElementById('overall-target-input');
+                if (oTarget) oTarget.value = '';
+                const fMod = document.getElementById('flat-mod-input');
+                if (fMod) fMod.value = '0';
+
+                // Reset engine variables
+                engine.rollingQueue = [];
+                engine.activeModifier = null;
+                engine.modifierLevel = 1;
+                engine.flatMod = 0;
+                engine.overallTarget = null;
+
+                // Reset rules panel elements to defaults in DOM
+                const sumOp = document.getElementById('rule-sum-op');
+                if (sumOp) sumOp.value = '';
+                const sumVal = document.getElementById('rule-sum-val');
+                if (sumVal) sumVal.value = 'overall';
+                const countOp = document.getElementById('rule-count-op');
+                if (countOp) countOp.value = '>=';
+                const countVal = document.getElementById('rule-count-val');
+                if (countVal) countVal.value = '0';
+                const countThreshOp = document.getElementById('rule-count-thresh-op');
+                if (countThreshOp) countThreshOp.value = '';
+                const countThreshVal = document.getElementById('rule-count-thresh-val');
+                if (countThreshVal) countThreshVal.value = 'overall';
+                
+                const rrOp = document.getElementById('rule-reroll-op');
+                if (rrOp) rrOp.value = '';
+                const rrVal = document.getElementById('rule-reroll-val');
+                if (rrVal) rrVal.value = '';
+                const exOp = document.getElementById('rule-explode-op');
+                if (exOp) exOp.value = '';
+                const exVal = document.getElementById('rule-explode-val');
+                if (exVal) exVal.value = '';
+                const setsOp = document.getElementById('rule-sets-op');
+                if (setsOp) setsOp.value = '';
+                const setsVal = document.getElementById('rule-sets-val');
+                if (setsVal) setsVal.value = '';
+
+                // Update volume slider and range value
+                const volumeSlider = document.getElementById('volume-slider');
+                if (volumeSlider) {
+                    volumeSlider.value = volume;
+                }
+                updateVolume(volume);
+
+                // Clear any active roll outputs from UI
+                const hero = document.getElementById('result-hero');
+                if (hero) hero.innerText = '0';
+                const label = document.getElementById('result-label');
+                if (label) label.innerText = '';
+                const breakdown = document.getElementById('result-breakdown');
+                if (breakdown) breakdown.innerHTML = '';
+                const badges = document.getElementById('result-badges');
+                if (badges) badges.innerHTML = '';
+
+                // Trigger all UI rerenders
+                updateUI();
+                updateSoundUI();
+                updateRulesUI();
+                renderDiceGrid();
+                renderCharacterSelect();
+                renderGroupTabs();
+                renderSavedQueues();
+
+                vibrate(20);
+            });
+        }
+
         function exportSettings() {
             const exportData = {
                 queues: engine.savedQueues,
+                characters: characters,
+                groups: groups,
+                activeCharacterId: activeCharacterId,
+                activeGroupId: activeGroupId,
                 settings: {
                     soundEnabled: soundEnabled,
                     volume: volume,
                     instaQueue: isInstaQueue,
                     arsenalQueue: isArsenalQueue,
                     moddedQuick: isModdedQuick,
-                    customDice: customDice
+                    customDice: customDice,
+                    currentTargetMode: currentTargetMode,
+                    headerHidden: headerHidden
                 }
             };
 
@@ -2992,16 +3121,101 @@
                         const mode = mergeChosen ? 'merge' : 'overwrite';
 
                         if (mode === 'merge') {
+                            // Merge characters & groups mapping to prevent ID collision
+                            const charIdMap = {};
+                            const grpIdMap = {};
+
+                            if (imported.characters) {
+                                imported.characters.forEach(c => {
+                                    const exists = characters.find(curr => curr.id === c.id);
+                                    if (!exists) {
+                                        characters.push(c);
+                                        charIdMap[c.id] = c.id;
+                                    } else {
+                                        if (exists.name === c.name) {
+                                            charIdMap[c.id] = exists.id;
+                                        } else {
+                                            const newId = 'char_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                            characters.push({ id: newId, name: `${c.name} (Imported)` });
+                                            charIdMap[c.id] = newId;
+                                        }
+                                    }
+                                });
+                            }
+
+                            if (imported.groups) {
+                                imported.groups.forEach(g => {
+                                    const mappedCharId = charIdMap[g.characterId] || g.characterId || activeCharacterId;
+                                    const exists = groups.find(curr => curr.id === g.id);
+                                    if (!exists) {
+                                        groups.push({ ...g, characterId: mappedCharId });
+                                        grpIdMap[g.id] = g.id;
+                                    } else {
+                                        if (exists.name === g.name && exists.characterId === mappedCharId) {
+                                            grpIdMap[g.id] = exists.id;
+                                        } else {
+                                            const newId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                            groups.push({ ...g, id: newId, characterId: mappedCharId, name: `${g.name} (Imported)` });
+                                            grpIdMap[g.id] = newId;
+                                        }
+                                    }
+                                });
+                            }
+
+                            // Keep current active selections but ensure they are valid
+                            if (!activeCharacterId && characters.length > 0) activeCharacterId = characters[0].id;
+                            if (!activeGroupId && groups.length > 0) {
+                                const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                                activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+                            }
+
+                            // Import loadouts/queues remapped to merged IDs
                             const currentIds = new Set(engine.savedQueues.map(q => q.id));
                             importedQueues.forEach(item => {
+                                const mappedCharId = charIdMap[item.characterId] || item.characterId || activeCharacterId;
+                                const mappedGrpId = grpIdMap[item.groupId] || item.groupId || activeGroupId;
+                                
+                                const newItem = {
+                                    ...item,
+                                    characterId: mappedCharId,
+                                    groupId: mappedGrpId
+                                };
+
                                 if (!currentIds.has(item.id)) {
-                                    engine.savedQueues.push(item);
+                                    engine.savedQueues.push(newItem);
                                 } else {
-                                    item.id = Date.now() + Math.random();
-                                    engine.savedQueues.push(item);
+                                    newItem.id = Date.now() + Math.random();
+                                    engine.savedQueues.push(newItem);
                                 }
                             });
                         } else {
+                            // Overwrite mode
+                            if (imported.characters && imported.characters.length > 0) {
+                                characters = imported.characters;
+                            }
+                            if (imported.groups && imported.groups.length > 0) {
+                                groups = imported.groups;
+                            }
+                            if (imported.activeCharacterId) {
+                                activeCharacterId = imported.activeCharacterId;
+                            } else if (characters.length > 0) {
+                                activeCharacterId = characters[0].id;
+                            }
+                            if (imported.activeGroupId) {
+                                activeGroupId = imported.activeGroupId;
+                            } else {
+                                const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                                activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+                            }
+
+                            // If legacy import without any characters/groups, assign to active
+                            if (!imported.characters || imported.characters.length === 0) {
+                                importedQueues.forEach(item => {
+                                    if (!item.characterId) item.characterId = activeCharacterId;
+                                    if (!item.groupId) item.groupId = activeGroupId;
+                                });
+                            }
+
                             engine.setSavedQueues(importedQueues);
                         }
 
@@ -3029,14 +3243,21 @@
                             if (importedSettings.currentTargetMode !== undefined) {
                                 currentTargetMode = importedSettings.currentTargetMode;
                             }
+                            if (importedSettings.headerHidden !== undefined) {
+                                headerHidden = importedSettings.headerHidden;
+                                document.body.classList.toggle('header-hidden', headerHidden);
+                            }
                             renderDiceGrid();
                             saveSettings();
                             updateSoundUI();
                         }
 
                         persistSaved();
+                        persistArsenal();
+                        renderCharacterSelect();
+                        renderGroupTabs();
                         renderSavedQueues();
-                        showModal({ title: 'Import Complete', body: 'Settings and loadouts successfully imported!', alertOnly: true });
+                        showModal({ title: 'Import Complete', body: 'Settings, characters, groups, and loadouts successfully imported!', alertOnly: true });
                     });
                 } catch (err) {
                     showModal({ title: 'Import Error', body: "Please ensure it's a valid StaticDice settings backup.", alertOnly: true, danger: true });
@@ -3167,9 +3388,16 @@
                 if (!name || !name.trim()) return;
                 const id = 'char_' + Date.now();
                 characters.push({ id, name: name.trim() });
-                groups.push({ id: 'grp_' + Date.now(), name: 'Main', color: '#00d4ff', characterId: id });
+                const baseTime = Date.now();
+                const charGroups = [
+                    { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: id },
+                    { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: id },
+                    { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: id },
+                    { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: id }
+                ];
+                groups.push(...charGroups);
                 activeCharacterId = id;
-                activeGroupId = groups.find(g => g.characterId === id).id;
+                activeGroupId = charGroups[0].id;
                 renderCharacterSelect();
                 renderGroupTabs();
                 renderSavedQueues();
@@ -3195,7 +3423,39 @@
         function removeCharacter(e) {
             if (e) e.stopPropagation();
             document.getElementById('char-menu').classList.add('hidden');
-            if (characters.length <= 1) { showModal({ title: 'Cannot Remove', body: 'You must keep at least one character.', alertOnly: true }); return; }
+            if (characters.length <= 1) {
+                const char = characters[0];
+                showModal({
+                    title: 'Reset Character',
+                    body: `The final character <span class="text-rose-400">${char.name}</span> cannot be completely deleted. Doing so will remove all its groups and loadouts, then create a new default <strong>Primary Character</strong> with default groups (Stats, Attacks, Spells, Items).`,
+                    confirmText: 'Reset',
+                    danger: true
+                }).then(ok => {
+                    if (!ok) return;
+                    // Delete all saved queues/loadouts
+                    engine.savedQueues = [];
+                    
+                    // Create new "Primary Character" with standard groups
+                    const baseTime = Date.now();
+                    characters = [{ id: 'primary', name: 'Primary Character' }];
+                    groups = [
+                        { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: 'primary' },
+                        { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: 'primary' },
+                        { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: 'primary' },
+                        { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: 'primary' }
+                    ];
+                    activeCharacterId = 'primary';
+                    activeGroupId = groups[0].id;
+
+                    renderCharacterSelect();
+                    renderGroupTabs();
+                    renderSavedQueues();
+                    persistSaved();
+                    persistArsenal();
+                    vibrate(15);
+                });
+                return;
+            }
             const char = characters.find(c => c.id === activeCharacterId);
             showModal({ title: `Remove <span class="text-rose-400">${char.name}</span>?`, body: 'All groups and loadouts for this character will be deleted.', confirmText: 'Remove', danger: true }).then(ok => {
                 if (!ok) return;
@@ -3259,7 +3519,7 @@
             if (e) e.stopPropagation();
             document.getElementById('group-menu').classList.add('hidden');
             const charGroups = groups.filter(g => g.characterId === activeCharacterId);
-            if (charGroups.length <= 1) { showModal({ title: 'Cannot Remove', body: 'Each character must have at least one group.', alertOnly: true }); return; }
+            if (charGroups.length <= 1) { showModal({ title: 'Cannot Remove', body: 'The last group cannot be deleted. Each character must have at least one group.', alertOnly: true }); return; }
             const grp = groups.find(g => g.id === activeGroupId);
             showModal({ title: `Remove <span class="text-rose-400">${grp.name}</span>?`, body: 'All loadouts in this group will be deleted.', confirmText: 'Remove', danger: true }).then(ok => {
                 if (!ok) return;
