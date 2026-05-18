@@ -3490,7 +3490,21 @@
         window.onload = () => {
             const stored = localStorage.getItem('crypto_roller_saved');
             if (stored) {
-                engine.setSavedQueues(JSON.parse(stored));
+                try {
+                    let queues = JSON.parse(stored);
+                    if (Array.isArray(queues)) {
+                        // Filter out the obsolete debug preset if it is still present in the user's localStorage
+                        const filtered = queues.filter(q => q.id !== 'lots-preset');
+                        if (filtered.length !== queues.length) {
+                            localStorage.setItem('crypto_roller_saved', JSON.stringify(filtered));
+                        }
+                        engine.setSavedQueues(filtered);
+                    } else {
+                        engine.setSavedQueues([]);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse saved queues:", e);
+                }
                 renderSavedQueues();
             }
 

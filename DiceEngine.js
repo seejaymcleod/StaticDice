@@ -11,32 +11,7 @@ class DiceEngine {
             countThreshOp: "", countThreshVal: null,
             setsOp: "", setsVal: null
         };
-        this.savedQueues = [
-            {
-                id: 'lots-preset',
-                name: 'Lots (DEBUG)',
-                color: '#38bdf8',
-                queue: [
-                    { count: 7, sides: 6, id: 1 },
-                    { count: 3, sides: 8, id: 2 },
-                    { count: 1, sides: 100, id: 3 }
-                ],
-                modifier: null,
-                modLevel: 1,
-                flat: 0,
-                rules: {
-                    targetMode: 'count',
-                    targetOp: '>=',
-                    targetVal: 2,
-                    rerollOp: '=',
-                    rerollVal: 1,
-                    explodeOp: '=',
-                    explodeVal: 2,
-                    setsOp: '=',
-                    setsVal: 1
-                }
-            }
-        ];
+        this.savedQueues = [];
         this.rng = this.defaultRng;
         this.overallTarget = null;
     }
@@ -154,22 +129,6 @@ class DiceEngine {
         return newSaved;
     }
 
-    loadLotsTest() {
-        this.rollingQueue = [
-            { count: 7, sides: 6, id: Date.now() + 1 },
-            { count: 3, sides: 8, id: Date.now() + 2 },
-            { count: 1, sides: 100, id: Date.now() + 3 }
-        ];
-        this.activeModifier = null;
-        this.modifierLevel = 1;
-        this.flatMod = 0;
-        this.rollRules = {
-            targetMode: 'count', targetOp: '>=', targetVal: 2,
-            rerollOp: '=', rerollVal: 1,
-            explodeOp: '=', explodeVal: 2,
-            setsOp: '=', setsVal: 1
-        };
-    }
 
     loadQueue(id) {
         const item = this.savedQueues.find(q => q.id === id);
