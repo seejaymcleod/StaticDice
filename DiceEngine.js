@@ -102,10 +102,27 @@ class DiceEngine {
         this.rollRules = { ...this.rollRules, ...rules };
     }
 
+    resolveVariable(name) {
+        if (typeof window !== 'undefined' && window.getActiveCharacterVariable) {
+            const resolved = window.getActiveCharacterVariable(name);
+            if (resolved !== null) return resolved;
+        }
+        return null;
+    }
+
     checkCondition(val, op, target) {
-        if (!op || target === null || isNaN(target)) return false;
+        if (!op || target === null || target === undefined || target === '') return false;
+        
+        let actualTarget = target;
+        const resolved = this.resolveVariable(target);
+        if (resolved !== null) {
+            actualTarget = resolved;
+        }
+        
         const v = Number(val);
-        const t = Number(target);
+        const t = Number(actualTarget);
+        if (isNaN(t)) return false;
+        
         if (op === '>=') return v >= t;
         if (op === '<=') return v <= t;
         if (op === '>') return v > t;
@@ -430,19 +447,40 @@ class DiceEngine {
                 } else if (rules.countThreshVal === 'varX') {
                     actualThresh = 0;
                     displayThreshStr = 'VARIABLE X';
+                } else {
+                    const resolved = this.resolveVariable(rules.countThreshVal);
+                    if (resolved !== null) {
+                        actualThresh = resolved;
+                        displayThreshStr = `${rules.countThreshVal} (${resolved})`;
+                    } else {
+                        actualThresh = Number(rules.countThreshVal);
+                        displayThreshStr = rules.countThreshVal;
+                    }
                 }
                 const isSuccess = this.checkCondition(total, rules.countThreshOp, actualThresh);
                 const status = isSuccess ? 'SUCCESS' : 'FAIL';
                 const color = isSuccess ? 'emerald' : 'rose';
                 const threshOpDisplay = this._getDisplayOp(rules.countThreshOp);
                 const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
-                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '0';
+                
+                let dieValDisplay = rules.targetVal;
+                const resolvedDieVal = this.resolveVariable(rules.targetVal);
+                if (resolvedDieVal !== null) {
+                    dieValDisplay = `${rules.targetVal} (${resolvedDieVal})`;
+                }
+                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? dieValDisplay : '0';
                 
                 labels.push({ text: `${total} ${dieOpDisplay} ${dieVal}, Target ${threshOpDisplay} ${displayThreshStr} ➔ ${status}`, color: color });
             } else {
                 // "Any" case: Just show the count
                 const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
-                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? rules.targetVal : '0';
+                
+                let dieValDisplay = rules.targetVal;
+                const resolvedDieVal = this.resolveVariable(rules.targetVal);
+                if (resolvedDieVal !== null) {
+                    dieValDisplay = `${rules.targetVal} (${resolvedDieVal})`;
+                }
+                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? dieValDisplay : '0';
                 labels.push({ text: `${total} DICE ${dieOpDisplay} ${dieVal}`, color: 'slate' });
             }
         } else if (rules.targetMode === 'sum') {
@@ -455,6 +493,15 @@ class DiceEngine {
                 } else if (rules.targetVal === 'varX') {
                     actualTarget = 0;
                     displayTargetStr = 'VARIABLE X';
+                } else {
+                    const resolved = this.resolveVariable(rules.targetVal);
+                    if (resolved !== null) {
+                        actualTarget = resolved;
+                        displayTargetStr = `${rules.targetVal} (${resolved})`;
+                    } else {
+                        actualTarget = Number(rules.targetVal);
+                        displayTargetStr = rules.targetVal;
+                    }
                 }
                 
                 const isSuccess = this.checkCondition(total, rules.targetOp, actualTarget);

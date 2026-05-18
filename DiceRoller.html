@@ -1379,8 +1379,13 @@
                             <span>Rename</span>
                         </button>
                         <div class="h-px bg-white/5 my-1"></div>
+                        <button onclick="openResourcesModal(event)" class="menu-item">
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            <span>Resources</span>
+                        </button>
+                        <div class="h-px bg-white/5 my-1"></div>
                         <button onclick="removeCharacter(event)" class="menu-item danger">
-                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2"/></svg>
                             <span>Remove Character</span>
                         </button>
                     </div>
@@ -1646,6 +1651,73 @@
             </div>
             <div id="color-grid" class="grid grid-cols-4 gap-3">
                 <!-- Colors injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Resources Modal -->
+    <div id="resources-overlay" onclick="if(event.target === this) closeResourcesModal()"
+        class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-[#020617]/95 backdrop-blur-md">
+        <div class="bg-[#020617] border border-slate-800 p-6 rounded-[2rem] shadow-2xl w-full max-w-[360px] space-y-4 text-left"
+             style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+            
+            <!-- Header -->
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-black text-[#94a3b8] uppercase tracking-widest flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-emerald-400">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    <span id="resources-title-char">Character Resources</span>
+                </h3>
+                <button onclick="closeResourcesModal()" class="text-slate-500 hover:text-[#e2e8f0] transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Operator Selector -->
+            <div class="bg-[#090d16] border border-white/5 p-3 rounded-2xl space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Formula Operator</span>
+                    <select id="resources-operator" onchange="saveResourcesOperator()" class="bg-[#020617] text-sky-400 text-xs font-black rounded px-2.5 py-1.5 outline-none border border-white/10 text-center">
+                        <option value=">=" selected>&ge;</option>
+                        <option value=">">&gt;</option>
+                        <option value="=">=</option>
+                        <option value="<">&lt;</option>
+                        <option value="<=">&le;</option>
+                    </select>
+                </div>
+                <p class="text-[9px] text-slate-500">Determines the threshold comparison when rolling a stat arsenal (e.g., 1d20 &ge; STR).</p>
+            </div>
+
+            <!-- Pre-load D&D Stats Button -->
+            <button onclick="preloadDdStats()" class="w-full py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 font-black text-xs hover:bg-[#00d4ff]/20 hover:text-[#e2e8f0] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Pre-load D&D Stats
+            </button>
+
+            <!-- Variables List -->
+            <div id="resources-list-container" class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 custom-scroll">
+                <!-- Variables and Steppers injected here -->
+            </div>
+
+            <div class="h-px bg-white/5"></div>
+
+            <!-- Add Custom Variable -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Add Custom Resource</label>
+                <div class="flex gap-2">
+                    <input type="text" id="new-resource-name" placeholder="E.g., MANA, AC, FATE" 
+                        class="flex-1 bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors uppercase" 
+                        onkeydown="if(event.key === 'Enter') createCustomVariable()">
+                    <button onclick="createCustomVariable()" 
+                        class="px-3 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-black text-xs hover:bg-emerald-500 hover:text-white transition-colors">
+                        Add
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -3472,6 +3544,289 @@
                 persistArsenal();
                 vibrate(10);
             });
+        }
+
+        // =========================================================================
+        // CHARACTER RESOURCES & VARIABLES MANAGEMENT
+        // =========================================================================
+        
+        window.getActiveCharacterVariable = function(name) {
+            if (typeof characters === 'undefined') return null;
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char && char.variables && char.variables[name] !== undefined) {
+                return parseInt(char.variables[name]) || 0;
+            }
+            return null;
+        };
+
+        function openResourcesModal(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('char-menu').classList.add('hidden');
+            
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
+            
+            // Set header title
+            const titleEl = document.getElementById('resources-title-char');
+            if (titleEl) {
+                titleEl.innerText = `${char.name} Resources`;
+            }
+            
+            // Initialize empty variables object if not present
+            if (!char.variables) {
+                char.variables = {};
+            }
+            
+            // Load operator from localStorage or default to '>='
+            let savedOp = localStorage.getItem(`resources_op_${activeCharacterId}`) || '>=';
+            document.getElementById('resources-operator').value = savedOp;
+            
+            renderResourcesList();
+            
+            // Show overlay
+            document.getElementById('resources-overlay').classList.remove('hidden');
+            document.getElementById('resources-overlay').classList.add('flex');
+            vibrate(5);
+        }
+
+        function preloadDdStats() {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
+            
+            if (!char.variables) {
+                char.variables = {};
+            }
+            
+            const stats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+            stats.forEach(stat => {
+                if (char.variables[stat] === undefined) {
+                    char.variables[stat] = 0;
+                }
+            });
+            
+            if (char.variables["Level"] === undefined) {
+                char.variables["Level"] = 1;
+            }
+            
+            persistArsenal();
+            renderResourcesList();
+            vibrate(10);
+            
+            showModal({ title: 'Stats Pre-loaded', body: 'Standard D&D stats pre-loaded with default values: Stats = 0, Level = 1.', alertOnly: true });
+        }
+        
+        function closeResourcesModal() {
+            document.getElementById('resources-overlay').classList.add('hidden');
+            document.getElementById('resources-overlay').classList.remove('flex');
+            vibrate(5);
+        }
+        
+        function saveResourcesOperator() {
+            const op = document.getElementById('resources-operator').value;
+            localStorage.setItem(`resources_op_${activeCharacterId}`, op);
+            
+            // Re-render resources to update the UI buttons or display
+            renderResourcesList();
+            vibrate(5);
+        }
+        
+        function renderResourcesList() {
+            const container = document.getElementById('resources-list-container');
+            if (!container) return;
+            
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char || !char.variables) {
+                container.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-4">No variables found.</p>';
+                return;
+            }
+            
+            const standardStats = ["STR", "DEX", "CON", "INT", "WIS", "CHA", "Level"];
+            const entries = Object.entries(char.variables);
+            
+            let html = '';
+            
+            entries.forEach(([name, value]) => {
+                const isCustom = !standardStats.includes(name);
+                const hasArsenal = engine.savedQueues.some(q => q.characterId === activeCharacterId && q.name === name);
+                
+                html += `
+                <div class="flex items-center justify-between gap-2 bg-[#020617]/40 border border-white/5 p-2 rounded-xl">
+                    <!-- Variable Name -->
+                    <div class="flex items-center gap-1 min-w-[70px] max-w-[90px] truncate">
+                        <span class="text-xs font-black text-[#e2e8f0] uppercase tracking-wider" title="${name}">${name}</span>
+                        ${isCustom ? `
+                        <button onclick="deleteCustomVariable('${name}')" class="text-rose-500/70 hover:text-rose-500 transition-colors p-0.5" title="Delete Resource">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                        ` : ''}
+                    </div>
+
+                    <!-- Stepper -->
+                    <div class="flex items-center bg-[#020617] border border-white/10 rounded-lg overflow-hidden h-8 w-24 shrink-0">
+                        <button onclick="adjustVariableValue('${name}', -1)" class="w-7 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors font-bold text-sm">－</button>
+                        <input type="text" inputmode="numeric" value="${value}" oninput="setVariableValue('${name}', this.value)"
+                            class="flex-1 bg-transparent text-sky-400 font-black text-xs text-center outline-none hide-spinners w-8" />
+                        <button onclick="adjustVariableValue('${name}', 1)" class="w-7 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors font-bold text-sm">＋</button>
+                    </div>
+
+                    <!-- Create/Update Arsenal Button -->
+                    ${name !== 'Level' ? `
+                    <button onclick="createOrUpdateArsenal('${name}')" class="h-8 px-2.5 rounded-lg border text-[10px] font-black uppercase tracking-wider shrink-0 transition-all ${
+                        hasArsenal ? 'bg-sky-500/10 border-sky-500/30 text-sky-400 hover:bg-sky-500 hover:text-[#020617]' : 'bg-[#00d4ff]/5 border-[#00d4ff]/10 text-slate-400 hover:text-[#00d4ff] hover:bg-[#00d4ff]/15'
+                    }">
+                        ${hasArsenal ? 'Update' : 'Create'}
+                    </button>
+                    ` : '<div class="w-[66px] shrink-0"></div>'}
+                </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function adjustVariableValue(name, delta) {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char || !char.variables) return;
+            
+            let val = parseInt(char.variables[name]) || 0;
+            val += delta;
+            if (val < 0) val = 0; // Prevent negative values for stats/levels
+            char.variables[name] = val;
+            
+            persistArsenal();
+            renderResourcesList();
+            vibrate(5);
+        }
+        
+        function setVariableValue(name, valStr) {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char || !char.variables) return;
+            
+            let val = parseInt(valStr);
+            if (isNaN(val)) val = 0;
+            if (val < 0) val = 0;
+            char.variables[name] = val;
+            
+            persistArsenal();
+        }
+        
+        function createCustomVariable() {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
+            
+            if (!char.variables) {
+                char.variables = { "STR": 10, "DEX": 10, "CON": 10, "INT": 10, "WIS": 10, "CHA": 10, "Level": 1 };
+            }
+            
+            const input = document.getElementById('new-resource-name');
+            const name = input.value.trim().toUpperCase();
+            
+            if (!name) return;
+            
+            // Check if variable name is valid
+            if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
+                showModal({ title: 'Invalid Name', body: 'Resource name must start with a letter and contain only letters, numbers, or underscores.', alertOnly: true });
+                return;
+            }
+            
+            // Check if variable already exists
+            if (char.variables[name] !== undefined) {
+                showModal({ title: 'Resource Exists', body: `A resource named "<strong>${name}</strong>" already exists.`, alertOnly: true });
+                return;
+            }
+            
+            char.variables[name] = 10; // Default to 10
+            input.value = '';
+            
+            persistArsenal();
+            renderResourcesList();
+            vibrate(10);
+        }
+        
+        function deleteCustomVariable(name) {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char || !char.variables) return;
+            
+            showModal({ title: `Delete Resource "${name}"?`, body: `Are you sure you want to delete the resource "<strong>${name}</strong>"? This will not delete any associated arsenal roll configurations.`, confirmText: 'Delete', danger: true }).then(ok => {
+                if (!ok) return;
+                delete char.variables[name];
+                
+                persistArsenal();
+                renderResourcesList();
+                vibrate(10);
+            });
+        }
+
+        function createOrUpdateArsenal(name) {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
+            
+            // Ensure variables are loaded
+            const variables = char.variables || {};
+            const val = variables[name] || 0;
+            const op = document.getElementById('resources-operator')?.value || '<=';
+            
+            // Find existing arsenal for this character + name
+            let existing = engine.savedQueues.find(q => q.characterId === activeCharacterId && q.name === name);
+            
+            if (existing) {
+                // Update it
+                existing.queue = [{ sides: 20, count: 1 }];
+                existing.modifier = null;
+                existing.modLevel = 0;
+                existing.flat = 0;
+                existing.rules = {
+                    rerollOp: "", rerollVal: null,
+                    explodeOp: "", explodeVal: null,
+                    targetMode: "sum",
+                    targetOp: op,
+                    targetVal: name, // We store the VARIABLE NAME as a string! E.g. 'STR'
+                    countThreshOp: "", countThreshVal: null,
+                    setsOp: "", setsVal: null
+                };
+                // Keep its group and color, or make sure it has group
+                if (!existing.groupId) existing.groupId = activeGroupId;
+                
+                persistSaved();
+                renderSavedQueues();
+                renderResourcesList();
+                vibrate(15);
+                
+                // Visual feedback
+                showModal({ title: 'Arsenal Updated', body: `Successfully updated arsenal for <strong>${name}</strong> using ${op} ${val}.`, alertOnly: true });
+            } else {
+                // Create new arsenal item
+                // Let's use a nice color for the stat
+                const color = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)] || '#00d4ff';
+                const newSaved = {
+                    id: Date.now(),
+                    name: name,
+                    color: color,
+                    queue: [{ sides: 20, count: 1 }],
+                    modifier: null,
+                    modLevel: 0,
+                    flat: 0,
+                    rules: {
+                        rerollOp: "", rerollVal: null,
+                        explodeOp: "", explodeVal: null,
+                        targetMode: "sum",
+                        targetOp: op,
+                        targetVal: name, // We store the VARIABLE NAME as a string! E.g. 'STR'
+                        countThreshOp: "", countThreshVal: null,
+                        setsOp: "", setsVal: null
+                    },
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId
+                };
+                engine.savedQueues.push(newSaved);
+                persistSaved();
+                renderSavedQueues();
+                renderResourcesList();
+                vibrate(15);
+                
+                // Visual feedback
+                showModal({ title: 'Arsenal Created', body: `Successfully created arsenal for <strong>${name}</strong> using ${op} ${val}.`, alertOnly: true });
+            }
         }
 
         // Group CRUD
