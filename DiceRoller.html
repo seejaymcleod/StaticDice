@@ -76,7 +76,7 @@
             border-radius: 0.8rem;
             display: flex;
             align-items: stretch;
-            min-height: 3.5rem;
+            min-height: 3rem;
             height: auto;
             padding: 0.25rem 0;
             overflow: hidden;
@@ -228,7 +228,7 @@
             background: rgba(15, 23, 42, 0.4);
             border: 1px solid rgba(0, 212, 255, 0.25);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            height: 3.5rem;
+            height: 3rem;
             box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.05);
         }
 
@@ -387,7 +387,7 @@
             opacity: 0.4;
         }
         .drag-placeholder {
-            height: 3.5rem;
+            height: 3rem;
             border: 2px dashed rgba(0,212,255,0.3);
             border-radius: 0.75rem;
             background: rgba(0,212,255,0.03);
@@ -980,7 +980,7 @@
 
                 <!-- QUEUE DISPLAY (FULL WIDTH, TOP) -->
                 <div
-                    class="glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[3.25rem] max-h-[8rem] overflow-y-auto custom-scroll border-white/5 w-full pointer-events-auto">
+                    class="glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[3rem] max-h-[8rem] overflow-y-auto custom-scroll border-white/5 w-full pointer-events-auto">
                     <div id="queue-display"
                         class="w-full flex flex-wrap items-center justify-center gap-2 font-bold mono uppercase">
                         <span class="text-base text-sky-400/40">EMPTY QUEUE</span>
@@ -1031,9 +1031,9 @@
                 <div class="flex gap-2.5">
                     <!-- MOD STEPPER -->
                     <div
-                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        class="flex-1 segmented-row h-[3rem] bg-[#020617] flex items-center justify-between !p-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
                         <button onclick="adjustFlatMod(-1)"
-                            class="w-[3.25rem] h-[3.25rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">－</button>
+                            class="w-[3rem] h-[3rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">－</button>
                         <div class="flex-1 flex flex-col items-center justify-center min-w-0">
                             <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">MOD</span>
                             <input type="text" id="flat-mod-input" inputmode="numeric"
@@ -1041,14 +1041,14 @@
                                 value="0" placeholder="0" oninput="setFlatMod(this.value)" onblur="updateUI()">
                         </div>
                         <button onclick="adjustFlatMod(1)"
-                            class="w-[3.25rem] h-[3.25rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">＋</button>
+                            class="w-[3rem] h-[3rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">＋</button>
                     </div>
 
                     <!-- TARGET STEPPER -->
                     <div id="overall-target-container"
-                        class="flex-1 segmented-row h-[3.25rem] bg-[#020617] flex items-center justify-between !p-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        class="flex-1 segmented-row h-[3rem] bg-[#020617] flex items-center justify-between !p-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
                         <button onclick="adjustOverallTarget(-1)"
-                            class="w-[3.25rem] h-[3.25rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">－</button>
+                            class="w-[3rem] h-[3rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">－</button>
                         <div class="flex-1 flex flex-col items-center justify-center min-w-0">
                             <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">TARGET</span>
                             <input type="text" id="overall-target-input" inputmode="numeric"
@@ -1056,7 +1056,7 @@
                                 value="" placeholder="0" oninput="setOverallTarget(this.value)" onblur="updateUI()">
                         </div>
                         <button onclick="adjustOverallTarget(1)"
-                            class="w-[3.25rem] h-[3.25rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">＋</button>
+                            class="w-[3rem] h-[3rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">＋</button>
                     </div>
                 </div>
 
@@ -1064,7 +1064,7 @@
                 <div class="grid grid-cols-12 gap-2.5">
 
                     <button id="roll-button" onclick="triggerRoll(event)"
-                        class="col-span-6 !h-[3.25rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group">
+                        class="col-span-6 !h-[3rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group">
 
                         <span class="relative z-10">ROLL</span>
                         <div
@@ -1073,7 +1073,7 @@
                     </button>
 
                     <button id="adv-btn" onclick="applyModifier('ADV')" disabled
-                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3.25rem]">
+                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3rem]">
 
                         <div id="adv-pip"
                             class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
@@ -1083,7 +1083,7 @@
                         <span id="adv-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
                     </button>
                     <button id="dis-btn" onclick="applyModifier('DIS')" disabled
-                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3.25rem]">
+                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3rem]">
 
                         <div id="dis-pip"
                             class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
@@ -1442,7 +1442,7 @@
 
             <details class="group" id="auditor-details">
                 <summary
-                    class="list-none cursor-pointer flex items-center justify-between glass-panel p-4 rounded-2xl border-white/5 min-h-[3.25rem]">
+                    class="list-none cursor-pointer flex items-center justify-between glass-panel p-4 rounded-2xl border-white/5 min-h-[3rem]">
                     <div class="flex items-center min-w-0 flex-1 px-1 pr-2">
                         <div class="flex flex-col min-w-0 w-full relative">
                             <div
@@ -3470,7 +3470,7 @@
                 const gearContainer = document.createElement('div');
                 gearContainer.className = 'shrink-0 relative';
                 gearContainer.innerHTML = `
-                    <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-[3.5rem] h-[3.5rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
+                    <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-[3rem] h-[3rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                     <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden">
