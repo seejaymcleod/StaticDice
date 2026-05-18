@@ -104,11 +104,13 @@ class DiceEngine {
 
     checkCondition(val, op, target) {
         if (!op || target === null || isNaN(target)) return false;
-        if (op === '>=') return val >= target;
-        if (op === '<=') return val <= target;
-        if (op === '>') return val > target;
-        if (op === '<') return val < target;
-        if (op === '=') return val === target;
+        const v = Number(val);
+        const t = Number(target);
+        if (op === '>=') return v >= t;
+        if (op === '<=') return v <= t;
+        if (op === '>') return v > t;
+        if (op === '<') return v < t;
+        if (op === '=') return v === t;
         return false;
     }
 

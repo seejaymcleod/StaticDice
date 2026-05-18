@@ -180,6 +180,39 @@ describe('DiceEngine', () => {
             // Only 8 is >= 5, so 1 success
             expect(result.total).toBe(1);
         });
+
+        test('sets scoring logic (singleton counts)', () => {
+            let callCount = 0;
+            // Rolls: 3, 3, 4, 5
+            engine.setRng((sides) => {
+                callCount++;
+                const r = [3, 3, 4, 5];
+                return r[callCount - 1];
+            });
+            engine.updateRules({ targetMode: "count", setsOp: "=", setsVal: 1 });
+            engine.changeQueue(6, 4);
+
+            const result = engine.calculateRoll();
+            // 3s are paired (count 2), 4 and 5 are singletons (count 1).
+            // So singletons are 4 and 5 (2 singletons).
+            expect(result.total).toBe(2);
+        });
+
+        test('sets scoring logic (pairs counts)', () => {
+            let callCount = 0;
+            // Rolls: 3, 3, 4, 4
+            engine.setRng((sides) => {
+                callCount++;
+                const r = [3, 3, 4, 4];
+                return r[callCount - 1];
+            });
+            engine.updateRules({ targetMode: "count", setsOp: "=", setsVal: 2 });
+            engine.changeQueue(6, 4);
+
+            const result = engine.calculateRoll();
+            // Both 3 and 4 are pairs (count 2). So 4 total dice are part of pairs.
+            expect(result.total).toBe(4);
+        });
     });
 
     describe('Arsenal Management', () => {

@@ -4019,29 +4019,31 @@
         }
 
         function getTheoreticalDistribution(queue, mod, modifierType, modifierLevel, rules = {}) {
-            const isCount = rules.targetMode === 'count';
             const isSum = rules.targetMode === 'sum';
+            const isCount = rules.targetMode === 'count';
+
+            // Sets path requires tracking the full joint face-count distribution.
+            // The exact BFS is used; a state-count abort guard (see below) handles
+            // intractable cases and falls back to a non-sets BFS curve.
             const hasSets = rules.setsOp && rules.setsVal !== null;
 
-            // Local Math-safe rule evaluator
+            // Unified, bug-free comparator — always coerces to Number first
             const check = (val, op, target) => {
-                if (!op || target === null || isNaN(target)) return true; // Standard logic: no constraints means everything counts
-                if (op === '>=') return val >= target;
-                if (op === '<=') return val <= target;
-                if (op === '>') return val > target;
-                if (op === '<') return val < target;
-                if (op === '=') return val === target;
-                return true;
+                if (!op || target === null || isNaN(Number(target))) return false;
+                const v = Number(val);
+                const t = Number(target);
+                if (op === '>=') return v >= t;
+                if (op === '<=') return v <= t;
+                if (op === '>') return v > t;
+                if (op === '<') return v < t;
+                if (op === '=' || op === '==') return v === t;
+                return false;
             };
-
-            const isSucc = (v) => check(v, rules.targetOp, rules.targetVal);
-            const isExp = (v) => rules.explodeOp && rules.explodeVal !== null && check(v, rules.explodeOp, rules.explodeVal);
-            const isRR = (v) => rules.rerollOp && rules.rerollVal !== null && check(v, rules.rerollOp, rules.rerollVal);
 
             const convolve = (d1, d2) => {
                 let res = {};
                 for (let v1 in d1) {
-                    let p1 = d1[v1];
+                    const p1 = d1[v1];
                     for (let v2 in d2) {
                         const s = parseInt(v1) + parseInt(v2);
                         const p = p1 * d2[v2];
@@ -4051,156 +4053,314 @@
                 return res;
             };
 
-            const facts = [1];
-            for (let i = 1; i <= 170; i++) facts[i] = facts[i - 1] * i;
-            const nCr = (n, r) => (n < r || r < 0) ? 0 : facts[n] / (facts[r] * facts[n - r]);
+            if (!hasSets) {
+                // ── Fast BFS path (non-sets) ────────────────────────────────
+                // Computes the exact single-die PMF via BFS over explosion chains,
+                // then convolves per-die PMFs across the whole queue.
 
-            const getGroupDistribution = (group) => {
-                const sides = group.sides;
-                const N = group.count;
+                const getDiePMF = (sides) => {
+                    const rollsToTake = 1 + (modifierType ? modifierLevel : 0);
 
-                // 1. Calculate Face Probabilities
-                let p_adv = {};
-                let p_norm = {};
+                    // 1. Initial face probabilities (ADV / DIS)
+                    let p_first = {};
+                    let p_norm  = {};
+                    for (let v = 1; v <= sides; v++) {
+                        p_norm[v] = 1 / sides;
+                        if (modifierType === 'ADV') {
+                            p_first[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / Math.pow(sides, rollsToTake);
+                        } else if (modifierType === 'DIS') {
+                            p_first[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / Math.pow(sides, rollsToTake);
+                        } else {
+                            p_first[v] = 1 / sides;
+                        }
+                    }
+
+                    const isRR  = (v) => rules.rerollOp  && rules.rerollVal  !== null && check(v, rules.rerollOp,  rules.rerollVal);
+                    const isExp = (v) => rules.explodeOp && rules.explodeVal !== null && check(v, rules.explodeOp, rules.explodeVal);
+                    const isSucc= (v) => rules.targetOp  && rules.targetVal  !== null && check(v, rules.targetOp,  rules.targetVal);
+
+                    // 2. Apply rerolls (up to 10) — geometric series redistribution
+                    let p_kept = {};
+                    const rrFaces = [];
+                    for (let v = 1; v <= sides; v++) if (isRR(v)) rrFaces.push(v);
+
+                    if (rrFaces.length > 0 && rrFaces.length < sides) {
+                        const p_R_first = rrFaces.reduce((s, f) => s + (p_first[f] || 0), 0);
+                        const p_R_norm  = rrFaces.reduce((s, f) => s + (p_norm[f]  || 0), 0);
+                        let geom = 0;
+                        for (let i = 0; i <= 8; i++) geom += Math.pow(p_R_norm, i);
+                        for (let v = 1; v <= sides; v++) {
+                            p_kept[v] = isRR(v)
+                                ? p_R_first * Math.pow(p_R_norm, 9) * p_norm[v]
+                                : p_first[v] + p_R_first * p_norm[v] * geom;
+                        }
+                    } else {
+                        p_kept = { ...p_first };
+                    }
+
+                    // 3. BFS over explosion chains
+                    let die_pmf = {};
+                    let bfsQueue = [];
+                    for (let v = 1; v <= sides; v++) {
+                        const p = p_kept[v] || 0;
+                        if (p <= 0) continue;
+                        const outcome = isCount ? (isSucc(v) ? 1 : 0) : v;
+                        if (isExp(v)) {
+                            bfsQueue.push({ outcome, prob: p, depth: 1 });
+                        } else {
+                            die_pmf[outcome] = (die_pmf[outcome] || 0) + p;
+                        }
+                    }
+                    while (bfsQueue.length > 0) {
+                        const curr = bfsQueue.shift();
+                        for (let v = 1; v <= sides; v++) {
+                            const nextProb = curr.prob * p_norm[v];
+                            if (nextProb < 1e-15) continue;
+                            const nextOutcome = isCount
+                                ? curr.outcome + (isSucc(v) ? 1 : 0)
+                                : curr.outcome + v;
+                            if (isExp(v) && curr.depth < 10) {
+                                bfsQueue.push({ outcome: nextOutcome, prob: nextProb, depth: curr.depth + 1 });
+                            } else {
+                                die_pmf[nextOutcome] = (die_pmf[nextOutcome] || 0) + nextProb;
+                            }
+                        }
+                    }
+                    return die_pmf;
+                };
+
+                let finalDist = { 0: 1 };
+                queue.forEach(group => {
+                    const pmf = getDiePMF(group.sides);
+                    for (let i = 0; i < group.count; i++) {
+                        finalDist = convolve(finalDist, pmf);
+                    }
+                });
+
+                if (isSum) {
+                    let shifted = {};
+                    for (let s in finalDist) shifted[parseInt(s) + mod] = finalDist[s];
+                    return shifted;
+                }
+                return finalDist;
+            }
+
+            // ── Exact Sets path: independent face-count-vector BFS ─────────
+            // In DiceEngine.js, sets are calculated and scored independently
+            // for each die group in the queue, and then summed.
+            // Convolving the face-count vectors per-group preserves exactness,
+            // avoids cross-group state explosion, and remains extremely fast.
+
+            const MAX_SETS_STATES = 30000;
+
+            const mergeSorted = (a, b) => {
+                let i = 0, j = 0;
+                const res = [];
+                while (i < a.length && j < b.length) {
+                    if (a[i] < b[j]) { res.push(a[i]); i++; }
+                    else { res.push(b[j]); j++; }
+                }
+                while (i < a.length) { res.push(a[i]); i++; }
+                while (j < b.length) { res.push(b[j]); j++; }
+                return res;
+            };
+
+            const getSlotVecPMF = (sides) => {
                 const rollsToTake = 1 + (modifierType ? modifierLevel : 0);
+                let p_first = {}, p_norm = {};
                 for (let v = 1; v <= sides; v++) {
                     p_norm[v] = 1 / sides;
-                    if (modifierType === 'ADV') p_adv[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / Math.pow(sides, rollsToTake);
-                    else if (modifierType === 'DIS') p_adv[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / Math.pow(sides, rollsToTake);
-                    else p_adv[v] = 1 / sides;
+                    if (modifierType === 'ADV') {
+                        p_first[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / Math.pow(sides, rollsToTake);
+                    } else if (modifierType === 'DIS') {
+                        p_first[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / Math.pow(sides, rollsToTake);
+                    } else {
+                        p_first[v] = 1 / sides;
+                    }
                 }
+                const isRR  = (v) => rules.rerollOp  && rules.rerollVal  !== null && check(v, rules.rerollOp,  rules.rerollVal);
+                const isExp = (v) => rules.explodeOp && rules.explodeVal !== null && check(v, rules.explodeOp, rules.explodeVal);
 
-                // 2. Apply Rerolls
-                let rrFaces = [];
+                let p_kept = {};
+                const rrFaces = [];
                 for (let v = 1; v <= sides; v++) if (isRR(v)) rrFaces.push(v);
                 if (rrFaces.length > 0 && rrFaces.length < sides) {
-                    let mass_adv = rrFaces.reduce((s, f) => s + (p_adv[f] || 0), 0);
-                    let mass_norm = rrFaces.reduce((s, f) => s + (p_norm[f] || 0), 0);
+                    const pRf = rrFaces.reduce((s, f) => s + (p_first[f] || 0), 0);
+                    const pRn = rrFaces.reduce((s, f) => s + (p_norm[f]  || 0), 0);
+                    let g = 0; for (let i = 0; i <= 8; i++) g += Math.pow(pRn, i);
                     for (let v = 1; v <= sides; v++) {
-                        if (isRR(v)) {
-                            p_adv[v] = 0;
-                            p_norm[v] = 0;
-                        } else {
-                            p_adv[v] = p_adv[v] + mass_adv * (p_norm[v] / (1 - mass_norm));
-                            p_norm[v] = p_norm[v] + mass_norm * (p_norm[v] / (1 - mass_norm));
-                        }
+                        p_kept[v] = isRR(v)
+                            ? pRf * Math.pow(pRn, 9) * p_norm[v]
+                            : p_first[v] + pRf * p_norm[v] * g;
                     }
-                }
+                } else { p_kept = { ...p_first }; }
 
-                // 3. Pre-Calculate Explosion Variables
-                const E_adv = Object.keys(p_adv).reduce((s, v) => s + (isExp(v) ? p_adv[v] : 0), 0);
-                const E_norm = Object.keys(p_norm).reduce((s, v) => s + (isExp(v) ? p_norm[v] : 0), 0);
-                const P_stop_norm = 1 - E_norm;
-                if (P_stop_norm <= 0) return { 0: 1 };
-
-                // 4. Explosion Contribution (Independent Negative Binomial)
-                let explode_pmfs = {};
+                let slotPMF = {};
+                let bfsQ = [];
                 for (let v = 1; v <= sides; v++) {
-                    if (!isExp(v)) continue;
-                    let p_v_adv = p_adv[v] || 0;
-                    let p_v_norm = p_norm[v] || 0;
-                    let p_geom = P_stop_norm / (P_stop_norm + p_v_norm);
-
-                    let single_die_exp_pmf = {};
-                    for (let k = 0; k <= 12; k++) {
-                        let pk = Math.pow(1 - p_geom, k) * p_geom;
-                        single_die_exp_pmf[1 + k] = (single_die_exp_pmf[1 + k] || 0) + p_v_adv * pk;
-                        single_die_exp_pmf[k] = (single_die_exp_pmf[k] || 0) + (E_adv - p_v_adv) * pk;
+                    const p = p_kept[v] || 0;
+                    if (p <= 0) continue;
+                    const vec = [v];
+                    if (isExp(v)) {
+                        bfsQ.push({ vec, prob: p, depth: 1 });
+                    } else {
+                        const key = vec.join(',');
+                        slotPMF[key] = (slotPMF[key] || 0) + p;
                     }
-                    single_die_exp_pmf[0] = (single_die_exp_pmf[0] || 0) + (1 - E_adv);
-
-                    let total_exp_pmf = { 0: 1 };
-                    for (let i = 0; i < N; i++) {
-                        let next = {};
-                        for (let c1 in total_exp_pmf) for (let c2 in single_die_exp_pmf) {
-                            let c = parseInt(c1) + parseInt(c2);
-                            if (c <= 30) next[c] = (next[c] || 0) + total_exp_pmf[c1] * single_die_exp_pmf[c2];
-                        }
-                        total_exp_pmf = next;
-                    }
-                    explode_pmfs[v] = total_exp_pmf;
                 }
-
-                // 5. Main Distribution logic (Multinomial DP for Stop Faces)
-                let dp = { 0: { 0: 1 } };
-                let stopVals = [];
-                for (let v = 1; v <= sides; v++) if (!isExp(v)) stopVals.push(v);
-
-                let p_rem_s = 1.0;
-                for (let v of stopVals) {
-                    let p_v_stop = (p_adv[v] || 0) + E_adv * ((p_norm[v] || 0) / P_stop_norm);
-                    let p_ratio = Math.max(0, Math.min(1.0, p_v_stop / Math.max(1e-15, p_rem_s)));
-                    let is_v_succ = isSucc(v);
-
-                    let next = {};
-                    for (let used = 0; used <= N; used++) {
-                        if (!dp[used]) continue;
-                        let rem = N - used;
-                        for (let k = 0; k <= rem; k++) {
-                            let p_k = nCr(rem, k) * Math.pow(p_ratio, k) * Math.pow(Math.max(0, 1 - p_ratio), rem - k);
-                            if (p_k < 1e-18) continue;
-
-                            let score = 0;
-                            if (is_v_succ) {
-                                if (hasSets) {
-                                    if (check(k, rules.setsOp, rules.setsVal)) score = isCount ? k : k * v;
-                                } else {
-                                    score = isCount ? k : k * v;
-                                }
-                            }
-
-                            for (let s in dp[used]) {
-                                let ns = parseInt(s) + score;
-                                let nu = used + k;
-                                if (!next[nu]) next[nu] = {};
-                                next[nu][ns] = (next[nu][ns] || 0) + dp[used][s] * p_k;
-                            }
+                while (bfsQ.length > 0) {
+                    const curr = bfsQ.shift();
+                    for (let v = 1; v <= sides; v++) {
+                        const np = curr.prob * p_norm[v];
+                        if (np < 1e-14) continue;
+                        const nv = mergeSorted(curr.vec, [v]);
+                        if (isExp(v) && curr.depth < 10) {
+                            bfsQ.push({ vec: nv, prob: np, depth: curr.depth + 1 });
+                        } else {
+                            const key = nv.join(',');
+                            slotPMF[key] = (slotPMF[key] || 0) + np;
                         }
                     }
-                    dp = next;
-                    p_rem_s -= p_v_stop;
                 }
+                return slotPMF;
+            };
 
-                // Aggregate probability mass ensuring precision preservation
-                let final_group_pmf = {};
-                // Precision: only sum the cases where all N dice were processed
-                if (dp[N]) {
-                    for (let s in dp[N]) {
-                        if (dp[N][s] > 1e-18) final_group_pmf[s] = dp[N][s];
+            const convolveSimple = (d1, d2) => {
+                let res = {};
+                for (let v1 in d1) {
+                    const p1 = d1[v1];
+                    for (let v2 in d2) {
+                        const s = Number(v1) + Number(v2);
+                        const p = p1 * d2[v2];
+                        if (p > 1e-20) res[s] = (res[s] || 0) + p;
                     }
                 }
-                let group_pmf = Object.keys(final_group_pmf).length > 0 ? final_group_pmf : { 0: 1 };
-
-                // 6. Integrate Explosion independent probabilities
-                for (let v in explode_pmfs) {
-                    const val = parseInt(v);
-                    const exp_pmf = explode_pmfs[v];
-                    let is_v_succ = isSucc(val);
-
-                    let score_v_pmf = {};
-                    for (let k_str in exp_pmf) {
-                        const k = parseInt(k_str);
-                        let score = 0;
-                        if (is_v_succ) {
-                            if (hasSets) {
-                                if (check(k, rules.setsOp, rules.setsVal)) score = isCount ? k : k * val;
-                            } else {
-                                score = isCount ? k : k * val;
-                            }
-                        }
-                        score_v_pmf[score] = (score_v_pmf[score] || 0) + exp_pmf[k_str];
-                    }
-                    group_pmf = convolve(group_pmf, score_v_pmf);
-                }
-
-                return group_pmf;
+                return res;
             };
 
             let finalDist = { 0: 1 };
-            queue.forEach((group) => {
-                finalDist = convolve(finalDist, getGroupDistribution(group));
-            });
+            let aborted = false;
 
+            for (const group of queue) {
+                const sp = getSlotVecPMF(group.sides);
+                const spArr = [];
+                for (let key in sp) {
+                    spArr.push({
+                        vec: key ? key.split(',').map(Number) : [],
+                        prob: sp[key]
+                    });
+                }
+
+                let groupPMF = [{ vec: [], prob: 1 }];
+                for (let i = 0; i < group.count; i++) {
+                    const resMap = {};
+                    for (let x = 0; x < groupPMF.length; x++) {
+                        const o1 = groupPMF[x];
+                        for (let y = 0; y < spArr.length; y++) {
+                            const o2 = spArr[y];
+                            const merged = mergeSorted(o1.vec, o2.vec);
+                            const key = merged.join(',');
+                            const p = o1.prob * o2.prob;
+                            if (p > 1e-20) resMap[key] = (resMap[key] || 0) + p;
+                        }
+                    }
+                    groupPMF = [];
+                    for (let key in resMap) {
+                        groupPMF.push({
+                            vec: key ? key.split(',').map(Number) : [],
+                            prob: resMap[key]
+                        });
+                    }
+                    if (groupPMF.length > MAX_SETS_STATES) {
+                        aborted = true;
+                        break;
+                    }
+                }
+                if (aborted) break;
+
+                // Apply sets filter and score this group to get its subtotal score PMF
+                const isSucc = (v) => rules.targetOp && rules.targetVal !== null && check(v, rules.targetOp, rules.targetVal);
+                let groupScorePMF = {};
+                for (let x = 0; x < groupPMF.length; x++) {
+                    const o = groupPMF[x];
+                    const arr = o.vec;
+                    let score = 0;
+                    let i = 0;
+                    while (i < arr.length) {
+                        let j = i;
+                        while (j < arr.length && arr[j] === arr[i]) j++;
+                        const cnt = j - i;
+                        const faceNum = arr[i];
+                        if (check(cnt, rules.setsOp, rules.setsVal)) {
+                            if (isCount) {
+                                if (!rules.targetOp || isSucc(faceNum)) score += cnt;
+                            } else {
+                                score += faceNum * cnt;
+                            }
+                        }
+                        i = j;
+                    }
+                    groupScorePMF[score] = (groupScorePMF[score] || 0) + o.prob;
+                }
+
+                // Convolve the group's score PMF into finalDist
+                finalDist = convolveSimple(finalDist, groupScorePMF);
+            }
+
+            if (aborted) {
+                // Fall back to the non-sets BFS — correct shape, ignores the
+                // sets filter. Better than a misleading approximation.
+                let finalDistFallback = { 0: 1 };
+                queue.forEach(group => {
+                    const sides = group.sides;
+                    const rollsToTake = 1 + (modifierType ? modifierLevel : 0);
+                    let p_first = {}, p_norm = {};
+                    for (let v = 1; v <= sides; v++) {
+                        p_norm[v] = 1 / sides;
+                        if (modifierType === 'ADV') p_first[v] = (Math.pow(v, rollsToTake) - Math.pow(v - 1, rollsToTake)) / Math.pow(sides, rollsToTake);
+                        else if (modifierType === 'DIS') p_first[v] = (Math.pow(sides - v + 1, rollsToTake) - Math.pow(sides - v, rollsToTake)) / Math.pow(sides, rollsToTake);
+                        else p_first[v] = 1 / sides;
+                    }
+                    const isRR2  = (v) => rules.rerollOp  && rules.rerollVal  !== null && check(v, rules.rerollOp,  rules.rerollVal);
+                    const isExp2 = (v) => rules.explodeOp && rules.explodeVal !== null && check(v, rules.explodeOp, rules.explodeVal);
+                    const isSucc2= (v) => rules.targetOp  && rules.targetVal  !== null && check(v, rules.targetOp,  rules.targetVal);
+                    let p_kept = {}, rrFaces = [];
+                    for (let v = 1; v <= sides; v++) if (isRR2(v)) rrFaces.push(v);
+                    if (rrFaces.length > 0 && rrFaces.length < sides) {
+                        const pRf = rrFaces.reduce((s, f) => s + (p_first[f] || 0), 0);
+                        const pRn = rrFaces.reduce((s, f) => s + (p_norm[f]  || 0), 0);
+                        let g = 0; for (let i = 0; i <= 8; i++) g += Math.pow(pRn, i);
+                        for (let v = 1; v <= sides; v++) {
+                            p_kept[v] = isRR2(v) ? pRf * Math.pow(pRn, 9) * p_norm[v] : p_first[v] + pRf * p_norm[v] * g;
+                        }
+                    } else { p_kept = { ...p_first }; }
+                    let die_pmf = {}, bfsQ2 = [];
+                    for (let v = 1; v <= sides; v++) {
+                        const p = p_kept[v] || 0; if (p <= 0) continue;
+                        const outcome = isCount ? (isSucc2(v) ? 1 : 0) : v;
+                        if (isExp2(v)) bfsQ2.push({ outcome, prob: p, depth: 1 });
+                        else die_pmf[outcome] = (die_pmf[outcome] || 0) + p;
+                    }
+                    while (bfsQ2.length > 0) {
+                        const curr = bfsQ2.shift();
+                        for (let v = 1; v <= sides; v++) {
+                            const np = curr.prob * p_norm[v]; if (np < 1e-15) continue;
+                            const no = isCount ? curr.outcome + (isSucc2(v) ? 1 : 0) : curr.outcome + v;
+                            if (isExp2(v) && curr.depth < 10) bfsQ2.push({ outcome: no, prob: np, depth: curr.depth + 1 });
+                            else die_pmf[no] = (die_pmf[no] || 0) + np;
+                        }
+                    }
+                    for (let i = 0; i < group.count; i++) finalDistFallback = convolve(finalDistFallback, die_pmf);
+                });
+                if (isSum) {
+                    let shifted = {};
+                    for (let s in finalDistFallback) shifted[parseInt(s) + mod] = finalDistFallback[s];
+                    return shifted;
+                }
+                return finalDistFallback;
+            }
+
+            if (Object.keys(finalDist).length === 0) finalDist = { 0: 1 };
             if (isSum) {
                 let shifted = {};
                 for (let s in finalDist) shifted[parseInt(s) + mod] = finalDist[s];
@@ -4208,7 +4368,6 @@
             }
             return finalDist;
         }
-
         let auditorChart = null;
         let auditorStopFlag = false;
         let auditorIsRunning = false;
