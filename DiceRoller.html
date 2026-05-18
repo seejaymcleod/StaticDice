@@ -1042,13 +1042,13 @@
                             <div
                                 class="flex-1 flex items-center border-l border-white/10 pl-2.5 gap-3 min-h-[48px]">
                                 <div
-                                    class="flex flex-col gap-px bg-[#00d4ff]/20 rounded border border-[#00d4ff]/20 overflow-hidden w-14 shrink-0">
+                                    class="flex flex-col bg-[#020617] rounded border border-white/10 overflow-hidden w-14 shrink-0">
                                     <button id="target-mode-sum" onclick="setTargetMode('sum')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff]">SUM</button>
+                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 hover:text-sky-400 text-slate-500">SUM</button>
                                     <button id="target-mode-count" onclick="setTargetMode('count')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">COUNT</button>
+                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 hover:text-sky-400 text-slate-500 border-t border-white/10">COUNT</button>
                                     <button id="target-mode-list" onclick="setTargetMode('list')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 text-[#00d4ff] border-t border-[#00d4ff]/20">LIST</button>
+                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 hover:text-sky-400 text-slate-500 border-t border-white/10">LIST</button>
                                 </div>
 
                                 <div class="flex-1 flex items-center">
@@ -1917,8 +1917,8 @@
 
             if (currentTargetMode === 'sum') {
                 sumBtn.classList.add('plasma-highlight');
-                countBtn.classList.add('text-[#00d4ff]');
-                listBtn.classList.add('text-[#00d4ff]');
+                countBtn.classList.add('text-slate-500');
+                listBtn.classList.add('text-slate-500');
                 sumContainer.classList.remove('hidden');
                 overallTargetContainer.classList.remove('opacity-30', 'pointer-events-none');
 
@@ -1930,14 +1930,14 @@
                     sumValEl.classList.add('opacity-30', 'pointer-events-none');
                 }
             } else if (currentTargetMode === 'count') {
-                sumBtn.classList.add('text-[#00d4ff]');
+                sumBtn.classList.add('text-slate-500');
                 countBtn.classList.add('plasma-highlight');
-                listBtn.classList.add('text-[#00d4ff]');
+                listBtn.classList.add('text-slate-500');
                 countContainer.classList.remove('hidden');
                 overallTargetContainer.classList.remove('opacity-30', 'pointer-events-none');
             } else { // LIST
-                sumBtn.classList.add('text-[#00d4ff]');
-                countBtn.classList.add('text-[#00d4ff]');
+                sumBtn.classList.add('text-slate-500');
+                countBtn.classList.add('text-slate-500');
                 listBtn.classList.add('plasma-highlight');
                 listContainer.classList.remove('hidden');
                 overallTargetContainer.classList.add('opacity-30', 'pointer-events-none');
