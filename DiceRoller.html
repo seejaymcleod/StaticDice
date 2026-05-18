@@ -310,6 +310,103 @@
             opacity: 1;
         }
 
+        /* Character / Group management */
+        .char-select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 0.75rem;
+            color: #e2e8f0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            outline: none;
+            cursor: pointer;
+            padding: 0 0.75rem;
+            height: 2rem;
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2rem;
+        }
+        .char-select:focus {
+            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.1);
+        }
+        .char-select option {
+            background: #0f172a;
+            color: #e2e8f0;
+            font-weight: 700;
+        }
+
+        .group-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 0.6rem;
+            border: 1px solid transparent;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #64748b;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            white-space: nowrap;
+            position: relative;
+        }
+        .group-tab:hover {
+            color: #94a3b8;
+            background: rgba(255,255,255,0.04);
+        }
+        .group-tab.active {
+            color: #00d4ff;
+            background: rgba(0, 212, 255, 0.08);
+            border-color: rgba(0, 212, 255, 0.25);
+        }
+        .group-tab .group-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Drag & Drop Arsenal */
+        .arsenal-item-wrapper.drag-over > .saved-item {
+            border-color: rgba(0, 212, 255, 0.6) !important;
+            box-shadow: 0 0 18px rgba(0,212,255,0.2);
+            transform: translateY(-2px);
+        }
+        .arsenal-item-wrapper.dragging {
+            opacity: 0.4;
+        }
+        .drag-placeholder {
+            height: 3.5rem;
+            border: 2px dashed rgba(0,212,255,0.3);
+            border-radius: 0.75rem;
+            background: rgba(0,212,255,0.03);
+            animation: placeholder-pulse 1.2s ease-in-out infinite;
+        }
+        @keyframes placeholder-pulse {
+            0%, 100% { border-color: rgba(0,212,255,0.2); }
+            50% { border-color: rgba(0,212,255,0.5); }
+        }
+        .group-drop-zone {
+            min-height: 3rem;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+        }
+        .group-drop-zone.drop-active {
+            background: rgba(0,212,255,0.04);
+            border: 2px dashed rgba(0,212,255,0.4);
+        }
+
 
         .desktop-only {
             display: none;
@@ -893,25 +990,25 @@
                 <!-- ROW 1: UTILITY STRIP -->
                 <div class="grid grid-cols-4 gap-2.5">
                     <button onclick="backspaceQueue()"
-                        class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                        class="h-[2rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
                         title="Backspace">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414A2 2 0 0010.828 19H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
                         </svg>
                     </button>
                     <button id="clear-btn" onclick="clearQueue()"
-                        class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                        class="h-[2rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
                         title="Clear Queue">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                     <button id="save-queue-btn" onclick="saveCurrentQueue()" disabled
-                        class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8]/50 flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all disabled:opacity-50 hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                        class="h-[2rem] bg-[#00d4ff]/05 text-[#94a3b8]/50 flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all disabled:opacity-50 hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
                         title="Save Current Queue">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
                             <polyline points="17 21 17 13 7 13 7 21" />
@@ -919,8 +1016,8 @@
                         </svg>
                     </button>
                     <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
-                        class="h-[2.75rem] rounded-xl bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 flex items-center justify-center text-[#94a3b8] hover:text-[#00d4ff] transition-colors border border-[#00d4ff]/10">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="h-[2rem] rounded-xl bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 flex items-center justify-center text-[#94a3b8] hover:text-[#00d4ff] transition-colors border border-[#00d4ff]/10">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
                             </path>
@@ -1014,7 +1111,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 -my-1">
                                 <button onclick="document.getElementById('import-input').click()"
-                                    class="bg-[#00d4ff]/10 text-[#94a3b8] h-11 w-11 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:scale-95"
+                                    class="bg-[#00d4ff]/10 text-[#94a3b8] h-8 w-8 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:scale-95"
                                     title="Import Settings & Loadouts">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1022,7 +1119,7 @@
                                     </svg>
                                 </button>
                                 <button onclick="exportSettings()"
-                                    class="bg-[#00d4ff]/10 text-[#94a3b8] h-11 w-11 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:scale-95"
+                                    class="bg-[#00d4ff]/10 text-[#94a3b8] h-8 w-8 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:scale-95"
                                     title="Export Settings & Loadouts">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1087,16 +1184,16 @@
                                             <option value="<=">&le;</option>
                                         </select>
                                         <div id="rule-count-input-container"
-                                            class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-28 focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)] transition-all">
+                                            class="segmented-row h-[2rem] !min-h-0 bg-[#020617] flex items-center justify-between !p-0.5 w-28 focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)] transition-all">
                                             <button onclick="adjustRuleVal('count', -1)"
-                                                class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
+                                                class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">－</button>
                                             <div class="flex-1 flex flex-col items-center justify-center min-w-0">
                                                 <input type="text" id="rule-count-val" inputmode="numeric"
                                                     class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
                                                     placeholder="0" oninput="updateRulesUI(true)">
                                             </div>
                                             <button onclick="adjustRuleVal('count', 1)"
-                                                class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
+                                                class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
                                         </div>
                                     </div>
                                     <div class="flex gap-2 items-center justify-start">
@@ -1144,16 +1241,16 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-sets-input-container"
-                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
+                                    class="segmented-row h-[2rem] !min-h-0 bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('sets', -1)"
-                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
+                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">－</button>
                                     <div class="flex-1 flex flex-col items-center justify-center min-w-0">
                                         <input type="text" id="rule-sets-val" inputmode="numeric"
                                             class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
                                             placeholder="0" oninput="updateRulesUI(true)">
                                     </div>
                                     <button onclick="adjustRuleVal('sets', 1)"
-                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
+                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
                                 </div>
                             </div>
                         </div>
@@ -1175,16 +1272,16 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-reroll-input-container"
-                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
+                                    class="segmented-row h-[2rem] !min-h-0 bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('reroll', -1)"
-                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
+                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">－</button>
                                     <div class="flex-1 flex flex-col items-center justify-center min-w-0">
                                         <input type="text" id="rule-reroll-val" inputmode="numeric"
                                             class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
                                             placeholder="0" oninput="updateRulesUI(true)">
                                     </div>
                                     <button onclick="adjustRuleVal('reroll', 1)"
-                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
+                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
                                 </div>
                             </div>
                         </div>
@@ -1206,16 +1303,16 @@
                                     <option value="<">&lt;</option>
                                 </select>
                                 <div id="rule-explode-input-container"
-                                    class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
+                                    class="segmented-row h-[2rem] !min-h-0 bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
                                     <button onclick="adjustRuleVal('explode', -1)"
-                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">－</button>
+                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">－</button>
                                     <div class="flex-1 flex flex-col items-center justify-center min-w-0">
                                         <input type="text" id="rule-explode-val" inputmode="numeric"
                                             class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
                                             placeholder="0" oninput="updateRulesUI(true)">
                                     </div>
                                     <button onclick="adjustRuleVal('explode', 1)"
-                                        class="w-8 h-8 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-lg font-bold">＋</button>
+                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
                                 </div>
                             </div>
                         </div>
@@ -1246,18 +1343,80 @@
         </section>
 
         <!-- ARSENAL VIEW -->
-        <section id="arsenal-section" class="section-arsenal glass-panel p-4 rounded-2xl border-white/5 space-y-4">
+        <section id="arsenal-section" class="section-arsenal glass-panel p-4 rounded-2xl border-white/5 space-y-3">
+            <!-- Arsenal Header -->
             <div class="flex justify-between items-center px-1">
                 <h3 class="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Dice Arsenal</h3>
                 <button id="arsenal-queue-btn" onclick="toggleArsenalQueue()"
                     class="toggle-btn px-2.5 py-1.5 rounded-lg transition-all hover:bg-white/5 border border-white/10 bg-[#020617]/30 min-w-[70px]">
                     <span id="arsenal-queue-label"
-                        class="text-[10px] font-black text-slate-500 uppercase tracking-wider leading-none">Roll
-                        Only</span>
+                        class="text-[10px] font-black text-slate-500 uppercase tracking-wider leading-none">Roll Only</span>
                 </button>
             </div>
-            <div class="saved-queues-list grid grid-cols-1 gap-3">
-                <!-- Items injected here -->
+
+            <!-- Character Row -->
+            <div class="flex items-center gap-2">
+                <select id="char-select" class="char-select" onchange="selectCharacter(this.value)"></select>
+                <div class="relative shrink-0">
+                    <button onclick="toggleCharMenu(event)" id="char-menu-btn"
+                        class="gear-btn w-[2rem] h-[2rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </button>
+                    <div id="char-menu" class="arsenal-menu absolute right-0 top-9 hidden" style="min-width:160px;z-index:200">
+                        <button onclick="addCharacter(event)" class="menu-item">
+                            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+                            <span>Add Character</span>
+                        </button>
+                        <button onclick="renameCharacter(event)" class="menu-item">
+                            <svg class="w-3.5 h-3.5 text-[#94a3b8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <span>Rename</span>
+                        </button>
+                        <div class="h-px bg-white/5 my-1"></div>
+                        <button onclick="removeCharacter(event)" class="menu-item danger">
+                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Remove Character</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Tabs Row -->
+            <div class="flex items-center gap-1.5">
+                <div id="group-tabs" class="flex gap-1.5 flex-wrap flex-1 min-w-0">
+                    <!-- Injected by JS -->
+                </div>
+                <div class="relative shrink-0">
+                    <button onclick="toggleGroupMenu(event)" id="group-menu-btn"
+                        class="gear-btn w-[2rem] h-[2rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <div id="group-menu" class="arsenal-menu absolute right-0 top-9 hidden" style="min-width:160px;z-index:200">
+                        <button onclick="addGroup(event)" class="menu-item">
+                            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+                            <span>Add Group</span>
+                        </button>
+                        <button onclick="renameGroup(event)" class="menu-item">
+                            <svg class="w-3.5 h-3.5 text-[#94a3b8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <span>Rename Group</span>
+                        </button>
+                        <button onclick="groupAppearance(event)" class="menu-item">
+                            <svg class="w-3.5 h-3.5 text-[#94a3b8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
+                            <span>Appearance</span>
+                        </button>
+                        <div class="h-px bg-white/5 my-1"></div>
+                        <button onclick="removeGroup(event)" class="menu-item danger">
+                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Remove Group</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arsenal List (filtered by character + group) -->
+            <div id="arsenal-list-container" class="group-drop-zone">
+                <div class="saved-queues-list grid grid-cols-1 gap-3">
+                    <!-- Items injected here -->
+                </div>
             </div>
         </section>
 
@@ -1585,6 +1744,14 @@
         let isCharging = false;
         let chargeTimer;
         let activeChargeButton = null;
+
+        // =========================================================================
+        // CHARACTER & GROUP MANAGEMENT STATE
+        // =========================================================================
+        let characters = [{ id: 'primary', name: 'Primary' }];
+        let groups = [{ id: 'main', name: 'Main', color: '#00d4ff', characterId: 'primary' }];
+        let activeCharacterId = 'primary';
+        let activeGroupId = 'main';
 
         let modalResolve = () => { };
 
@@ -2443,6 +2610,9 @@
                 if (!name) return;
                 const newSaved = engine.saveQueue(name, COLOR_PALETTE[0]);
                 if (newSaved) {
+                    // Tag with current character and group
+                    newSaved.characterId = activeCharacterId;
+                    newSaved.groupId = activeGroupId;
                     persistSaved();
                     renderSavedQueues();
                 }
@@ -2452,6 +2622,8 @@
         function closeAllArsenalMenus() {
             document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
             document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+            document.getElementById('char-menu')?.classList.add('hidden');
+            document.getElementById('group-menu')?.classList.add('hidden');
             activeMenuId = null;
         }
 
@@ -2935,104 +3107,404 @@
             });
         }
 
-        function renderSavedQueues() {
-            const lists = document.querySelectorAll('.saved-queues-list');
-            const countDisplays = document.querySelectorAll('.saved-count');
+        // =========================================================================
+        // CHARACTER & GROUP UI RENDERING
+        // =========================================================================
 
-            const countText = `${engine.savedQueues.length}/20`;
-            countDisplays.forEach(el => el.innerText = countText);
+        function renderCharacterSelect() {
+            const sel = document.getElementById('char-select');
+            if (!sel) return;
+            sel.innerHTML = characters.map(c =>
+                `<option value="${c.id}" ${c.id === activeCharacterId ? 'selected' : ''}>${c.name}</option>`
+            ).join('');
+        }
 
-            lists.forEach(list => {
-                list.innerHTML = '';
+        function renderGroupTabs() {
+            const container = document.getElementById('group-tabs');
+            if (!container) return;
+            const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+            container.innerHTML = charGroups.map(g => `
+                <button class="group-tab ${g.id === activeGroupId ? 'active' : ''}"
+                    onclick="selectGroup('${g.id}')">
+                    <span class="group-dot" style="background:${g.color}"></span>
+                    ${g.name}
+                </button>
+            `).join('');
+        }
 
-                if (engine.savedQueues.length === 0) {
-                    list.innerHTML = '<div class="text-sm text-slate-600 italic px-1 py-8 text-center border-2 border-dashed border-white/5 rounded-[1.5rem] bg-white/[0.02] col-span-full">No saved loadouts yet.</div>';
-                    return;
-                }
+        function selectCharacter(id) {
+            activeCharacterId = id;
+            const charGroups = groups.filter(g => g.characterId === id);
+            activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+            renderGroupTabs();
+            renderSavedQueues();
+            persistArsenal();
+        }
 
-                engine.savedQueues.forEach(q => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative';
+        function selectGroup(id) {
+            activeGroupId = id;
+            renderGroupTabs();
+            renderSavedQueues();
+            persistArsenal();
+            vibrate(5);
+        }
 
-                    const item = document.createElement('div');
-                    item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
-                    item.style.setProperty('--item-color', q.color);
-                    item.dataset.id = q.id;
-                    item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
+        // Character CRUD
+        function toggleCharMenu(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('char-menu');
+            const isHidden = menu.classList.contains('hidden');
+            closeAllArsenalMenus();
+            document.getElementById('group-menu')?.classList.add('hidden');
+            if (isHidden) menu.classList.remove('hidden');
+            vibrate(5);
+        }
 
-                    let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
-                    if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
-                    if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
-
-                    if (q.rules) {
-                        if (q.rules.rerollOp && q.rules.rerollVal !== null) formula += ` RR${q.rules.rerollOp}${q.rules.rerollVal}`;
-                        if (q.rules.explodeOp && q.rules.explodeVal !== null) formula += ` EX${q.rules.explodeOp}${q.rules.explodeVal}`;
-                        if (q.rules.targetOp && q.rules.targetVal !== null) formula += ` TARGET${q.rules.targetOp}${q.rules.targetVal}`;
-                    }
-
-                    item.innerHTML = `
-                        <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>
-                        <div class="flex-grow min-w-0 pl-6">
-                            <div class="flex items-center gap-1.5">
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                                ${isArsenalQueue ? `
-                                    <div class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 text-indigo-400" title="Roll & Queue">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 1 1 2.12 9.36L1 14"/></svg>
-                                    </div>
-                                ` : `
-                                    <div class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-sky-500/20 text-sky-400" title="Roll Only">
-                                        <svg viewBox="0 0 24 24" fill="currentColor" class="w-2.5 h-2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
-                                    </div>
-                                `}
-                            </div>
-                            <div class="text-sm mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
-                        </div>
-                    `;
-                    wrapper.appendChild(item);
-
-                    const gearContainer = document.createElement('div');
-                    gearContainer.className = 'shrink-0 relative';
-                    gearContainer.innerHTML = `
-                        <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-[3.5rem] h-[3.5rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </button>
-                        <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden">
-                            <button onclick="loadQueue(${q.id}, event)" class="menu-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                <span>Edit Loadout</span>
-                            </button>
-                            <div class="h-px bg-white/5 my-1"></div>
-                            <button onclick="updateSavedQueue(${q.id}, event)" class="menu-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                <span>Overwrite</span>
-                            </button>
-                            <button onclick="renameSavedQueue(${q.id}, event)" class="menu-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                <span>Rename</span>
-                            </button>
-                            <button onclick="openColorPicker(${q.id}, event)" class="menu-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
-                                <span>Appearance</span>
-                            </button>
-                            ${false ? `
-                            <button onclick="openChainConfig(${q.id}, event)" class="menu-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                                <span>Link Chain</span>
-                            </button>
-                            ` : ''}
-                            <div class="h-px bg-white/5 my-1"></div>
-                            <button onclick="deleteQueue(${q.id}, event)" class="menu-item danger">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                <span>Delete</span>
-                            </button>
-                        </div>
-                    `;
-                    wrapper.appendChild(gearContainer);
-
-                    list.appendChild(wrapper);
-                });
+        function addCharacter(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('char-menu').classList.add('hidden');
+            showModal({ title: 'Add Character', body: 'Enter character name:', confirmText: 'Add', inputPrompt: true, defaultValue: `Character ${characters.length + 1}` }).then(name => {
+                if (!name || !name.trim()) return;
+                const id = 'char_' + Date.now();
+                characters.push({ id, name: name.trim() });
+                groups.push({ id: 'grp_' + Date.now(), name: 'Main', color: '#00d4ff', characterId: id });
+                activeCharacterId = id;
+                activeGroupId = groups.find(g => g.characterId === id).id;
+                renderCharacterSelect();
+                renderGroupTabs();
+                renderSavedQueues();
+                persistArsenal();
+                vibrate(5);
             });
         }
+
+        function renameCharacter(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('char-menu').classList.add('hidden');
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
+            showModal({ title: 'Rename Character', body: 'Enter new name:', confirmText: 'Rename', inputPrompt: true, defaultValue: char.name }).then(name => {
+                if (!name || !name.trim()) return;
+                char.name = name.trim();
+                renderCharacterSelect();
+                persistArsenal();
+                vibrate(5);
+            });
+        }
+
+        function removeCharacter(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('char-menu').classList.add('hidden');
+            if (characters.length <= 1) { showModal({ title: 'Cannot Remove', body: 'You must keep at least one character.', alertOnly: true }); return; }
+            const char = characters.find(c => c.id === activeCharacterId);
+            showModal({ title: `Remove <span class="text-rose-400">${char.name}</span>?`, body: 'All groups and loadouts for this character will be deleted.', confirmText: 'Remove', danger: true }).then(ok => {
+                if (!ok) return;
+                engine.savedQueues = engine.savedQueues.filter(q => q.characterId !== activeCharacterId);
+                groups = groups.filter(g => g.characterId !== activeCharacterId);
+                characters = characters.filter(c => c.id !== activeCharacterId);
+                activeCharacterId = characters[0].id;
+                const remaining = groups.filter(g => g.characterId === activeCharacterId);
+                activeGroupId = remaining.length ? remaining[0].id : null;
+                renderCharacterSelect();
+                renderGroupTabs();
+                renderSavedQueues();
+                persistSaved();
+                persistArsenal();
+                vibrate(10);
+            });
+        }
+
+        // Group CRUD
+        function toggleGroupMenu(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('group-menu');
+            const isHidden = menu.classList.contains('hidden');
+            closeAllArsenalMenus();
+            document.getElementById('char-menu')?.classList.add('hidden');
+            if (isHidden) menu.classList.remove('hidden');
+            vibrate(5);
+        }
+
+        function addGroup(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('group-menu').classList.add('hidden');
+            showModal({ title: 'Add Group', body: 'Enter group name:', confirmText: 'Add', inputPrompt: true, defaultValue: `Group ${groups.filter(g=>g.characterId===activeCharacterId).length + 1}` }).then(name => {
+                if (!name || !name.trim()) return;
+                const id = 'grp_' + Date.now();
+                const color = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
+                groups.push({ id, name: name.trim(), color, characterId: activeCharacterId });
+                activeGroupId = id;
+                renderGroupTabs();
+                renderSavedQueues();
+                persistArsenal();
+                vibrate(5);
+            });
+        }
+
+        function renameGroup(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('group-menu').classList.add('hidden');
+            const grp = groups.find(g => g.id === activeGroupId);
+            if (!grp) return;
+            showModal({ title: 'Rename Group', body: 'Enter new name:', confirmText: 'Rename', inputPrompt: true, defaultValue: grp.name }).then(name => {
+                if (!name || !name.trim()) return;
+                grp.name = name.trim();
+                renderGroupTabs();
+                persistArsenal();
+                vibrate(5);
+            });
+        }
+
+        function removeGroup(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('group-menu').classList.add('hidden');
+            const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+            if (charGroups.length <= 1) { showModal({ title: 'Cannot Remove', body: 'Each character must have at least one group.', alertOnly: true }); return; }
+            const grp = groups.find(g => g.id === activeGroupId);
+            showModal({ title: `Remove <span class="text-rose-400">${grp.name}</span>?`, body: 'All loadouts in this group will be deleted.', confirmText: 'Remove', danger: true }).then(ok => {
+                if (!ok) return;
+                engine.savedQueues = engine.savedQueues.filter(q => q.groupId !== activeGroupId);
+                groups = groups.filter(g => g.id !== activeGroupId);
+                const remaining = groups.filter(g => g.characterId === activeCharacterId);
+                activeGroupId = remaining.length ? remaining[0].id : null;
+                renderGroupTabs();
+                renderSavedQueues();
+                persistSaved();
+                persistArsenal();
+                vibrate(10);
+            });
+        }
+
+        function groupAppearance(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('group-menu').classList.add('hidden');
+            const grp = groups.find(g => g.id === activeGroupId);
+            if (!grp) return;
+            pickerTargetId = '__group__' + activeGroupId;
+            const overlay = document.getElementById('color-picker-overlay');
+            const grid = document.getElementById('color-grid');
+            grid.innerHTML = '';
+            COLOR_PALETTE.forEach(color => {
+                const btn = document.createElement('button');
+                btn.className = 'color-option w-10 h-10 rounded-full border-2 border-white/5';
+                btn.style.backgroundColor = color;
+                btn.onclick = () => {
+                    grp.color = color;
+                    persistArsenal();
+                    renderGroupTabs();
+                    closeColorPicker();
+                    vibrate(5);
+                };
+                grid.appendChild(btn);
+            });
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
+
+        // Move arsenal item to a different group
+        function moveQueueToGroup(id, e) {
+            if (e) e.stopPropagation();
+            closeAllArsenalMenus();
+            const item = engine.savedQueues.find(q => q.id === id);
+            if (!item) return;
+            const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+            const options = charGroups.filter(g => g.id !== item.groupId);
+            if (options.length === 0) { showModal({ title: 'No Other Groups', body: 'Create another group first to move this loadout.', alertOnly: true }); return; }
+            // Build options HTML inside modal body
+            const optHtml = '<div class="flex flex-col gap-2 mt-3">' + options.map(g =>
+                `<button onclick="document.getElementById('modal-overlay').classList.add('hidden');document.getElementById('modal-overlay').classList.remove('flex');assignQueueGroup(${id},'${g.id}')" class="py-2 px-3 rounded-xl border border-white/10 text-xs font-bold text-[#e2e8f0] hover:bg-white/5 flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background:${g.color}"></span>${g.name}</button>`
+            ).join('') + '</div>';
+            showModal({ title: 'Move to Group', body: optHtml, alertOnly: true, confirmText: 'Cancel' });
+        }
+
+        function assignQueueGroup(id, groupId) {
+            const item = engine.savedQueues.find(q => q.id === id);
+            if (item) {
+                item.groupId = groupId;
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+
+        // Ensure new queues saved with character/group context
+        function persistArsenal() {
+            localStorage.setItem('crypto_roller_arsenal', JSON.stringify({ characters, groups, activeCharacterId, activeGroupId }));
+        }
+
+        // =========================================================================
+        // DRAG & DROP STATE
+        // =========================================================================
+        let dragSrcId = null;
+
+        function renderSavedQueues() {
+            // Update single list in the arsenal section
+            const container = document.getElementById('arsenal-list-container');
+            if (!container) return;
+            const list = container.querySelector('.saved-queues-list');
+            if (!list) return;
+
+            // Filter by active character+group (items without groupId fall into first group)
+            const filtered = engine.savedQueues.filter(q => {
+                const charMatch = !q.characterId || q.characterId === activeCharacterId;
+                const grpMatch = !q.groupId || q.groupId === activeGroupId;
+                // Legacy items (no characterId) show in Primary/Main
+                if (!q.characterId && !q.groupId) {
+                    return activeCharacterId === 'primary' && activeGroupId === (groups.find(g=>g.characterId==='primary')?.id);
+                }
+                return charMatch && grpMatch;
+            });
+
+            list.innerHTML = '';
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="text-sm text-slate-600 italic px-1 py-8 text-center border-2 border-dashed border-white/5 rounded-[1.5rem] bg-white/[0.02] col-span-full">No loadouts in this group.<br><span class="text-slate-700 text-xs">Save the current queue above to add one.</span></div>';
+                // Drag into empty group
+                container.ondragover = e => { e.preventDefault(); container.classList.add('drop-active'); };
+                container.ondragleave = () => container.classList.remove('drop-active');
+                container.ondrop = e => {
+                    e.preventDefault();
+                    container.classList.remove('drop-active');
+                    if (dragSrcId !== null) { assignQueueGroup(dragSrcId, activeGroupId); dragSrcId = null; }
+                };
+                return;
+            }
+            container.ondragover = null;
+            container.ondragleave = null;
+            container.ondrop = null;
+
+            const activeGrp = groups.find(g => g.id === activeGroupId);
+            const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+
+            filtered.forEach(q => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative';
+                wrapper.draggable = true;
+                wrapper.dataset.id = q.id;
+
+                // Drag source
+                wrapper.addEventListener('dragstart', (e) => {
+                    dragSrcId = q.id;
+                    wrapper.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                wrapper.addEventListener('dragend', () => {
+                    wrapper.classList.remove('dragging');
+                    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                    document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
+                });
+                wrapper.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (dragSrcId === q.id) return;
+                    wrapper.classList.add('drag-over');
+                });
+                wrapper.addEventListener('dragleave', () => wrapper.classList.remove('drag-over'));
+                wrapper.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    wrapper.classList.remove('drag-over');
+                    if (dragSrcId === null || dragSrcId === q.id) return;
+                    // Reorder within group
+                    const srcIdx = engine.savedQueues.findIndex(x => x.id === dragSrcId);
+                    const tgtIdx = engine.savedQueues.findIndex(x => x.id === q.id);
+                    if (srcIdx > -1 && tgtIdx > -1) {
+                        const [moved] = engine.savedQueues.splice(srcIdx, 1);
+                        moved.groupId = activeGroupId;
+                        moved.characterId = activeCharacterId;
+                        const newTgt = engine.savedQueues.findIndex(x => x.id === q.id);
+                        engine.savedQueues.splice(newTgt, 0, moved);
+                        persistSaved();
+                        renderSavedQueues();
+                    }
+                    dragSrcId = null;
+                });
+
+                const item = document.createElement('div');
+                item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
+                item.style.setProperty('--item-color', q.color);
+                item.dataset.id = q.id;
+                item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
+
+                let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
+                if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
+                if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
+                if (q.rules) {
+                    if (q.rules.rerollOp && q.rules.rerollVal !== null) formula += ` RR${q.rules.rerollOp}${q.rules.rerollVal}`;
+                    if (q.rules.explodeOp && q.rules.explodeVal !== null) formula += ` EX${q.rules.explodeOp}${q.rules.explodeVal}`;
+                    if (q.rules.targetOp && q.rules.targetVal !== null) formula += ` TARGET${q.rules.targetOp}${q.rules.targetVal}`;
+                }
+
+                // Drag handle icon
+                item.innerHTML = `
+                    <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>
+                    <div class="flex items-center justify-center w-5 h-full ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                    </div>
+                    <div class="flex-grow min-w-0 pl-2">
+                        <div class="flex items-center gap-1.5">
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            ${isArsenalQueue ? `
+                                <div class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 text-indigo-400" title="Roll &amp; Queue">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 1 1 2.12 9.36L1 14"/></svg>
+                                </div>
+                            ` : `
+                                <div class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-sky-500/20 text-sky-400" title="Roll Only">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" class="w-2.5 h-2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                                </div>
+                            `}
+                        </div>
+                        <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
+                    </div>
+                `;
+                wrapper.appendChild(item);
+
+                // Build move-to-group submenu options
+                const otherGroups = charGroups.filter(g => g.id !== activeGroupId);
+                const moveGroupHtml = otherGroups.length > 0 ? `
+                    <div class="h-px bg-white/5 my-1"></div>
+                    <button onclick="moveQueueToGroup(${q.id}, event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                        <span>Move to Group</span>
+                    </button>
+                ` : '';
+
+                const gearContainer = document.createElement('div');
+                gearContainer.className = 'shrink-0 relative';
+                gearContainer.innerHTML = `
+                    <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-[3.5rem] h-[3.5rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden">
+                        <button onclick="loadQueue(${q.id}, event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <span>Edit Loadout</span>
+                        </button>
+                        <div class="h-px bg-white/5 my-1"></div>
+                        <button onclick="updateSavedQueue(${q.id}, event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            <span>Overwrite</span>
+                        </button>
+                        <button onclick="renameSavedQueue(${q.id}, event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <span>Rename</span>
+                        </button>
+                        <button onclick="openColorPicker(${q.id}, event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
+                            <span>Appearance</span>
+                        </button>
+                        ${moveGroupHtml}
+                        <div class="h-px bg-white/5 my-1"></div>
+                        <button onclick="deleteQueue(${q.id}, event)" class="menu-item danger">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            <span>Delete</span>
+                        </button>
+                    </div>
+                `;
+                wrapper.appendChild(gearContainer);
+                list.appendChild(wrapper);
+            });
+        }
+
+
 
         function renderChainProgress(steps, scrambleVal, currentName, currentColor) {
             const container = document.getElementById('chain-cascade-container');
@@ -4049,6 +4521,18 @@
         }
 
         window.onload = () => {
+            // Load arsenal (characters + groups) first so rendering has correct context
+            const storedArsenal = localStorage.getItem('crypto_roller_arsenal');
+            if (storedArsenal) {
+                try {
+                    const a = JSON.parse(storedArsenal);
+                    if (a.characters && a.characters.length > 0) characters = a.characters;
+                    if (a.groups && a.groups.length > 0) groups = a.groups;
+                    if (a.activeCharacterId) activeCharacterId = a.activeCharacterId;
+                    if (a.activeGroupId) activeGroupId = a.activeGroupId;
+                } catch(e) { /* keep defaults */ }
+            }
+
             const stored = localStorage.getItem('crypto_roller_saved');
             if (stored) {
                 try {
@@ -4068,6 +4552,7 @@
                 }
                 renderSavedQueues();
             }
+
 
             const savedSettingsStr = localStorage.getItem('crypto_roller_settings');
             if (savedSettingsStr) {
@@ -4115,7 +4600,10 @@
             updateVolume(volume);
             renderDiceGrid();
             updateRulesUI();
+            renderCharacterSelect();
+            renderGroupTabs();
         };
+
 
     </script>
     <footer class="py-12 text-center w-full">
