@@ -343,6 +343,48 @@
             font-weight: 700;
         }
 
+        .system-select {
+            background-color: #020617;
+            border-radius: 0.35rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            outline: none;
+            cursor: pointer;
+            padding: 0.2rem 1.35rem 0.2rem 0.5rem;
+            -webkit-appearance: none;
+            appearance: none;
+            background-repeat: no-repeat;
+            background-position: right 0.45rem center;
+            transition: all 0.2s ease;
+        }
+        .system-select.theme-sky {
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            color: #38bdf8;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2338bdf8' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        .system-select.theme-sky:hover {
+            background-color: rgba(14, 165, 233, 0.1);
+        }
+        .system-select.theme-purple {
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #c084fc;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c084fc' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        .system-select.theme-purple:hover {
+            background-color: rgba(168, 85, 247, 0.1);
+        }
+        .system-select.theme-slate {
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: #94a3b8;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        .system-select.theme-slate:hover {
+            background-color: rgba(148, 163, 184, 0.1);
+        }
+
         .group-tab {
             display: flex;
             align-items: center;
@@ -1658,29 +1700,39 @@
     <!-- Resources Modal -->
     <div id="resources-overlay" onclick="if(event.target === this) closeResourcesModal()"
         class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-[#020617]/95 backdrop-blur-md">
-        <div class="bg-[#020617] border border-slate-800 p-4.5 rounded-[1.8rem] shadow-2xl w-full max-w-md space-y-3.5 text-left"
+        <div class="bg-[#020617] border border-slate-800 p-6 rounded-[2rem] shadow-2xl w-full max-w-md space-y-5 text-left"
              style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
             
             <!-- Header -->
             <div class="flex justify-between items-center">
-                <h3 class="text-xs font-black text-[#94a3b8] uppercase tracking-widest flex items-center gap-1.5">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-emerald-400">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    </svg>
-                    <span id="resources-title-char">Character Resources</span>
-                </h3>
-                <button onclick="closeResourcesModal()" class="text-slate-500 hover:text-[#e2e8f0] transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                <div class="flex flex-col gap-1">
+                    <h3 class="text-sm font-black text-[#94a3b8] uppercase tracking-widest flex items-center gap-1.5">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-emerald-400">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                        <span id="resources-title-char">Character Resources</span>
+                    </h3>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider">System:</span>
+                        <select id="char-system-select" onchange="changeCharacterSystem(this.value)" class="system-select theme-sky">
+                            <option value="standard" class="bg-[#020617] text-sky-400">d20 Roll Over</option>
+                            <option value="roll-under" class="bg-[#020617] text-purple-400">d20 Roll Under</option>
+                            <option value="none" class="bg-[#020617] text-slate-400">Custom / None</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="closeResourcesModal()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10 transition-all shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
 
             <!-- Operator Selector -->
-            <div class="bg-[#090d16] border border-white/5 p-2 rounded-xl space-y-1.5">
-                <div class="flex justify-between items-center">
-                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider">Formula Operator</span>
-                    <select id="resources-operator" onchange="saveResourcesOperator()" class="bg-[#020617] text-sky-400 text-xs font-black rounded px-2 py-1 outline-none border border-white/10 text-center">
+            <div id="resources-operator-container" class="bg-[#090d16] border border-white/5 p-3.5 rounded-2xl space-y-2">
+                <div class="flex justify-between items-center h-11">
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Formula Operator (Custom)</span>
+                    <select id="resources-operator" onchange="saveResourcesOperator()" class="bg-[#020617] text-sky-400 text-sm font-black rounded-xl px-3 py-2 outline-none border border-white/10 text-center h-10 min-w-[70px]">
                         <option value=">=" selected>&ge;</option>
                         <option value=">">&gt;</option>
                         <option value="=">=</option>
@@ -1688,36 +1740,107 @@
                         <option value="<=">&le;</option>
                     </select>
                 </div>
-                <p class="text-[8.5px] text-slate-500 leading-normal">Determines the threshold comparison when rolling a stat arsenal (e.g., 1d20 &ge; STR).</p>
+                <p class="text-[10px] text-slate-500 leading-normal">Determines the threshold comparison when rolling custom resource arsenals (e.g., 1d20 &ge; MANA).</p>
             </div>
 
-            <!-- Pre-load D&D Stats Button -->
-            <button onclick="preloadDdStats()" class="w-full py-1.5 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 font-black text-[10px] hover:bg-[#00d4ff]/20 hover:text-[#e2e8f0] transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider">
-                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Pre-load D&D Stats
-            </button>
+            <!-- Pre-load & Reset Wizard Button Row -->
+            <div class="flex gap-3">
+                <button onclick="preloadDdStats()" class="flex-1 py-2.5 rounded-xl bg-sky-500/20 border border-sky-500/50 text-sky-400 font-bold text-xs hover:bg-sky-500 hover:text-[#e2e8f0] transition-colors text-center uppercase tracking-wider">
+                    Pre-load Stats
+                </button>
+                <button onclick="resetDdStats()" class="flex-1 py-2.5 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-400 font-bold text-xs hover:bg-rose-500 hover:text-[#e2e8f0] transition-colors text-center uppercase tracking-wider">
+                    Reset Stats
+                </button>
+            </div>
 
             <!-- Variables List -->
-            <div id="resources-list-container" class="space-y-1.5 max-h-[220px] overflow-y-auto pr-1 custom-scroll">
+            <div id="resources-list-container" class="space-y-1.5 max-h-[380px] overflow-y-auto pr-1 custom-scroll">
                 <!-- Variables and Steppers injected here -->
             </div>
 
             <div class="h-px bg-white/5"></div>
 
             <!-- Add Custom Variable -->
-            <div class="space-y-1.5">
-                <label class="text-[9px] font-black text-slate-500 uppercase tracking-wider block">Add Custom Resource</label>
-                <div class="flex gap-1.5">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Add Custom Resource</label>
+                <div class="flex gap-3">
                     <input type="text" id="new-resource-name" placeholder="E.g., MANA, AC, FATE" 
-                        class="flex-1 bg-[#090d16] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors uppercase" 
+                        class="flex-1 bg-[#090d16] border border-white/10 rounded-xl px-3.5 h-11 text-sm text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors uppercase" 
                         onkeydown="if(event.key === 'Enter') createCustomVariable()">
                     <button onclick="createCustomVariable()" 
-                        class="px-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-black text-xs hover:bg-emerald-500 hover:text-white transition-colors">
+                        class="h-11 px-5 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-black text-xs hover:bg-emerald-500 hover:text-[#020617] uppercase tracking-wider transition-colors shrink-0">
                         Add
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Character Creation Modal -->
+    <div id="char-creation-overlay" onclick="if(event.target === this) closeCharCreationModal()"
+        class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-[#020617]/95 backdrop-blur-md">
+        <div class="bg-[#020617] border border-slate-800 p-6 rounded-[2rem] shadow-2xl w-full max-w-[360px] space-y-5 text-left"
+             style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-black text-[#94a3b8] uppercase tracking-widest flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-sky-400">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Create Character</span>
+                </h3>
+                <button onclick="closeCharCreationModal()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10 transition-all shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Name -->
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Character Name</label>
+                    <input type="text" id="new-char-name" placeholder="E.g., Aragorn, Galdor" 
+                        class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors">
+                </div>
+
+                <!-- Rules/System Selector -->
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-2">Stat Roll System</label>
+                    <div class="space-y-2">
+                        <!-- Standard d20 Roll Over -->
+                        <label class="relative flex items-start p-3 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 cursor-pointer transition-all focus-within:border-sky-500/50">
+                            <input type="radio" name="new-char-dndtype" value="standard" checked class="mt-1.5 mr-3 text-sky-500 focus:ring-sky-500 bg-[#020617] border-white/10">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-black text-slate-200 uppercase tracking-wide">d20 Roll Over</span>
+                                <span class="text-[10px] text-slate-400 font-medium leading-normal mt-0.5">Roll 1d20 + Ability Modifier (Adds stat as flat modifier).</span>
+                            </div>
+                        </label>
+                        
+                        <!-- d20 Roll Under -->
+                        <label class="relative flex items-start p-3 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 cursor-pointer transition-all focus-within:border-sky-500/50">
+                            <input type="radio" name="new-char-dndtype" value="roll-under" class="mt-1.5 mr-3 text-sky-500 focus:ring-sky-500 bg-[#020617] border-white/10">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-black text-slate-200 uppercase tracking-wide">d20 Roll Under</span>
+                                <span class="text-[10px] text-slate-400 font-medium leading-normal mt-0.5">Roll 1d20 &le; Ability Score (Roll equal or under stat).</span>
+                            </div>
+                        </label>
+
+                        <!-- Custom / None -->
+                        <label class="relative flex items-start p-3 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 cursor-pointer transition-all focus-within:border-sky-500/50">
+                            <input type="radio" name="new-char-dndtype" value="none" class="mt-1.5 mr-3 text-sky-500 focus:ring-sky-500 bg-[#020617] border-white/10">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-black text-slate-200 uppercase tracking-wide">Custom / None</span>
+                                <span class="text-[10px] text-slate-400 font-medium leading-normal mt-0.5">Start with an empty slate of custom resources.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeCharCreationModal()" class="flex-grow py-3 rounded-xl border border-white/10 text-[#94a3b8] font-black text-xs uppercase tracking-wider hover:bg-white/5 transition-all">Cancel</button>
+                <button onclick="submitCharCreation()" class="flex-grow py-3 rounded-xl bg-sky-500/20 border border-sky-500/50 text-sky-400 font-black text-xs uppercase tracking-wider hover:bg-sky-500 hover:text-[#020617] transition-all">Create</button>
             </div>
         </div>
     </div>
@@ -3476,26 +3599,73 @@
         function addCharacter(e) {
             if (e) e.stopPropagation();
             document.getElementById('char-menu').classList.add('hidden');
-            showModal({ title: 'Add Character', body: 'Enter character name:', confirmText: 'Add', inputPrompt: true, defaultValue: `Character ${characters.length + 1}` }).then(name => {
-                if (!name || !name.trim()) return;
-                const id = 'char_' + Date.now();
-                characters.push({ id, name: name.trim() });
-                const baseTime = Date.now();
-                const charGroups = [
-                    { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: id },
-                    { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: id },
-                    { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: id },
-                    { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: id }
-                ];
-                groups.push(...charGroups);
-                activeCharacterId = id;
-                activeGroupId = charGroups[0].id;
-                renderCharacterSelect();
-                renderGroupTabs();
-                renderSavedQueues();
-                persistArsenal();
-                vibrate(5);
+            
+            // Set default name and selection in Character Creation Modal
+            document.getElementById('new-char-name').value = `Character ${characters.length + 1}`;
+            const radios = document.getElementsByName('new-char-dndtype');
+            radios.forEach(r => {
+                if (r.value === 'standard') r.checked = true;
             });
+            
+            const overlay = document.getElementById('char-creation-overlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            setTimeout(() => {
+                const input = document.getElementById('new-char-name');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 50);
+            vibrate(5);
+        }
+
+        function closeCharCreationModal() {
+            const overlay = document.getElementById('char-creation-overlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            vibrate(5);
+        }
+
+        function submitCharCreation() {
+            const nameEl = document.getElementById('new-char-name');
+            const name = nameEl.value.trim();
+            if (!name) return;
+            
+            let dndType = 'standard';
+            const radios = document.getElementsByName('new-char-dndtype');
+            radios.forEach(r => {
+                if (r.checked) dndType = r.value;
+            });
+            
+            const id = 'char_' + Date.now();
+            characters.push({ id, name, dndType });
+            
+            const baseTime = Date.now();
+            const charGroups = [
+                { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: id },
+                { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: id },
+                { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: id },
+                { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: id }
+            ];
+            groups.push(...charGroups);
+            activeCharacterId = id;
+            activeGroupId = charGroups[0].id;
+            
+            closeCharCreationModal();
+            renderCharacterSelect();
+            renderGroupTabs();
+            renderSavedQueues();
+            persistArsenal();
+            vibrate(10);
+            
+            // Automatically open the resources modal after creating a D&D character!
+            if (dndType !== 'none') {
+                setTimeout(() => {
+                    openResourcesModal();
+                }, 200);
+            }
         }
 
         function renameCharacter(e) {
@@ -3529,7 +3699,7 @@
                     
                     // Create new "Primary Character" with standard groups
                     const baseTime = Date.now();
-                    characters = [{ id: 'primary', name: 'Primary Character' }];
+                    characters = [{ id: 'primary', name: 'Primary Character', dndType: 'standard' }];
                     groups = [
                         { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: 'primary' },
                         { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: 'primary' },
@@ -3622,20 +3792,29 @@
             const char = characters.find(c => c.id === activeCharacterId);
             if (!char) return;
             
-            // Set header title
             const titleEl = document.getElementById('resources-title-char');
             if (titleEl) {
                 titleEl.innerText = `${char.name} Resources`;
             }
             
-            // Initialize empty variables object if not present
             if (!char.variables) {
                 char.variables = {};
             }
             
+            // Show/hide operator container based on whether it is a Custom/None system character
+            const opContainer = document.getElementById('resources-operator-container');
+            if (opContainer) {
+                if (char.dndType === 'none') {
+                    opContainer.classList.remove('hidden');
+                } else {
+                    opContainer.classList.add('hidden');
+                }
+            }
+            
             // Load operator from localStorage or default to '>='
             let savedOp = localStorage.getItem(`resources_op_${activeCharacterId}`) || '>=';
-            document.getElementById('resources-operator').value = savedOp;
+            const opSelect = document.getElementById('resources-operator');
+            if (opSelect) opSelect.value = savedOp;
             
             renderResourcesList();
             
@@ -3655,7 +3834,7 @@
             
             const stats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
             stats.forEach(stat => {
-                if (char.variables[stat] === undefined) {
+                if (char.variables[stat] === undefined || char.variables[stat] === 0) {
                     char.variables[stat] = 0;
                 }
             });
@@ -3664,12 +3843,55 @@
                 char.variables["Level"] = 1;
             }
             
+            // Automatically push/recreate associated arsenal rolls silently
+            stats.forEach(stat => {
+                createOrUpdateArsenal(stat, true);
+            });
+            
             persistArsenal();
             renderResourcesList();
+            renderSavedQueues();
             populateRulesVariableDropdowns();
             vibrate(10);
             
-            showModal({ title: 'Stats Pre-loaded', body: 'Standard D&D stats pre-loaded with default values: Stats = 0, Level = 1.', alertOnly: true });
+            const systemLabel = char.dndType === 'roll-under' ? 'd20 Roll Under (1d20 &le; Stat)' : 'd20 Roll Over (1d20 + Stat)';
+            showModal({ 
+                title: 'Stats Pre-loaded', 
+                body: `Stats and Arsenal rolls successfully pre-loaded for <strong>${char.name}</strong>.<br><br>System configuration: <strong>${systemLabel}</strong>`, 
+                alertOnly: true 
+            });
+        }
+
+        function resetDdStats() {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
+            
+            showModal({
+                title: 'Reset Stats & Arsenal?',
+                body: `This will clear STR, DEX, CON, INT, WIS, CHA, Level and their associated Arsenal rolls for <strong>${char.name}</strong>, then recreate them using the <strong>${char.dndType === 'roll-under' ? 'd20 Roll Under' : 'd20 Roll Over'}</strong> rules. Custom resources will be untouched.`,
+                confirmText: 'Reset',
+                danger: true
+            }).then(confirmed => {
+                if (!confirmed) return;
+                
+                const stats = ["STR", "DEX", "CON", "INT", "WIS", "CHA", "Level"];
+                
+                // Remove variable keys
+                if (char.variables) {
+                    stats.forEach(stat => {
+                        delete char.variables[stat];
+                    });
+                }
+                
+                // Filter out saved arsenal queues matching D&D stats for this character
+                engine.savedQueues = engine.savedQueues.filter(q => {
+                    const isDdStat = stats.includes(q.name);
+                    const isForActiveChar = q.characterId === activeCharacterId;
+                    return !(isDdStat && isForActiveChar);
+                });
+                
+                preloadDdStats();
+            });
         }
         
         function closeResourcesModal() {
@@ -3686,6 +3908,18 @@
             renderResourcesList();
             vibrate(5);
         }
+
+        function changeCharacterSystem(val) {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
+            
+            char.dndType = val;
+            persistArsenal();
+            
+            // Re-render resources list and refresh color configurations
+            renderResourcesList();
+            vibrate(10);
+        }
         
         function renderResourcesList() {
             const container = document.getElementById('resources-list-container');
@@ -3697,6 +3931,19 @@
                 return;
             }
             
+            // Display system select value
+            const selectEl = document.getElementById('char-system-select');
+            if (selectEl) {
+                selectEl.value = char.dndType || 'standard';
+                if (char.dndType === 'roll-under') {
+                    selectEl.className = "system-select theme-purple";
+                } else if (char.dndType === 'standard') {
+                    selectEl.className = "system-select theme-sky";
+                } else {
+                    selectEl.className = "system-select theme-slate";
+                }
+            }
+
             const standardStats = ["STR", "DEX", "CON", "INT", "WIS", "CHA", "Level"];
             const entries = Object.entries(char.variables);
             
@@ -3704,41 +3951,65 @@
             
             entries.forEach(([name, value]) => {
                 const isCustom = !standardStats.includes(name);
-                const hasArsenal = engine.savedQueues.some(q => q.characterId === activeCharacterId && q.name === name);
+                const qEntry = engine.savedQueues.find(q => q.characterId === activeCharacterId && q.name === name);
+                const hasArsenal = !!qEntry;
                 
                 html += `
-                <div class="flex items-center justify-between gap-1.5 bg-[#020617]/40 border border-white/5 py-1 px-2.5 rounded-xl">
-                    <!-- Variable Name -->
-                    <div class="flex items-center gap-1 min-w-[70px] max-w-[90px] truncate">
-                        <span class="text-xs font-black text-[#e2e8f0] uppercase tracking-wider" title="${name}">${name}</span>
+                <div class="flex items-center justify-between gap-3 bg-[#020617]/40 border border-white/5 px-3 py-1.5 rounded-xl h-11 shrink-0">
+                    <!-- Variable Name & Delete Custom -->
+                    <div class="flex items-center gap-1.5 min-w-[70px] max-w-[100px] truncate">
+                        <span class="text-xs font-bold text-[#e2e8f0] uppercase tracking-wider" title="${name}">${name}</span>
                         ${isCustom ? `
                         <button onclick="deleteCustomVariable('${name}')" class="text-rose-500/70 hover:text-rose-500 transition-colors p-0.5" title="Delete Resource">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                         ` : ''}
                     </div>
-
-                    <!-- Stepper -->
-                    <div class="flex items-center bg-[#020617] border border-white/10 rounded-lg overflow-hidden h-7 w-22 shrink-0">
-                        <button onclick="adjustVariableValue('${name}', -1)" class="w-6.5 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors font-bold text-xs">－</button>
+ 
+                    <!-- Stepper (matching segmented-row, h-8 = 2rem) -->
+                    <div class="segmented-row h-8 bg-[#020617] flex items-center justify-between !p-0 w-24 shrink-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
+                        <button onclick="adjustVariableValue('${name}', -1)" class="w-7.5 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-base font-bold select-none">－</button>
                         <input type="text" inputmode="numeric" value="${value}" oninput="setVariableValue('${name}', this.value)"
-                            class="flex-1 bg-transparent text-sky-400 font-black text-xs text-center outline-none hide-spinners w-8" />
-                        <button onclick="adjustVariableValue('${name}', 1)" class="w-6.5 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors font-bold text-xs">＋</button>
+                            class="flex-1 bg-transparent text-sky-400 font-bold text-xs text-center outline-none hide-spinners w-8 leading-none" />
+                        <button onclick="adjustVariableValue('${name}', 1)" class="w-7.5 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-base font-bold select-none">＋</button>
                     </div>
-
-                    <!-- Create/Update Arsenal Button -->
-                    ${(name !== 'Level' && !hasArsenal) ? `
-                    <button onclick="createOrUpdateArsenal('${name}')" class="h-7 px-2 rounded-lg border text-[9px] font-black uppercase tracking-wider shrink-0 transition-all bg-[#00d4ff]/5 border-[#00d4ff]/10 text-slate-400 hover:text-[#00d4ff] hover:bg-[#00d4ff]/15">
-                        Add
-                    </button>
-                    ` : '<div class="w-[58px] shrink-0"></div>'}
+ 
+                    <!-- Include ADV/DIS Checkbox -->
+                    <div class="w-[85px] shrink-0 flex items-center justify-end">
+                        ${(name !== 'Level') ? `
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none text-[10px] font-bold text-slate-400 hover:text-[#00d4ff] transition-colors">
+                            <input type="checkbox" onchange="toggleResourceAdvDis('${name}', this.checked)" ${hasArsenal && qEntry.includeAdvDis ? 'checked' : ''} 
+                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+                            <span>ADV/DIS</span>
+                        </label>
+                        ` : ''}
+                    </div>
                 </div>
                 `;
             });
             
-            container.innerHTML = html;
+            if (html === '') {
+                container.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-8">No stats or custom variables. Use the Pre-load button or Add Custom Resource below.</p>';
+            } else {
+                container.innerHTML = html;
+            }
         }
-        
+
+        function toggleResourceAdvDis(name, checked) {
+            let q = engine.savedQueues.find(sq => sq.characterId === activeCharacterId && sq.name === name);
+            if (!q && checked) {
+                // Silently create the arsenal entry first
+                createOrUpdateArsenal(name, true);
+                q = engine.savedQueues.find(sq => sq.characterId === activeCharacterId && sq.name === name);
+            }
+            if (q) {
+                q.includeAdvDis = checked;
+                persistSaved();
+                renderSavedQueues();
+            }
+            vibrate(5);
+        }
+
         function adjustVariableValue(name, delta) {
             const char = characters.find(c => c.id === activeCharacterId);
             if (!char || !char.variables) return;
@@ -3752,7 +4023,7 @@
             renderSavedQueues();
             vibrate(5);
         }
-        
+
         function setVariableValue(name, valStr) {
             const char = characters.find(c => c.id === activeCharacterId);
             if (!char || !char.variables) return;
@@ -3771,7 +4042,7 @@
             persistArsenal();
             renderSavedQueues();
         }
-        
+
         function createCustomVariable() {
             const char = characters.find(c => c.id === activeCharacterId);
             if (!char) return;
@@ -3785,19 +4056,17 @@
             
             if (!name) return;
             
-            // Check if variable name is valid
             if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
                 showModal({ title: 'Invalid Name', body: 'Resource name must start with a letter and contain only letters, numbers, or underscores.', alertOnly: true });
                 return;
             }
             
-            // Check if variable already exists
             if (char.variables[name] !== undefined) {
                 showModal({ title: 'Resource Exists', body: `A resource named "<strong>${name}</strong>" already exists.`, alertOnly: true });
                 return;
             }
             
-            char.variables[name] = 0; // Default to 0
+            char.variables[name] = 0;
             input.value = '';
             
             persistArsenal();
@@ -3805,7 +4074,7 @@
             populateRulesVariableDropdowns();
             vibrate(10);
         }
-        
+
         function deleteCustomVariable(name) {
             const char = characters.find(c => c.id === activeCharacterId);
             if (!char || !char.variables) return;
@@ -3821,39 +4090,70 @@
             });
         }
 
-        function createOrUpdateArsenal(name) {
+        function createOrUpdateArsenal(name, silent = false) {
             const char = characters.find(c => c.id === activeCharacterId);
             if (!char) return;
             
-            // Ensure variables are loaded
             const variables = char.variables || {};
             const val = variables[name] || 0;
             const op = document.getElementById('resources-operator')?.value || '<=';
             
-            // Find existing arsenal for this character + name
             let existing = engine.savedQueues.find(q => q.characterId === activeCharacterId && q.name === name);
             
             const isDdStat = ["STR", "DEX", "CON", "INT", "WIS", "CHA"].includes(name);
-            const isRollUnder = op === '<=' || op === '<';
-            const shouldCheck = isDdStat || isRollUnder;
-
-            if (existing) {
-                // Update it
-                existing.queue = [{ sides: 20, count: 1 }];
-                existing.modifier = null;
-                existing.modLevel = 0;
-                existing.flat = isDdStat ? name : 0;
-                existing.rules = {
+            
+            let rules;
+            let flatVal = 0;
+            let shouldCheck = false;
+            
+            if (isDdStat) {
+                if (char.dndType === 'roll-under') {
+                    flatVal = 0;
+                    rules = {
+                        rerollOp: "", rerollVal: null,
+                        explodeOp: "", explodeVal: null,
+                        targetMode: "sum",
+                        targetOp: "<=",
+                        targetVal: name,
+                        countThreshOp: "", countThreshVal: null,
+                        setsOp: "", setsVal: null
+                    };
+                    shouldCheck = true;
+                } else {
+                    flatVal = name;
+                    rules = {
+                        rerollOp: "", rerollVal: null,
+                        explodeOp: "", explodeVal: null,
+                        targetMode: "sum",
+                        targetOp: "",
+                        targetVal: null,
+                        countThreshOp: "", countThreshVal: null,
+                        setsOp: "", setsVal: null
+                    };
+                    shouldCheck = true;
+                }
+            } else {
+                const isRollUnder = op === '<=' || op === '<';
+                shouldCheck = isRollUnder;
+                flatVal = 0;
+                rules = {
                     rerollOp: "", rerollVal: null,
                     explodeOp: "", explodeVal: null,
                     targetMode: "sum",
-                    targetOp: isDdStat ? "" : op,
-                    targetVal: isDdStat ? null : name, // We store the VARIABLE NAME as a string! E.g. 'STR'
+                    targetOp: op,
+                    targetVal: name,
                     countThreshOp: "", countThreshVal: null,
                     setsOp: "", setsVal: null
                 };
+            }
+            
+            if (existing) {
+                existing.queue = [{ sides: 20, count: 1 }];
+                existing.modifier = null;
+                existing.modLevel = 0;
+                existing.flat = flatVal;
+                existing.rules = rules;
                 existing.includeAdvDis = shouldCheck;
-                // Keep its group and color, or make sure it has group
                 if (!existing.groupId) existing.groupId = activeGroupId;
                 
                 persistSaved();
@@ -3861,29 +4161,20 @@
                 renderResourcesList();
                 vibrate(15);
                 
-                // Visual feedback
-                showModal({ title: 'Arsenal Updated', body: `Successfully updated arsenal for <strong>${name}</strong>.`, alertOnly: true });
+                if (!silent) {
+                    showModal({ title: 'Arsenal Updated', body: `Successfully updated arsenal for <strong>${name}</strong>.`, alertOnly: true });
+                }
             } else {
-                // Create new arsenal item
-                // Let's use a nice color for the stat
                 const color = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)] || '#00d4ff';
                 const newSaved = {
-                    id: Date.now(),
+                    id: Date.now() + Math.floor(Math.random() * 1000),
                     name: name,
                     color: color,
                     queue: [{ sides: 20, count: 1 }],
                     modifier: null,
                     modLevel: 0,
-                    flat: isDdStat ? name : 0,
-                    rules: {
-                        rerollOp: "", rerollVal: null,
-                        explodeOp: "", explodeVal: null,
-                        targetMode: "sum",
-                        targetOp: isDdStat ? "" : op,
-                        targetVal: isDdStat ? null : name, // We store the VARIABLE NAME as a string! E.g. 'STR'
-                        countThreshOp: "", countThreshVal: null,
-                        setsOp: "", setsVal: null
-                    },
+                    flat: flatVal,
+                    rules: rules,
                     characterId: activeCharacterId,
                     groupId: activeGroupId,
                     includeAdvDis: shouldCheck
@@ -3894,8 +4185,12 @@
                 renderResourcesList();
                 vibrate(15);
                 
-                // Visual feedback
-                showModal({ title: 'Arsenal Created', body: `Successfully created arsenal for <strong>${name}</strong> using ${op} ${val}.`, alertOnly: true });
+                if (!silent) {
+                    const desc = isDdStat 
+                        ? (char.dndType === 'roll-under' ? '1d20 &le; ' + name : '1d20 + ' + name)
+                        : `${op} ${val}`;
+                    showModal({ title: 'Arsenal Created', body: `Successfully created arsenal for <strong>${name}</strong> configured as <strong>${desc}</strong>.`, alertOnly: true });
+                }
             }
         }
 
@@ -4765,11 +5060,19 @@
             // intractable cases and falls back to a non-sets BFS curve.
             const hasSets = rules.setsOp && rules.setsVal !== null;
 
-            // Unified, bug-free comparator — always coerces to Number first
+            // Unified, bug-free comparator — always coerces to Number first (resolving variables)
             const check = (val, op, target) => {
-                if (!op || target === null || isNaN(Number(target))) return false;
+                if (!op || target === null) return false;
+                let actualTarget = target;
+                if (window.getActiveCharacterVariable) {
+                    const resolved = window.getActiveCharacterVariable(target);
+                    if (resolved !== null) {
+                        actualTarget = resolved;
+                    }
+                }
+                if (isNaN(Number(actualTarget))) return false;
                 const v = Number(val);
-                const t = Number(target);
+                const t = Number(actualTarget);
                 if (op === '>=') return v >= t;
                 if (op === '<=') return v <= t;
                 if (op === '>') return v > t;
@@ -5429,6 +5732,13 @@
                     if (a.activeGroupId) activeGroupId = a.activeGroupId;
                 } catch(e) { /* keep defaults */ }
             }
+
+            // Ensure backwards compatibility for loaded characters: missing dndType should default to 'standard'
+            characters.forEach(char => {
+                if (!char.dndType) {
+                    char.dndType = 'standard';
+                }
+            });
 
             const stored = localStorage.getItem('crypto_roller_saved');
             if (stored) {
