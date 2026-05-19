@@ -1961,8 +1961,10 @@
         let activeGroupId = 'grp_stats_1';
 
         let modalResolve = () => { };
+        let isCurrentModalDanger = false;
 
         function showModal({ title, body, confirmText = 'OK', cancelText = 'Cancel', danger = false, alertOnly = false, inputPrompt = false, defaultValue = '' }) {
+            isCurrentModalDanger = danger;
             return new Promise(resolve => {
                 const overlay = document.getElementById('modal-overlay');
                 const box = document.getElementById('modal-box');
@@ -1996,6 +1998,7 @@
                 const getResult = (confirmed) => {
                     overlay.classList.add('hidden');
                     overlay.classList.remove('flex');
+                    isCurrentModalDanger = false;
                     if (inputPrompt) {
                         const inputEl = document.getElementById('modal-input');
                         resolve(confirmed ? (inputEl ? inputEl.value : null) : null);
@@ -5821,6 +5824,99 @@
             renderGroupTabs();
         };
 
+        // =========================================================================
+        // Auto Highlight & ENTER Confirm Layer for Popups
+        // =========================================================================
+        function autoHighlightFirstInput(overlay) {
+            if (!overlay) return;
+            const selector = 'input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="image"]):not([type="hidden"]), select, textarea';
+            setTimeout(() => {
+                const elements = Array.from(overlay.querySelectorAll(selector));
+                const firstInput = elements.find(el => {
+                    const style = window.getComputedStyle(el);
+                    return !el.disabled && 
+                           el.offsetWidth > 0 && 
+                           el.offsetHeight > 0 && 
+                           style.display !== 'none' && 
+                           style.visibility !== 'hidden' && 
+                           style.opacity !== '0';
+                });
+                if (firstInput) {
+                    firstInput.focus();
+                    if (typeof firstInput.select === 'function') {
+                        firstInput.select();
+                    }
+                }
+            }, 100);
+        }
+
+        const popupObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    const isVisible = !target.classList.contains('hidden');
+                    const wasHidden = !mutation.oldValue || mutation.oldValue.includes('hidden');
+                    if (isVisible && wasHidden) {
+                        autoHighlightFirstInput(target);
+                    }
+                }
+            });
+        });
+
+        const modalOverlaysList = [
+            document.getElementById('chain-config-overlay'),
+            document.getElementById('color-picker-overlay'),
+            document.getElementById('resources-overlay'),
+            document.getElementById('char-creation-overlay'),
+            document.getElementById('modal-overlay')
+        ];
+
+        modalOverlaysList.forEach(overlay => {
+            if (overlay) {
+                popupObserver.observe(overlay, { attributes: true, attributeOldValue: true });
+            }
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                const overlays = [
+                    { id: 'modal-overlay', type: 'generic' },
+                    { id: 'chain-config-overlay', type: 'chain' },
+                    { id: 'char-creation-overlay', type: 'char' },
+                    { id: 'resources-overlay', type: 'resources' },
+                    { id: 'color-picker-overlay', type: 'color' }
+                ];
+                
+                const activeOverlay = overlays.find(o => {
+                    const el = document.getElementById(o.id);
+                    return el && !el.classList.contains('hidden') && el.offsetWidth > 0;
+                });
+                
+                if (!activeOverlay) return;
+
+                if (activeOverlay.type === 'generic') {
+                    if (isCurrentModalDanger) {
+                        // NEVER FOR DELETE OR OTHER WARNING POPUPS
+                        return;
+                    }
+                    const okBtn = document.getElementById('modal-ok-btn');
+                    const confirmBtn = document.getElementById('modal-confirm-btn');
+                    if (okBtn && !okBtn.classList.contains('hidden') && okBtn.offsetWidth > 0) {
+                        event.preventDefault();
+                        okBtn.click();
+                    } else if (confirmBtn && !confirmBtn.classList.contains('hidden') && confirmBtn.offsetWidth > 0) {
+                        event.preventDefault();
+                        confirmBtn.click();
+                    }
+                } else if (activeOverlay.type === 'char') {
+                    event.preventDefault();
+                    submitCharCreation();
+                } else if (activeOverlay.type === 'chain') {
+                    event.preventDefault();
+                    saveChainConfig();
+                }
+            }
+        }, true);
 
     </script>
     <footer class="py-12 text-center w-full">
