@@ -142,7 +142,8 @@ class DiceEngine {
             modifier: this.activeModifier,
             modLevel: this.modifierLevel,
             flat: this.flatMod,
-            rules: JSON.parse(JSON.stringify(this.rollRules))
+            rules: JSON.parse(JSON.stringify(this.rollRules)),
+            includeAdvDis: false
         };
         this.savedQueues.push(newSaved);
         return newSaved;
@@ -376,12 +377,28 @@ class DiceEngine {
         }
 
         if (activeRules.targetMode !== 'count' && !isListMode) {
-            total += activeFlat;
+            let flatVal = 0;
+            let flatSubtotal = "";
             if (activeFlat !== 0) {
+                if (typeof activeFlat === 'string') {
+                    const resolved = this.resolveVariable(activeFlat);
+                    if (resolved !== null) {
+                        flatVal = resolved;
+                        flatSubtotal = `${activeFlat} (${resolved >= 0 ? '+' : ''}${resolved})`;
+                    } else {
+                        flatVal = Number(activeFlat) || 0;
+                        flatSubtotal = activeFlat;
+                    }
+                } else {
+                    flatVal = Number(activeFlat) || 0;
+                    flatSubtotal = `${flatVal >= 0 ? '+' : ''}${flatVal}`;
+                }
+                
+                total += flatVal;
                 breakdownRows.push({
                     formula: 'Flat Mod',
                     rolls: '',
-                    subtotal: `${activeFlat > 0 ? '+' : ''}${activeFlat}`
+                    subtotal: flatSubtotal
                 });
             }
         }

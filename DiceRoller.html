@@ -2514,7 +2514,15 @@
 
             // 1. Build Dice Parts
             let diceParts = engine.rollingQueue.map(q => `${q.count}d${q.sides}`);
-            if (engine.flatMod !== 0) diceParts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
+            if (engine.flatMod !== 0) {
+                if (typeof engine.flatMod === 'string') {
+                    const resolved = window.getActiveCharacterVariable(engine.flatMod);
+                    const valStr = resolved !== null ? ` (${resolved >= 0 ? '+' : ''}${resolved})` : '';
+                    diceParts.push(`[${engine.flatMod}${valStr}]`);
+                } else {
+                    diceParts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
+                }
+            }
 
             // 2. Build Rules (RR, EX, SET)
             let rulesParts = [];
@@ -3364,6 +3372,16 @@
             }
         }
 
+        function toggleArsenalAdvDis(id, checked) {
+            const item = engine.savedQueues.find(q => q.id === id);
+            if (item) {
+                item.includeAdvDis = checked;
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+
         window.addEventListener('click', (e) => {
             // Close arsenal menus
             if (!e.target.closest('.arsenal-menu') && !e.target.closest('.gear-btn')) {
@@ -3815,21 +3833,26 @@
             // Find existing arsenal for this character + name
             let existing = engine.savedQueues.find(q => q.characterId === activeCharacterId && q.name === name);
             
+            const isDdStat = ["STR", "DEX", "CON", "INT", "WIS", "CHA"].includes(name);
+            const isRollUnder = op === '<=' || op === '<';
+            const shouldCheck = isDdStat || isRollUnder;
+
             if (existing) {
                 // Update it
                 existing.queue = [{ sides: 20, count: 1 }];
                 existing.modifier = null;
                 existing.modLevel = 0;
-                existing.flat = 0;
+                existing.flat = isDdStat ? name : 0;
                 existing.rules = {
                     rerollOp: "", rerollVal: null,
                     explodeOp: "", explodeVal: null,
                     targetMode: "sum",
-                    targetOp: op,
-                    targetVal: name, // We store the VARIABLE NAME as a string! E.g. 'STR'
+                    targetOp: isDdStat ? "" : op,
+                    targetVal: isDdStat ? null : name, // We store the VARIABLE NAME as a string! E.g. 'STR'
                     countThreshOp: "", countThreshVal: null,
                     setsOp: "", setsVal: null
                 };
+                existing.includeAdvDis = shouldCheck;
                 // Keep its group and color, or make sure it has group
                 if (!existing.groupId) existing.groupId = activeGroupId;
                 
@@ -3839,7 +3862,7 @@
                 vibrate(15);
                 
                 // Visual feedback
-                showModal({ title: 'Arsenal Updated', body: `Successfully updated arsenal for <strong>${name}</strong> using ${op} ${val}.`, alertOnly: true });
+                showModal({ title: 'Arsenal Updated', body: `Successfully updated arsenal for <strong>${name}</strong>.`, alertOnly: true });
             } else {
                 // Create new arsenal item
                 // Let's use a nice color for the stat
@@ -3851,18 +3874,19 @@
                     queue: [{ sides: 20, count: 1 }],
                     modifier: null,
                     modLevel: 0,
-                    flat: 0,
+                    flat: isDdStat ? name : 0,
                     rules: {
                         rerollOp: "", rerollVal: null,
                         explodeOp: "", explodeVal: null,
                         targetMode: "sum",
-                        targetOp: op,
-                        targetVal: name, // We store the VARIABLE NAME as a string! E.g. 'STR'
+                        targetOp: isDdStat ? "" : op,
+                        targetVal: isDdStat ? null : name, // We store the VARIABLE NAME as a string! E.g. 'STR'
                         countThreshOp: "", countThreshVal: null,
                         setsOp: "", setsVal: null
                     },
                     characterId: activeCharacterId,
-                    groupId: activeGroupId
+                    groupId: activeGroupId,
+                    includeAdvDis: shouldCheck
                 };
                 engine.savedQueues.push(newSaved);
                 persistSaved();
@@ -4086,7 +4110,15 @@
                 item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
 
                 let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
-                if (q.flat !== 0) formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
+                if (q.flat !== 0) {
+                    if (typeof q.flat === 'string') {
+                        const resolvedVal = window.getActiveCharacterVariable(q.flat);
+                        const valStr = resolvedVal !== null ? ` (${resolvedVal >= 0 ? '+' : ''}${resolvedVal})` : '';
+                        formula += ` [${q.flat}${valStr}]`;
+                    } else {
+                        formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
+                    }
+                }
                 if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
                 if (q.rules) {
                     if (q.rules.rerollOp && q.rules.rerollVal !== null) formula += ` RR${q.rules.rerollOp}${q.rules.rerollVal}`;
@@ -4126,6 +4158,33 @@
                 `;
                 wrapper.appendChild(item);
 
+                if (q.includeAdvDis) {
+                    const advBtn = document.createElement('button');
+                    advBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-[#00d4ff]/10 hover:border-[#00d4ff]/30 active:scale-95 group/adv';
+                    advBtn.title = "Roll with Advantage";
+                    advBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        triggerRoll(e, { arsenalId: q.id, forcedModifier: 'ADV' });
+                    };
+                    advBtn.innerHTML = `
+                        <span class="text-[10px] font-black text-slate-400 group-hover/adv:text-[#00d4ff] transition-colors uppercase tracking-widest">ADV</span>
+                    `;
+
+                    const disBtn = document.createElement('button');
+                    disBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-[#6366f1]/10 hover:border-[#6366f1]/30 active:scale-95 group/dis';
+                    disBtn.title = "Roll with Disadvantage";
+                    disBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        triggerRoll(e, { arsenalId: q.id, forcedModifier: 'DIS' });
+                    };
+                    disBtn.innerHTML = `
+                        <span class="text-[10px] font-black text-slate-400 group-hover/dis:text-[#6366f1] transition-colors uppercase tracking-widest">DIS</span>
+                    `;
+
+                    wrapper.appendChild(advBtn);
+                    wrapper.appendChild(disBtn);
+                }
+
                 // Build move-to-group submenu options
                 const otherGroups = charGroups.filter(g => g.id !== activeGroupId);
                 const moveGroupHtml = otherGroups.length > 0 ? `
@@ -4143,6 +4202,11 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                     <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden">
+                        <label class="menu-item flex items-center gap-2.5 cursor-pointer">
+                            <input type="checkbox" onchange="toggleArsenalAdvDis(${q.id}, this.checked)" ${q.includeAdvDis ? 'checked' : ''} class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-0 w-3.5 h-3.5" onclick="event.stopPropagation()">
+                            <span>Include ADV/DIS</span>
+                        </label>
+                        <div class="h-px bg-white/5 my-1"></div>
                         <button onclick="loadQueue(${q.id}, event)" class="menu-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             <span>Edit Loadout</span>
@@ -4278,7 +4342,7 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        async function executeRollChain(startId, e) {
+        async function executeRollChain(startId, e, forcedModifier = null) {
             if (isRolling) return;
             
             // Set rolling state
@@ -4295,14 +4359,14 @@
             let completedSteps = [];
 
             // A modular recursive runner so that we can support multi-hop chains!
-            async function rollStep(itemId, name, color) {
+            async function rollStep(itemId, name, color, stepForcedModifier = null) {
                 const item = engine.savedQueues.find(q => q.id === itemId);
                 if (!item) return null;
                 
                 const queue = item.queue;
                 const overrides = {
-                    modifier: item.modifier,
-                    modLevel: item.modLevel,
+                    modifier: stepForcedModifier || item.modifier,
+                    modLevel: stepForcedModifier ? Math.max(1, item.modLevel || 1) : item.modLevel,
                     flat: item.flat,
                     rules: item.rules
                 };
@@ -4374,7 +4438,7 @@
                     vibrate([100, 50, 100]);
                 } else {
                     // B. Roll primary step
-                    const primaryRes = await rollStep(startId, startItem.name, startItem.color || '#00d4ff');
+                    const primaryRes = await rollStep(startId, startItem.name, startItem.color || '#00d4ff', forcedModifier);
                     if (primaryRes) {
                         completedSteps.push({ name: startItem.name, result: primaryRes, color: startItem.color || '#00d4ff' });
 
@@ -4439,6 +4503,11 @@
                     activeLoadoutId = options.arsenalId;
                     if (isArsenalQueue) {
                         loadQueue(options.arsenalId);
+                        if (options.forcedModifier) {
+                            engine.activeModifier = options.forcedModifier;
+                            engine.modifierLevel = 1;
+                            updateUI();
+                        }
                     }
                     
                     // Check if there is an active chain config
@@ -4452,7 +4521,7 @@
                     );
                     
                     if (hasChain) {
-                        executeRollChain(options.arsenalId, e);
+                        executeRollChain(options.arsenalId, e, options.forcedModifier);
                         return;
                     }
                     
@@ -4460,8 +4529,8 @@
                     forcedQueue = item.queue;
                     isInstant = false;
                     rollOverrides = {
-                        modifier: item.modifier,
-                        modLevel: item.modLevel,
+                        modifier: options.forcedModifier || item.modifier,
+                        modLevel: options.forcedModifier ? 1 : item.modLevel,
                         flat: item.flat,
                         rules: item.rules
                     };

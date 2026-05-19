@@ -213,6 +213,28 @@ describe('DiceEngine', () => {
             // Both 3 and 4 are pairs (count 2). So 4 total dice are part of pairs.
             expect(result.total).toBe(4);
         });
+
+        test('variable flat modifier resolution', () => {
+            engine.changeQueue(20, 1);
+            engine.setRng(() => 15);
+            
+            // Mock resolveVariable
+            engine.resolveVariable = (name) => {
+                if (name === 'STR') return 2;
+                return null;
+            };
+            
+            engine.flatMod = 'STR';
+            engine.updateRules({ targetMode: 'sum' });
+            
+            const result = engine.calculateRoll();
+            expect(result.total).toBe(17);
+            expect(result.breakdown[1]).toEqual({
+                formula: 'Flat Mod',
+                rolls: '',
+                subtotal: 'STR (+2)'
+            });
+        });
     });
 
     describe('Arsenal Management', () => {
@@ -222,6 +244,7 @@ describe('DiceEngine', () => {
             const saved = engine.saveQueue('My Loadout');
 
             expect(saved).not.toBeNull();
+            expect(saved.includeAdvDis).toBe(false);
             expect(engine.savedQueues.length).toBe(1);
 
             engine.clearQueue();
