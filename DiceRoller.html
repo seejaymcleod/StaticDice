@@ -5052,6 +5052,16 @@
         }
 
         function getTheoreticalDistribution(queue, mod, modifierType, modifierLevel, rules = {}) {
+            let numericMod = 0;
+            if (typeof mod === 'string' && window.getActiveCharacterVariable) {
+                const resolved = window.getActiveCharacterVariable(mod);
+                if (resolved !== null) {
+                    numericMod = parseInt(resolved) || 0;
+                }
+            } else {
+                numericMod = parseInt(mod) || 0;
+            }
+
             const isSum = rules.targetMode === 'sum';
             const isCount = rules.targetMode === 'count';
 
@@ -5180,7 +5190,7 @@
 
                 if (isSum) {
                     let shifted = {};
-                    for (let s in finalDist) shifted[parseInt(s) + mod] = finalDist[s];
+                    for (let s in finalDist) shifted[parseInt(s) + numericMod] = finalDist[s];
                     return shifted;
                 }
                 return finalDist;
@@ -5395,7 +5405,7 @@
                 });
                 if (isSum) {
                     let shifted = {};
-                    for (let s in finalDistFallback) shifted[parseInt(s) + mod] = finalDistFallback[s];
+                    for (let s in finalDistFallback) shifted[parseInt(s) + numericMod] = finalDistFallback[s];
                     return shifted;
                 }
                 return finalDistFallback;
@@ -5404,7 +5414,7 @@
             if (Object.keys(finalDist).length === 0) finalDist = { 0: 1 };
             if (isSum) {
                 let shifted = {};
-                for (let s in finalDist) shifted[parseInt(s) + mod] = finalDist[s];
+                for (let s in finalDist) shifted[parseInt(s) + numericMod] = finalDist[s];
                 return shifted;
             }
             return finalDist;
