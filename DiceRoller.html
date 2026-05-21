@@ -1102,6 +1102,11 @@
                     </div>
                 </div>
 
+                <!-- ACTIVE MODIFIER CHIPS DISPLAY ROW -->
+                <div id="main-active-chips-row" class="flex flex-wrap gap-1.5 px-1 mt-1 hidden">
+                    <!-- Small compact chips injected via JS -->
+                </div>
+
                 <!-- ROW 3: ROLL, ADV, DIS -->
                 <div class="grid grid-cols-12 gap-2.5">
 
@@ -1362,7 +1367,101 @@
                                     </div>
                                     <button onclick="adjustRuleVal('explode', 1)"
                                         class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
+                                    </div>
                                 </div>
+                            </div>
+
+
+                        <!-- 5. Modifier Chips -->
+                        <div class="flex flex-col gap-2 bg-[#020617]/30 p-2.5 rounded-lg border border-white/5 transition-all">
+                            <div class="flex justify-between items-center pb-1 border-b border-white/5">
+                                <span class="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest leading-tight">Modifier Chips</span>
+                                <span id="chips-total-badge" class="text-[10px] font-bold text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded">Total: 0</span>
+                            </div>
+                            
+                            <!-- Chips List Container -->
+                            <div id="modifier-chips-list" class="flex flex-wrap gap-1.5 py-1">
+                                <!-- Chips dynamically injected here -->
+                            </div>
+                            
+                            <!-- Add Chip Row (Compact collapsible control block) -->
+                            <div class="bg-[#020617]/50 rounded-lg p-2 border border-white/5 space-y-2 mt-1">
+                                <div class="flex gap-1.5 items-center justify-between">
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Add Complex Chip</span>
+                                </div>
+                                
+                                <div class="flex flex-wrap gap-1.5 items-center">
+                                    <!-- Operator -->
+                                    <select id="new-chip-operator" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 w-10 text-center">
+                                        <option value="+">+</option>
+                                        <option value="-">-</option>
+                                    </select>
+                                    
+                                    <!-- Base Type -->
+                                    <select id="new-chip-base-type" onchange="toggleNewChipBaseType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                        <option value="literal">Literal</option>
+                                        <option value="variable">Variable</option>
+                                    </select>
+                                    
+                                    <!-- Base Value (Literal Input) -->
+                                    <input type="number" id="new-chip-base-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center" placeholder="Value">
+                                    
+                                    <!-- Base Value (Variable Dropdown) -->
+                                    <select id="new-chip-base-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden">
+                                        <!-- Dynamically populated -->
+                                    </select>
+                                </div>
+                                
+                                <!-- Math options trigger -->
+                                <button onclick="toggleMathOptions()" id="math-options-btn" class="text-[9px] font-bold text-slate-400 hover:text-sky-400 flex items-center gap-1 transition-colors">
+                                    <span>⚙ Show Math Options (× / ÷ / Round)</span>
+                                </button>
+                                
+                                <!-- Math Options (Collapsible) -->
+                                <div id="new-chip-math-opts" class="space-y-2 border-t border-white/5 pt-2 hidden">
+                                    <!-- Multiplier -->
+                                    <div class="flex gap-2 items-center">
+                                        <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Multiply</span>
+                                        <select id="new-chip-mult-type" onchange="toggleNewChipMultType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center shrink-0">
+                                            <option value="none">None</option>
+                                            <option value="literal">Literal</option>
+                                            <option value="variable">Variable</option>
+                                        </select>
+                                        <input type="number" id="new-chip-mult-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center hidden" value="1">
+                                        <select id="new-chip-mult-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden">
+                                            <!-- Populated -->
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Divisor -->
+                                    <div class="flex gap-2 items-center">
+                                        <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Divide</span>
+                                        <select id="new-chip-div-type" onchange="toggleNewChipDivType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center shrink-0">
+                                            <option value="none">None</option>
+                                            <option value="literal">Literal</option>
+                                            <option value="variable">Variable</option>
+                                        </select>
+                                        <input type="number" id="new-chip-div-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center hidden" value="1">
+                                        <select id="new-chip-div-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden">
+                                            <!-- Populated -->
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Round Mode -->
+                                    <div class="flex gap-2 items-center">
+                                        <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Rounding</span>
+                                        <select id="new-chip-round-mode" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                            <option value="none">None</option>
+                                            <option value="up">Round Up (↑)</option>
+                                            <option value="down">Round Down (↓)</option>
+                                            <option value="round">Round Nearest (≈)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="addNewModifierChip()" class="w-full h-8 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 hover:border-sky-500/50 text-xs font-bold rounded-lg uppercase tracking-wider transition-all active:scale-[0.98]">
+                                    ＋ Add Modifier Chip
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1756,6 +1855,31 @@
             <!-- Variables List -->
             <div id="resources-list-container" class="space-y-1.5 max-h-[380px] overflow-y-auto pr-1 custom-scroll">
                 <!-- Variables and Steppers injected here -->
+            </div>
+
+            <div class="h-px bg-white/5"></div>
+
+            <!-- Condensed Chip Builder -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Add Variable Chip to Queue</label>
+                <div class="bg-[#020617]/50 rounded-xl p-2 border border-white/5 flex flex-wrap gap-2 items-center">
+                    <select id="res-chip-operator" class="bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 w-10 text-center h-9">
+                        <option value="+">+</option>
+                        <option value="-">-</option>
+                    </select>
+                    <select id="res-chip-variable" class="flex-1 bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 px-2 h-9">
+                        <!-- Populated with character variables -->
+                    </select>
+                    <select id="res-chip-multiplier" class="bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 w-[4.5rem] text-center h-9" title="Multiplier">
+                        <option value="1">x1</option>
+                        <option value="2">x2</option>
+                        <option value="3">x3</option>
+                        <option value="0.5">x½ (↓)</option>
+                    </select>
+                    <button id="res-add-chip-btn" onclick="addResourceChip()" class="h-9 px-4 rounded-lg bg-sky-500/20 border border-sky-500/50 text-sky-400 font-bold text-[10px] hover:bg-sky-500 hover:text-[#020617] uppercase tracking-wider transition-colors shrink-0">
+                        Add to Queue
+                    </button>
+                </div>
             </div>
 
             <div class="h-px bg-white/5"></div>
@@ -2511,7 +2635,16 @@
         function setFlatMod(val) {
             activeLoadoutId = null;
             const num = parseInt(val) || 0;
-            engine.flatMod = num;
+            engine.flatMod = num !== 0 ? [{
+                type: 'literal',
+                value: Math.abs(num),
+                operator: num >= 0 ? '+' : '-',
+                multiplierType: 'none',
+                multiplierValue: 1,
+                divisorType: 'none',
+                divisorValue: 1,
+                roundMode: 'none'
+            }] : [];
             updateUI();
         }
 
@@ -2632,7 +2765,8 @@
             const rollBtn = document.getElementById('roll-button');
             const saveBtn = document.getElementById('save-queue-btn');
 
-            const canRoll = engine.rollingQueue.length > 0 || engine.flatMod !== 0;
+            const hasFlatMod = Array.isArray(engine.flatMod) ? engine.flatMod.length > 0 : (engine.flatMod !== 0);
+            const canRoll = engine.rollingQueue.length > 0 || hasFlatMod;
             rollBtn.disabled = !canRoll;
             rollBtn.style.opacity = canRoll ? '1' : '0.4';
             rollBtn.style.filter = canRoll ? 'none' : 'grayscale(1)';
@@ -2640,15 +2774,37 @@
 
             // 1. Build Dice Parts
             let diceParts = engine.rollingQueue.map(q => `${q.count}d${q.sides}`);
-            if (engine.flatMod !== 0) {
-                if (typeof engine.flatMod === 'string') {
-                    const resolved = window.getActiveCharacterVariable(engine.flatMod);
-                    const valStr = resolved !== null ? ` (${resolved >= 0 ? '+' : ''}${resolved})` : '';
-                    diceParts.push(`[${engine.flatMod}${valStr}]`);
+            let diceHtml = diceParts.map((d, i) => i === 0 ? `<span class="text-sky-400 font-bold whitespace-nowrap">${d}</span>` : `<span class="text-sky-400/50 font-black">+</span> <span class="text-sky-400 font-bold whitespace-nowrap">${d}</span>`).join(" ");
+
+            // 1b. Build Modifier Chips
+            let modHtmlStr = "";
+            const chips = engine._flatMod || [];
+            if (chips.length > 0) {
+                const chipsHtmlList = chips.map(term => {
+                    const opStr = term.operator === '-' ? '-' : '+';
+                    let termStr = engine.getModifierTermString(term).substring(2);
+                    
+                    let resolvedVal = engine.resolveModifier([term]);
+                    let titleStr = `Resolved: ${resolvedVal >= 0 ? '+' : ''}${resolvedVal}`;
+                    
+                    let inlineResolved = "";
+                    if (term.type === 'variable') {
+                        const resolvedVar = window.getActiveCharacterVariable(term.value);
+                        if (resolvedVar !== null) inlineResolved = `<span class="text-sky-400/60 text-[0.85em] ml-0.5">(${resolvedVar})</span>`;
+                    }
+                    
+                    return `<span class="text-sky-400/50 font-black">${opStr}</span> <span class="text-sky-400 font-bold whitespace-nowrap cursor-help transition-colors hover:text-sky-300" title="${titleStr}">${termStr}${inlineResolved}</span>`;
+                });
+                
+                if (diceParts.length === 0 && chips.length > 0 && chips[0].operator !== '-') {
+                    modHtmlStr = chipsHtmlList.join(" ").replace('<span class="text-sky-400/50 font-black">+</span> ', '');
                 } else {
-                    diceParts.push(`[${engine.flatMod > 0 ? '+' : ''}${engine.flatMod}]`);
+                    modHtmlStr = (diceParts.length > 0 ? " " : "") + chipsHtmlList.join(" ");
                 }
             }
+
+            // Combine base components
+            const basePartsHtml = [diceHtml, modHtmlStr].filter(s => s !== "").join(" ");
 
             // 2. Build Rules (RR, EX, SET)
             let rulesParts = [];
@@ -2676,18 +2832,17 @@
                 modeLabel += ` ≥${engine.overallTarget}`;
             }
 
-            const hasBaseContent = diceParts.length > 0 || engine.activeModifier !== null || engine.overallTarget !== null;
+            const hasBaseContent = basePartsHtml !== "" || engine.activeModifier !== null || engine.overallTarget !== null;
             const hasRules = rrActive || exActive || setsActive;
 
             if (hasBaseContent || hasRules) {
-                const diceHtml = diceParts.map((d, i) => i === 0 ? `<span class="text-sky-400 font-bold whitespace-nowrap">${d}</span>` : `<span class="text-sky-400/50 font-black">+</span><span class="text-sky-400 font-bold whitespace-nowrap">${d}</span>`).join(" ");
                 const modHtml = engine.activeModifier ? `<span class="bg-indigo-500/10 text-indigo-400 text-sm px-1.5 py-0.5 rounded border border-indigo-500/20 font-black whitespace-nowrap opacity-90">${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}</span>` : "";
                 const rulesHtml = rulesParts.length > 0 ? rulesParts.map(r => `<span class="bg-slate-500/10 text-slate-400 text-sm px-1.5 py-0.5 rounded border border-slate-500/20 font-bold whitespace-nowrap opacity-80">${r}</span>`).join("") : "";
                 const modeHtml = modeLabel !== "" ? `<span class="bg-sky-500/10 text-sky-400 text-sm px-1.5 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90">${modeLabel}</span>` : "";
 
                 display.innerHTML = `
                     <div class="flex flex-wrap items-center justify-center gap-1.5">
-                        ${diceHtml} ${modHtml} ${rulesHtml} ${modeHtml}
+                        ${basePartsHtml} ${modHtml} ${rulesHtml} ${modeHtml}
                     </div>
                 `;
             } else {
@@ -2695,7 +2850,16 @@
             }
 
             if (modInput && document.activeElement !== modInput) {
-                modInput.value = engine.flatMod > 0 ? `+${engine.flatMod}` : (engine.flatMod === 0 ? "0" : engine.flatMod);
+                let resolvedVal = 0;
+                if (Array.isArray(engine.flatMod)) {
+                    resolvedVal = engine.resolveModifier(engine.flatMod);
+                } else if (typeof engine.flatMod === 'string' && engine.flatMod !== '') {
+                    const resolved = window.getActiveCharacterVariable(engine.flatMod);
+                    resolvedVal = resolved !== null ? resolved : 0;
+                } else {
+                    resolvedVal = Number(engine.flatMod) || 0;
+                }
+                modInput.value = resolvedVal > 0 ? `+${resolvedVal}` : (resolvedVal === 0 ? "0" : resolvedVal);
             }
             const overallTargetInput = document.getElementById('overall-target-input');
             if (overallTargetInput && document.activeElement !== overallTargetInput) {
@@ -2788,7 +2952,7 @@
             advSub.innerText = (canMod && engine.activeModifier === 'ADV' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
             disSub.innerText = (canMod && engine.activeModifier === 'DIS' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
 
-            saveBtn.disabled = !hasDice && engine.flatMod === 0;
+            saveBtn.disabled = !hasDice && !hasFlatMod;
 
             const runAuditBtn = document.getElementById('run-audit-btn');
             if (runAuditBtn) {
@@ -2798,6 +2962,7 @@
             }
 
             syncAuditorLabels();
+            renderModifierChips();
         }
 
         function syncAuditorLabels() {
@@ -2814,6 +2979,281 @@
             if (container) {
                 container.classList.remove('justify-center', 'flex-nowrap', '[mask-image:linear-gradient(to_right,white_80%,transparent)]');
                 container.classList.add('justify-start', 'flex-wrap', 'w-full', 'max-h-[3rem]', 'overflow-hidden');
+            }
+        }
+
+        // =========================================================================
+        // MODIFIER CHIPS MANAGEMENT
+        // =========================================================================
+        function toggleNewChipBaseType() {
+            const type = document.getElementById('new-chip-base-type').value;
+            const litInput = document.getElementById('new-chip-base-literal');
+            const varSelect = document.getElementById('new-chip-base-variable');
+            
+            if (type === 'variable') {
+                litInput.classList.add('hidden');
+                varSelect.classList.remove('hidden');
+                populateVariablesDropdown(varSelect);
+            } else {
+                litInput.classList.remove('hidden');
+                varSelect.classList.add('hidden');
+            }
+        }
+
+        function toggleNewChipMultType() {
+            const type = document.getElementById('new-chip-mult-type').value;
+            const litInput = document.getElementById('new-chip-mult-literal');
+            const varSelect = document.getElementById('new-chip-mult-variable');
+            
+            if (type === 'literal') {
+                litInput.classList.remove('hidden');
+                varSelect.classList.add('hidden');
+            } else if (type === 'variable') {
+                litInput.classList.add('hidden');
+                varSelect.classList.remove('hidden');
+                populateVariablesDropdown(varSelect);
+            } else {
+                litInput.classList.add('hidden');
+                varSelect.classList.add('hidden');
+            }
+        }
+
+        function toggleNewChipDivType() {
+            const type = document.getElementById('new-chip-div-type').value;
+            const litInput = document.getElementById('new-chip-div-literal');
+            const varSelect = document.getElementById('new-chip-div-variable');
+            
+            if (type === 'literal') {
+                litInput.classList.remove('hidden');
+                varSelect.classList.add('hidden');
+            } else if (type === 'variable') {
+                litInput.classList.add('hidden');
+                varSelect.classList.remove('hidden');
+                populateVariablesDropdown(varSelect);
+            } else {
+                litInput.classList.add('hidden');
+                varSelect.classList.add('hidden');
+            }
+        }
+
+        let mathOptionsVisible = false;
+        function toggleMathOptions() {
+            mathOptionsVisible = !mathOptionsVisible;
+            const mathPanel = document.getElementById('new-chip-math-opts');
+            const toggleBtn = document.getElementById('math-options-btn');
+            
+            if (mathOptionsVisible) {
+                mathPanel.classList.remove('hidden');
+                toggleBtn.innerHTML = "<span>⚙ Hide Math Options (× / ÷ / Round)</span>";
+            } else {
+                mathPanel.classList.add('hidden');
+                toggleBtn.innerHTML = "<span>⚙ Show Math Options (× / ÷ / Round)</span>";
+            }
+        }
+
+        function populateVariablesDropdown(dropdownEl) {
+            if (!dropdownEl) return;
+            const currentVal = dropdownEl.value;
+            const char = characters.find(c => c.id === activeCharacterId);
+            let options = "";
+            if (char && char.variables) {
+                Object.keys(char.variables).forEach(name => {
+                    options += `<option value="${name}">${name}</option>`;
+                });
+            }
+            if (!options) {
+                options = `<option value="">No Variables</option>`;
+            }
+            dropdownEl.innerHTML = options;
+            if ([...dropdownEl.options].some(o => o.value === currentVal)) {
+                dropdownEl.value = currentVal;
+            }
+        }
+
+        function addNewModifierChip() {
+            activeLoadoutId = null;
+            
+            const operator = document.getElementById('new-chip-operator').value;
+            const baseType = document.getElementById('new-chip-base-type').value;
+            let baseValue;
+            
+            if (baseType === 'variable') {
+                baseValue = document.getElementById('new-chip-base-variable').value;
+                if (!baseValue || baseValue === "No Variables") {
+                    showModal({ title: 'Add Chip Failed', body: 'No character variable selected.', alertOnly: true });
+                    return;
+                }
+            } else {
+                baseValue = parseInt(document.getElementById('new-chip-base-literal').value);
+                if (isNaN(baseValue)) {
+                    showModal({ title: 'Add Chip Failed', body: 'Invalid literal modifier value entered.', alertOnly: true });
+                    return;
+                }
+            }
+            
+            // Math inputs
+            const multType = document.getElementById('new-chip-mult-type').value;
+            let multValue = 1;
+            if (multType === 'literal') {
+                multValue = parseInt(document.getElementById('new-chip-mult-literal').value);
+                if (isNaN(multValue)) multValue = 1;
+            } else if (multType === 'variable') {
+                multValue = document.getElementById('new-chip-mult-variable').value;
+                if (!multValue || multValue === "No Variables") multValue = 1;
+            }
+            
+            const divType = document.getElementById('new-chip-div-type').value;
+            let divValue = 1;
+            if (divType === 'literal') {
+                divValue = parseInt(document.getElementById('new-chip-div-literal').value);
+                if (isNaN(divValue) || divValue === 0) divValue = 1;
+            } else if (divType === 'variable') {
+                divValue = document.getElementById('new-chip-div-variable').value;
+                if (!divValue || divValue === "No Variables") divValue = 1;
+            }
+            
+            const roundMode = document.getElementById('new-chip-round-mode').value;
+            
+            const newTerm = {
+                type: baseType,
+                value: baseValue,
+                operator: operator,
+                multiplierType: multType,
+                multiplierValue: multValue,
+                divisorType: divType,
+                divisorValue: divValue,
+                roundMode: roundMode
+            };
+            
+            if (!Array.isArray(engine._flatMod)) {
+                engine._flatMod = [];
+            }
+            
+            engine._flatMod.push(newTerm);
+            
+            // Clear literal base value
+            document.getElementById('new-chip-base-literal').value = '';
+            
+            // Vibrate and refresh UI
+            vibrate(10);
+            updateUI();
+        }
+
+        function removeModifierChip(index, e) {
+            if (e) e.stopPropagation();
+            activeLoadoutId = null;
+            if (Array.isArray(engine._flatMod)) {
+                engine._flatMod.splice(index, 1);
+            }
+            vibrate(5);
+            updateUI();
+        }
+
+        let draggedChipIndex = null;
+        
+        function handleChipDragStart(e, index) {
+            draggedChipIndex = index;
+            e.dataTransfer.effectAllowed = 'move';
+            // Slight delay so the drag ghost image looks normal before we dim the original
+            setTimeout(() => e.target.classList.add('opacity-30', 'scale-95'), 0);
+        }
+        
+        function handleChipDragEnd(e) {
+            e.target.classList.remove('opacity-30', 'scale-95');
+            draggedChipIndex = null;
+        }
+
+        function handleChipDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleChipDrop(e, targetIndex) {
+            e.stopPropagation();
+            if (draggedChipIndex === null || draggedChipIndex === targetIndex) return;
+            
+            const arr = engine._flatMod;
+            const item = arr.splice(draggedChipIndex, 1)[0];
+            arr.splice(targetIndex, 0, item);
+            
+            activeLoadoutId = null;
+            vibrate(10);
+            updateUI();
+            return false;
+        }
+
+        function renderModifierChips() {
+            const listContainer = document.getElementById('modifier-chips-list');
+            const mainActiveRow = document.getElementById('main-active-chips-row');
+            const totalBadge = document.getElementById('chips-total-badge');
+            
+            const chips = engine._flatMod || [];
+            
+            // Calculate total badge resolved value
+            const totalVal = engine.resolveModifier(chips);
+            if (totalBadge) {
+                totalBadge.innerText = `Total: ${totalVal >= 0 ? '+' : ''}${totalVal}`;
+            }
+            
+            // 1. Render in Advanced Rules Panel
+            if (listContainer) {
+                if (chips.length === 0) {
+                    listContainer.innerHTML = '<span class="text-[10px] text-slate-500 italic py-1 pl-1">No modifier chips active</span>';
+                } else {
+                    listContainer.innerHTML = chips.map((chip, index) => {
+                        const termStr = engine.getModifierTermString(chip);
+                        let resolvedStr = "";
+                        if (chip.type === 'variable') {
+                            const resolved = window.getActiveCharacterVariable(chip.value);
+                            if (resolved !== null) {
+                                resolvedStr = ` <span class="text-slate-400">(${resolved >= 0 ? '+' : ''}${resolved})</span>`;
+                            }
+                        }
+                        return `
+                            <div draggable="true" 
+                                ondragstart="handleChipDragStart(event, ${index})" 
+                                ondragend="handleChipDragEnd(event)" 
+                                ondragover="handleChipDragOver(event)" 
+                                ondrop="handleChipDrop(event, ${index})"
+                                class="flex items-center gap-1.5 bg-[#020617] border border-white/10 text-sky-400 rounded-lg px-2 py-1 text-xs font-bold transition-all hover:border-[#00d4ff]/30 cursor-grab active:cursor-grabbing">
+                                <span>${termStr}</span>${resolvedStr}
+                                <button onclick="removeModifierChip(${index}, event)" class="text-slate-500 hover:text-rose-400 transition-colors ml-1 shrink-0" title="Remove Chip">✕</button>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+            
+            // 2. Render on main screen below steppers
+            if (mainActiveRow) {
+                if (chips.length === 0) {
+                    mainActiveRow.classList.add('hidden');
+                    mainActiveRow.innerHTML = '';
+                } else {
+                    mainActiveRow.classList.remove('hidden');
+                    mainActiveRow.innerHTML = chips.map((chip, index) => {
+                        const termStr = engine.getModifierTermString(chip);
+                        let resolvedStr = "";
+                        if (chip.type === 'variable') {
+                            const resolved = window.getActiveCharacterVariable(chip.value);
+                            if (resolved !== null) {
+                                resolvedStr = ` <span class="opacity-60">(${resolved >= 0 ? '+' : ''}${resolved})</span>`;
+                            }
+                        }
+                        return `
+                            <div draggable="true" 
+                                ondragstart="handleChipDragStart(event, ${index})" 
+                                ondragend="handleChipDragEnd(event)" 
+                                ondragover="handleChipDragOver(event)" 
+                                ondrop="handleChipDrop(event, ${index})"
+                                class="flex items-center gap-1 bg-[#020617] border border-[#00d4ff]/20 text-sky-400 rounded-md px-1.5 py-0.5 text-[10px] font-bold shadow-[0_0_10px_rgba(0,212,255,0.02)] transition-all hover:border-[#00d4ff]/40 cursor-grab active:cursor-grabbing">
+                                <span>${termStr}</span>${resolvedStr}
+                                <button onclick="removeModifierChip(${index}, event)" class="text-slate-500 hover:text-rose-400 transition-colors ml-0.5 shrink-0" title="Remove Chip">✕</button>
+                            </div>
+                        `;
+                    }).join('');
+                }
             }
         }
 
@@ -3786,6 +4226,15 @@
             } else {
                 countValEl.value = 'overall';
             }
+
+            // Populate New Mod Chip selects
+            const baseVar = document.getElementById('new-chip-base-variable');
+            const multVar = document.getElementById('new-chip-mult-variable');
+            const divVar = document.getElementById('new-chip-div-variable');
+            
+            populateVariablesDropdown(baseVar);
+            populateVariablesDropdown(multVar);
+            populateVariablesDropdown(divVar);
         }
 
         function openResourcesModal(e) {
@@ -3820,6 +4269,10 @@
             if (opSelect) opSelect.value = savedOp;
             
             renderResourcesList();
+            
+            // Populate quick chip builder
+            const resChipVar = document.getElementById('res-chip-variable');
+            if (resChipVar) populateVariablesDropdown(resChipVar);
             
             // Show overlay
             document.getElementById('resources-overlay').classList.remove('hidden');
@@ -3895,6 +4348,51 @@
                 
                 preloadDdStats();
             });
+        }
+
+        function addResourceChip() {
+            const operator = document.getElementById('res-chip-operator').value;
+            const variable = document.getElementById('res-chip-variable').value;
+            let multiplier = parseFloat(document.getElementById('res-chip-multiplier').value);
+            
+            if (!variable || variable === "No Variables") {
+                vibrate([20, 50, 20]);
+                return;
+            }
+
+            const newTerm = {
+                type: 'variable',
+                value: variable,
+                operator: operator,
+                multiplierType: multiplier === 1 ? 'none' : 'literal',
+                multiplierValue: multiplier === 1 ? 1 : multiplier,
+                divisorType: 'none',
+                divisorValue: 1,
+                roundMode: multiplier === 0.5 ? 'down' : 'none'
+            };
+            
+            if (!Array.isArray(engine._flatMod)) {
+                engine._flatMod = [];
+            }
+            
+            engine._flatMod.push(newTerm);
+            
+            vibrate(10);
+            updateUI();
+            
+            // Flash button
+            const btn = document.getElementById('res-add-chip-btn');
+            const oldText = btn.innerText;
+            btn.innerText = 'Added!';
+            btn.classList.replace('bg-sky-500/20', 'bg-emerald-500/20');
+            btn.classList.replace('text-sky-400', 'text-emerald-400');
+            btn.classList.replace('border-sky-500/50', 'border-emerald-500/50');
+            setTimeout(() => {
+                btn.innerText = oldText;
+                btn.classList.replace('bg-emerald-500/20', 'bg-sky-500/20');
+                btn.classList.replace('text-emerald-400', 'text-sky-400');
+                btn.classList.replace('border-emerald-500/50', 'border-sky-500/50');
+            }, 800);
         }
         
         function closeResourcesModal() {
@@ -4408,14 +4906,31 @@
                 item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
 
                 let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
-                if (q.flat !== 0) {
-                    if (typeof q.flat === 'string') {
-                        const resolvedVal = window.getActiveCharacterVariable(q.flat);
-                        const valStr = resolvedVal !== null ? ` (${resolvedVal >= 0 ? '+' : ''}${resolvedVal})` : '';
-                        formula += ` [${q.flat}${valStr}]`;
-                    } else {
-                        formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
-                    }
+                if (Array.isArray(q.flat) && q.flat.length > 0) {
+                    q.flat.forEach(term => {
+                        let termStr = term.value;
+                        let suffix = "";
+                        if (term.multiplierType && term.multiplierType !== 'none') suffix += `*${term.multiplierValue}`;
+                        if (term.divisorType && term.divisorType !== 'none') suffix += `/${term.divisorValue}`;
+                        if (term.roundMode === 'up') suffix += '↑';
+                        if (term.roundMode === 'down') suffix += '↓';
+                        if (term.roundMode === 'round') suffix += '≈';
+                        
+                        let resolvedStr = "";
+                        if (term.type === 'variable') {
+                            const resolved = window.getActiveCharacterVariable(term.value);
+                            if (resolved !== null) {
+                                resolvedStr = ` (${resolved >= 0 ? '+' : ''}${resolved})`;
+                            }
+                        }
+                        formula += ` [${term.operator === '-' ? '-' : '+'}${termStr}${suffix}${resolvedStr}]`;
+                    });
+                } else if (typeof q.flat === 'string' && q.flat !== '') {
+                    const resolvedVal = window.getActiveCharacterVariable(q.flat);
+                    const valStr = resolvedVal !== null ? ` (${resolvedVal >= 0 ? '+' : ''}${resolvedVal})` : '';
+                    formula += ` [${q.flat}${valStr}]`;
+                } else if (typeof q.flat === 'number' && q.flat !== 0) {
+                    formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
                 }
                 if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
                 if (q.rules) {
@@ -5056,7 +5571,9 @@
 
         function getTheoreticalDistribution(queue, mod, modifierType, modifierLevel, rules = {}) {
             let numericMod = 0;
-            if (typeof mod === 'string' && window.getActiveCharacterVariable) {
+            if (Array.isArray(mod)) {
+                numericMod = engine.resolveModifier(mod);
+            } else if (typeof mod === 'string' && window.getActiveCharacterVariable) {
                 const resolved = window.getActiveCharacterVariable(mod);
                 if (resolved !== null) {
                     numericMod = parseInt(resolved) || 0;

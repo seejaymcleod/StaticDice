@@ -3,7 +3,7 @@ class DiceEngine {
         this.rollingQueue = [];
         this.activeModifier = null; // 'ADV', 'DIS', or null
         this.modifierLevel = 0;
-        this.flatMod = 0;
+        this._flatMod = []; // Under-the-hood complex chip array
         this.rollRules = {
             rerollOp: "", rerollVal: null,
             explodeOp: "", explodeVal: null,
@@ -14,6 +14,56 @@ class DiceEngine {
         this.savedQueues = [];
         this.rng = this.defaultRng;
         this.overallTarget = null;
+    }
+
+    get flatMod() {
+        if (!this._flatMod || this._flatMod.length === 0) {
+            return 0;
+        }
+        if (this._flatMod.length === 1) {
+            const first = this._flatMod[0];
+            if (first.type === 'literal' &&
+                (!first.multiplierType || first.multiplierType === 'none') &&
+                (!first.divisorType || first.divisorType === 'none')) {
+                return first.operator === '-' ? -first.value : first.value;
+            }
+            if (first.type === 'variable' &&
+                (!first.multiplierType || first.multiplierType === 'none') &&
+                (!first.divisorType || first.divisorType === 'none')) {
+                return first.value;
+            }
+        }
+        return this._flatMod;
+    }
+
+    set flatMod(val) {
+        if (Array.isArray(val)) {
+            this._flatMod = val;
+        } else if (typeof val === 'string' && val !== '') {
+            this._flatMod = [{
+                type: 'variable',
+                value: val,
+                operator: '+',
+                multiplierType: 'none',
+                multiplierValue: 1,
+                divisorType: 'none',
+                divisorValue: 1,
+                roundMode: 'none'
+            }];
+        } else if (typeof val === 'number' && val !== 0) {
+            this._flatMod = [{
+                type: 'literal',
+                value: Math.abs(val),
+                operator: val >= 0 ? '+' : '-',
+                multiplierType: 'none',
+                multiplierValue: 1,
+                divisorType: 'none',
+                divisorValue: 1,
+                roundMode: 'none'
+            }];
+        } else {
+            this._flatMod = [];
+        }
     }
 
     defaultRng(sides) {
@@ -53,15 +103,44 @@ class DiceEngine {
         } else if (this.activeModifier) {
             this.activeModifier = null;
             this.modifierLevel = 0;
-        } else if (this.flatMod !== 0) {
-            this.flatMod = 0;
+        } else if (this._flatMod && this._flatMod.length > 0) {
+            this._flatMod.pop();
         } else if (this.rollingQueue.length > 0) {
             this.rollingQueue.pop();
         }
     }
 
     adjustFlatMod(val) {
-        this.flatMod += val;
+        if (!Array.isArray(this._flatMod)) {
+            this._flatMod = [];
+        }
+        const lastTerm = this._flatMod[this._flatMod.length - 1];
+        if (lastTerm && lastTerm.type === 'literal' && lastTerm.multiplierType === 'none' && lastTerm.divisorType === 'none') {
+            let currentVal = Number(lastTerm.value) || 0;
+            let op = lastTerm.operator || '+';
+            if (op === '-') currentVal = -currentVal;
+            
+            currentVal += val;
+            if (currentVal === 0) {
+                this._flatMod.pop();
+            } else {
+                lastTerm.operator = currentVal >= 0 ? '+' : '-';
+                lastTerm.value = Math.abs(currentVal);
+            }
+        } else {
+            if (val !== 0) {
+                this._flatMod.push({
+                    type: 'literal',
+                    value: Math.abs(val),
+                    operator: val >= 0 ? '+' : '-',
+                    multiplierType: 'none',
+                    multiplierValue: 1,
+                    divisorType: 'none',
+                    divisorValue: 1,
+                    roundMode: 'none'
+                });
+            }
+        }
     }
 
     adjustOverallTarget(val) {
@@ -85,7 +164,7 @@ class DiceEngine {
         this.rollingQueue = [];
         this.activeModifier = null;
         this.modifierLevel = 0;
-        this.flatMod = 0;
+        this._flatMod = [];
         
         this.rollRules = {
             rerollOp: "", rerollVal: null,
@@ -133,7 +212,8 @@ class DiceEngine {
 
     // ARSENAL LOGIC
     saveQueue(name, color = '#ef4444') {
-        if (this.rollingQueue.length === 0 && this.flatMod === 0) return null;
+        const hasFlatMod = this._flatMod && this._flatMod.length > 0;
+        if (this.rollingQueue.length === 0 && !hasFlatMod) return null;
         const newSaved = {
             id: Date.now(),
             name: name,
@@ -141,7 +221,7 @@ class DiceEngine {
             queue: JSON.parse(JSON.stringify(this.rollingQueue)),
             modifier: this.activeModifier,
             modLevel: this.modifierLevel,
-            flat: this.flatMod,
+            flat: JSON.parse(JSON.stringify(this._flatMod)),
             rules: JSON.parse(JSON.stringify(this.rollRules)),
             includeAdvDis: false
         };
@@ -157,7 +237,37 @@ class DiceEngine {
         this.rollingQueue = JSON.parse(JSON.stringify(item.queue));
         this.activeModifier = item.modifier;
         this.modifierLevel = item.modLevel;
-        this.flatMod = item.flat;
+        
+        let loadedFlat = item.flat;
+        if (!Array.isArray(loadedFlat)) {
+            if (typeof loadedFlat === 'string' && loadedFlat !== '') {
+                loadedFlat = [{
+                    type: 'variable',
+                    value: loadedFlat,
+                    operator: '+',
+                    multiplierType: 'none',
+                    multiplierValue: 1,
+                    divisorType: 'none',
+                    divisorValue: 1,
+                    roundMode: 'none'
+                }];
+            } else if (typeof loadedFlat === 'number' && loadedFlat !== 0) {
+                loadedFlat = [{
+                    type: 'literal',
+                    value: Math.abs(loadedFlat),
+                    operator: loadedFlat >= 0 ? '+' : '-',
+                    multiplierType: 'none',
+                    multiplierValue: 1,
+                    divisorType: 'none',
+                    divisorValue: 1,
+                    roundMode: 'none'
+                }];
+            } else {
+                loadedFlat = [];
+            }
+        }
+        this._flatMod = JSON.parse(JSON.stringify(loadedFlat));
+        
         this.rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetMode: "sum", targetOp: "", targetVal: null, countThreshOp: "", countThreshVal: null, setsOp: "", setsVal: null };
         if (!this.rollRules.targetMode) this.rollRules.targetMode = "sum";
         if (this.rollRules.countThreshOp === undefined) this.rollRules.countThreshOp = "";
@@ -185,7 +295,7 @@ class DiceEngine {
         item.queue = JSON.parse(JSON.stringify(this.rollingQueue));
         item.modifier = this.activeModifier;
         item.modLevel = this.modifierLevel;
-        item.flat = this.flatMod;
+        item.flat = JSON.parse(JSON.stringify(this._flatMod));
         item.rules = JSON.parse(JSON.stringify(this.rollRules));
         return true;
     }
@@ -199,17 +309,124 @@ class DiceEngine {
     }
 
     // ROLL LOGIC
+    resolveModifier(flatModList) {
+        if (!Array.isArray(flatModList)) {
+            if (typeof flatModList === 'string' && flatModList !== '') {
+                const resolved = this.resolveVariable(flatModList);
+                return resolved !== null ? resolved : 0;
+            }
+            return Number(flatModList) || 0;
+        }
+
+        let total = 0;
+        flatModList.forEach(term => {
+            let base = 0;
+            if (term.type === 'variable') {
+                const resolved = this.resolveVariable(term.value);
+                base = resolved !== null ? resolved : 0;
+            } else {
+                base = Number(term.value) || 0;
+            }
+
+            let mult = 1;
+            if (term.multiplierType === 'variable') {
+                const resolved = this.resolveVariable(term.multiplierValue);
+                mult = resolved !== null ? resolved : 1;
+            } else if (term.multiplierType === 'literal') {
+                mult = Number(term.multiplierValue);
+                if (isNaN(mult)) mult = 1;
+            }
+
+            let div = 1;
+            if (term.divisorType === 'variable') {
+                const resolved = this.resolveVariable(term.divisorValue);
+                div = resolved !== null ? resolved : 1;
+            } else if (term.divisorType === 'literal') {
+                div = Number(term.divisorValue);
+                if (isNaN(div) || div === 0) div = 1;
+            }
+
+            let result = (base * mult) / div;
+
+            if (term.roundMode === 'up') {
+                result = Math.ceil(result);
+            } else if (term.roundMode === 'down') {
+                result = Math.floor(result);
+            } else if (term.roundMode === 'round') {
+                result = Math.round(result);
+            }
+
+            if (term.operator === '-') {
+                total -= result;
+            } else {
+                total += result;
+            }
+        });
+
+        return total;
+    }
+
+    getModifierTermString(term) {
+        let base = term.value;
+        let op = term.operator === '-' ? '-' : '+';
+        
+        let expr = `${base}`;
+        if (term.multiplierType && term.multiplierType !== 'none') {
+            expr += ` * ${term.multiplierValue}`;
+        }
+        if (term.divisorType && term.divisorType !== 'none') {
+            expr += ` / ${term.divisorValue}`;
+        }
+        
+        if (term.roundMode === 'up') {
+            expr = `${expr} (↑)`;
+        } else if (term.roundMode === 'down') {
+            expr = `${expr} (↓)`;
+        } else if (term.roundMode === 'round') {
+            expr = `${expr} (≈)`;
+        }
+        
+        return `${op} ${expr}`;
+    }
+
     calculateRoll(forcedQueue = null, isInstant = false, overrides = null) {
         const activeQueue = forcedQueue || this.rollingQueue;
         
-        // Context Variables (from overrides or engine state)
         const activeModifier = (overrides && overrides.modifier !== undefined) ? overrides.modifier : this.activeModifier;
         const activeModLevel = (overrides && overrides.modLevel !== undefined) ? overrides.modLevel : this.modifierLevel;
-        const activeFlat = (overrides && overrides.flat !== undefined) ? overrides.flat : (isInstant ? 0 : this.flatMod);
+        const activeFlat = (overrides && overrides.flat !== undefined) ? overrides.flat : (isInstant ? [] : this._flatMod);
         const activeRules = (overrides && overrides.rules !== undefined) ? overrides.rules : this.rollRules;
         const activeOverallTarget = (overrides && overrides.overallTarget !== undefined) ? overrides.overallTarget : this.overallTarget;
 
-        if ((activeQueue.length === 0 && activeFlat === 0)) return null;
+        let activeFlatList = [];
+        if (Array.isArray(activeFlat)) {
+            activeFlatList = activeFlat;
+        } else if (typeof activeFlat === 'string' && activeFlat !== '') {
+            activeFlatList = [{
+                type: 'variable',
+                value: activeFlat,
+                operator: '+',
+                multiplierType: 'none',
+                multiplierValue: 1,
+                divisorType: 'none',
+                divisorValue: 1,
+                roundMode: 'none'
+            }];
+        } else if (typeof activeFlat === 'number' && activeFlat !== 0) {
+            activeFlatList = [{
+                type: 'literal',
+                value: Math.abs(activeFlat),
+                operator: activeFlat >= 0 ? '+' : '-',
+                multiplierType: 'none',
+                multiplierValue: 1,
+                divisorType: 'none',
+                divisorValue: 1,
+                roundMode: 'none'
+            }];
+        }
+
+        const hasFlat = activeFlatList.length > 0;
+        if (activeQueue.length === 0 && !hasFlat) return null;
 
         const isListMode = activeRules.targetMode === 'list';
         let total = isListMode ? [] : 0;
@@ -376,31 +593,84 @@ class DiceEngine {
             total = total.join(', ') || '0';
         }
 
-        if (activeRules.targetMode !== 'count' && !isListMode) {
-            let flatVal = 0;
-            let flatSubtotal = "";
-            if (activeFlat !== 0) {
-                if (typeof activeFlat === 'string') {
-                    const resolved = this.resolveVariable(activeFlat);
-                    if (resolved !== null) {
-                        flatVal = resolved;
-                        flatSubtotal = `${activeFlat} (${resolved >= 0 ? '+' : ''}${resolved})`;
-                    } else {
-                        flatVal = Number(activeFlat) || 0;
-                        flatSubtotal = activeFlat;
-                    }
+        if (!isListMode) {
+            activeFlatList.forEach(term => {
+                let base = 0;
+                let baseStr = "";
+                if (term.type === 'variable') {
+                    const resolved = this.resolveVariable(term.value);
+                    base = resolved !== null ? resolved : 0;
+                    baseStr = `${term.value} (${resolved !== null ? resolved : 0})`;
                 } else {
-                    flatVal = Number(activeFlat) || 0;
-                    flatSubtotal = `${flatVal >= 0 ? '+' : ''}${flatVal}`;
+                    base = Number(term.value) || 0;
+                    baseStr = `${base}`;
+                }
+
+                let mult = 1;
+                let multStr = "";
+                if (term.multiplierType === 'variable') {
+                    const resolved = this.resolveVariable(term.multiplierValue);
+                    mult = resolved !== null ? resolved : 1;
+                    multStr = ` * ${term.multiplierValue} (${mult})`;
+                } else if (term.multiplierType === 'literal') {
+                    mult = Number(term.multiplierValue);
+                    if (isNaN(mult)) mult = 1;
+                    multStr = ` * ${mult}`;
+                }
+
+                let div = 1;
+                let divStr = "";
+                if (term.divisorType === 'variable') {
+                    const resolved = this.resolveVariable(term.divisorValue);
+                    div = resolved !== null ? resolved : 1;
+                    divStr = ` / ${term.divisorValue} (${div})`;
+                } else if (term.divisorType === 'literal') {
+                    div = Number(term.divisorValue);
+                    if (isNaN(div) || div === 0) div = 1;
+                    divStr = ` / ${div}`;
+                }
+
+                let termVal = (base * mult) / div;
+                let formulaStr = baseStr;
+                if (multStr || divStr) {
+                    formulaStr = `(${baseStr}${multStr}${divStr})`;
+                }
+
+                let roundStr = "";
+                if (term.roundMode === 'up') {
+                    termVal = Math.ceil(termVal);
+                    roundStr = " (round up)";
+                } else if (term.roundMode === 'down') {
+                    termVal = Math.floor(termVal);
+                    roundStr = " (round down)";
+                } else if (term.roundMode === 'round') {
+                    termVal = Math.round(termVal);
+                    roundStr = " (round)";
+                }
+
+                const op = term.operator === '-' ? '-' : '+';
+                const signedVal = op === '-' ? -termVal : termVal;
+                total += signedVal;
+
+                let breakdownFormulaName = `${op} ${term.type === 'variable' ? term.value : Math.abs(Number(term.value))}${term.multiplierType && term.multiplierType !== 'none' ? ' * ' + term.multiplierValue : ''}${term.divisorType && term.divisorType !== 'none' ? ' / ' + term.divisorValue : ''}${roundStr}`;
+                let breakdownSubtotal = `${op === '-' ? '-' : '+'}${termVal}`;
+                
+                if (activeFlatList.length === 1) {
+                    if (term.type === 'variable' && (!term.multiplierType || term.multiplierType === 'none') && (!term.divisorType || term.divisorType === 'none')) {
+                        breakdownFormulaName = 'Flat Mod';
+                        breakdownSubtotal = `${term.value} (${signedVal >= 0 ? '+' : ''}${signedVal})`;
+                    } else if (term.type === 'literal' && (!term.multiplierType || term.multiplierType === 'none') && (!term.divisorType || term.divisorType === 'none')) {
+                        breakdownFormulaName = 'Flat Mod';
+                        breakdownSubtotal = `${signedVal >= 0 ? '+' : ''}${signedVal}`;
+                    }
                 }
                 
-                total += flatVal;
                 breakdownRows.push({
-                    formula: 'Flat Mod',
+                    formula: breakdownFormulaName,
                     rolls: '',
-                    subtotal: flatSubtotal
+                    subtotal: breakdownSubtotal
                 });
-            }
+            });
         }
 
         // Compute heroClass

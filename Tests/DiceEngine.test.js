@@ -235,6 +235,49 @@ describe('DiceEngine', () => {
                 subtotal: 'STR (+2)'
             });
         });
+
+        test('complex modifier chips calculation', () => {
+            engine.changeQueue(20, 1);
+            engine.setRng(() => 10); // roll 10
+            
+            engine.resolveVariable = (name) => {
+                if (name === 'LVL') return 5;
+                if (name === 'STR') return 3;
+                return null;
+            };
+            
+            // Roll 10 + [STR * 2] - [LVL / 2 (round down)] + [4]
+            // = 10 + [3 * 2] - [floor(5/2)] + 4
+            // = 10 + 6 - 2 + 4 = 18
+            engine.flatMod = [
+                { type: 'variable', value: 'STR', operator: '+', multiplierType: 'literal', multiplierValue: 2, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { type: 'variable', value: 'LVL', operator: '-', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' },
+                { type: 'literal', value: 4, operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+            ];
+            
+            const result = engine.calculateRoll();
+            expect(result.total).toBe(18);
+        });
+
+        test('count successes mode with modifiers', () => {
+            let callCount = 0;
+            // Rolls: 4, 8, 2
+            engine.setRng((sides) => {
+                callCount++;
+                if (callCount === 1) return 4;
+                if (callCount === 2) return 8;
+                return 2;
+            });
+            engine.updateRules({ targetMode: "count", targetOp: ">=", targetVal: 5 });
+            engine.changeQueue(10, 3);
+            
+            // Add a +2 successes chip
+            engine.flatMod = 2;
+
+            const result = engine.calculateRoll();
+            // Only 8 is >= 5, so 1 success. Plus 2 from modifier = 3.
+            expect(result.total).toBe(3);
+        });
     });
 
     describe('Arsenal Management', () => {
