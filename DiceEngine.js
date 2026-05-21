@@ -1,9 +1,8 @@
 class DiceEngine {
     constructor() {
-        this.rollingQueue = [];
+        this.queue = []; // Unified queue of chips (dice and modifier chips in exact visual/chronological order)
         this.activeModifier = null; // 'ADV', 'DIS', or null
         this.modifierLevel = 0;
-        this._flatMod = []; // Under-the-hood complex chip array
         this.rollRules = {
             rerollOp: "", rerollVal: null,
             explodeOp: "", explodeVal: null,
@@ -16,12 +15,163 @@ class DiceEngine {
         this.overallTarget = null;
     }
 
+    get rollingQueue() {
+        const self = this;
+        const filtered = this.queue
+            .filter(c => c.chipType === 'dice')
+            .map(c => ({ sides: c.sides, count: c.count }));
+
+        return new Proxy(filtered, {
+            get(target, prop, receiver) {
+                if (prop === 'push') {
+                    return function(...args) {
+                        args.forEach(item => {
+                            self.queue.push({
+                                chipType: 'dice',
+                                id: 'dice_' + Math.random(),
+                                sides: item.sides,
+                                count: item.count
+                            });
+                        });
+                        return self.queue.filter(c => c.chipType === 'dice').length;
+                    };
+                }
+                if (prop === 'pop') {
+                    return function() {
+                        for (let i = self.queue.length - 1; i >= 0; i--) {
+                            if (self.queue[i].chipType === 'dice') {
+                                const popped = self.queue.splice(i, 1)[0];
+                                return { sides: popped.sides, count: popped.count };
+                            }
+                        }
+                        return undefined;
+                    };
+                }
+                if (prop === 'splice') {
+                    return function(start, deleteCount, ...items) {
+                        const diceIndices = [];
+                        self.queue.forEach((c, idx) => {
+                            if (c.chipType === 'dice') diceIndices.push(idx);
+                        });
+                        const targetIndices = diceIndices.slice(start, start + deleteCount);
+                        targetIndices.sort((a, b) => b - a).forEach(idx => {
+                            self.queue.splice(idx, 1);
+                        });
+                        const insertIndex = diceIndices[start] !== undefined ? diceIndices[start] : self.queue.length;
+                        const preparedItems = items.map(item => ({
+                            chipType: 'dice',
+                            id: 'dice_' + Math.random(),
+                            sides: item.sides,
+                            count: item.count
+                        }));
+                        self.queue.splice(insertIndex, 0, ...preparedItems);
+                        return [];
+                    };
+                }
+                const value = Reflect.get(target, prop, receiver);
+                if (typeof value === 'function') {
+                    return value.bind(target);
+                }
+                return value;
+            }
+        });
+    }
+
+    set rollingQueue(val) {
+        this.queue = this.queue.filter(c => c.chipType !== 'dice');
+        if (Array.isArray(val)) {
+            val.forEach(item => {
+                this.queue.push({
+                    chipType: 'dice',
+                    id: 'dice_' + Math.random(),
+                    sides: item.sides,
+                    count: item.count
+                });
+            });
+        }
+    }
+
+    get _flatMod() {
+        const self = this;
+        const filtered = this.queue.filter(c => c.chipType === 'modifier');
+        
+        return new Proxy(filtered, {
+            get(target, prop, receiver) {
+                if (prop === 'push') {
+                    return function(...args) {
+                        args.forEach(item => {
+                            self.queue.push({
+                                ...item,
+                                chipType: 'modifier',
+                                id: item.id || ('mod_' + Math.random())
+                            });
+                        });
+                        return self.queue.filter(c => c.chipType === 'modifier').length;
+                    };
+                }
+                if (prop === 'pop') {
+                    return function() {
+                        for (let i = self.queue.length - 1; i >= 0; i--) {
+                            if (self.queue[i].chipType === 'modifier') {
+                                const popped = self.queue.splice(i, 1)[0];
+                                return popped;
+                            }
+                        }
+                        return undefined;
+                    };
+                }
+                if (prop === 'splice') {
+                    return function(start, deleteCount, ...items) {
+                        const modIndices = [];
+                        self.queue.forEach((c, idx) => {
+                            if (c.chipType === 'modifier') modIndices.push(idx);
+                        });
+                        
+                        const targetIndices = modIndices.slice(start, start + deleteCount);
+                        targetIndices.sort((a, b) => b - a).forEach(idx => {
+                            self.queue.splice(idx, 1);
+                        });
+                        
+                        const insertIndex = modIndices[start] !== undefined ? modIndices[start] : self.queue.length;
+                        const preparedItems = items.map(item => ({
+                            ...item,
+                            chipType: 'modifier',
+                            id: item.id || ('mod_' + Math.random())
+                        }));
+                        self.queue.splice(insertIndex, 0, ...preparedItems);
+                        return [];
+                    };
+                }
+                
+                const value = Reflect.get(target, prop, receiver);
+                if (typeof value === 'function') {
+                    return value.bind(target);
+                }
+                return value;
+            }
+        });
+    }
+
+    set _flatMod(val) {
+        this.queue = this.queue.filter(c => c.chipType !== 'modifier');
+        if (Array.isArray(val)) {
+            val.forEach(item => {
+                this.queue.push({
+                    ...item,
+                    chipType: 'modifier',
+                    id: item.id || ('mod_' + Math.random())
+                });
+            });
+        }
+    }
+
     get flatMod() {
-        if (!this._flatMod || this._flatMod.length === 0) {
+        const flatList = this.queue.filter(c => c.chipType === 'modifier');
+        if (flatList.length === 0) {
             return 0;
         }
-        if (this._flatMod.length === 1) {
-            const first = this._flatMod[0];
+        if (flatList.length === 1) {
+            const first = flatList[0];
             if (first.type === 'literal' &&
                 (!first.multiplierType || first.multiplierType === 'none') &&
                 (!first.divisorType || first.divisorType === 'none')) {
@@ -33,7 +183,7 @@ class DiceEngine {
                 return first.value;
             }
         }
-        return this._flatMod;
+        return flatList;
     }
 
     set flatMod(val) {
@@ -88,12 +238,29 @@ class DiceEngine {
     }
 
     changeQueue(sides, delta) {
-        const index = this.rollingQueue.findIndex(q => q.sides === sides);
-        if (index > -1) {
-            this.rollingQueue[index].count += delta;
-            if (this.rollingQueue[index].count <= 0) this.rollingQueue.splice(index, 1);
-        } else if (delta > 0) {
-            this.rollingQueue.push({ sides: sides, count: delta });
+        if (delta > 0) {
+            const lastChip = this.queue[this.queue.length - 1];
+            if (lastChip && lastChip.chipType === 'dice' && lastChip.sides === sides) {
+                lastChip.count += delta;
+            } else {
+                this.queue.push({
+                    chipType: 'dice',
+                    id: 'dice_' + Date.now() + Math.random(),
+                    sides: sides,
+                    count: delta
+                });
+            }
+        } else if (delta < 0) {
+            for (let i = this.queue.length - 1; i >= 0; i--) {
+                const chip = this.queue[i];
+                if (chip.chipType === 'dice' && chip.sides === sides) {
+                    chip.count += delta;
+                    if (chip.count <= 0) {
+                        this.queue.splice(i, 1);
+                    }
+                    break;
+                }
+            }
         }
     }
 
@@ -103,33 +270,30 @@ class DiceEngine {
         } else if (this.activeModifier) {
             this.activeModifier = null;
             this.modifierLevel = 0;
-        } else if (this._flatMod && this._flatMod.length > 0) {
-            this._flatMod.pop();
-        } else if (this.rollingQueue.length > 0) {
-            this.rollingQueue.pop();
+        } else if (this.queue.length > 0) {
+            this.queue.pop();
         }
     }
 
     adjustFlatMod(val) {
-        if (!Array.isArray(this._flatMod)) {
-            this._flatMod = [];
-        }
-        const lastTerm = this._flatMod[this._flatMod.length - 1];
-        if (lastTerm && lastTerm.type === 'literal' && lastTerm.multiplierType === 'none' && lastTerm.divisorType === 'none') {
-            let currentVal = Number(lastTerm.value) || 0;
-            let op = lastTerm.operator || '+';
+        const lastChip = this.queue[this.queue.length - 1];
+        if (lastChip && lastChip.chipType === 'modifier' && lastChip.type === 'literal' && lastChip.multiplierType === 'none' && lastChip.divisorType === 'none') {
+            let currentVal = Number(lastChip.value) || 0;
+            let op = lastChip.operator || '+';
             if (op === '-') currentVal = -currentVal;
             
             currentVal += val;
             if (currentVal === 0) {
-                this._flatMod.pop();
+                this.queue.pop();
             } else {
-                lastTerm.operator = currentVal >= 0 ? '+' : '-';
-                lastTerm.value = Math.abs(currentVal);
+                lastChip.operator = currentVal >= 0 ? '+' : '-';
+                lastChip.value = Math.abs(currentVal);
             }
         } else {
             if (val !== 0) {
-                this._flatMod.push({
+                this.queue.push({
+                    chipType: 'modifier',
+                    id: 'mod_' + Date.now() + Math.random(),
                     type: 'literal',
                     value: Math.abs(val),
                     operator: val >= 0 ? '+' : '-',
@@ -161,10 +325,9 @@ class DiceEngine {
     }
 
     clearQueue() {
-        this.rollingQueue = [];
+        this.queue = [];
         this.activeModifier = null;
         this.modifierLevel = 0;
-        this._flatMod = [];
         
         this.rollRules = {
             rerollOp: "", rerollVal: null,
@@ -212,16 +375,16 @@ class DiceEngine {
 
     // ARSENAL LOGIC
     saveQueue(name, color = '#ef4444') {
-        const hasFlatMod = this._flatMod && this._flatMod.length > 0;
-        if (this.rollingQueue.length === 0 && !hasFlatMod) return null;
+        if (this.queue.length === 0) return null;
         const newSaved = {
             id: Date.now(),
             name: name,
             color: color,
-            queue: JSON.parse(JSON.stringify(this.rollingQueue)),
+            queue: JSON.parse(JSON.stringify(this.rollingQueue)), // for legacy backwards compatibility
             modifier: this.activeModifier,
             modLevel: this.modifierLevel,
-            flat: JSON.parse(JSON.stringify(this._flatMod)),
+            flat: JSON.parse(JSON.stringify(this._flatMod)), // for legacy backwards compatibility
+            unifiedQueue: JSON.parse(JSON.stringify(this.queue)),
             rules: JSON.parse(JSON.stringify(this.rollRules)),
             includeAdvDis: false
         };
@@ -234,39 +397,63 @@ class DiceEngine {
         const item = this.savedQueues.find(q => q.id === id);
         if (!item) return;
 
-        this.rollingQueue = JSON.parse(JSON.stringify(item.queue));
+        // If saved queue is unified, load it directly:
+        if (item.unifiedQueue && Array.isArray(item.unifiedQueue)) {
+            this.queue = JSON.parse(JSON.stringify(item.unifiedQueue));
+        } else if (item.queue && item.queue.some(c => c.chipType !== undefined)) {
+            this.queue = JSON.parse(JSON.stringify(item.queue));
+        } else {
+            // Legacy queue: rebuild from item.queue and item.flat
+            this.queue = [];
+            if (Array.isArray(item.queue)) {
+                item.queue.forEach(q => {
+                    this.queue.push({
+                        chipType: 'dice',
+                        id: 'dice_' + Math.random(),
+                        sides: q.sides,
+                        count: q.count
+                    });
+                });
+            }
+            let loadedFlat = item.flat;
+            if (!Array.isArray(loadedFlat)) {
+                if (typeof loadedFlat === 'string' && loadedFlat !== '') {
+                    loadedFlat = [{
+                        type: 'variable',
+                        value: loadedFlat,
+                        operator: '+',
+                        multiplierType: 'none',
+                        multiplierValue: 1,
+                        divisorType: 'none',
+                        divisorValue: 1,
+                        roundMode: 'none'
+                    }];
+                } else if (typeof loadedFlat === 'number' && loadedFlat !== 0) {
+                    loadedFlat = [{
+                        type: 'literal',
+                        value: Math.abs(loadedFlat),
+                        operator: loadedFlat >= 0 ? '+' : '-',
+                        multiplierType: 'none',
+                        multiplierValue: 1,
+                        divisorType: 'none',
+                        divisorValue: 1,
+                        roundMode: 'none'
+                    }];
+                } else {
+                    loadedFlat = [];
+                }
+            }
+            loadedFlat.forEach(f => {
+                this.queue.push({
+                    ...f,
+                    chipType: 'modifier',
+                    id: f.id || ('mod_' + Math.random())
+                });
+            });
+        }
+
         this.activeModifier = item.modifier;
         this.modifierLevel = item.modLevel;
-        
-        let loadedFlat = item.flat;
-        if (!Array.isArray(loadedFlat)) {
-            if (typeof loadedFlat === 'string' && loadedFlat !== '') {
-                loadedFlat = [{
-                    type: 'variable',
-                    value: loadedFlat,
-                    operator: '+',
-                    multiplierType: 'none',
-                    multiplierValue: 1,
-                    divisorType: 'none',
-                    divisorValue: 1,
-                    roundMode: 'none'
-                }];
-            } else if (typeof loadedFlat === 'number' && loadedFlat !== 0) {
-                loadedFlat = [{
-                    type: 'literal',
-                    value: Math.abs(loadedFlat),
-                    operator: loadedFlat >= 0 ? '+' : '-',
-                    multiplierType: 'none',
-                    multiplierValue: 1,
-                    divisorType: 'none',
-                    divisorValue: 1,
-                    roundMode: 'none'
-                }];
-            } else {
-                loadedFlat = [];
-            }
-        }
-        this._flatMod = JSON.parse(JSON.stringify(loadedFlat));
         
         this.rollRules = item.rules ? JSON.parse(JSON.stringify(item.rules)) : { rerollOp: "", rerollVal: null, explodeOp: "", explodeVal: null, targetMode: "sum", targetOp: "", targetVal: null, countThreshOp: "", countThreshVal: null, setsOp: "", setsVal: null };
         if (!this.rollRules.targetMode) this.rollRules.targetMode = "sum";
@@ -292,10 +479,11 @@ class DiceEngine {
         const item = this.savedQueues.find(q => q.id === id);
         if (!item) return false;
 
-        item.queue = JSON.parse(JSON.stringify(this.rollingQueue));
+        item.queue = JSON.parse(JSON.stringify(this.rollingQueue)); // for legacy backward compatibility
+        item.flat = JSON.parse(JSON.stringify(this._flatMod)); // for legacy backward compatibility
+        item.unifiedQueue = JSON.parse(JSON.stringify(this.queue));
         item.modifier = this.activeModifier;
         item.modLevel = this.modifierLevel;
-        item.flat = JSON.parse(JSON.stringify(this._flatMod));
         item.rules = JSON.parse(JSON.stringify(this.rollRules));
         return true;
     }
@@ -389,22 +577,20 @@ class DiceEngine {
         return `${op} ${expr}`;
     }
 
-    calculateRoll(forcedQueue = null, isInstant = false, overrides = null) {
-        const activeQueue = forcedQueue || this.rollingQueue;
-        
-        const activeModifier = (overrides && overrides.modifier !== undefined) ? overrides.modifier : this.activeModifier;
-        const activeModLevel = (overrides && overrides.modLevel !== undefined) ? overrides.modLevel : this.modifierLevel;
-        const activeFlat = (overrides && overrides.flat !== undefined) ? overrides.flat : (isInstant ? [] : this._flatMod);
-        const activeRules = (overrides && overrides.rules !== undefined) ? overrides.rules : this.rollRules;
-        const activeOverallTarget = (overrides && overrides.overallTarget !== undefined) ? overrides.overallTarget : this.overallTarget;
-
-        let activeFlatList = [];
-        if (Array.isArray(activeFlat)) {
-            activeFlatList = activeFlat;
-        } else if (typeof activeFlat === 'string' && activeFlat !== '') {
-            activeFlatList = [{
+    _normalizeFlatMod(flat) {
+        let list = [];
+        if (Array.isArray(flat)) {
+            list = flat.map(item => ({
+                ...item,
+                chipType: 'modifier',
+                id: item.id || ('mod_' + Math.random())
+            }));
+        } else if (typeof flat === 'string' && flat !== '') {
+            list = [{
+                chipType: 'modifier',
+                id: 'mod_' + Math.random(),
                 type: 'variable',
-                value: activeFlat,
+                value: flat,
                 operator: '+',
                 multiplierType: 'none',
                 multiplierValue: 1,
@@ -412,11 +598,13 @@ class DiceEngine {
                 divisorValue: 1,
                 roundMode: 'none'
             }];
-        } else if (typeof activeFlat === 'number' && activeFlat !== 0) {
-            activeFlatList = [{
+        } else if (typeof flat === 'number' && flat !== 0) {
+            list = [{
+                chipType: 'modifier',
+                id: 'mod_' + Math.random(),
                 type: 'literal',
-                value: Math.abs(activeFlat),
-                operator: activeFlat >= 0 ? '+' : '-',
+                value: Math.abs(flat),
+                operator: flat >= 0 ? '+' : '-',
                 multiplierType: 'none',
                 multiplierValue: 1,
                 divisorType: 'none',
@@ -424,9 +612,47 @@ class DiceEngine {
                 roundMode: 'none'
             }];
         }
+        return list;
+    }
 
-        const hasFlat = activeFlatList.length > 0;
-        if (activeQueue.length === 0 && !hasFlat) return null;
+    calculateRoll(forcedQueue = null, isInstant = false, overrides = null) {
+        let evalChips = [];
+        if (forcedQueue) {
+            if (forcedQueue.some(c => c.chipType !== undefined)) {
+                evalChips = forcedQueue;
+            } else {
+                evalChips = forcedQueue.map(q => ({
+                    chipType: 'dice',
+                    sides: q.sides,
+                    count: q.count
+                }));
+                const activeFlat = (overrides && overrides.flat !== undefined) ? overrides.flat : (isInstant ? [] : this._flatMod);
+                evalChips = evalChips.concat(this._normalizeFlatMod(activeFlat));
+            }
+        } else {
+            if (overrides) {
+                if (overrides.queue) {
+                    if (overrides.queue.some(c => c.chipType !== undefined)) {
+                        evalChips = overrides.queue;
+                    } else {
+                        const diceChips = overrides.queue.map(q => ({ chipType: 'dice', sides: q.sides, count: q.count }));
+                        const flatList = this._normalizeFlatMod(overrides.flat !== undefined ? overrides.flat : []);
+                        evalChips = diceChips.concat(flatList);
+                    }
+                } else {
+                    evalChips = this.queue;
+                }
+            } else {
+                evalChips = this.queue;
+            }
+        }
+
+        const activeModifier = (overrides && overrides.modifier !== undefined) ? overrides.modifier : this.activeModifier;
+        const activeModLevel = (overrides && overrides.modLevel !== undefined) ? overrides.modLevel : this.modifierLevel;
+        const activeRules = (overrides && overrides.rules !== undefined) ? overrides.rules : this.rollRules;
+        const activeOverallTarget = (overrides && overrides.overallTarget !== undefined) ? overrides.overallTarget : this.overallTarget;
+
+        if (evalChips.length === 0) return null;
 
         const isListMode = activeRules.targetMode === 'list';
         let total = isListMode ? [] : 0;
@@ -437,195 +663,187 @@ class DiceEngine {
         let totalRerolls = 0;
         let totalExplosions = 0;
 
-        activeQueue.forEach(group => {
-            let pool = [];
-            let rawRolls = [];
-            let groupRerolls = 0;
-            let groupExplosions = 0;
-            const rollsToTake = 1 + (activeModifier ? activeModLevel : 0);
+        evalChips.forEach(chip => {
+            if (chip.chipType === 'dice') {
+                let pool = [];
+                let rawRolls = [];
+                let groupRerolls = 0;
+                let groupExplosions = 0;
+                const rollsToTake = 1 + (activeModifier ? activeModLevel : 0);
 
-            for (let i = 0; i < group.count; i++) {
-                let dieRolls = [];
-                for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(group.sides));
+                for (let i = 0; i < chip.count; i++) {
+                    let dieRolls = [];
+                    for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(chip.sides));
 
-                let kept = dieRolls[0];
-                if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
-                if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
+                    let kept = dieRolls[0];
+                    if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
+                    if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
 
-                let dieLog = "";
-                if (dieRolls.length > 1) {
-                    dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
+                    let dieLog = "";
+                    if (dieRolls.length > 1) {
+                        dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
+                    }
+                    dieLog += `${kept}`;
+
+                    // Reroll Logic
+                    let rerollCount = 0;
+                    while (this.checkCondition(kept, activeRules.rerollOp, activeRules.rerollVal) && rerollCount < 10) {
+                        kept = this.rng(chip.sides);
+                        dieLog += `r->${kept}`;
+                        rerollCount++;
+                    }
+                    groupRerolls += rerollCount;
+
+                    let totalValueForThisDie = kept;
+
+                    // Explode Logic
+                    let explodeCount = 0;
+                    let currentExplodeDie = kept;
+                    while (this.checkCondition(currentExplodeDie, activeRules.explodeOp, activeRules.explodeVal) && explodeCount < 10) {
+                        currentExplodeDie = this.rng(chip.sides);
+                        totalValueForThisDie += currentExplodeDie;
+                        dieLog += `!->${currentExplodeDie}`;
+                        explodeCount++;
+                    }
+                    groupExplosions += explodeCount;
+
+                    if (activeRules.targetOp || activeRules.targetMode === 'count' || activeRules.setsOp) {
+                        pool.push(kept);
+                        if (explodeCount > 0) {
+                            let parts = dieLog.split('!->');
+                            for (let p = 1; p < parts.length; p++) {
+                                pool.push(parseInt(parts[p]));
+                            }
+                        }
+                    } else {
+                        pool.push(totalValueForThisDie);
+                    }
+
+                    rawRolls.push(dieLog);
+
+                    if (chip.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
+                        if (totalValueForThisDie === 20) hasCritHit = true;
+                        if (totalValueForThisDie === 1) hasCritFail = true;
+                    }
                 }
-                dieLog += `${kept}`;
 
-                // Reroll Logic
-                let rerollCount = 0;
-                while (this.checkCondition(kept, activeRules.rerollOp, activeRules.rerollVal) && rerollCount < 10) {
-                    kept = this.rng(group.sides);
-                    dieLog += `r->${kept}`;
-                    rerollCount++;
+                let sum = 0;
+                let filteredPool = pool;
+                
+                // 1. Apply Target Condition (Only for COUNT mode)
+                if (activeRules.targetOp && activeRules.targetMode === 'count') {
+                    filteredPool = pool.filter(v => this.checkCondition(v, activeRules.targetOp, activeRules.targetVal));
                 }
-                groupRerolls += rerollCount;
 
-                let totalValueForThisDie = kept;
+                // 2. Apply Sets Condition
+                let setGroups = {};
+                if (activeRules.setsOp && activeRules.setsVal !== null) {
+                    const counts = {};
+                    filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
+                    
+                    Object.keys(counts).forEach(v => {
+                        if (this.checkCondition(counts[v], activeRules.setsOp, activeRules.setsVal)) {
+                            setGroups[v] = counts[v];
+                        }
+                    });
 
-                // Explode Logic
-                let explodeCount = 0;
-                let currentExplodeDie = kept;
-                while (this.checkCondition(currentExplodeDie, activeRules.explodeOp, activeRules.explodeVal) && explodeCount < 10) {
-                    currentExplodeDie = this.rng(group.sides);
-                    totalValueForThisDie += currentExplodeDie;
-                    dieLog += `!->${currentExplodeDie}`;
-                    explodeCount++;
+                    filteredPool = filteredPool.filter(v => setGroups[v] !== undefined);
                 }
-                groupExplosions += explodeCount;
 
-                if (activeRules.targetOp || activeRules.targetMode === 'count' || activeRules.setsOp) {
-                    pool.push(kept);
-                    if (explodeCount > 0) {
-                        let parts = dieLog.split('!->');
-                        for (let p = 1; p < parts.length; p++) {
-                            pool.push(parseInt(parts[p]));
+                // Aggregate set groups across all dice groups
+                Object.entries(setGroups).forEach(([v, c]) => {
+                    allSetGroups[v] = (allSetGroups[v] || 0) + c;
+                });
+                totalRerolls += groupRerolls;
+                totalExplosions += groupExplosions;
+                
+                if (activeRules.targetMode === 'count') {
+                    sum = filteredPool.length;
+                } else if (activeRules.targetMode === 'list') {
+                    filteredPool.sort((a, b) => a - b);
+                    sum = filteredPool.join(', ');
+                } else {
+                    sum = filteredPool.reduce((a, b) => a + b, 0);
+                }
+                
+                // Build formula string
+                let f = `${chip.count}d${chip.sides}`;
+                if (activeModifier === 'ADV') f += 'kh1';
+                if (activeModifier === 'DIS') f += 'kl1';
+                if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
+                if (activeRules.explodeOp && activeRules.explodeVal !== null) f += `e${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
+                if (activeRules.targetMode === 'count' || activeRules.targetMode === 'sum') {
+                    if (activeRules.targetOp && activeRules.targetVal !== null && activeRules.targetVal !== '') {
+                        if (activeRules.targetMode === 'count') f += 'c';
+                        let valStr = activeRules.targetVal;
+                        if (activeRules.targetMode === 'sum') {
+                            if (valStr === 'overall') valStr = 'TARGET';
+                            else if (valStr === 'varX') valStr = 'VARX';
+                        }
+                        f += `${activeRules.targetOp.replace('=', '')}${valStr}`;
+                    }
+                }
+                if (activeRules.setsOp && activeRules.setsVal !== null) f += `set${activeRules.setsOp.replace('=', '')}${activeRules.setsVal}`;
+                f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
+
+                let highlightedRaw = rawRolls.map(dieStr => {
+                    const parts = dieStr.split('->');
+                    const lastPart = parts[parts.length - 1];
+                    const val = parseInt(lastPart.split('!')[0]);
+                    
+                    if (activeRules.setsOp && activeRules.setsVal !== null) {
+                        if (setGroups[val] !== undefined) {
+                            return `<span class="set-match" data-val="${val}">${dieStr}</span>`;
+                        } else {
+                            return `<span class="set-dim">${dieStr}</span>`;
                         }
                     }
-                } else {
-                    pool.push(totalValueForThisDie);
-                }
-
-                rawRolls.push(dieLog);
-
-                if (group.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
-                    if (totalValueForThisDie === 20) hasCritHit = true;
-                    if (totalValueForThisDie === 1) hasCritFail = true;
-                }
-            }
-
-            let sum = 0;
-            let filteredPool = pool;
-            
-            // 1. Apply Target Condition (Only for COUNT mode)
-            if (activeRules.targetOp && activeRules.targetMode === 'count') {
-                filteredPool = pool.filter(v => this.checkCondition(v, activeRules.targetOp, activeRules.targetVal));
-            }
-
-            // 2. Apply Sets Condition
-            let setGroups = {};
-            if (activeRules.setsOp && activeRules.setsVal !== null) {
-                const counts = {};
-                filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
-                
-                Object.keys(counts).forEach(v => {
-                    if (this.checkCondition(counts[v], activeRules.setsOp, activeRules.setsVal)) {
-                        setGroups[v] = counts[v];
-                    }
+                    return dieStr;
                 });
 
-                filteredPool = filteredPool.filter(v => setGroups[v] !== undefined);
-            }
-
-            // Aggregate set groups across all dice groups
-            Object.entries(setGroups).forEach(([v, c]) => {
-                allSetGroups[v] = (allSetGroups[v] || 0) + c;
-            });
-            totalRerolls += groupRerolls;
-            totalExplosions += groupExplosions;
-            
-            if (activeRules.targetMode === 'count') {
-                sum = filteredPool.length;
-            } else if (activeRules.targetMode === 'list') {
-                // Sort each die type individually
-                filteredPool.sort((a, b) => a - b);
-                sum = filteredPool.join(', ');
-            } else {
-                sum = filteredPool.reduce((a, b) => a + b, 0);
-            }
-            
-            // Build formula string
-            let f = `${group.count}d${group.sides}`;
-            if (activeModifier === 'ADV') f += 'kh1';
-            if (activeModifier === 'DIS') f += 'kl1';
-            if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
-            if (activeRules.explodeOp && activeRules.explodeVal !== null) f += `e${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
-            if (activeRules.targetMode === 'count' || activeRules.targetMode === 'sum') {
-                if (activeRules.targetOp && activeRules.targetVal !== null && activeRules.targetVal !== '') {
-                    if (activeRules.targetMode === 'count') f += 'c';
-                    let valStr = activeRules.targetVal;
-                    if (activeRules.targetMode === 'sum') {
-                        if (valStr === 'overall') valStr = 'TARGET';
-                        else if (valStr === 'varX') valStr = 'VARX';
-                    }
-                    f += `${activeRules.targetOp.replace('=', '')}${valStr}`;
-                }
-            }
-            if (activeRules.setsOp && activeRules.setsVal !== null) f += `set${activeRules.setsOp.replace('=', '')}${activeRules.setsVal}`;
-            f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
-
-            // Highlight sets in the roll log
-            let highlightedRaw = rawRolls.map(dieStr => {
-                const parts = dieStr.split('->');
-                const lastPart = parts[parts.length - 1];
-                const val = parseInt(lastPart.split('!')[0]);
+                breakdownRows.push({
+                    formula: f,
+                    rolls: highlightedRaw.join(', '),
+                    subtotal: sum
+                });
                 
-                if (activeRules.setsOp && activeRules.setsVal !== null) {
-                    if (setGroups[val] !== undefined) {
-                        return `<span class="set-match" data-val="${val}">${dieStr}</span>`;
-                    } else {
-                        return `<span class="set-dim">${dieStr}</span>`;
-                    }
+                if (isListMode) {
+                    if (sum) total.push(sum);
+                } else {
+                    total += sum;
                 }
-                return dieStr;
-            });
-
-            breakdownRows.push({
-                formula: f,
-                rolls: highlightedRaw.join(', '),
-                subtotal: sum
-            });
-            
-            if (isListMode) {
-                if (sum) total.push(sum);
-            } else {
-                total += sum;
-            }
-        });
-
-        if (isListMode) {
-            total = total.join(', ') || '0';
-        }
-
-        if (!isListMode) {
-            activeFlatList.forEach(term => {
+            } else if (chip.chipType === 'modifier' && !isListMode) {
                 let base = 0;
                 let baseStr = "";
-                if (term.type === 'variable') {
-                    const resolved = this.resolveVariable(term.value);
+                if (chip.type === 'variable') {
+                    const resolved = this.resolveVariable(chip.value);
                     base = resolved !== null ? resolved : 0;
-                    baseStr = `${term.value} (${resolved !== null ? resolved : 0})`;
+                    baseStr = `${chip.value} (${resolved !== null ? resolved : 0})`;
                 } else {
-                    base = Number(term.value) || 0;
+                    base = Number(chip.value) || 0;
                     baseStr = `${base}`;
                 }
 
                 let mult = 1;
                 let multStr = "";
-                if (term.multiplierType === 'variable') {
-                    const resolved = this.resolveVariable(term.multiplierValue);
+                if (chip.multiplierType === 'variable') {
+                    const resolved = this.resolveVariable(chip.multiplierValue);
                     mult = resolved !== null ? resolved : 1;
-                    multStr = ` * ${term.multiplierValue} (${mult})`;
-                } else if (term.multiplierType === 'literal') {
-                    mult = Number(term.multiplierValue);
+                    multStr = ` * ${chip.multiplierValue} (${mult})`;
+                } else if (chip.multiplierType === 'literal') {
+                    mult = Number(chip.multiplierValue);
                     if (isNaN(mult)) mult = 1;
                     multStr = ` * ${mult}`;
                 }
 
                 let div = 1;
                 let divStr = "";
-                if (term.divisorType === 'variable') {
-                    const resolved = this.resolveVariable(term.divisorValue);
+                if (chip.divisorType === 'variable') {
+                    const resolved = this.resolveVariable(chip.divisorValue);
                     div = resolved !== null ? resolved : 1;
-                    divStr = ` / ${term.divisorValue} (${div})`;
-                } else if (term.divisorType === 'literal') {
-                    div = Number(term.divisorValue);
+                    divStr = ` / ${chip.divisorValue} (${div})`;
+                } else if (chip.divisorType === 'literal') {
+                    div = Number(chip.divisorValue);
                     if (isNaN(div) || div === 0) div = 1;
                     divStr = ` / ${div}`;
                 }
@@ -637,29 +855,31 @@ class DiceEngine {
                 }
 
                 let roundStr = "";
-                if (term.roundMode === 'up') {
+                if (chip.roundMode === 'up') {
                     termVal = Math.ceil(termVal);
                     roundStr = " (round up)";
-                } else if (term.roundMode === 'down') {
+                } else if (chip.roundMode === 'down') {
                     termVal = Math.floor(termVal);
                     roundStr = " (round down)";
-                } else if (term.roundMode === 'round') {
+                } else if (chip.roundMode === 'round') {
                     termVal = Math.round(termVal);
                     roundStr = " (round)";
                 }
 
-                const op = term.operator === '-' ? '-' : '+';
+                const op = chip.operator === '-' ? '-' : '+';
                 const signedVal = op === '-' ? -termVal : termVal;
                 total += signedVal;
 
-                let breakdownFormulaName = `${op} ${term.type === 'variable' ? term.value : Math.abs(Number(term.value))}${term.multiplierType && term.multiplierType !== 'none' ? ' * ' + term.multiplierValue : ''}${term.divisorType && term.divisorType !== 'none' ? ' / ' + term.divisorValue : ''}${roundStr}`;
+                let breakdownFormulaName = `${op} ${chip.type === 'variable' ? chip.value : Math.abs(Number(chip.value))}${chip.multiplierType && chip.multiplierType !== 'none' ? ' * ' + chip.multiplierValue : ''}${chip.divisorType && chip.divisorType !== 'none' ? ' / ' + chip.divisorValue : ''}${roundStr}`;
                 let breakdownSubtotal = `${op === '-' ? '-' : '+'}${termVal}`;
                 
-                if (activeFlatList.length === 1) {
-                    if (term.type === 'variable' && (!term.multiplierType || term.multiplierType === 'none') && (!term.divisorType || term.divisorType === 'none')) {
+                // Keep backward compatibility for single-chip flat mod descriptions in tests
+                const totalModifiers = evalChips.filter(c => c.chipType === 'modifier').length;
+                if (totalModifiers === 1) {
+                    if (chip.type === 'variable' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
                         breakdownFormulaName = 'Flat Mod';
-                        breakdownSubtotal = `${term.value} (${signedVal >= 0 ? '+' : ''}${signedVal})`;
-                    } else if (term.type === 'literal' && (!term.multiplierType || term.multiplierType === 'none') && (!term.divisorType || term.divisorType === 'none')) {
+                        breakdownSubtotal = `${chip.value} (${signedVal >= 0 ? '+' : ''}${signedVal})`;
+                    } else if (chip.type === 'literal' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
                         breakdownFormulaName = 'Flat Mod';
                         breakdownSubtotal = `${signedVal >= 0 ? '+' : ''}${signedVal}`;
                     }
@@ -670,7 +890,11 @@ class DiceEngine {
                     rolls: '',
                     subtotal: breakdownSubtotal
                 });
-            });
+            }
+        });
+
+        if (isListMode) {
+            total = total.join(', ') || '0';
         }
 
         // Compute heroClass

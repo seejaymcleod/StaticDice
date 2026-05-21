@@ -1981,6 +1981,11 @@
         </div>
     </div>
 
+    <!-- Chip Popover Editor -->
+    <div id="chip-popover-editor" class="hidden fixed z-[90] bg-[#0f172a] border border-[#00d4ff]/20 rounded-xl p-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] w-72 text-white pointer-events-auto">
+        <!-- Dynamically injected -->
+    </div>
+
     <script src="DiceEngine.js"></script>
     <script>
         // =========================================================================
@@ -2622,7 +2627,7 @@
 
         function clearQueue() {
             activeLoadoutId = null;
-            engine.rollingQueue = [];
+            engine.clearQueue();
             updateUI();
         }
 
@@ -2765,46 +2770,64 @@
             const rollBtn = document.getElementById('roll-button');
             const saveBtn = document.getElementById('save-queue-btn');
 
-            const hasFlatMod = Array.isArray(engine.flatMod) ? engine.flatMod.length > 0 : (engine.flatMod !== 0);
-            const canRoll = engine.rollingQueue.length > 0 || hasFlatMod;
+            const hasFlatMod = engine.queue.some(c => c.chipType === 'modifier');
+            const hasDice = engine.queue.some(c => c.chipType === 'dice');
+            const canRoll = engine.queue.length > 0;
             rollBtn.disabled = !canRoll;
             rollBtn.style.opacity = canRoll ? '1' : '0.4';
             rollBtn.style.filter = canRoll ? 'none' : 'grayscale(1)';
             rollBtn.style.pointerEvents = canRoll ? 'auto' : 'none';
 
-            // 1. Build Dice Parts
-            let diceParts = engine.rollingQueue.map(q => `${q.count}d${q.sides}`);
-            let diceHtml = diceParts.map((d, i) => i === 0 ? `<span class="text-sky-400 font-bold whitespace-nowrap">${d}</span>` : `<span class="text-sky-400/50 font-black">+</span> <span class="text-sky-400 font-bold whitespace-nowrap">${d}</span>`).join(" ");
-
-            // 1b. Build Modifier Chips
-            let modHtmlStr = "";
-            const chips = engine._flatMod || [];
-            if (chips.length > 0) {
-                const chipsHtmlList = chips.map(term => {
-                    const opStr = term.operator === '-' ? '-' : '+';
-                    let termStr = engine.getModifierTermString(term).substring(2);
-                    
-                    let resolvedVal = engine.resolveModifier([term]);
-                    let titleStr = `Resolved: ${resolvedVal >= 0 ? '+' : ''}${resolvedVal}`;
-                    
-                    let inlineResolved = "";
-                    if (term.type === 'variable') {
-                        const resolvedVar = window.getActiveCharacterVariable(term.value);
-                        if (resolvedVar !== null) inlineResolved = `<span class="text-sky-400/60 text-[0.85em] ml-0.5">(${resolvedVar})</span>`;
+            // 1. Build Unified Chips
+            let basePartsHtml = "";
+            if (engine.queue.length > 0) {
+                basePartsHtml = engine.queue.map((chip, idx) => {
+                    if (chip.chipType === 'dice') {
+                        const displayText = `${chip.count}d${chip.sides}`;
+                        return `
+                            <div class="group relative flex items-center gap-1 bg-[#020617] border border-sky-500/20 hover:border-sky-500/50 text-sky-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-pointer select-none"
+                                 onclick="editQueueChip(${idx}, event)">
+                                <span class="text-[10px] opacity-75">🎲</span>
+                                <span>${displayText}</span>
+                                <button class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-3.5 h-3.5 ml-1 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[8px] transition-all"
+                                        onclick="removeQueueChip(${idx}, event)" title="Remove">✕</button>
+                            </div>
+                        `;
+                    } else if (chip.chipType === 'modifier') {
+                        const op = chip.operator === '-' ? '-' : '+';
+                        let valStr = chip.value;
+                        let inlineResolved = "";
+                        if (chip.type === 'variable') {
+                            const resolvedVar = window.getActiveCharacterVariable(chip.value);
+                            if (resolvedVar !== null) {
+                                inlineResolved = `<span class="opacity-60 text-[0.85em] ml-0.5">(${resolvedVar})</span>`;
+                            }
+                        }
+                        
+                        let mathIndicator = "";
+                        if (chip.multiplierType && chip.multiplierType !== 'none') {
+                            mathIndicator += ` ×${chip.multiplierValue}`;
+                        }
+                        if (chip.divisorType && chip.divisorType !== 'none') {
+                            mathIndicator += ` /${chip.divisorValue}`;
+                        }
+                        if (chip.roundMode && chip.roundMode !== 'none') {
+                            mathIndicator += ` (${chip.roundMode === 'up' ? '↑' : chip.roundMode === 'down' ? '↓' : '≈'})`;
+                        }
+                        
+                        return `
+                            <div class="group relative flex items-center gap-1 bg-[#020617] border border-emerald-500/20 hover:border-emerald-500/50 text-emerald-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-pointer select-none"
+                                 onclick="editQueueChip(${idx}, event)">
+                                <span class="text-[10px] opacity-75">${op === '-' ? '➖' : '➕'}</span>
+                                <span>${valStr}${inlineResolved}${mathIndicator}</span>
+                                <button class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-3.5 h-3.5 ml-1 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[8px] transition-all"
+                                        onclick="removeQueueChip(${idx}, event)" title="Remove">✕</button>
+                            </div>
+                        `;
                     }
-                    
-                    return `<span class="text-sky-400/50 font-black">${opStr}</span> <span class="text-sky-400 font-bold whitespace-nowrap cursor-help transition-colors hover:text-sky-300" title="${titleStr}">${termStr}${inlineResolved}</span>`;
-                });
-                
-                if (diceParts.length === 0 && chips.length > 0 && chips[0].operator !== '-') {
-                    modHtmlStr = chipsHtmlList.join(" ").replace('<span class="text-sky-400/50 font-black">+</span> ', '');
-                } else {
-                    modHtmlStr = (diceParts.length > 0 ? " " : "") + chipsHtmlList.join(" ");
-                }
+                    return "";
+                }).join("");
             }
-
-            // Combine base components
-            const basePartsHtml = [diceHtml, modHtmlStr].filter(s => s !== "").join(" ");
 
             // 2. Build Rules (RR, EX, SET)
             let rulesParts = [];
@@ -2866,7 +2889,6 @@
                 overallTargetInput.value = engine.overallTarget !== null ? engine.overallTarget : '';
             }
 
-            const hasDice = engine.rollingQueue.length > 0;
             const canMod = hasDice;
 
             advBtn.disabled = !canMod;
@@ -2952,7 +2974,7 @@
             advSub.innerText = (canMod && engine.activeModifier === 'ADV' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
             disSub.innerText = (canMod && engine.activeModifier === 'DIS' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
 
-            saveBtn.disabled = !hasDice && !hasFlatMod;
+            saveBtn.disabled = !canRoll;
 
             const runAuditBtn = document.getElementById('run-audit-btn');
             if (runAuditBtn) {
@@ -3137,6 +3159,308 @@
             // Vibrate and refresh UI
             vibrate(10);
             updateUI();
+        }
+
+        let activeEditChipIndex = null;
+
+        function removeQueueChip(index, event) {
+            if (event) event.stopPropagation();
+            engine.queue.splice(index, 1);
+            
+            // Hide popover if the deleted chip was open
+            const popover = document.getElementById('chip-popover-editor');
+            if (popover) popover.classList.add('hidden');
+            activeEditChipIndex = null;
+            
+            vibrate(5);
+            updateUI();
+        }
+
+        function editQueueChip(index, event) {
+            if (event) event.stopPropagation();
+            activeEditChipIndex = index;
+            const chip = engine.queue[index];
+            if (!chip) return;
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            const popover = document.getElementById('chip-popover-editor');
+            if (!popover) return;
+
+            // Generate content dynamically
+            let html = "";
+            if (chip.chipType === 'dice') {
+                html = `
+                    <div class="space-y-3 text-[#e2e8f0]">
+                        <div class="flex justify-between items-center pb-1.5 border-b border-white/5">
+                            <span class="text-xs font-black text-sky-400 uppercase tracking-wider flex items-center gap-1">🎲 Edit Dice Chip</span>
+                            <button onclick="closeChipPopover()" class="text-slate-400 hover:text-white">✕</button>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">Count</span>
+                            <div class="flex items-center bg-[#020617] border border-white/10 rounded-lg p-0.5">
+                                <button onclick="updatePopDiceCount(-1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white transition-colors">-</button>
+                                <span class="w-8 text-center text-xs font-bold font-mono text-sky-400">${chip.count}</span>
+                                <button onclick="updatePopDiceCount(1)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white transition-colors">+</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">Sides</span>
+                            <div class="grid grid-cols-4 gap-1.5">
+                                ${[4, 6, 8, 10, 12, 20, 100].map(s => `
+                                    <button onclick="updatePopDiceSides(${s})" class="py-1 rounded text-[10px] font-black transition-all ${chip.sides === s ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'bg-[#020617] text-slate-400 border border-white/10 hover:border-white/20'}">d${s}</button>
+                                `).join("")}
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="deletePopChip()" class="flex-1 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all">✕ Delete</button>
+                        </div>
+                    </div>
+                `;
+            } else if (chip.chipType === 'modifier') {
+                const char = characters.find(c => c.id === activeCharacterId);
+                let varOptions = "";
+                if (char && char.variables) {
+                    Object.keys(char.variables).forEach(name => {
+                        varOptions += `<option value="${name}" ${chip.value === name ? 'selected' : ''}>${name}</option>`;
+                    });
+                }
+                if (!varOptions) {
+                    varOptions = `<option value="">No Variables</option>`;
+                }
+
+                html = `
+                    <div class="space-y-3 text-[#e2e8f0]">
+                        <div class="flex justify-between items-center pb-1.5 border-b border-white/5">
+                            <span class="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1">➕ Edit Modifier Chip</span>
+                            <button onclick="closeChipPopover()" class="text-slate-400 hover:text-white">✕</button>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <div class="flex-1 flex flex-col gap-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">Sign</span>
+                                <select onchange="updatePopModField('operator', this.value)" class="w-full bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10">
+                                    <option value="+" ${chip.operator === '+' ? 'selected' : ''}>+ Plus</option>
+                                    <option value="-" ${chip.operator === '-' ? 'selected' : ''}>- Minus</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 flex flex-col gap-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">Type</span>
+                                <select onchange="updatePopModType(this.value)" class="w-full bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10">
+                                    <option value="literal" ${chip.type === 'literal' ? 'selected' : ''}>Literal</option>
+                                    <option value="variable" ${chip.type === 'variable' ? 'selected' : ''}>Variable</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">${chip.type === 'variable' ? 'Variable' : 'Value'}</span>
+                            ${chip.type === 'variable' ? `
+                                <select onchange="updatePopModField('value', this.value)" class="w-full bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10">
+                                    ${varOptions}
+                                </select>
+                            ` : `
+                                <div class="flex items-center bg-[#020617] border border-white/10 rounded-lg p-0.5 w-full">
+                                    <button onclick="updatePopModLiteral(-1)" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-white transition-colors">-</button>
+                                    <input type="number" value="${chip.value}" onchange="updatePopModField('value', parseInt(this.value))" class="flex-1 bg-transparent font-bold font-mono text-xs text-sky-400 text-center outline-none" />
+                                    <button onclick="updatePopModLiteral(1)" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-white transition-colors">+</button>
+                                </div>
+                            `}
+                        </div>
+
+                        <button onclick="togglePopMathOpts()" class="text-[9px] font-bold text-slate-400 hover:text-sky-400 flex items-center gap-1 transition-colors">
+                            <span>⚙ Math Settings (× / ÷ / Round)</span>
+                        </button>
+
+                        <div id="pop-math-opts" class="${(chip.multiplierType && chip.multiplierType !== 'none') || (chip.divisorType && chip.divisorType !== 'none') || (chip.roundMode && chip.roundMode !== 'none') ? '' : 'hidden'} space-y-2 border-t border-white/5 pt-2">
+                            <!-- Multiplier -->
+                            <div class="flex gap-2 items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase w-12 shrink-0">Multiply</span>
+                                <select onchange="updatePopModMultType(this.value)" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                    <option value="none" ${chip.multiplierType === 'none' ? 'selected' : ''}>None</option>
+                                    <option value="literal" ${chip.multiplierType === 'literal' ? 'selected' : ''}>Literal</option>
+                                    <option value="variable" ${chip.multiplierType === 'variable' ? 'selected' : ''}>Variable</option>
+                                </select>
+                                <input type="number" value="${chip.multiplierValue || 1}" onchange="updatePopModField('multiplierValue', parseInt(this.value))" class="${chip.multiplierType === 'literal' ? '' : 'hidden'} bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-12 text-center" />
+                                <select onchange="updatePopModField('multiplierValue', this.value)" class="${chip.multiplierType === 'variable' ? '' : 'hidden'} bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                    ${varOptions}
+                                </select>
+                            </div>
+                            <!-- Divisor -->
+                            <div class="flex gap-2 items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase w-12 shrink-0">Divide</span>
+                                <select onchange="updatePopModDivType(this.value)" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                    <option value="none" ${chip.divisorType === 'none' ? 'selected' : ''}>None</option>
+                                    <option value="literal" ${chip.divisorType === 'literal' ? 'selected' : ''}>Literal</option>
+                                    <option value="variable" ${chip.divisorType === 'variable' ? 'selected' : ''}>Variable</option>
+                                </select>
+                                <input type="number" value="${chip.divisorValue || 1}" onchange="updatePopModField('divisorValue', parseInt(this.value))" class="${chip.divisorType === 'literal' ? '' : 'hidden'} bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-12 text-center" />
+                                <select onchange="updatePopModField('divisorValue', this.value)" class="${chip.divisorType === 'variable' ? '' : 'hidden'} bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                    ${varOptions}
+                                </select>
+                            </div>
+                            <!-- Rounding -->
+                            <div class="flex gap-2 items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase w-12 shrink-0">Rounding</span>
+                                <select onchange="updatePopModField('roundMode', this.value)" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                    <option value="none" ${chip.roundMode === 'none' ? 'selected' : ''}>None</option>
+                                    <option value="up" ${chip.roundMode === 'up' ? 'selected' : ''}>Round Up (↑)</option>
+                                    <option value="down" ${chip.roundMode === 'down' ? 'selected' : ''}>Round Down (↓)</option>
+                                    <option value="round" ${chip.roundMode === 'round' ? 'selected' : ''}>Nearest (≈)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="deletePopChip()" class="flex-1 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all">✕ Delete</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            popover.innerHTML = html;
+            popover.classList.remove('hidden');
+
+            const popoverWidth = 288;
+            let left = rect.left + window.scrollX + (rect.width - popoverWidth) / 2;
+            let top = rect.bottom + window.scrollY + 8;
+
+            if (left < 10) left = 10;
+            if (left + popoverWidth > window.innerWidth - 10) left = window.innerWidth - popoverWidth - 10;
+
+            popover.style.left = `${left}px`;
+            popover.style.top = `${top}px`;
+        }
+
+        function closeChipPopover() {
+            const popover = document.getElementById('chip-popover-editor');
+            if (popover) popover.classList.add('hidden');
+            activeEditChipIndex = null;
+        }
+
+        function deletePopChip() {
+            if (activeEditChipIndex !== null) {
+                removeQueueChip(activeEditChipIndex);
+                closeChipPopover();
+            }
+        }
+
+        function updatePopDiceCount(delta) {
+            if (activeEditChipIndex === null) return;
+            const chip = engine.queue[activeEditChipIndex];
+            if (chip && chip.chipType === 'dice') {
+                chip.count = Math.max(1, chip.count + delta);
+                vibrate(5);
+                updateUI();
+                editQueueChip(activeEditChipIndex);
+            }
+        }
+
+        function updatePopDiceSides(sides) {
+            if (activeEditChipIndex === null) return;
+            const chip = engine.queue[activeEditChipIndex];
+            if (chip && chip.chipType === 'dice') {
+                chip.sides = sides;
+                vibrate(5);
+                updateUI();
+                editQueueChip(activeEditChipIndex);
+            }
+        }
+
+        function updatePopModLiteral(delta) {
+            if (activeEditChipIndex === null) return;
+            const chip = engine.queue[activeEditChipIndex];
+            if (chip && chip.chipType === 'modifier') {
+                let currentVal = Number(chip.value) || 0;
+                currentVal = Math.max(0, currentVal + delta);
+                chip.value = currentVal;
+                vibrate(5);
+                updateUI();
+                editQueueChip(activeEditChipIndex);
+            }
+        }
+
+        function updatePopModType(type) {
+            if (activeEditChipIndex === null) return;
+            const chip = engine.queue[activeEditChipIndex];
+            if (chip && chip.chipType === 'modifier') {
+                chip.type = type;
+                if (type === 'variable') {
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    if (char && char.variables && Object.keys(char.variables).length > 0) {
+                        chip.value = Object.keys(char.variables)[0];
+                    } else {
+                        chip.value = "";
+                    }
+                } else {
+                    chip.value = 0;
+                }
+                vibrate(5);
+                updateUI();
+                editQueueChip(activeEditChipIndex);
+            }
+        }
+
+        function updatePopModMultType(type) {
+            if (activeEditChipIndex === null) return;
+            const chip = engine.queue[activeEditChipIndex];
+            if (chip && chip.chipType === 'modifier') {
+                chip.multiplierType = type;
+                if (type === 'variable') {
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    if (char && char.variables && Object.keys(char.variables).length > 0) {
+                        chip.multiplierValue = Object.keys(char.variables)[0];
+                    } else {
+                        chip.multiplierValue = "";
+                    }
+                } else {
+                    chip.multiplierValue = 1;
+                }
+                vibrate(5);
+                updateUI();
+                editQueueChip(activeEditChipIndex);
+            }
+        }
+
+        function updatePopModDivType(type) {
+            if (activeEditChipIndex === null) return;
+            const chip = engine.queue[activeEditChipIndex];
+            if (chip && chip.chipType === 'modifier') {
+                chip.divisorType = type;
+                if (type === 'variable') {
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    if (char && char.variables && Object.keys(char.variables).length > 0) {
+                        chip.divisorValue = Object.keys(char.variables)[0];
+                    } else {
+                        chip.divisorValue = "";
+                    }
+                } else {
+                    chip.divisorValue = 1;
+                }
+                vibrate(5);
+                updateUI();
+                editQueueChip(activeEditChipIndex);
+            }
+        }
+
+        function updatePopModField(field, value) {
+            if (activeEditChipIndex === null) return;
+            const chip = engine.queue[activeEditChipIndex];
+            if (chip) {
+                chip[field] = value;
+                vibrate(5);
+                updateUI();
+                editQueueChip(activeEditChipIndex);
+            }
+        }
+
+        function togglePopMathOpts() {
+            const panel = document.getElementById('pop-math-opts');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
         }
 
         function removeModifierChip(index, e) {
@@ -3949,6 +4273,15 @@
         }
 
         window.addEventListener('click', (e) => {
+            // Close chip popover editor
+            const popover = document.getElementById('chip-popover-editor');
+            if (popover && !popover.classList.contains('hidden')) {
+                if (!popover.contains(e.target) && !e.target.closest('#queue-display')) {
+                    popover.classList.add('hidden');
+                    activeEditChipIndex = null;
+                }
+            }
+
             // Close arsenal menus
             if (!e.target.closest('.arsenal-menu') && !e.target.closest('.gear-btn')) {
                 document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
