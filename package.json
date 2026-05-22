@@ -20,5 +20,8 @@
   "homepage": "https://github.com/seejaymcleod/StaticDice#readme",
   "devDependencies": {
     "jest": "^30.4.0"
+  },
+  "dependencies": {
+    "jsdom": "^29.1.1"
   }
 }

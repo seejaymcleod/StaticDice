@@ -1029,22 +1029,14 @@
                     </div>
                 </div>
 
-                <!-- ROW 1: UTILITY STRIP -->
+                <!-- ROW 1: UTILITY STRIP (CLEAR | SAVE | ADVANCED | BACK) -->
                 <div class="grid grid-cols-4 gap-2.5">
-                    <button onclick="backspaceQueue()"
-                        class="h-[2rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
-                        title="Backspace">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414A2 2 0 0010.828 19H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
-                        </svg>
-                    </button>
                     <button id="clear-btn" onclick="clearQueue()"
                         class="h-[2rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
                         title="Clear Queue">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
                     <button id="save-queue-btn" onclick="saveCurrentQueue()" disabled
@@ -1057,9 +1049,9 @@
                             <polyline points="7 3 7 8 15 8" />
                         </svg>
                     </button>
-                    <button id="adv-rules-toggle" onclick="toggleRulesPanel()"
-                        class="h-[2rem] rounded-xl bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 flex items-center justify-center text-[#94a3b8] hover:text-[#00d4ff] transition-colors border border-[#00d4ff]/10">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button id="adv-rules-toggle" onclick="toggleAdvancedPanel()"
+                        class="h-[2rem] px-3 rounded-xl bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 flex items-center justify-center text-[#94a3b8] hover:text-[#00d4ff] transition-colors border border-[#00d4ff]/10">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
                             </path>
@@ -1067,10 +1059,18 @@
                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
                     </button>
+                    <button onclick="backspaceQueue()"
+                        class="h-[2rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
+                        title="Backspace">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414A2 2 0 0010.828 19H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- ROW 2: MOD & TARGET STEPPERS SIDE-BY-SIDE -->
-                <div class="flex gap-2.5">
+                <div class="hidden gap-2.5">
                     <!-- MOD STEPPER -->
                     <div
                         class="flex-1 segmented-row h-[3rem] bg-[#020617] flex items-center justify-between !p-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
@@ -1107,365 +1107,492 @@
                     <!-- Small compact chips injected via JS -->
                 </div>
 
-                <!-- ROW 3: ROLL, ADV, DIS -->
+                <!-- ROW 3: # | ADV | DIS | ROLL -->
                 <div class="grid grid-cols-12 gap-2.5">
+                    <!-- # Number Node Button -->
+                    <button id="hash-btn" onclick="openNodeEditor('number')"
+                        class="col-span-2 toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[3rem]">
+                        <span class="text-lg font-black text-slate-500 leading-none group-hover:text-[#00d4ff] transition-colors">#</span>
+                        <span class="text-[7px] font-black text-slate-600 uppercase tracking-widest leading-none mt-0.5">NUM</span>
+                    </button>
+
+                    <button id="adv-btn" onclick="handleAdvDisBtnClick('ADV')" disabled
+                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3rem]">
+                        <div id="adv-pip"
+                            class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
+                        </div>
+                        <span id="adv-label"
+                            class="text-sm font-black text-slate-500 uppercase tracking-widest group-hover:text-[#00d4ff] transition-colors">ADV</span>
+                        <span id="adv-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
+                    </button>
+                    <button id="dis-btn" onclick="handleAdvDisBtnClick('DIS')" disabled
+                        class="col-span-2 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3rem]">
+                        <div id="dis-pip"
+                            class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
+                        </div>
+                        <span id="dis-label"
+                            class="text-sm font-black text-slate-500 uppercase tracking-widest group-hover:text-[#6366f1] transition-colors">DIS</span>
+                        <span id="dis-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
+                    </button>
 
                     <button id="roll-button" onclick="triggerRoll(event)"
-                        class="col-span-6 !h-[3rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group">
-
+                        class="col-span-5 !h-[3rem] bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] hover:text-[#33e0ff] font-black rounded-xl text-xl shadow-[0_0_25px_rgba(0,212,255,0.15)] border border-[#00d4ff]/30 hover:border-[#00d4ff]/50 uppercase tracking-[0.2em] relative overflow-hidden group">
                         <span class="relative z-10">ROLL</span>
                         <div
                             class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]">
                         </div>
                     </button>
+                </div>
 
-                    <button id="adv-btn" onclick="applyModifier('ADV')" disabled
-                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3rem]">
+                <div id="advanced-rows" class="hidden space-y-2.5">
+                    <!-- ROW 4: FLOW (disabled) | EVAL | REROLL -->
+                    <div class="grid grid-cols-4 gap-2.5">
+                        <!-- FLOW — disabled for now -->
+                        <button disabled
+                            class="h-[3rem] bg-transparent text-slate-600 flex flex-col items-center justify-center gap-0.5 rounded-xl border border-white/5 transition-all opacity-30 cursor-not-allowed"
+                            title="Flow (Coming Soon)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            <span class="text-[8px] font-black uppercase tracking-widest">FLOW</span>
+                        </button>
+                        <!-- EVAL -->
+                        <button id="eval-btn" onclick="openNodeEditor('eval')"
+                            class="h-[3rem] bg-[#00d4ff]/05 text-[#94a3b8] flex flex-col items-center justify-center gap-0.5 rounded-xl border border-[#00d4ff]/10 transition-all hover:bg-[#00d4ff]/10 hover:text-[#00d4ff]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            <span class="text-[8px] font-black uppercase tracking-widest">EVAL</span>
+                        </button>
+                        <!-- REROLL -->
+                        <button id="reroll-btn" onclick="openNodeEditor('reroll')"
+                            class="col-span-2 h-[3rem] bg-[#00d4ff]/05 text-[#94a3b8] flex flex-col items-center justify-center gap-0.5 rounded-xl border border-[#00d4ff]/10 transition-all hover:bg-[#00d4ff]/10 hover:text-[#00d4ff]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span class="text-[8px] font-black uppercase tracking-widest">REROLL</span>
+                        </button>
+                    </div>
 
-                        <div id="adv-pip"
-                            class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
-                        </div>
-                        <span id="adv-label"
-                            class="text-sm font-black text-slate-500 uppercase tracking-widest hover:text-[#00d4ff] transition-colors">ADV</span>
-                        <span id="adv-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
-                    </button>
-                    <button id="dis-btn" onclick="applyModifier('DIS')" disabled
-                        class="col-span-3 toggle-btn segmented-row justify-center items-center flex-col disabled:opacity-50 transition-all hover:bg-white/5 group relative overflow-hidden !h-[3rem]">
-
-                        <div id="dis-pip"
-                            class="absolute left-0 top-0 bottom-0 w-1 bg-white/5 transition-all duration-300">
-                        </div>
-                        <span id="dis-label"
-                            class="text-sm font-black text-slate-500 uppercase tracking-widest hover:text-[#6366f1] transition-colors">DIS</span>
-                        <span id="dis-sub" class="text-xs font-bold text-slate-600 mono leading-none mt-0.5"></span>
-                    </button>
+                    <!-- ROW 5: MATH OPERATORS -->
+                    <div class="grid grid-cols-6 gap-2">
+                        <button onclick="addOperatorToQueue('+')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">+</button>
+                        <button onclick="addOperatorToQueue('-')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">-</button>
+                        <button onclick="addOperatorToQueue('*')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">*</button>
+                        <button onclick="addOperatorToQueue('/')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">/</button>
+                        <button onclick="addOperatorToQueue('(')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">(</button>
+                        <button onclick="addOperatorToQueue(')')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">)</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-                <!-- ADVANCED RULES PANEL -->
-                <div class="glass-panel rounded-xl overflow-hidden border-white/5 transition-all hidden"
-                    id="rules-panel">
-                    <div class="p-2 space-y-2 bg-[#020617]/40">
-                        <!-- Advanced Toggles moved to section headers -->
-                        <!-- Header Row -->
-                        <div class="flex gap-2 px-1 mb-0.5 items-center justify-between">
-                            <div class="flex gap-2 items-center">
-                                <span class="w-14 text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 shrink-0">Rule</span>
-                                <div class="text-left pl-3">
-                                    <span class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Configuration</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1.5 -my-1">
-                                <button onclick="document.getElementById('import-input').click()"
-                                    class="bg-[#00d4ff]/10 text-[#94a3b8] h-8 w-8 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:scale-95"
-                                    title="Import Settings & Loadouts">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                    </svg>
-                                </button>
-                                <button onclick="exportSettings()"
-                                    class="bg-[#00d4ff]/10 text-[#94a3b8] h-8 w-8 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:scale-95"
-                                    title="Export Settings & Loadouts">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                </button>
-                                <button onclick="restoreDefaults()"
-                                    class="bg-[#ff003c]/10 text-[#94a3b8] h-8 w-8 flex items-center justify-center rounded-lg border border-[#ff003c]/10 transition-all hover:text-[#ff003c] hover:border-[#ff003c]/30 active:scale-95"
-                                    title="Restore Default Settings">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
-                                    </svg>
-                                </button>
-                            </div>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ADVANCED NODES PANEL (toggled by ADVANCED button)      -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <div id="advanced-panel" class="hidden space-y-3">
+            <div class="glass-panel rounded-xl overflow-hidden border-white/5">
+                <div class="p-3 space-y-2 bg-[#020617]/40">
+                    <!-- Panel Header -->
+                    <div class="flex gap-2 px-1 mb-1 items-center justify-between">
+                        <span class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Advanced Nodes</span>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="document.getElementById('import-input').click()"
+                                class="bg-[#00d4ff]/10 text-[#94a3b8] h-7 w-7 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:scale-95"
+                                title="Import Settings &amp; Loadouts">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                            </button>
+                            <button onclick="exportSettings()"
+                                class="bg-[#00d4ff]/10 text-[#94a3b8] h-7 w-7 flex items-center justify-center rounded-lg border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:scale-95"
+                                title="Export Settings &amp; Loadouts">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </button>
+                            <button onclick="restoreDefaults()"
+                                class="bg-[#ff003c]/10 text-[#94a3b8] h-7 w-7 flex items-center justify-center rounded-lg border border-[#ff003c]/10 transition-all hover:text-[#ff003c] hover:border-[#ff003c]/30 active:scale-95"
+                                title="Restore Default Settings">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
+                                </svg>
+                            </button>
                         </div>
+                    </div>
 
-                        <!-- 1. Roll Target -->
-                        <div id="rule-target-container"
-                            class="flex gap-2 bg-[#020617]/30 p-1.5 rounded-lg border border-white/5 items-center transition-all">
-
-                            <span
-                                class="w-14 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 leading-tight shrink-0">ROLL<br>TYPE</span>
-
-                            <div
-                                class="flex-1 flex items-center border-l border-white/10 pl-2.5 gap-3 min-h-[48px]">
-                                <div
-                                    class="flex flex-col bg-[#020617] rounded border border-white/10 overflow-hidden w-14 shrink-0">
-                                    <button id="target-mode-sum" onclick="setTargetMode('sum')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 hover:text-sky-400 text-slate-500">SUM</button>
-                                    <button id="target-mode-count" onclick="setTargetMode('count')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 hover:text-sky-400 text-slate-500 border-t border-white/10">COUNT</button>
-                                    <button id="target-mode-list" onclick="setTargetMode('list')"
-                                        class="text-[9px] font-black py-1.5 transition-all uppercase hover:bg-[#00d4ff]/10 hover:text-sky-400 text-slate-500 border-t border-white/10">LIST</button>
-                                </div>
-
-                                <div class="flex-1 flex items-center">
-                                <!-- SUM container -->
-                                <div id="sum-target-inputs" class="flex gap-2 w-full justify-start items-center">
-                                    <select id="rule-sum-op"
-                                        class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
-                                        onchange="updateRulesUI()">
-                                        <option value="">Any</option>
-                                        <option value=">=">&ge;</option>
-                                        <option value=">">&gt;</option>
-                                        <option value="=">=</option>
-                                        <option value="<">&lt;</option>
-                                        <option value="<=">&le;</option>
-                                    </select>
-                                    <select id="rule-sum-val"
-                                        class="min-w-[7rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center transition-all opacity-30 pointer-events-none"
-                                        onchange="updateRulesUI()">
-                                        <option value="overall">Target</option>
-                                        <option value="varX">Variable X</option>
-                                    </select>
-                                </div>
-
-                                <!-- COUNT container -->
-                                <div id="count-target-inputs" class="flex flex-col gap-1 w-full hidden">
-                                    <div class="flex gap-2 items-center justify-start">
-                                        <span
-                                            class="text-[9px] font-black text-slate-600 uppercase tracking-widest w-8 text-right">Die</span>
-                                        <select id="rule-count-op"
-                                            class="min-w-[3rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center"
-                                            onchange="updateRulesUI()">
-                                            <option value=">=">&ge;</option>
-                                            <option value=">">&gt;</option>
-                                            <option value="=">=</option>
-                                            <option value="<">&lt;</option>
-                                            <option value="<=">&le;</option>
-                                        </select>
-                                        <div id="rule-count-input-container"
-                                            class="segmented-row h-[2rem] !min-h-0 bg-[#020617] flex items-center justify-between !p-0.5 w-28 focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)] transition-all">
-                                            <button onclick="adjustRuleVal('count', -1)"
-                                                class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">－</button>
-                                            <div class="flex-1 flex flex-col items-center justify-center min-w-0">
-                                                <input type="text" id="rule-count-val" inputmode="numeric"
-                                                    class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
-                                                    placeholder="0" oninput="updateRulesUI(true)">
-                                            </div>
-                                            <button onclick="adjustRuleVal('count', 1)"
-                                                class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2 items-center justify-start">
-                                        <span
-                                            class="text-[9px] font-black text-slate-600 uppercase tracking-widest w-12 text-right">TARGET</span>
-                                        <select id="rule-count-thresh-op"
-                                            class="min-w-[3rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center"
-                                            onchange="updateRulesUI()">
-                                            <option value="">Any</option>
-                                            <option value=">=">&ge;</option>
-                                            <option value=">">&gt;</option>
-                                            <option value="=">=</option>
-                                            <option value="<">&lt;</option>
-                                            <option value="<=">&le;</option>
-                                        </select>
-                                        <select id="rule-count-thresh-val"
-                                            class="w-24 bg-[#020617] text-sky-400 text-[11px] font-black rounded p-1 outline-none border border-white/10 text-center transition-all opacity-30 pointer-events-none"
-                                            onchange="updateRulesUI()">
-                                            <option value="overall">TARGET</option>
-                                            <option value="varX">VAR X</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- LIST container -->
-                                <div id="list-target-inputs" class="flex gap-2 w-full hidden opacity-30 pointer-events-none"></div>
-                                </div>
-                            </div>
+                    <!-- Modifier Chips Section -->
+                    <div class="flex flex-col gap-2 bg-[#020617]/30 p-2.5 rounded-lg border border-white/5 transition-all">
+                        <div class="flex justify-between items-center pb-1 border-b border-white/5">
+                            <span class="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest leading-tight">Modifier Chips</span>
+                            <span id="chips-total-badge" class="text-[10px] font-bold text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded">Total: 0</span>
                         </div>
-
-                        <!-- 2. Sets -->
-                        <div
-                            class="flex gap-2 bg-[#020617]/30 p-1.5 rounded-lg border border-white/5 items-center">
-                            <span
-                                class="w-14 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 shrink-0">Sets</span>
-                            <div class="flex-1 flex gap-2 items-center justify-start border-l border-white/10 pl-2.5">
-                                <select id="rule-sets-op"
-                                    class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
-                                    onchange="updateRulesUI()">
-                                    <option value="">Off</option>
-                                    <option value=">">&gt;</option>
-                                    <option value=">=">&ge;</option>
-                                    <option value="=">=</option>
-                                    <option value="<=">&le;</option>
-                                    <option value="<">&lt;</option>
+                        <div id="modifier-chips-list" class="flex flex-wrap gap-1.5 py-1">
+                            <!-- Chips dynamically injected here -->
+                        </div>
+                        <div class="bg-[#020617]/50 rounded-lg p-2 border border-white/5 space-y-2 mt-1">
+                            <div class="flex gap-1.5 items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Add Complex Chip</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 items-center">
+                                <select id="new-chip-operator" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 w-10 text-center">
+                                    <option value="+">+</option>
+                                    <option value="-">-</option>
                                 </select>
-                                <div id="rule-sets-input-container"
-                                    class="segmented-row h-[2rem] !min-h-0 bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
-                                    <button onclick="adjustRuleVal('sets', -1)"
-                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">－</button>
-                                    <div class="flex-1 flex flex-col items-center justify-center min-w-0">
-                                        <input type="text" id="rule-sets-val" inputmode="numeric"
-                                            class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
-                                            placeholder="0" oninput="updateRulesUI(true)">
-                                    </div>
-                                    <button onclick="adjustRuleVal('sets', 1)"
-                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. Reroll -->
-                        <div
-                            class="flex gap-2 bg-[#020617]/30 p-1.5 rounded-lg border border-white/5 items-center">
-                            <span
-                                class="w-14 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 shrink-0">Reroll</span>
-                            <div class="col-span-10 flex-1 flex gap-2 items-center justify-start border-l border-white/10 pl-2.5">
-                                <select id="rule-reroll-op"
-                                    class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
-                                    onchange="updateRulesUI()">
-                                    <option value="">Off</option>
-                                    <option value=">">&gt;</option>
-                                    <option value=">=">&ge;</option>
-                                    <option value="=">=</option>
-                                    <option value="<=">&le;</option>
-                                    <option value="<">&lt;</option>
+                                <select id="new-chip-base-type" onchange="toggleNewChipBaseType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                    <option value="literal">Literal</option>
+                                    <option value="variable">Variable</option>
                                 </select>
-                                <div id="rule-reroll-input-container"
-                                    class="segmented-row h-[2rem] !min-h-0 bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
-                                    <button onclick="adjustRuleVal('reroll', -1)"
-                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">－</button>
-                                    <div class="flex-1 flex flex-col items-center justify-center min-w-0">
-                                        <input type="text" id="rule-reroll-val" inputmode="numeric"
-                                            class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
-                                            placeholder="0" oninput="updateRulesUI(true)">
-                                    </div>
-                                    <button onclick="adjustRuleVal('reroll', 1)"
-                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4. Explode -->
-                        <div
-                            class="flex gap-2 bg-[#020617]/30 p-1.5 rounded-lg border border-white/5 items-center">
-                            <span
-                                class="w-14 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left pl-1 shrink-0">Explode</span>
-                            <div class="col-span-10 flex-1 flex gap-2 items-center justify-start border-l border-white/10 pl-2.5">
-                                <select id="rule-explode-op"
-                                    class="min-w-[4rem] bg-[#020617] text-sky-400 text-xs font-black rounded p-1.5 outline-none border border-white/10 text-center"
-                                    onchange="updateRulesUI()">
-                                    <option value="">Off</option>
-                                    <option value=">">&gt;</option>
-                                    <option value=">=">&ge;</option>
-                                    <option value="=">=</option>
-                                    <option value="<=">&le;</option>
-                                    <option value="<">&lt;</option>
+                                <input type="number" id="new-chip-base-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center" placeholder="Value">
+                                <select id="new-chip-base-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden">
+                                    <!-- Dynamically populated -->
                                 </select>
-                                <div id="rule-explode-input-container"
-                                    class="segmented-row h-[2rem] !min-h-0 bg-[#020617] flex items-center justify-between !p-0.5 w-28 transition-all opacity-30 pointer-events-none focus-within:border-sky-500 focus-within:shadow-[0_0_10px_rgba(0,212,255,0.2)]">
-                                    <button onclick="adjustRuleVal('explode', -1)"
-                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">－</button>
-                                    <div class="flex-1 flex flex-col items-center justify-center min-w-0">
-                                        <input type="text" id="rule-explode-val" inputmode="numeric"
-                                            class="w-full bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
-                                            placeholder="0" oninput="updateRulesUI(true)">
-                                    </div>
-                                    <button onclick="adjustRuleVal('explode', 1)"
-                                        class="w-7 h-7 aspect-square flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors rounded-lg text-sm font-bold">＋</button>
-                                    </div>
-                                </div>
                             </div>
-
-
-                        <!-- 5. Modifier Chips -->
-                        <div class="flex flex-col gap-2 bg-[#020617]/30 p-2.5 rounded-lg border border-white/5 transition-all">
-                            <div class="flex justify-between items-center pb-1 border-b border-white/5">
-                                <span class="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest leading-tight">Modifier Chips</span>
-                                <span id="chips-total-badge" class="text-[10px] font-bold text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded">Total: 0</span>
-                            </div>
-                            
-                            <!-- Chips List Container -->
-                            <div id="modifier-chips-list" class="flex flex-wrap gap-1.5 py-1">
-                                <!-- Chips dynamically injected here -->
-                            </div>
-                            
-                            <!-- Add Chip Row (Compact collapsible control block) -->
-                            <div class="bg-[#020617]/50 rounded-lg p-2 border border-white/5 space-y-2 mt-1">
-                                <div class="flex gap-1.5 items-center justify-between">
-                                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Add Complex Chip</span>
-                                </div>
-                                
-                                <div class="flex flex-wrap gap-1.5 items-center">
-                                    <!-- Operator -->
-                                    <select id="new-chip-operator" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 w-10 text-center">
-                                        <option value="+">+</option>
-                                        <option value="-">-</option>
-                                    </select>
-                                    
-                                    <!-- Base Type -->
-                                    <select id="new-chip-base-type" onchange="toggleNewChipBaseType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                            <button onclick="toggleMathOptions()" id="math-options-btn" class="text-[9px] font-bold text-slate-400 hover:text-sky-400 flex items-center gap-1 transition-colors">
+                                <span>⚙ Show Math Options (× / ÷ / Round)</span>
+                            </button>
+                            <div id="new-chip-math-opts" class="space-y-2 border-t border-white/5 pt-2 hidden">
+                                <div class="flex gap-2 items-center">
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Multiply</span>
+                                    <select id="new-chip-mult-type" onchange="toggleNewChipMultType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center shrink-0">
+                                        <option value="none">None</option>
                                         <option value="literal">Literal</option>
                                         <option value="variable">Variable</option>
                                     </select>
-                                    
-                                    <!-- Base Value (Literal Input) -->
-                                    <input type="number" id="new-chip-base-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center" placeholder="Value">
-                                    
-                                    <!-- Base Value (Variable Dropdown) -->
-                                    <select id="new-chip-base-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden">
-                                        <!-- Dynamically populated -->
+                                    <input type="number" id="new-chip-mult-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center hidden" value="1">
+                                    <select id="new-chip-mult-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden"></select>
+                                </div>
+                                <div class="flex gap-2 items-center">
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Divide</span>
+                                    <select id="new-chip-div-type" onchange="toggleNewChipDivType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center shrink-0">
+                                        <option value="none">None</option>
+                                        <option value="literal">Literal</option>
+                                        <option value="variable">Variable</option>
+                                    </select>
+                                    <input type="number" id="new-chip-div-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center hidden" value="1">
+                                    <select id="new-chip-div-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden"></select>
+                                </div>
+                                <div class="flex gap-2 items-center">
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Rounding</span>
+                                    <select id="new-chip-round-mode" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
+                                        <option value="none">None</option>
+                                        <option value="up">Round Up (↑)</option>
+                                        <option value="down">Round Down (↓)</option>
+                                        <option value="round">Round Nearest (≈)</option>
                                     </select>
                                 </div>
-                                
-                                <!-- Math options trigger -->
-                                <button onclick="toggleMathOptions()" id="math-options-btn" class="text-[9px] font-bold text-slate-400 hover:text-sky-400 flex items-center gap-1 transition-colors">
-                                    <span>⚙ Show Math Options (× / ÷ / Round)</span>
+                            </div>
+                            <button onclick="addNewModifierChip()" class="w-full h-8 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 hover:border-sky-500/50 text-xs font-bold rounded-lg uppercase tracking-wider transition-all active:scale-[0.98]">
+                                ＋ Add Modifier Chip
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hidden legacy rule inputs still referenced by engine JS -->
+                    <div class="hidden" aria-hidden="true">
+                        <select id="rule-sum-op" onchange="updateRulesUI()">
+                            <option value="">Any</option>
+                            <option value=">=">&ge;</option>
+                            <option value=">">&gt;</option>
+                            <option value="=">=</option>
+                            <option value="<">&lt;</option>
+                            <option value="<=">&le;</option>
+                        </select>
+                        <select id="rule-sum-val" onchange="updateRulesUI()">
+                            <option value="overall">Target</option>
+                            <option value="varX">Variable X</option>
+                        </select>
+                        <select id="rule-count-op" onchange="updateRulesUI()">
+                            <option value=">=">&ge;</option>
+                            <option value=">">&gt;</option>
+                            <option value="=">=</option>
+                            <option value="<">&lt;</option>
+                            <option value="<=">&le;</option>
+                        </select>
+                        <input type="text" id="rule-count-val" inputmode="numeric" placeholder="0" oninput="updateRulesUI(true)">
+                        <select id="rule-count-thresh-op" onchange="updateRulesUI()">
+                            <option value="">Any</option>
+                            <option value=">=">&ge;</option>
+                            <option value=">">&gt;</option>
+                            <option value="=">=</option>
+                            <option value="<">&lt;</option>
+                            <option value="<=">&le;</option>
+                        </select>
+                        <select id="rule-count-thresh-val" onchange="updateRulesUI()">
+                            <option value="overall">TARGET</option>
+                            <option value="varX">VAR X</option>
+                        </select>
+                        <select id="rule-sets-op" onchange="updateRulesUI()">
+                            <option value="">Off</option>
+                            <option value=">">&gt;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="=">=</option>
+                            <option value="<=">&le;</option>
+                            <option value="<">&lt;</option>
+                        </select>
+                        <input type="text" id="rule-sets-val" inputmode="numeric" placeholder="0" oninput="updateRulesUI(true)">
+                        <select id="rule-reroll-op" onchange="updateRulesUI()">
+                            <option value="">Off</option>
+                            <option value=">">&gt;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="=">=</option>
+                            <option value="<=">&le;</option>
+                            <option value="<">&lt;</option>
+                        </select>
+                        <input type="text" id="rule-reroll-val" inputmode="numeric" placeholder="0" oninput="updateRulesUI(true)">
+                        <select id="rule-explode-op" onchange="updateRulesUI()">
+                            <option value="">Off</option>
+                            <option value=">">&gt;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="=">=</option>
+                            <option value="<=">&le;</option>
+                            <option value="<">&lt;</option>
+                        </select>
+                        <input type="text" id="rule-explode-val" inputmode="numeric" placeholder="0" oninput="updateRulesUI(true)">
+                        <!-- legacy containers expected by updateRulesUI -->
+                        <div id="sum-target-inputs"></div>
+                        <div id="count-target-inputs" class="hidden"></div>
+                        <div id="list-target-inputs" class="hidden"></div>
+                        <div id="rule-count-input-container"></div>
+                        <div id="rule-sets-input-container"></div>
+                        <div id="rule-reroll-input-container"></div>
+                        <div id="rule-explode-input-container"></div>
+                        <button id="target-mode-sum" onclick="setTargetMode('sum')"></button>
+                        <button id="target-mode-count" onclick="setTargetMode('count')"></button>
+                        <button id="target-mode-list" onclick="setTargetMode('list')"></button>
+                        <div id="rule-target-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- NODE EDITOR (context-sensitive, shown by button clicks) -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <div id="node-editor" class="hidden">
+                <div class="glass-panel rounded-xl overflow-hidden border-white/5">
+                    <div class="p-3 space-y-3 bg-[#020617]/50">
+
+                        <!-- Node Editor Header -->
+                        <div class="flex items-center justify-between px-0.5">
+                            <span id="node-editor-title" class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Node Editor</span>
+                            <button onclick="closeNodeEditor()" class="text-slate-600 hover:text-slate-400 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- ── NUMBER NODE EDITOR ── -->
+                        <div id="ne-number" class="hidden space-y-3">
+                            <!-- NUM / VAR Toggle -->
+                            <div class="flex items-center gap-2">
+                                <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden">
+                                    <button id="ne-num-tab" onclick="setNumberMode('NUM')"
+                                        class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all text-slate-500">NUM</button>
+                                    <button id="ne-var-tab" onclick="setNumberMode('VAR')"
+                                        class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all text-slate-500 border-l border-white/10">VAR</button>
+                                </div>
+                            </div>
+
+                            <!-- NUM mode: stepper -->
+                            <div id="ne-num-mode" class="hidden">
+                                <div class="segmented-row h-[3rem] bg-[#020617] flex items-center justify-between !p-0">
+                                    <button onclick="adjustNumberNode(-1)"
+                                        class="w-[3rem] h-[3rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">－</button>
+                                    <div class="flex-1 flex flex-col items-center justify-center min-w-0">
+                                        <span class="text-[8px] font-black text-sky-400/50 uppercase tracking-tighter">NUMBER</span>
+                                        <input type="text" id="ne-num-input" inputmode="numeric"
+                                            class="w-full bg-transparent font-black text-base text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                                            value="0" placeholder="0">
+                                    </div>
+                                    <button onclick="adjustNumberNode(1)"
+                                        class="w-[3rem] h-[3rem] flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-xl font-bold">＋</button>
+                                </div>
+                                <button onclick="addNumberNodeToQueue()"
+                                    class="w-full mt-2 h-9 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold rounded-lg uppercase tracking-wider transition-all">
+                                    ＋ Add Number Node
                                 </button>
-                                
-                                <!-- Math Options (Collapsible) -->
-                                <div id="new-chip-math-opts" class="space-y-2 border-t border-white/5 pt-2 hidden">
-                                    <!-- Multiplier -->
-                                    <div class="flex gap-2 items-center">
-                                        <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Multiply</span>
-                                        <select id="new-chip-mult-type" onchange="toggleNewChipMultType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center shrink-0">
-                                            <option value="none">None</option>
-                                            <option value="literal">Literal</option>
-                                            <option value="variable">Variable</option>
-                                        </select>
-                                        <input type="number" id="new-chip-mult-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center hidden" value="1">
-                                        <select id="new-chip-mult-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden">
-                                            <!-- Populated -->
-                                        </select>
-                                    </div>
-                                    
-                                    <!-- Divisor -->
-                                    <div class="flex gap-2 items-center">
-                                        <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Divide</span>
-                                        <select id="new-chip-div-type" onchange="toggleNewChipDivType()" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center shrink-0">
-                                            <option value="none">None</option>
-                                            <option value="literal">Literal</option>
-                                            <option value="variable">Variable</option>
-                                        </select>
-                                        <input type="number" id="new-chip-div-literal" class="bg-[#020617] text-sky-400 text-xs font-bold rounded p-1 outline-none border border-white/10 w-16 text-center hidden" value="1">
-                                        <select id="new-chip-div-variable" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center hidden">
-                                            <!-- Populated -->
-                                        </select>
-                                    </div>
-                                    
-                                    <!-- Round Mode -->
-                                    <div class="flex gap-2 items-center">
-                                        <span class="text-[9px] font-bold text-slate-500 uppercase w-14 shrink-0">Rounding</span>
-                                        <select id="new-chip-round-mode" class="bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">
-                                            <option value="none">None</option>
-                                            <option value="up">Round Up (↑)</option>
-                                            <option value="down">Round Down (↓)</option>
-                                            <option value="round">Round Nearest (≈)</option>
-                                        </select>
+                            </div>
+
+                            <!-- VAR mode: dropdown -->
+                            <div id="ne-var-mode" class="hidden space-y-2">
+                                <select id="ne-var-select"
+                                    class="w-full bg-[#020617] text-sky-400 text-xs font-black rounded-lg p-2 outline-none border border-white/10 text-center"
+                                    onchange="onVarSelectChange()">
+                                    <option value="target">Target</option>
+                                    <!-- Populated dynamically with character variables -->
+                                </select>
+                                <!-- No extra input for Target; shows value display for others -->
+                                <div id="ne-var-value-display" class="hidden">
+                                    <div class="bg-[#020617]/60 rounded-lg border border-white/10 px-3 py-2 text-center">
+                                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Resolved Value</span>
+                                        <span id="ne-var-resolved" class="text-sm font-black text-sky-400 mono">—</span>
                                     </div>
                                 </div>
-                                
-                                <button onclick="addNewModifierChip()" class="w-full h-8 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 hover:border-sky-500/50 text-xs font-bold rounded-lg uppercase tracking-wider transition-all active:scale-[0.98]">
-                                    ＋ Add Modifier Chip
+                                <button onclick="addVariableNodeToQueue()"
+                                    class="w-full h-9 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold rounded-lg uppercase tracking-wider transition-all">
+                                    ＋ Add Variable Node
                                 </button>
                             </div>
                         </div>
+
+                        <!-- ── EVAL NODE EDITOR ── -->
+                        <div id="ne-eval" class="hidden space-y-3">
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest px-0.5">Evaluation</p>
+                            <!-- Eval Type Tabs: Sum | Count | Sets | List -->
+                            <div class="flex gap-1.5">
+                                <button id="eval-tab-sum" onclick="setEvalTab('sum')"
+                                    class="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg border transition-all text-slate-500 border-white/10 bg-[#020617]">Sum</button>
+                                <button id="eval-tab-count" onclick="setEvalTab('count')"
+                                    class="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg border transition-all text-slate-500 border-white/10 bg-[#020617]">Count</button>
+                                <button id="eval-tab-sets" onclick="setEvalTab('sets')"
+                                    class="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg border transition-all text-slate-500 border-white/10 bg-[#020617]">Sets</button>
+                                <button id="eval-tab-list" onclick="setEvalTab('list')"
+                                    class="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg border transition-all text-slate-500 border-white/10 bg-[#020617]">List</button>
+                            </div>
+
+                            <!-- Eval Criteria Container (dynamically rendered) -->
+                            <div id="eval-criteria-container" class="space-y-2">
+                                <!-- Injected by renderEvalCriteria() -->
+                            </div>
+
+                            <button onclick="addEvalCriteria()"
+                                class="w-full h-8 bg-[#00d4ff]/05 hover:bg-[#00d4ff]/10 text-[#94a3b8] hover:text-[#00d4ff] border border-[#00d4ff]/10 text-[9px] font-bold rounded-lg uppercase tracking-wider transition-all">
+                                ＋ Add New
+                            </button>
+                        </div>
+
+                        <!-- ── REROLL/EXPLODE NODE EDITOR ── -->
+                        <div id="ne-reroll" class="hidden space-y-3">
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest px-0.5">Reroll / Explode</p>
+
+                            <!-- Explode checkbox -->
+                            <label class="flex items-center gap-2.5 px-0.5 cursor-pointer group">
+                                <div class="relative shrink-0">
+                                    <input type="checkbox" id="ne-explode-check" class="sr-only peer" onchange="updateRerollEditorUI()">
+                                    <div class="w-4 h-4 rounded border border-white/20 bg-[#020617] peer-checked:bg-[#00d4ff] peer-checked:border-[#00d4ff] transition-all flex items-center justify-center">
+                                        <svg class="w-2.5 h-2.5 text-[#020617] hidden peer-checked:block" fill="none" viewBox="0 0 12 12">
+                                            <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-sky-400 transition-colors block">Explode</span>
+                                    <span class="text-[9px] font-medium text-slate-600 leading-tight">Keep original roll (add new alongside)</span>
+                                </div>
+                            </label>
+
+                            <!-- Operator + NUM/VAR stepper -->
+                            <div class="space-y-2">
+                                <!-- Operator row -->
+                                <div class="flex gap-2 items-center">
+                                    <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest w-14 shrink-0 text-right">When</span>
+                                    <select id="ne-reroll-op"
+                                        class="flex-1 bg-[#020617] text-sky-400 text-xs font-black rounded-lg p-1.5 outline-none border border-white/10 text-center"
+                                        onchange="updateRerollEditorUI()">
+                                        <option value="">Off</option>
+                                        <option value=">">&gt;</option>
+                                        <option value=">=">&ge;</option>
+                                        <option value="=">=</option>
+                                        <option value="<=">&le;</option>
+                                        <option value="<">&lt;</option>
+                                    </select>
+                                </div>
+
+                                <!-- NUM/VAR toggle + stepper (shown when op is set) -->
+                                <div id="ne-reroll-val-area" class="hidden space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0">
+                                            <button id="ne-reroll-num-tab" onclick="setRerollMode('NUM')"
+                                                class="px-3 py-1 text-[9px] font-black uppercase tracking-widest transition-all text-slate-500">NUM</button>
+                                            <button id="ne-reroll-var-tab" onclick="setRerollMode('VAR')"
+                                                class="px-3 py-1 text-[9px] font-black uppercase tracking-widest transition-all text-slate-500 border-l border-white/10">VAR</button>
+                                        </div>
+                                    </div>
+                                    <!-- NUM mode -->
+                                    <div id="ne-reroll-num" class="hidden">
+                                        <div class="segmented-row h-[2.5rem] bg-[#020617] flex items-center justify-between !p-0">
+                                            <button onclick="adjustRerollVal(-1)"
+                                                class="w-10 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors text-lg font-bold">－</button>
+                                            <input type="text" id="ne-reroll-num-input" inputmode="numeric"
+                                                class="flex-1 bg-transparent font-black text-sm text-sky-400 mono leading-none text-center outline-none hide-spinners"
+                                                value="0" placeholder="0">
+                                            <button onclick="adjustRerollVal(1)"
+                                                class="w-10 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 transition-colors text-lg font-bold">＋</button>
+                                        </div>
+                                    </div>
+                                    <!-- VAR mode -->
+                                    <div id="ne-reroll-var" class="hidden">
+                                        <select id="ne-reroll-var-select"
+                                            class="w-full bg-[#020617] text-sky-400 text-xs font-black rounded-lg p-2 outline-none border border-white/10 text-center">
+                                            <option value="target">Target</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Apply to all checkbox -->
+                            <label class="flex items-center gap-2.5 px-0.5 cursor-pointer group mt-1">
+                                <div class="relative shrink-0">
+                                    <input type="checkbox" id="ne-reroll-all-check" class="sr-only peer" onchange="updateRerollEditorUI()">
+                                    <div class="w-4 h-4 rounded border border-white/20 bg-[#020617] peer-checked:bg-violet-500 peer-checked:border-violet-500 transition-all flex items-center justify-center">
+                                        <svg class="w-2.5 h-2.5 text-white hidden peer-checked:block" fill="none" viewBox="0 0 12 12">
+                                            <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-violet-400 transition-colors block">Apply to All</span>
+                                    <span class="text-[9px] font-medium text-slate-600 leading-tight">Global rule for every die in queue</span>
+                                </div>
+                            </label>
+
+                            <button onclick="applyRerollRule()"
+                                class="w-full h-8 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold rounded-lg uppercase tracking-wider transition-all">
+                                Apply Rule
+                            </button>
+                        </div>
+
+                        <!-- ── ADV/DIS NODE EDITOR ── -->
+                        <div id="ne-advdis" class="hidden space-y-3">
+                            <p id="ne-advdis-title" class="text-[9px] font-black text-slate-500 uppercase tracking-widest px-0.5">Advantage / Disadvantage</p>
+
+                            <label class="flex items-center gap-2.5 px-0.5 cursor-pointer group">
+                                <div class="relative shrink-0">
+                                    <input type="checkbox" id="ne-advdis-all-check" class="sr-only peer">
+                                    <div class="w-4 h-4 rounded border border-white/20 bg-[#020617] peer-checked:bg-violet-500 peer-checked:border-violet-500 transition-all flex items-center justify-center">
+                                        <svg class="w-2.5 h-2.5 text-white hidden peer-checked:block" fill="none" viewBox="0 0 12 12">
+                                            <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-violet-400 transition-colors block">Apply to All</span>
+                                    <span class="text-[9px] font-medium text-slate-600 leading-tight">Global rule for every die in queue</span>
+                                </div>
+                            </label>
+
+                            <button onclick="applyAdvDisNode()"
+                                class="w-full h-8 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold rounded-lg uppercase tracking-wider transition-all">
+                                Apply
+                            </button>
+                        </div>
+
                     </div>
                 </div>
+            </div>
+        </div>
+        <!-- END ADVANCED PANEL -->
+
+
+
+
+
 
         <section id="dice-section" class="section-dice glass-panel p-4 rounded-2xl border-white/5 space-y-4">
             <div class="flex justify-between items-center px-1">
@@ -2329,34 +2456,317 @@
             vibrate(5);
         }
 
-        function toggleRulesPanel() {
-            const panel = document.getElementById('rules-panel');
-            if (panel.classList.contains('hidden')) {
-                openRulesPanel();
-            } else {
-                closeRulesPanel();
-            }
-        }
+        // ═══════════════════════════════════════════════════════════════
+        // ADVANCED PANEL TOGGLE
+        // ═══════════════════════════════════════════════════════════════
 
-        function openRulesPanel() {
-            const panel = document.getElementById('rules-panel');
-            const btn = document.getElementById('adv-rules-toggle');
-            panel.classList.remove('hidden');
-            btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
-            // Align with actual HTML classes from line 828
-            btn.classList.remove('bg-[#00d4ff]/05', 'text-[#94a3b8]', 'border-[#00d4ff]/10');
+        function toggleAdvancedPanel() {
+            const panel = document.getElementById('advanced-panel');
+            const advRows = document.getElementById('advanced-rows');
+            const btn   = document.getElementById('adv-rules-toggle');
+            const isOpen = !panel.classList.contains('hidden');
+            if (isOpen) {
+                panel.classList.add('hidden');
+                if (advRows) advRows.classList.add('hidden');
+                btn.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+                btn.classList.add('bg-[#00d4ff]/05', 'text-[#94a3b8]', 'border-[#00d4ff]/10');
+            } else {
+                panel.classList.remove('hidden');
+                if (advRows) advRows.classList.remove('hidden');
+                btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+                btn.classList.remove('bg-[#00d4ff]/05', 'text-[#94a3b8]', 'border-[#00d4ff]/10');
+            }
             vibrate(5);
         }
 
-        function closeRulesPanel() {
-            const panel = document.getElementById('rules-panel');
-            const btn = document.getElementById('adv-rules-toggle');
-            if (panel.classList.contains('hidden')) return;
+        // Legacy shims
+        function toggleRulesPanel() { toggleAdvancedPanel(); }
+        function openRulesPanel()   { const p = document.getElementById('advanced-panel'); if (p && p.classList.contains('hidden')) toggleAdvancedPanel(); }
+        function closeRulesPanel()  { const p = document.getElementById('advanced-panel'); if (p && !p.classList.contains('hidden')) toggleAdvancedPanel(); }
 
-            panel.classList.add('hidden');
-            btn.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
-            btn.classList.add('bg-[#00d4ff]/05', 'text-[#94a3b8]', 'border-[#00d4ff]/10');
+        // ═══════════════════════════════════════════════════════════════
+        // NODE EDITOR — SHARED
+        // ═══════════════════════════════════════════════════════════════
+
+        let currentNodeEditorType = null;
+        let currentAdvDisType = null;
+        let currentEvalTab = 'sum';
+        let numberNodeMode = 'NUM';
+        let rerollMode = 'NUM';
+        const evalCriteria = { sum: [], count: [], sets: [], list: [] };
+
+        function openNodeEditor(type) {
+            const advPanel = document.getElementById('advanced-panel');
+            if (advPanel.classList.contains('hidden')) {
+                advPanel.classList.remove('hidden');
+                const btn = document.getElementById('adv-rules-toggle');
+                btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+                btn.classList.remove('bg-[#00d4ff]/05', 'text-[#94a3b8]', 'border-[#00d4ff]/10');
+            }
+            currentNodeEditorType = type;
+            const ne = document.getElementById('node-editor');
+            ne.classList.remove('hidden');
+            ['ne-number', 'ne-eval', 'ne-reroll', 'ne-advdis'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            populateVarDropdowns();
+            if (type === 'number') {
+                document.getElementById('ne-number').classList.remove('hidden');
+                document.getElementById('node-editor-title').textContent = 'Number Node';
+                setNumberMode('NUM');
+            } else if (type === 'eval') {
+                document.getElementById('ne-eval').classList.remove('hidden');
+                document.getElementById('node-editor-title').textContent = 'Evaluation';
+                setEvalTab(currentEvalTab);
+            } else if (type === 'reroll') {
+                document.getElementById('ne-reroll').classList.remove('hidden');
+                document.getElementById('node-editor-title').textContent = 'Reroll / Explode';
+                updateRerollEditorUI();
+                setRerollMode('NUM');
+            }
+            vibrate(5);
         }
+
+        function closeNodeEditor() {
+            document.getElementById('node-editor').classList.add('hidden');
+            currentNodeEditorType = null;
+        }
+
+        function populateVarDropdowns() {
+            const char = characters.find(c => c.id === activeCharacterId);
+            const vars = (char && char.variables) ? char.variables : [];
+            ['ne-var-select', 'ne-reroll-var-select'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = '';
+                const tgt = document.createElement('option');
+                tgt.value = 'target'; tgt.textContent = 'Target';
+                sel.appendChild(tgt);
+                vars.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.id || v.name;
+                    const sign = v.value >= 0 ? '+' : '';
+                    opt.textContent = v.name + '(' + sign + v.value + ')';
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        // ── NUMBER NODE ──
+
+        function setNumberMode(mode) {
+            numberNodeMode = mode;
+            const numTab = document.getElementById('ne-num-tab');
+            const varTab = document.getElementById('ne-var-tab');
+            const numMode = document.getElementById('ne-num-mode');
+            const varMode = document.getElementById('ne-var-mode');
+            const active = ['bg-sky-500/20', 'text-sky-400'];
+            const inactive = ['text-slate-500'];
+            [numTab, varTab].forEach(t => { t.classList.remove(...active, ...inactive); t.classList.add(...inactive); });
+            if (mode === 'NUM') {
+                numTab.classList.remove(...inactive); numTab.classList.add(...active);
+                numMode.classList.remove('hidden'); varMode.classList.add('hidden');
+            } else {
+                varTab.classList.remove(...inactive); varTab.classList.add(...active);
+                numMode.classList.add('hidden'); varMode.classList.remove('hidden');
+                onVarSelectChange();
+            }
+        }
+
+        function adjustNumberNode(delta) {
+            const inp = document.getElementById('ne-num-input');
+            inp.value = (parseInt(inp.value) || 0) + delta;
+            vibrate(5);
+        }
+
+        function onVarSelectChange() {
+            const sel = document.getElementById('ne-var-select');
+            const display = document.getElementById('ne-var-value-display');
+            const resolved = document.getElementById('ne-var-resolved');
+            if (!sel) return;
+            if (sel.value === 'target') {
+                display.classList.add('hidden');
+            } else {
+                display.classList.remove('hidden');
+                const char = characters.find(c => c.id === activeCharacterId);
+                const v = char && char.variables && char.variables.find(x => (x.id || x.name) === sel.value);
+                resolved.textContent = v ? ((v.value >= 0 ? '+' : '') + v.value) : '—';
+            }
+        }
+
+        function addNumberNodeToQueue() {
+            const val = parseInt(document.getElementById('ne-num-input').value) || 0;
+            activeLoadoutId = null;
+            engine.queue.push({ chipType: 'number', value: val, operator: '+', type: 'literal',
+                multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' });
+            updateUI(); vibrate(10);
+        }
+
+        function addVariableNodeToQueue() {
+            const sel = document.getElementById('ne-var-select');
+            if (!sel) return;
+            activeLoadoutId = null;
+            engine.queue.push({ chipType: 'modifier', type: sel.value === 'target' ? 'target' : 'variable',
+                variableId: sel.value, operator: '+', value: 0,
+                multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' });
+            updateUI(); vibrate(10);
+        }
+
+        // ── EVAL NODE ──
+
+        function setEvalTab(tab) {
+            currentEvalTab = tab;
+            ['sum','count','sets','list'].forEach(t => {
+                const btn = document.getElementById('eval-tab-' + t);
+                if (t === tab) {
+                    btn.classList.add('bg-sky-500/20','text-sky-400','border-sky-500/30');
+                    btn.classList.remove('text-slate-500','border-white/10','bg-[#020617]');
+                } else {
+                    btn.classList.remove('bg-sky-500/20','text-sky-400','border-sky-500/30');
+                    btn.classList.add('text-slate-500','border-white/10','bg-[#020617]');
+                }
+            });
+            if (evalCriteria[tab].length === 0) {
+                let op = '', val = '', mode = 'NUM';
+                if (tab === 'sum') { op = document.getElementById('rule-sum-op').value; val = 'overall'; mode = 'VAR'; }
+                else if (tab === 'count') { op = document.getElementById('rule-count-op').value; val = document.getElementById('rule-count-val').value; }
+                else if (tab === 'sets') { op = document.getElementById('rule-sets-op').value; val = document.getElementById('rule-sets-val').value; }
+                if (op) evalCriteria[tab].push({ viewOnly: false, op, mode, numVal: val, varVal: 'target', gate: 'AND' });
+            }
+            renderEvalCriteria();
+        }
+
+        function addEvalCriteria() {
+            evalCriteria[currentEvalTab].push({ viewOnly: false, op: '>=', mode: 'NUM', numVal: '0', varVal: 'target', gate: 'AND' });
+            renderEvalCriteria(); vibrate(5);
+        }
+
+        function renderEvalCriteria() {
+            const container = document.getElementById('eval-criteria-container');
+            if (!container) return;
+            const criteria = evalCriteria[currentEvalTab] || [];
+            if (criteria.length === 0) {
+                container.innerHTML = '<p class="text-[9px] text-slate-600 italic text-center py-2">No criteria yet — tap ＋ Add New</p>';
+                return;
+            }
+            container.innerHTML = criteria.map((c, i) => {
+                const gateHtml = i > 0 ? '<button onclick="toggleEvalGate(' + i + ')" class="w-full py-1 text-[9px] font-black uppercase tracking-widest text-violet-400 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 rounded-lg transition-all mb-1">' + c.gate + '</button>' : '';
+                const modeVal = c.mode === 'NUM'
+                    ? '<input type="text" value="' + c.numVal + '" inputmode="numeric" onchange="updateEvalCriteria(' + i + ', &quot;numVal&quot;, this.value)" class="w-14 bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">'
+                    : '<select onchange="updateEvalCriteria(' + i + ', &quot;varVal&quot;, this.value)" class="flex-1 bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center"><option value="target" ' + (c.varVal === 'target' ? 'selected' : '') + '>Target</option></select>';
+                return gateHtml +
+                    '<div class="bg-[#020617]/40 rounded-lg border border-white/5 p-2 space-y-2">' +
+                    '<div class="flex items-center justify-between">' +
+                    '<label class="flex items-center gap-1.5 cursor-pointer">' +
+                    '<input type="checkbox" ' + (c.viewOnly ? 'checked' : '') + ' onchange="toggleEvalViewOnly(' + i + ',this.checked)" class="w-3 h-3 rounded accent-sky-400">' +
+                    '<span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">View Only</span></label>' +
+                    '<button onclick="removeEvalCriteria(' + i + ')" class="text-rose-500/50 hover:text-rose-400 text-[10px]">✕</button>' +
+                    '</div>' +
+                    '<div class="flex gap-1.5 items-center">' +
+                    '<select onchange="updateEvalCriteria(' + i + ', &quot;op&quot;, this.value)" class="flex-1 bg-[#020617] text-sky-400 text-xs font-black rounded p-1 outline-none border border-white/10 text-center">' +
+                    '<option value=">=" ' + (c.op === '>=' ? 'selected' : '') + '>≥</option>' +
+                    '<option value=">" ' + (c.op === '>' ? 'selected' : '') + '>></option>' +
+                    '<option value="=" ' + (c.op === '=' ? 'selected' : '') + '>=</option>' +
+                    '<option value="<" ' + (c.op === '<' ? 'selected' : '') + '><</option>' +
+                    '<option value="<=" ' + (c.op === '<=' ? 'selected' : '') + '>≤</option>' +
+                    '</select>' +
+                    '<div class="flex bg-[#020617] rounded border border-white/10 overflow-hidden shrink-0">' +
+                    '<button onclick="setEvalCriteriaMode(' + i + ', &quot;NUM&quot;)" class="px-2 py-1 text-[8px] font-black uppercase ' + (c.mode === 'NUM' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600') + ' transition-all">NUM</button>' +
+                    '<button onclick="setEvalCriteriaMode(' + i + ', &quot;VAR&quot;)" class="px-2 py-1 text-[8px] font-black uppercase border-l border-white/10 ' + (c.mode === 'VAR' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600') + ' transition-all">VAR</button>' +
+                    '</div>' + modeVal + '</div></div>';
+            }).join('');
+            _syncEvalToEngine();
+        }
+
+        function toggleEvalGate(idx) {
+            const gates = ['AND','OR','AND/OR'];
+            const c = evalCriteria[currentEvalTab][idx];
+            c.gate = gates[(gates.indexOf(c.gate)+1) % gates.length];
+            renderEvalCriteria();
+        }
+        function toggleEvalViewOnly(idx, val) { evalCriteria[currentEvalTab][idx].viewOnly = val; }
+        function removeEvalCriteria(idx) { evalCriteria[currentEvalTab].splice(idx, 1); renderEvalCriteria(); }
+        function updateEvalCriteria(idx, key, val) { evalCriteria[currentEvalTab][idx][key] = val; _syncEvalToEngine(); }
+        function setEvalCriteriaMode(idx, mode) { evalCriteria[currentEvalTab][idx].mode = mode; renderEvalCriteria(); }
+
+        function _syncEvalToEngine() {
+            const tab = currentEvalTab;
+            const first = (evalCriteria[tab] || [])[0];
+            if (!first) return;
+            if (tab === 'sum') { document.getElementById('rule-sum-op').value = first.op; }
+            else if (tab === 'count') { document.getElementById('rule-count-op').value = first.op; document.getElementById('rule-count-val').value = first.numVal; }
+            else if (tab === 'sets') { document.getElementById('rule-sets-op').value = first.op; document.getElementById('rule-sets-val').value = first.numVal; }
+            updateRulesUI();
+        }
+
+        // ── REROLL/EXPLODE NODE ──
+
+        function setRerollMode(mode) {
+            rerollMode = mode;
+            const numTab = document.getElementById('ne-reroll-num-tab');
+            const varTab = document.getElementById('ne-reroll-var-tab');
+            const numDiv = document.getElementById('ne-reroll-num');
+            const varDiv = document.getElementById('ne-reroll-var');
+            if (!numTab) return;
+            const active = ['bg-sky-500/20','text-sky-400'], inactive = ['text-slate-500'];
+            [numTab, varTab].forEach(t => { t.classList.remove(...active, ...inactive); t.classList.add(...inactive); });
+            if (mode === 'NUM') {
+                numTab.classList.remove(...inactive); numTab.classList.add(...active);
+                numDiv.classList.remove('hidden'); varDiv.classList.add('hidden');
+            } else {
+                varTab.classList.remove(...inactive); varTab.classList.add(...active);
+                numDiv.classList.add('hidden'); varDiv.classList.remove('hidden');
+            }
+        }
+
+        function updateRerollEditorUI() {
+            const op = document.getElementById('ne-reroll-op').value;
+            document.getElementById('ne-reroll-val-area').classList.toggle('hidden', !op);
+        }
+
+        function adjustRerollVal(delta) {
+            const inp = document.getElementById('ne-reroll-num-input');
+            inp.value = Math.max(0, (parseInt(inp.value) || 0) + delta);
+            vibrate(5);
+        }
+
+        function applyRerollRule() {
+            const op = document.getElementById('ne-reroll-op').value;
+            const isExplode = document.getElementById('ne-explode-check').checked;
+            const val = rerollMode === 'NUM' ? (parseInt(document.getElementById('ne-reroll-num-input').value) || 0) : null;
+            if (isExplode) {
+                document.getElementById('rule-explode-op').value = op;
+                if (val !== null) document.getElementById('rule-explode-val').value = val;
+            } else {
+                document.getElementById('rule-reroll-op').value = op;
+                if (val !== null) document.getElementById('rule-reroll-val').value = val;
+            }
+            updateRulesUI(); vibrate(10);
+        }
+
+        // ── ADV/DIS NODE ──
+
+        function handleAdvDisBtnClick(type) {
+            currentAdvDisType = type;
+            openNodeEditor('advdis');
+            document.getElementById('ne-advdis').classList.remove('hidden');
+            document.getElementById('node-editor-title').textContent = type === 'ADV' ? 'Advantage' : 'Disadvantage';
+            document.getElementById('ne-advdis-title').textContent = type === 'ADV' ? 'Advantage' : 'Disadvantage';
+        }
+
+        function applyAdvDisNode() {
+            if (!currentAdvDisType) return;
+            applyModifier(currentAdvDisType); vibrate(10);
+        }
+
+        // ── OPERATOR QUEUE ──
+
+        function addOperatorToQueue(op) {
+            activeLoadoutId = null;
+            engine.queue.push({ chipType: 'operator', operator: op });
+            updateUI(); vibrate(5);
+        }
+
 
 
 
@@ -2426,7 +2836,7 @@
                 countBtn.classList.add('text-slate-500');
                 listBtn.classList.add('text-slate-500');
                 sumContainer.classList.remove('hidden');
-                overallTargetContainer.classList.remove('opacity-30', 'pointer-events-none');
+                overallTargetContainer?.classList.remove('opacity-30', 'pointer-events-none');
 
                 const sumOp = document.getElementById('rule-sum-op').value;
                 const sumValEl = document.getElementById('rule-sum-val');
@@ -2440,13 +2850,13 @@
                 countBtn.classList.add('plasma-highlight');
                 listBtn.classList.add('text-slate-500');
                 countContainer.classList.remove('hidden');
-                overallTargetContainer.classList.remove('opacity-30', 'pointer-events-none');
+                overallTargetContainer?.classList.remove('opacity-30', 'pointer-events-none');
             } else { // LIST
                 sumBtn.classList.add('text-slate-500');
                 countBtn.classList.add('text-slate-500');
                 listBtn.classList.add('plasma-highlight');
                 listContainer.classList.remove('hidden');
-                overallTargetContainer.classList.add('opacity-30', 'pointer-events-none');
+                overallTargetContainer?.classList.add('opacity-30', 'pointer-events-none');
             }
 
             let targetOp = '';
@@ -2625,11 +3035,7 @@
             updateUI();
         }
 
-        function clearQueue() {
-            activeLoadoutId = null;
-            engine.clearQueue();
-            updateUI();
-        }
+        // clearQueue is defined fully below
 
         function adjustFlatMod(val) {
             activeLoadoutId = null;
@@ -2693,6 +3099,10 @@
             document.getElementById('rule-count-thresh-val').value = "";
             document.getElementById('rule-sets-op').value = "";
             document.getElementById('rule-sets-val').value = "";
+
+            // Reset node editor state
+            evalCriteria.sum = []; evalCriteria.count = []; evalCriteria.sets = []; evalCriteria.list = [];
+            closeNodeEditor();
 
             updateRulesUI();
             resetDisplayToIdle();
