@@ -325,14 +325,26 @@ class DiceEngine {
     }
 
     applyModifier(type) {
-        if (this.activeModifier === type) {
-            this.modifierLevel++;
-        } else if (this.activeModifier !== null) {
-            this.activeModifier = null;
-            this.modifierLevel = 0;
+        if (this.queue.length === 0) return;
+        const lastChip = this.queue[this.queue.length - 1];
+        if (lastChip && lastChip.chipType === 'operator' && (lastChip.operator === 'ADV' || lastChip.operator === 'DIS')) {
+            if (lastChip.operator === type) {
+                lastChip.modifierLevel = (lastChip.modifierLevel || 1) + 1;
+            } else {
+                lastChip.operator = type;
+                lastChip.modifierLevel = 1;
+            }
         } else {
-            this.activeModifier = type;
-            this.modifierLevel = 1;
+            // Check if we can append ADV/DIS: must have a dice or closing parenthesis to the left
+            const last = this.queue[this.queue.length - 1];
+            const isValidLeft = last && (last.chipType === 'dice' || (last.chipType === 'operator' && last.operator === ')'));
+            if (isValidLeft) {
+                this.queue.push({
+                    chipType: 'operator',
+                    operator: type,
+                    modifierLevel: 1
+                });
+            }
         }
     }
 
@@ -382,12 +394,20 @@ class DiceEngine {
                     if (next.chipType === 'operator' && next.operator === ')') {
                         return false;
                     }
+                    if (next.chipType === 'operator' && (next.operator === 'ADV' || next.operator === 'DIS')) {
+                        return false;
+                    }
+                } else if (current.operator === 'ADV' || current.operator === 'DIS') {
+                    const prev = this.queue[i - 1];
+                    if (!prev || (prev.chipType !== 'dice' && !(prev.chipType === 'operator' && prev.operator === ')'))) {
+                        return false;
+                    }
                 }
             }
         }
 
         const last = this.queue[this.queue.length - 1];
-        if (last.chipType === 'operator' && last.operator !== ')') {
+        if (last.chipType === 'operator' && last.operator !== ')' && last.operator !== 'ADV' && last.operator !== 'DIS') {
             return false;
         }
 
@@ -745,6 +765,50 @@ class DiceEngine {
 
         if (evalChips.length === 0) return null;
 
+        // Make a copy of evalChips so we don't mutate the original queue directly
+        evalChips = evalChips.map(c => ({ ...c }));
+
+        // 1. Scan for ADV / DIS chips and assign local modifier properties to targets
+        for (let i = 0; i < evalChips.length; i++) {
+            const chip = evalChips[i];
+            if (chip.chipType === 'operator' && (chip.operator === 'ADV' || chip.operator === 'DIS')) {
+                const modifier = chip.operator;
+                const modLevel = chip.modifierLevel || 1;
+                
+                if (i > 0) {
+                    const prev = evalChips[i - 1];
+                    if (prev.chipType === 'dice') {
+                        prev.localModifier = modifier;
+                        prev.localModLevel = modLevel;
+                    } else if (prev.chipType === 'operator' && prev.operator === ')') {
+                        // Find matching '('
+                        let parenCount = 1;
+                        let j = i - 2;
+                        while (j >= 0 && parenCount > 0) {
+                            const pChip = evalChips[j];
+                            if (pChip.chipType === 'operator') {
+                                if (pChip.operator === ')') parenCount++;
+                                else if (pChip.operator === '(') parenCount--;
+                            }
+                            j--;
+                        }
+                        const startIndex = j + 1;
+                        for (let k = startIndex; k < i; k++) {
+                            if (evalChips[k].chipType === 'dice') {
+                                evalChips[k].localModifier = modifier;
+                                evalChips[k].localModLevel = modLevel;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Filter out ADV/DIS chips
+        evalChips = evalChips.filter(c => !(c.chipType === 'operator' && (c.operator === 'ADV' || c.operator === 'DIS')));
+
+        if (evalChips.length === 0) return null;
+
         const isListMode = activeRules.targetMode === 'list';
         let total = isListMode ? [] : 0;
         let breakdownRows = [];
@@ -761,19 +825,21 @@ class DiceEngine {
                     let rawRolls = [];
                     let groupRerolls = 0;
                     let groupExplosions = 0;
-                    const rollsToTake = 1 + (activeModifier ? activeModLevel : 0);
+                    const currentModifier = chip.localModifier || activeModifier;
+                    const currentModLevel = chip.localModifier ? chip.localModLevel : activeModLevel;
+                    const rollsToTake = 1 + (currentModifier ? currentModLevel : 0);
 
                     for (let i = 0; i < chip.count; i++) {
                         let dieRolls = [];
                         for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(chip.sides));
 
                         let kept = dieRolls[0];
-                        if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
-                        if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
+                        if (currentModifier === 'ADV') kept = Math.max(...dieRolls);
+                        if (currentModifier === 'DIS') kept = Math.min(...dieRolls);
 
                         let dieLog = "";
                         if (dieRolls.length > 1) {
-                            dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
+                            dieLog += `(${dieRolls.join(', ')})${currentModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
                         }
                         dieLog += `${kept}`;
 
@@ -806,10 +872,10 @@ class DiceEngine {
                         if (activeRules.targetOp || activeRules.targetMode === 'count' || activeRules.setsOp) {
                             pool.push(kept);
                             if (explodeCount > 0) {
-                                let parts = dieLog.split('!->');
-                                for (let p = 1; p < parts.length; p++) {
-                                    pool.push(parseInt(parts[p]));
-                                }
+                                  let parts = dieLog.split('!->');
+                                  for (let p = 1; p < parts.length; p++) {
+                                      pool.push(parseInt(parts[p]));
+                                  }
                             }
                         } else {
                             pool.push(totalValueForThisDie);
@@ -873,8 +939,8 @@ class DiceEngine {
                     
                     // Build formula string
                     let f = `${chip.count}d${chip.sides}`;
-                    if (activeModifier === 'ADV') f += 'kh1';
-                    if (activeModifier === 'DIS') f += 'kl1';
+                    if (currentModifier === 'ADV') f += 'kh1' + (currentModLevel > 1 ? `+${currentModLevel - 1}` : '');
+                    if (currentModifier === 'DIS') f += 'kl1' + (currentModLevel > 1 ? `+${currentModLevel - 1}` : '');
                     if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
                     if (activeRules.explodeOp && activeRules.explodeVal !== null) f += `e${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
                     if (activeRules.targetMode === 'count' || activeRules.targetMode === 'sum') {
@@ -925,19 +991,21 @@ class DiceEngine {
                     let rawRolls = [];
                     let groupRerolls = 0;
                     let groupExplosions = 0;
-                    const rollsToTake = 1 + (activeModifier ? activeModLevel : 0);
+                    const currentModifier = chip.localModifier || activeModifier;
+                    const currentModLevel = chip.localModifier ? chip.localModLevel : activeModLevel;
+                    const rollsToTake = 1 + (currentModifier ? currentModLevel : 0);
 
                     for (let i = 0; i < chip.count; i++) {
                         let dieRolls = [];
                         for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(chip.sides));
 
                         let kept = dieRolls[0];
-                        if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
-                        if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
+                        if (currentModifier === 'ADV') kept = Math.max(...dieRolls);
+                        if (currentModifier === 'DIS') kept = Math.min(...dieRolls);
 
                         let dieLog = "";
                         if (dieRolls.length > 1) {
-                            dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
+                            dieLog += `(${dieRolls.join(', ')})${currentModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
                         }
                         dieLog += `${kept}`;
 
@@ -970,10 +1038,10 @@ class DiceEngine {
                         if (activeRules.targetOp || activeRules.targetMode === 'count' || activeRules.setsOp) {
                             pool.push(kept);
                             if (explodeCount > 0) {
-                                let parts = dieLog.split('!->');
-                                for (let p = 1; p < parts.length; p++) {
-                                    pool.push(parseInt(parts[p]));
-                                }
+                                  let parts = dieLog.split('!->');
+                                  for (let p = 1; p < parts.length; p++) {
+                                      pool.push(parseInt(parts[p]));
+                                  }
                             }
                         } else {
                             pool.push(totalValueForThisDie);
@@ -1034,8 +1102,8 @@ class DiceEngine {
                     
                     // Build formula string
                     let f = `${chip.count}d${chip.sides}`;
-                    if (activeModifier === 'ADV') f += 'kh1';
-                    if (activeModifier === 'DIS') f += 'kl1';
+                    if (currentModifier === 'ADV') f += 'kh1' + (currentModLevel > 1 ? `+${currentModLevel - 1}` : '');
+                    if (currentModifier === 'DIS') f += 'kl1' + (currentModLevel > 1 ? `+${currentModLevel - 1}` : '');
                     if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
                     if (activeRules.explodeOp && activeRules.explodeVal !== null) f += `e${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
                     if (activeRules.targetMode === 'count' || activeRules.targetMode === 'sum') {

@@ -4352,19 +4352,28 @@
                     } else if (chip.chipType === 'operator') {
                         const op = chip.operator;
                         const isDivision = op === '/';
-                        // Show rounding mode indicator on division chips
+                        const isAdvDis = op === 'ADV' || op === 'DIS';
+                        
                         let roundIndicator = '';
                         if (isDivision && chip.roundMode && chip.roundMode !== 'none') {
                             roundIndicator = `<span class="ml-0.5 opacity-70">${chip.roundMode === 'up' ? '↑' : '↓'}</span>`;
                         }
-                        const opDisplay = op === '*' ? '×' : op === '/' ? '÷' : op;
-                        const chipColor = isDivision
-                            ? 'border-cyan-500/30 hover:border-cyan-500/60 text-cyan-400 bg-[#020617]'
-                            : 'border-slate-600/30 hover:border-slate-500/40 text-slate-400 bg-[#020617]';
+                        
+                        const opDisplay = op === '*' ? '×' : op === '/' ? '÷' : (isAdvDis ? `${op}${chip.modifierLevel > 1 ? '+' + (chip.modifierLevel - 1) : ''}` : op);
+                        
+                        let chipColor = 'border-slate-600/30 hover:border-slate-500/40 text-slate-400 bg-[#020617]';
+                        if (isDivision) {
+                            chipColor = 'border-cyan-500/30 hover:border-cyan-500/60 text-cyan-400 bg-[#020617]';
+                        } else if (op === 'ADV') {
+                            chipColor = 'border-[#00d4ff]/30 hover:border-[#00d4ff]/60 text-[#00d4ff] bg-[#020617] shadow-[0_0_8px_rgba(0,212,255,0.1)]';
+                        } else if (op === 'DIS') {
+                            chipColor = 'border-[#6366f1]/30 hover:border-[#6366f1]/60 text-[#6366f1] bg-[#020617] shadow-[0_0_8px_rgba(99,102,241,0.1)]';
+                        }
+                        
                         const clickHandler = isDivision ? `onclick="editQueueChip(${idx}, event)"` : '';
                         const cursorClass = isDivision ? 'cursor-pointer' : 'cursor-default';
                         return `
-                            <div class="group relative flex items-center justify-center gap-0.5 ${chipColor} px-3 h-[2rem] rounded-xl text-sm font-black transition-all select-none ${cursorClass}" ${clickHandler}>
+                            <div class="group relative flex items-center justify-center gap-0.5 ${chipColor} px-3 h-[2rem] rounded-xl text-xs font-black transition-all select-none ${cursorClass}" ${clickHandler}>
                                 <span>${opDisplay}${roundIndicator}</span>
                                 <button class="w-0 opacity-0 group-hover:w-4 group-hover:ml-1.5 group-hover:opacity-100 focus:w-4 focus:ml-1.5 focus:opacity-100 h-4 flex-shrink-0 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[9px] transition-all duration-200 overflow-hidden"
                                         onclick="removeQueueChip(${idx}, event)" title="Remove">✕</button>
@@ -4490,6 +4499,11 @@
                 overallTargetInput.value = engine.overallTarget !== null ? engine.overallTarget : '';
             }
 
+            // Sync toggle buttons with queue ending ADV/DIS operator state
+            const lastChip = engine.queue[engine.queue.length - 1];
+            const currentActiveMod = (lastChip && lastChip.chipType === 'operator' && (lastChip.operator === 'ADV' || lastChip.operator === 'DIS')) ? lastChip.operator : null;
+            const currentActiveModLevel = currentActiveMod ? lastChip.modifierLevel : 0;
+
             const canMod = hasDice;
 
             advBtn.disabled = !canMod;
@@ -4497,7 +4511,13 @@
 
             const advPip = document.getElementById('adv-pip');
             const advLabel = document.getElementById('adv-label');
-            if (engine.activeModifier === 'ADV') {
+            if (currentActiveMod === 'ADV') {
+                advBtn.style.borderColor = '#00d4ff';
+                advBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
+                advPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
+                advLabel.classList.add('text-white');
+                advLabel.classList.remove('text-slate-500');
+            } else if (engine.activeModifier === 'ADV') {
                 advBtn.style.borderColor = '#00d4ff';
                 advBtn.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.3)';
                 advPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#00d4ff] shadow-[0_0_12px_rgba(0, 212, 255, 0.6)] transition-all duration-300';
@@ -4513,7 +4533,13 @@
 
             const disPip = document.getElementById('dis-pip');
             const disLabel = document.getElementById('dis-label');
-            if (engine.activeModifier === 'DIS') {
+            if (currentActiveMod === 'DIS') {
+                disBtn.style.borderColor = '#6366f1'; /* DIS is traditionally a different 'charge' */
+                disBtn.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.3)';
+                disPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#6366f1] shadow-[0_0_12px_rgba(99, 102, 241, 0.6)] transition-all duration-300';
+                disLabel.classList.add('text-white');
+                disLabel.classList.remove('text-slate-500');
+            } else if (engine.activeModifier === 'DIS') {
                 disBtn.style.borderColor = '#6366f1'; /* DIS is traditionally a different 'charge' */
                 disBtn.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.3)';
                 disPip.className = 'absolute left-0 top-0 bottom-0 w-1.5 bg-[#6366f1] shadow-[0_0_12px_rgba(99, 102, 241, 0.6)] transition-all duration-300';
@@ -4528,8 +4554,8 @@
             }
 
             // Update Dynamic Tooltips
-            const advLevel = engine.activeModifier === 'ADV' ? engine.modifierLevel : 0;
-            const disLevel = engine.activeModifier === 'DIS' ? engine.modifierLevel : 0;
+            const advLevel = (currentActiveMod === 'ADV' ? currentActiveModLevel : 0) || (engine.activeModifier === 'ADV' ? engine.modifierLevel : 0);
+            const disLevel = (currentActiveMod === 'DIS' ? currentActiveModLevel : 0) || (engine.activeModifier === 'DIS' ? engine.modifierLevel : 0);
             const advDesc = advLevel > 1 ? `Plus ${advLevel - 1}` : "";
             const disDesc = disLevel > 1 ? `Plus ${disLevel - 1}` : "";
             const rollsAdv = 1 + (advLevel || 1);
@@ -5675,7 +5701,12 @@
                     !e.target.closest('#hash-btn') && 
                     !e.target.closest('#eval-btn') && 
                     !e.target.closest('#reroll-btn')) {
-                    ineConfirm();
+                    const mode = ineEl.getAttribute('data-mode');
+                    if (ineChipIndex === null && mode === 'number') {
+                        ineClose();
+                    } else {
+                        ineConfirm();
+                    }
                 }
             }
 

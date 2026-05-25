@@ -23,23 +23,24 @@ describe('DiceEngine', () => {
         expect(engine.rollingQueue.length).toBe(0);
     });
 
-    test('backspaceQueue removes modifiers before dice', () => {
+    test('backspaceQueue removes chips in reverse chronological order', () => {
         engine.changeQueue(20, 1);
         engine.applyModifier('ADV');
         engine.adjustFlatMod(5);
 
-        expect(engine.activeModifier).toBe('ADV');
+        // Queue is: [1d20, ADV, +5]
+        expect(engine.queue.length).toBe(3);
         expect(engine.flatMod).toBe(5);
 
-        engine.backspaceQueue(); // removes modifier
-        expect(engine.activeModifier).toBeNull();
-        expect(engine.flatMod).toBe(5);
-
-        engine.backspaceQueue(); // removes flat mod
+        engine.backspaceQueue(); // removes flat mod (+5)
         expect(engine.flatMod).toBe(0);
+        expect(engine.queue.length).toBe(2);
+
+        engine.backspaceQueue(); // removes ADV operator chip
+        expect(engine.queue.length).toBe(1);
 
         engine.backspaceQueue(); // removes last die group
-        expect(engine.rollingQueue.length).toBe(0);
+        expect(engine.queue.length).toBe(0);
     });
 
     test('clearQueue resets all state', () => {
@@ -50,8 +51,7 @@ describe('DiceEngine', () => {
 
         engine.clearQueue();
 
-        expect(engine.rollingQueue.length).toBe(0);
-        expect(engine.activeModifier).toBeNull();
+        expect(engine.queue.length).toBe(0);
         expect(engine.flatMod).toBe(0);
         expect(engine.rollRules.rerollOp).toBe("");
     });
@@ -63,28 +63,29 @@ describe('DiceEngine', () => {
         expect(engine.flatMod).toBe(1);
     });
 
-    test('applyModifier toggles correctly', () => {
+    test('applyModifier appends and stacks ADV/DIS chips correctly', () => {
         engine.changeQueue(20, 1);
         
         engine.applyModifier('ADV');
-        expect(engine.activeModifier).toBe('ADV');
-        expect(engine.modifierLevel).toBe(1);
+        expect(engine.queue[1]).toEqual({
+            chipType: 'operator',
+            operator: 'ADV',
+            modifierLevel: 1
+        });
 
         engine.applyModifier('ADV'); // Stack it
-        expect(engine.activeModifier).toBe('ADV');
-        expect(engine.modifierLevel).toBe(2);
+        expect(engine.queue[1]).toEqual({
+            chipType: 'operator',
+            operator: 'ADV',
+            modifierLevel: 2
+        });
 
-        engine.applyModifier('DIS'); // Clicking opposite modifier clears it
-        expect(engine.activeModifier).toBeNull();
-        expect(engine.modifierLevel).toBe(0);
-
-        engine.applyModifier('DIS'); // Clicking again applies it
-        expect(engine.activeModifier).toBe('DIS');
-        expect(engine.modifierLevel).toBe(1);
-        
-        engine.applyModifier('ADV'); // Clicking opposite clears
-        expect(engine.activeModifier).toBeNull();
-        expect(engine.modifierLevel).toBe(0);
+        engine.applyModifier('DIS'); // Swaps to DIS
+        expect(engine.queue[1]).toEqual({
+            chipType: 'operator',
+            operator: 'DIS',
+            modifierLevel: 1
+        });
     });
 
     test('checkCondition correctly evaluates rules', () => {
@@ -277,6 +278,62 @@ describe('DiceEngine', () => {
             const result = engine.calculateRoll();
             // Only 8 is >= 5, so 1 success. Plus 2 from modifier = 3.
             expect(result.total).toBe(3);
+        });
+
+        test('local advantage on adjacent die only', () => {
+            let rollSequence = [
+                // 1d20 rolls (with ADV, so 2 rolls)
+                5, 15,
+                // 1d6 rolls (no ADV, so 1 roll)
+                4
+            ];
+            let callCount = 0;
+            engine.setRng((sides) => {
+                const val = rollSequence[callCount];
+                callCount++;
+                return val;
+            });
+
+            // 1d20 ADV + 1d6
+            engine.changeQueue(20, 1);
+            engine.applyModifier('ADV');
+            engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            engine.changeQueue(6, 1);
+
+            const result = engine.calculateRoll();
+            // 1d20 ADV kept 15. 1d6 kept 4. Total = 19.
+            expect(result.total).toBe(19);
+            expect(result.breakdown[0].formula).toBe('1d20kh1');
+            expect(result.breakdown[1].formula).toBe('1d6');
+        });
+
+        test('parenthetical advantage on all dice inside group', () => {
+            let rollSequence = [
+                // 1d20 rolls (with ADV, so 2 rolls)
+                5, 15,
+                // 1d6 rolls (with ADV, so 2 rolls)
+                2, 6
+            ];
+            let callCount = 0;
+            engine.setRng((sides) => {
+                const val = rollSequence[callCount];
+                callCount++;
+                return val;
+            });
+
+            // (1d20 + 1d6) ADV
+            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
+            engine.changeQueue(20, 1);
+            engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            engine.changeQueue(6, 1);
+            engine.queue.push({ chipType: 'operator', operator: ')', roundMode: 'none' });
+            engine.applyModifier('ADV');
+
+            const result = engine.calculateRoll();
+            // 1d20 ADV kept 15. 1d6 ADV kept 6. Total = 21.
+            expect(result.total).toBe(21);
+            expect(result.breakdown[0].formula).toBe('1d20kh1');
+            expect(result.breakdown[1].formula).toBe('1d6kh1');
         });
     });
 
