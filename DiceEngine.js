@@ -352,6 +352,53 @@ class DiceEngine {
         this.overallTarget = null;
     }
 
+    isQueueValid() {
+        if (this.queue.length === 0) return false;
+
+        let openParenCount = 0;
+        const binaryOps = ['+', '-', '*', '/'];
+
+        for (let i = 0; i < this.queue.length; i++) {
+            const current = this.queue[i];
+            const next = this.queue[i + 1];
+
+            if (current.chipType === 'operator') {
+                if (current.operator === '(') {
+                    openParenCount++;
+                    if (next && next.chipType === 'operator' && next.operator === ')') {
+                        return false;
+                    }
+                    if (next && next.chipType === 'operator' && binaryOps.includes(next.operator)) {
+                        return false;
+                    }
+                } else if (current.operator === ')') {
+                    openParenCount--;
+                    if (openParenCount < 0) return false;
+                } else if (binaryOps.includes(current.operator)) {
+                    if (!next) return false;
+                    if (next.chipType === 'operator' && binaryOps.includes(next.operator)) {
+                        return false;
+                    }
+                    if (next.chipType === 'operator' && next.operator === ')') {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        const last = this.queue[this.queue.length - 1];
+        if (last.chipType === 'operator' && last.operator !== ')') {
+            return false;
+        }
+
+        const first = this.queue[0];
+        if (first.chipType === 'operator' && first.operator !== '(') {
+            return false;
+        }
+
+        return openParenCount === 0;
+    }
+
     updateRules(rules) {
         this.rollRules = { ...this.rollRules, ...rules };
     }
@@ -707,251 +754,494 @@ class DiceEngine {
         let totalRerolls = 0;
         let totalExplosions = 0;
 
-        evalChips.forEach(chip => {
-            if (chip.chipType === 'dice') {
-                let pool = [];
-                let rawRolls = [];
-                let groupRerolls = 0;
-                let groupExplosions = 0;
-                const rollsToTake = 1 + (activeModifier ? activeModLevel : 0);
+        if (isListMode) {
+            evalChips.forEach(chip => {
+                if (chip.chipType === 'dice') {
+                    let pool = [];
+                    let rawRolls = [];
+                    let groupRerolls = 0;
+                    let groupExplosions = 0;
+                    const rollsToTake = 1 + (activeModifier ? activeModLevel : 0);
 
-                for (let i = 0; i < chip.count; i++) {
-                    let dieRolls = [];
-                    for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(chip.sides));
+                    for (let i = 0; i < chip.count; i++) {
+                        let dieRolls = [];
+                        for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(chip.sides));
 
-                    let kept = dieRolls[0];
-                    if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
-                    if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
+                        let kept = dieRolls[0];
+                        if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
+                        if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
 
-                    let dieLog = "";
-                    if (dieRolls.length > 1) {
-                        dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
-                    }
-                    dieLog += `${kept}`;
-
-                    // Reroll Logic
-                    let rerollCount = 0;
-                    const rOp = (chip.rerollOp !== undefined) ? chip.rerollOp : activeRules.rerollOp;
-                    const rVal = (chip.rerollVal !== undefined) ? chip.rerollVal : activeRules.rerollVal;
-                    while (rOp && rVal !== null && this.checkCondition(kept, rOp, rVal) && rerollCount < 10) {
-                        kept = this.rng(chip.sides);
-                        dieLog += `r->${kept}`;
-                        rerollCount++;
-                    }
-                    groupRerolls += rerollCount;
-
-                    let totalValueForThisDie = kept;
-
-                    // Explode Logic
-                    let explodeCount = 0;
-                    let currentExplodeDie = kept;
-                    const eOp = (chip.explodeOp !== undefined) ? chip.explodeOp : activeRules.explodeOp;
-                    const eVal = (chip.explodeVal !== undefined) ? chip.explodeVal : activeRules.explodeVal;
-                    while (eOp && eVal !== null && this.checkCondition(currentExplodeDie, eOp, eVal) && explodeCount < 10) {
-                        currentExplodeDie = this.rng(chip.sides);
-                        totalValueForThisDie += currentExplodeDie;
-                        dieLog += `!->${currentExplodeDie}`;
-                        explodeCount++;
-                    }
-                    groupExplosions += explodeCount;
-
-                    if (activeRules.targetOp || activeRules.targetMode === 'count' || activeRules.setsOp) {
-                        pool.push(kept);
-                        if (explodeCount > 0) {
-                            let parts = dieLog.split('!->');
-                            for (let p = 1; p < parts.length; p++) {
-                                pool.push(parseInt(parts[p]));
-                            }
+                        let dieLog = "";
+                        if (dieRolls.length > 1) {
+                            dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
                         }
-                    } else {
-                        pool.push(totalValueForThisDie);
+                        dieLog += `${kept}`;
+
+                        // Reroll Logic
+                        let rerollCount = 0;
+                        const rOp = (chip.rerollOp !== undefined) ? chip.rerollOp : activeRules.rerollOp;
+                        const rVal = (chip.rerollVal !== undefined) ? chip.rerollVal : activeRules.rerollVal;
+                        while (rOp && rVal !== null && this.checkCondition(kept, rOp, rVal) && rerollCount < 10) {
+                            kept = this.rng(chip.sides);
+                            dieLog += `r->${kept}`;
+                            rerollCount++;
+                        }
+                        groupRerolls += rerollCount;
+
+                        let totalValueForThisDie = kept;
+
+                        // Explode Logic
+                        let explodeCount = 0;
+                        let currentExplodeDie = kept;
+                        const eOp = (chip.explodeOp !== undefined) ? chip.explodeOp : activeRules.explodeOp;
+                        const eVal = (chip.explodeVal !== undefined) ? chip.explodeVal : activeRules.explodeVal;
+                        while (eOp && eVal !== null && this.checkCondition(currentExplodeDie, eOp, eVal) && explodeCount < 10) {
+                            currentExplodeDie = this.rng(chip.sides);
+                            totalValueForThisDie += currentExplodeDie;
+                            dieLog += `!->${currentExplodeDie}`;
+                            explodeCount++;
+                        }
+                        groupExplosions += explodeCount;
+
+                        if (activeRules.targetOp || activeRules.targetMode === 'count' || activeRules.setsOp) {
+                            pool.push(kept);
+                            if (explodeCount > 0) {
+                                let parts = dieLog.split('!->');
+                                for (let p = 1; p < parts.length; p++) {
+                                    pool.push(parseInt(parts[p]));
+                                }
+                            }
+                        } else {
+                            pool.push(totalValueForThisDie);
+                        }
+
+                        rawRolls.push(dieLog);
+
+                        if (chip.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
+                            if (totalValueForThisDie === 20) hasCritHit = true;
+                            if (totalValueForThisDie === 1) hasCritFail = true;
+                        }
                     }
 
-                    rawRolls.push(dieLog);
-
-                    if (chip.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
-                        if (totalValueForThisDie === 20) hasCritHit = true;
-                        if (totalValueForThisDie === 1) hasCritFail = true;
-                    }
-                }
-
-                let sum = 0;
-                let filteredPool = pool;
-                
-                // 1. Apply Target Condition (Only for COUNT mode)
-                if (activeRules.targetMode === 'count') {
-                    if (activeRules.evalCriteria && Array.isArray(activeRules.evalCriteria.count)) {
-                        filteredPool = pool.filter(v => this.evaluateCriteriaList(v, activeRules.evalCriteria.count, activeOverallTarget));
-                    } else if (activeRules.targetOp) {
-                        filteredPool = pool.filter(v => this.checkCondition(v, activeRules.targetOp, activeRules.targetVal));
-                    }
-                }
-
-                // 2. Apply Sets Condition
-                let setGroups = {};
-                const hasSetsCriteria = activeRules.evalCriteria && Array.isArray(activeRules.evalCriteria.sets) && activeRules.evalCriteria.sets.length > 0;
-                if (hasSetsCriteria || (activeRules.setsOp && activeRules.setsVal !== null)) {
-                    const counts = {};
-                    filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
+                    let sum = 0;
+                    let filteredPool = pool;
                     
-                    Object.keys(counts).forEach(v => {
-                        if (hasSetsCriteria) {
-                            if (this.evaluateCriteriaList(counts[v], activeRules.evalCriteria.sets, activeOverallTarget)) {
-                                setGroups[v] = counts[v];
-                            }
-                        } else if (this.checkCondition(counts[v], activeRules.setsOp, activeRules.setsVal)) {
-                            setGroups[v] = counts[v];
+                    // 1. Apply Target Condition (Only for COUNT mode)
+                    if (activeRules.targetMode === 'count') {
+                        if (activeRules.evalCriteria && Array.isArray(activeRules.evalCriteria.count)) {
+                            filteredPool = pool.filter(v => this.evaluateCriteriaList(v, activeRules.evalCriteria.count, activeOverallTarget));
+                        } else if (activeRules.targetOp) {
+                            filteredPool = pool.filter(v => this.checkCondition(v, activeRules.targetOp, activeRules.targetVal));
                         }
+                    }
+
+                    // 2. Apply Sets Condition
+                    let setGroups = {};
+                    const hasSetsCriteria = activeRules.evalCriteria && Array.isArray(activeRules.evalCriteria.sets) && activeRules.evalCriteria.sets.length > 0;
+                    if (hasSetsCriteria || (activeRules.setsOp && activeRules.setsVal !== null)) {
+                        const counts = {};
+                        filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
+                        
+                        Object.keys(counts).forEach(v => {
+                            if (hasSetsCriteria) {
+                                if (this.evaluateCriteriaList(counts[v], activeRules.evalCriteria.sets, activeOverallTarget)) {
+                                    setGroups[v] = counts[v];
+                                }
+                            } else if (this.checkCondition(counts[v], activeRules.setsOp, activeRules.setsVal)) {
+                                    setGroups[v] = counts[v];
+                            }
+                        });
+
+                        filteredPool = filteredPool.filter(v => setGroups[v] !== undefined);
+                    }
+
+                    // Aggregate set groups across all dice groups
+                    Object.entries(setGroups).forEach(([v, c]) => {
+                        allSetGroups[v] = (allSetGroups[v] || 0) + c;
+                    });
+                    totalRerolls += groupRerolls;
+                    totalExplosions += groupExplosions;
+                    
+                    if (activeRules.targetMode === 'count') {
+                        sum = filteredPool.length;
+                    } else if (activeRules.targetMode === 'list') {
+                        filteredPool.sort((a, b) => a - b);
+                        sum = filteredPool.join(', ');
+                    } else {
+                        sum = filteredPool.reduce((a, b) => a + b, 0);
+                    }
+                    
+                    // Build formula string
+                    let f = `${chip.count}d${chip.sides}`;
+                    if (activeModifier === 'ADV') f += 'kh1';
+                    if (activeModifier === 'DIS') f += 'kl1';
+                    if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
+                    if (activeRules.explodeOp && activeRules.explodeVal !== null) f += `e${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
+                    if (activeRules.targetMode === 'count' || activeRules.targetMode === 'sum') {
+                        if (activeRules.targetOp && activeRules.targetVal !== null && activeRules.targetVal !== '') {
+                            if (activeRules.targetMode === 'count') f += 'c';
+                            let valStr = activeRules.targetVal;
+                            if (activeRules.targetMode === 'sum') {
+                                if (valStr === 'overall') valStr = 'TARGET';
+                                else if (valStr === 'varX') valStr = 'VARX';
+                            }
+                            f += `${activeRules.targetOp.replace('=', '')}${valStr}`;
+                        }
+                    }
+                    if (activeRules.setsOp && activeRules.setsVal !== null) f += `set${activeRules.setsOp.replace('=', '')}${activeRules.setsVal}`;
+                    f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
+
+                    let highlightedRaw = rawRolls.map(dieStr => {
+                        const parts = dieStr.split('->');
+                        const lastPart = parts[parts.length - 1];
+                        const val = parseInt(lastPart.split('!')[0]);
+                        
+                        if (activeRules.setsOp && activeRules.setsVal !== null) {
+                            if (setGroups[val] !== undefined) {
+                                return `<span class="set-match" data-val="${val}">${dieStr}</span>`;
+                            } else {
+                                return `<span class="set-dim">${dieStr}</span>`;
+                            }
+                        }
+                        return dieStr;
                     });
 
-                    filteredPool = filteredPool.filter(v => setGroups[v] !== undefined);
-                }
-
-                // Aggregate set groups across all dice groups
-                Object.entries(setGroups).forEach(([v, c]) => {
-                    allSetGroups[v] = (allSetGroups[v] || 0) + c;
-                });
-                totalRerolls += groupRerolls;
-                totalExplosions += groupExplosions;
-                
-                if (activeRules.targetMode === 'count') {
-                    sum = filteredPool.length;
-                } else if (activeRules.targetMode === 'list') {
-                    filteredPool.sort((a, b) => a - b);
-                    sum = filteredPool.join(', ');
-                } else {
-                    sum = filteredPool.reduce((a, b) => a + b, 0);
-                }
-                
-                // Build formula string
-                let f = `${chip.count}d${chip.sides}`;
-                if (activeModifier === 'ADV') f += 'kh1';
-                if (activeModifier === 'DIS') f += 'kl1';
-                if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
-                if (activeRules.explodeOp && activeRules.explodeVal !== null) f += `e${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
-                if (activeRules.targetMode === 'count' || activeRules.targetMode === 'sum') {
-                    if (activeRules.targetOp && activeRules.targetVal !== null && activeRules.targetVal !== '') {
-                        if (activeRules.targetMode === 'count') f += 'c';
-                        let valStr = activeRules.targetVal;
-                        if (activeRules.targetMode === 'sum') {
-                            if (valStr === 'overall') valStr = 'TARGET';
-                            else if (valStr === 'varX') valStr = 'VARX';
-                        }
-                        f += `${activeRules.targetOp.replace('=', '')}${valStr}`;
-                    }
-                }
-                if (activeRules.setsOp && activeRules.setsVal !== null) f += `set${activeRules.setsOp.replace('=', '')}${activeRules.setsVal}`;
-                f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
-
-                let highlightedRaw = rawRolls.map(dieStr => {
-                    const parts = dieStr.split('->');
-                    const lastPart = parts[parts.length - 1];
-                    const val = parseInt(lastPart.split('!')[0]);
+                    breakdownRows.push({
+                        formula: f,
+                        rolls: highlightedRaw.join(', '),
+                        subtotal: sum
+                    });
                     
-                    if (activeRules.setsOp && activeRules.setsVal !== null) {
-                        if (setGroups[val] !== undefined) {
-                            return `<span class="set-match" data-val="${val}">${dieStr}</span>`;
+                    if (sum) total.push(sum);
+                }
+            });
+            total = total.join(', ') || '0';
+        } else {
+            let tokens = [];
+
+            evalChips.forEach(chip => {
+                if (chip.chipType === 'dice') {
+                    let pool = [];
+                    let rawRolls = [];
+                    let groupRerolls = 0;
+                    let groupExplosions = 0;
+                    const rollsToTake = 1 + (activeModifier ? activeModLevel : 0);
+
+                    for (let i = 0; i < chip.count; i++) {
+                        let dieRolls = [];
+                        for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(chip.sides));
+
+                        let kept = dieRolls[0];
+                        if (activeModifier === 'ADV') kept = Math.max(...dieRolls);
+                        if (activeModifier === 'DIS') kept = Math.min(...dieRolls);
+
+                        let dieLog = "";
+                        if (dieRolls.length > 1) {
+                            dieLog += `(${dieRolls.join(', ')})${activeModifier === 'ADV' ? 'kh1' : 'kl1'}->`;
+                        }
+                        dieLog += `${kept}`;
+
+                        // Reroll Logic
+                        let rerollCount = 0;
+                        const rOp = (chip.rerollOp !== undefined) ? chip.rerollOp : activeRules.rerollOp;
+                        const rVal = (chip.rerollVal !== undefined) ? chip.rerollVal : activeRules.rerollVal;
+                        while (rOp && rVal !== null && this.checkCondition(kept, rOp, rVal) && rerollCount < 10) {
+                            kept = this.rng(chip.sides);
+                            dieLog += `r->${kept}`;
+                            rerollCount++;
+                        }
+                        groupRerolls += rerollCount;
+
+                        let totalValueForThisDie = kept;
+
+                        // Explode Logic
+                        let explodeCount = 0;
+                        let currentExplodeDie = kept;
+                        const eOp = (chip.explodeOp !== undefined) ? chip.explodeOp : activeRules.explodeOp;
+                        const eVal = (chip.explodeVal !== undefined) ? chip.explodeVal : activeRules.explodeVal;
+                        while (eOp && eVal !== null && this.checkCondition(currentExplodeDie, eOp, eVal) && explodeCount < 10) {
+                            currentExplodeDie = this.rng(chip.sides);
+                            totalValueForThisDie += currentExplodeDie;
+                            dieLog += `!->${currentExplodeDie}`;
+                            explodeCount++;
+                        }
+                        groupExplosions += explodeCount;
+
+                        if (activeRules.targetOp || activeRules.targetMode === 'count' || activeRules.setsOp) {
+                            pool.push(kept);
+                            if (explodeCount > 0) {
+                                let parts = dieLog.split('!->');
+                                for (let p = 1; p < parts.length; p++) {
+                                    pool.push(parseInt(parts[p]));
+                                }
+                            }
                         } else {
-                            return `<span class="set-dim">${dieStr}</span>`;
+                            pool.push(totalValueForThisDie);
+                        }
+
+                        rawRolls.push(dieLog);
+
+                        if (chip.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
+                            if (totalValueForThisDie === 20) hasCritHit = true;
+                            if (totalValueForThisDie === 1) hasCritFail = true;
                         }
                     }
-                    return dieStr;
-                });
 
-                breakdownRows.push({
-                    formula: f,
-                    rolls: highlightedRaw.join(', '),
-                    subtotal: sum
-                });
-                
-                if (isListMode) {
-                    if (sum) total.push(sum);
-                } else {
-                    total += sum;
+                    let sum = 0;
+                    let filteredPool = pool;
+                    
+                    // 1. Apply Target Condition (Only for COUNT mode)
+                    if (activeRules.targetMode === 'count') {
+                        if (activeRules.evalCriteria && Array.isArray(activeRules.evalCriteria.count)) {
+                            filteredPool = pool.filter(v => this.evaluateCriteriaList(v, activeRules.evalCriteria.count, activeOverallTarget));
+                        } else if (activeRules.targetOp) {
+                            filteredPool = pool.filter(v => this.checkCondition(v, activeRules.targetOp, activeRules.targetVal));
+                        }
+                    }
+
+                    // 2. Apply Sets Condition
+                    let setGroups = {};
+                    const hasSetsCriteria = activeRules.evalCriteria && Array.isArray(activeRules.evalCriteria.sets) && activeRules.evalCriteria.sets.length > 0;
+                    if (hasSetsCriteria || (activeRules.setsOp && activeRules.setsVal !== null)) {
+                        const counts = {};
+                        filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
+                        
+                        Object.keys(counts).forEach(v => {
+                            if (hasSetsCriteria) {
+                                if (this.evaluateCriteriaList(counts[v], activeRules.evalCriteria.sets, activeOverallTarget)) {
+                                    setGroups[v] = counts[v];
+                                }
+                            } else if (this.checkCondition(counts[v], activeRules.setsOp, activeRules.setsVal)) {
+                                    setGroups[v] = counts[v];
+                            }
+                        });
+
+                        filteredPool = filteredPool.filter(v => setGroups[v] !== undefined);
+                    }
+
+                    // Aggregate set groups across all dice groups
+                    Object.entries(setGroups).forEach(([v, c]) => {
+                        allSetGroups[v] = (allSetGroups[v] || 0) + c;
+                    });
+                    totalRerolls += groupRerolls;
+                    totalExplosions += groupExplosions;
+                    
+                    if (activeRules.targetMode === 'count') {
+                        sum = filteredPool.length;
+                    } else {
+                        sum = filteredPool.reduce((a, b) => a + b, 0);
+                    }
+                    
+                    // Build formula string
+                    let f = `${chip.count}d${chip.sides}`;
+                    if (activeModifier === 'ADV') f += 'kh1';
+                    if (activeModifier === 'DIS') f += 'kl1';
+                    if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
+                    if (activeRules.explodeOp && activeRules.explodeVal !== null) f += `e${activeRules.explodeOp.replace('=', '')}${activeRules.explodeVal}`;
+                    if (activeRules.targetMode === 'count' || activeRules.targetMode === 'sum') {
+                        if (activeRules.targetOp && activeRules.targetVal !== null && activeRules.targetVal !== '') {
+                            if (activeRules.targetMode === 'count') f += 'c';
+                            let valStr = activeRules.targetVal;
+                            if (activeRules.targetMode === 'sum') {
+                                if (valStr === 'overall') valStr = 'TARGET';
+                                else if (valStr === 'varX') valStr = 'VARX';
+                            }
+                            f += `${activeRules.targetOp.replace('=', '')}${valStr}`;
+                        }
+                    }
+                    if (activeRules.setsOp && activeRules.setsVal !== null) f += `set${activeRules.setsOp.replace('=', '')}${activeRules.setsVal}`;
+                    f = f.replace(/>=/g, '≥').replace(/<=/g, '≤');
+
+                    let highlightedRaw = rawRolls.map(dieStr => {
+                        const parts = dieStr.split('->');
+                        const lastPart = parts[parts.length - 1];
+                        const val = parseInt(lastPart.split('!')[0]);
+                        
+                        if (activeRules.setsOp && activeRules.setsVal !== null) {
+                            if (setGroups[val] !== undefined) {
+                                return `<span class="set-match" data-val="${val}">${dieStr}</span>`;
+                            } else {
+                                return `<span class="set-dim">${dieStr}</span>`;
+                            }
+                        }
+                        return dieStr;
+                    });
+
+                    breakdownRows.push({
+                        formula: f,
+                        rolls: highlightedRaw.join(', '),
+                        subtotal: sum
+                    });
+
+                    tokens.push({ type: 'num', value: sum });
+                } else if (chip.chipType === 'modifier' || chip.chipType === 'number') {
+                    let base = 0;
+                    let baseStr = "";
+                    if (chip.type === 'variable') {
+                        const resolved = this.resolveVariable(chip.value);
+                        base = resolved !== null ? resolved : 0;
+                        baseStr = `${chip.value} (${resolved !== null ? resolved : 0})`;
+                    } else {
+                        base = Number(chip.value) || 0;
+                        baseStr = `${base}`;
+                    }
+
+                    let mult = 1;
+                    let multStr = "";
+                    if (chip.multiplierType === 'variable') {
+                        const resolved = this.resolveVariable(chip.multiplierValue);
+                        mult = resolved !== null ? resolved : 1;
+                        multStr = ` * ${chip.multiplierValue} (${mult})`;
+                    } else if (chip.multiplierType === 'literal') {
+                        mult = Number(chip.multiplierValue);
+                        if (isNaN(mult)) mult = 1;
+                        multStr = ` * ${mult}`;
+                    }
+
+                    let div = 1;
+                    let divStr = "";
+                    if (chip.divisorType === 'variable') {
+                        const resolved = this.resolveVariable(chip.divisorValue);
+                        div = resolved !== null ? resolved : 1;
+                        divStr = ` / ${chip.divisorValue} (${div})`;
+                    } else if (chip.divisorType === 'literal') {
+                        div = Number(chip.divisorValue);
+                        if (isNaN(div) || div === 0) div = 1;
+                        divStr = ` / ${div}`;
+                    }
+
+                    let termVal = (base * mult) / div;
+                    let formulaStr = baseStr;
+                    if (multStr || divStr) {
+                        formulaStr = `(${baseStr}${multStr}${divStr})`;
+                    }
+
+                    let roundStr = "";
+                    if (chip.roundMode === 'up') {
+                        termVal = Math.ceil(termVal);
+                        roundStr = " (round up)";
+                    } else if (chip.roundMode === 'down') {
+                        termVal = Math.floor(termVal);
+                        roundStr = " (round down)";
+                    } else if (chip.roundMode === 'round') {
+                        termVal = Math.round(termVal);
+                        roundStr = " (round)";
+                    }
+
+                    const op = chip.operator === '-' ? '-' : '+';
+                    const signedVal = op === '-' ? -termVal : termVal;
+
+                    let breakdownFormulaName = `${op} ${chip.type === 'variable' ? chip.value : Math.abs(Number(chip.value))}${chip.multiplierType && chip.multiplierType !== 'none' ? ' * ' + chip.multiplierValue : ''}${chip.divisorType && chip.divisorType !== 'none' ? ' / ' + chip.divisorValue : ''}${roundStr}`;
+                    let breakdownSubtotal = `${op === '-' ? '-' : '+'}${termVal}`;
+                    
+                    // Keep backward compatibility for single-chip flat mod descriptions in tests
+                    const totalModifiers = evalChips.filter(c => c.chipType === 'modifier' || c.chipType === 'number').length;
+                    if (totalModifiers === 1) {
+                        if (chip.type === 'variable' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
+                            breakdownFormulaName = 'Flat Mod';
+                            breakdownSubtotal = `${chip.value} (${signedVal >= 0 ? '+' : ''}${signedVal})`;
+                        } else if (chip.type === 'literal' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
+                            breakdownFormulaName = 'Flat Mod';
+                            breakdownSubtotal = `${signedVal >= 0 ? '+' : ''}${signedVal}`;
+                        }
+                    }
+                    
+                    breakdownRows.push({
+                        formula: breakdownFormulaName,
+                        rolls: '',
+                        subtotal: breakdownSubtotal
+                    });
+
+                    tokens.push({ type: 'num', value: signedVal });
+                } else if (chip.chipType === 'operator') {
+                    tokens.push({
+                        type: 'op',
+                        value: chip.operator,
+                        roundMode: chip.roundMode || 'none'
+                    });
                 }
-            } else if ((chip.chipType === 'modifier' || chip.chipType === 'number') && !isListMode) {
-                let base = 0;
-                let baseStr = "";
-                if (chip.type === 'variable') {
-                    const resolved = this.resolveVariable(chip.value);
-                    base = resolved !== null ? resolved : 0;
-                    baseStr = `${chip.value} (${resolved !== null ? resolved : 0})`;
-                } else {
-                    base = Number(chip.value) || 0;
-                    baseStr = `${base}`;
-                }
+            });
 
-                let mult = 1;
-                let multStr = "";
-                if (chip.multiplierType === 'variable') {
-                    const resolved = this.resolveVariable(chip.multiplierValue);
-                    mult = resolved !== null ? resolved : 1;
-                    multStr = ` * ${chip.multiplierValue} (${mult})`;
-                } else if (chip.multiplierType === 'literal') {
-                    mult = Number(chip.multiplierValue);
-                    if (isNaN(mult)) mult = 1;
-                    multStr = ` * ${mult}`;
-                }
-
-                let div = 1;
-                let divStr = "";
-                if (chip.divisorType === 'variable') {
-                    const resolved = this.resolveVariable(chip.divisorValue);
-                    div = resolved !== null ? resolved : 1;
-                    divStr = ` / ${chip.divisorValue} (${div})`;
-                } else if (chip.divisorType === 'literal') {
-                    div = Number(chip.divisorValue);
-                    if (isNaN(div) || div === 0) div = 1;
-                    divStr = ` / ${div}`;
-                }
-
-                let termVal = (base * mult) / div;
-                let formulaStr = baseStr;
-                if (multStr || divStr) {
-                    formulaStr = `(${baseStr}${multStr}${divStr})`;
-                }
-
-                let roundStr = "";
-                if (chip.roundMode === 'up') {
-                    termVal = Math.ceil(termVal);
-                    roundStr = " (round up)";
-                } else if (chip.roundMode === 'down') {
-                    termVal = Math.floor(termVal);
-                    roundStr = " (round down)";
-                } else if (chip.roundMode === 'round') {
-                    termVal = Math.round(termVal);
-                    roundStr = " (round)";
-                }
-
-                const op = chip.operator === '-' ? '-' : '+';
-                const signedVal = op === '-' ? -termVal : termVal;
-                total += signedVal;
-
-                let breakdownFormulaName = `${op} ${chip.type === 'variable' ? chip.value : Math.abs(Number(chip.value))}${chip.multiplierType && chip.multiplierType !== 'none' ? ' * ' + chip.multiplierValue : ''}${chip.divisorType && chip.divisorType !== 'none' ? ' / ' + chip.divisorValue : ''}${roundStr}`;
-                let breakdownSubtotal = `${op === '-' ? '-' : '+'}${termVal}`;
-                
-                // Keep backward compatibility for single-chip flat mod descriptions in tests
-                const totalModifiers = evalChips.filter(c => c.chipType === 'modifier' || c.chipType === 'number').length;
-                if (totalModifiers === 1) {
-                    if (chip.type === 'variable' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
-                        breakdownFormulaName = 'Flat Mod';
-                        breakdownSubtotal = `${chip.value} (${signedVal >= 0 ? '+' : ''}${signedVal})`;
-                    } else if (chip.type === 'literal' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
-                        breakdownFormulaName = 'Flat Mod';
-                        breakdownSubtotal = `${signedVal >= 0 ? '+' : ''}${signedVal}`;
+            // Insert implicit '+' operators between adjacent values/parentheses
+            let processedTokens = [];
+            for (let i = 0; i < tokens.length; i++) {
+                if (i > 0) {
+                    const prev = tokens[i - 1];
+                    const curr = tokens[i];
+                    const prevIsVal = prev.type === 'num' || (prev.type === 'op' && prev.value === ')');
+                    const currIsVal = curr.type === 'num' || (curr.type === 'op' && curr.value === '(');
+                    if (prevIsVal && currIsVal) {
+                        processedTokens.push({ type: 'op', value: '+', roundMode: 'none' });
                     }
                 }
-                
-                breakdownRows.push({
-                    formula: breakdownFormulaName,
-                    rolls: '',
-                    subtotal: breakdownSubtotal
-                });
+                processedTokens.push(tokens[i]);
             }
-        });
+            tokens = processedTokens;
 
-        if (isListMode) {
-            total = total.join(', ') || '0';
+            // Parse RPN using Shunting-yard algorithm
+            const rpn = [];
+            const opStack = [];
+            const precedence = {
+                '+': 1,
+                '-': 1,
+                '*': 2,
+                '/': 2
+            };
+
+            tokens.forEach(tok => {
+                if (tok.type === 'num') {
+                    rpn.push(tok.value);
+                } else if (tok.type === 'op') {
+                    if (tok.value === '(') {
+                        opStack.push(tok);
+                    } else if (tok.value === ')') {
+                        while (opStack.length > 0 && opStack[opStack.length - 1].value !== '(') {
+                            rpn.push(opStack.pop());
+                        }
+                        opStack.pop(); // Remove '('
+                    } else {
+                        while (opStack.length > 0 &&
+                               opStack[opStack.length - 1].value !== '(' &&
+                               precedence[opStack[opStack.length - 1].value] >= precedence[tok.value]) {
+                            rpn.push(opStack.pop());
+                        }
+                        opStack.push(tok);
+                    }
+                }
+            });
+
+            while (opStack.length > 0) {
+                rpn.push(opStack.pop());
+            }
+
+            // Evaluate RPN
+            const valStack = [];
+            rpn.forEach(node => {
+                if (typeof node === 'number') {
+                    valStack.push(node);
+                } else {
+                    const b = valStack.pop() ?? 0;
+                    const a = valStack.pop() ?? 0;
+                    let res = 0;
+                    if (node.value === '+') {
+                        res = a + b;
+                    } else if (node.value === '-') {
+                        res = a - b;
+                    } else if (node.value === '*') {
+                        res = a * b;
+                    } else if (node.value === '/') {
+                        res = b === 0 ? 0 : a / b;
+                        if (node.roundMode === 'up') {
+                            res = Math.ceil(res);
+                        } else if (node.roundMode === 'down') {
+                            res = Math.floor(res);
+                        }
+                    }
+                    valStack.push(res);
+                }
+            });
+
+            total = valStack.length > 0 ? valStack.pop() : 0;
         }
 
         // Compute heroClass

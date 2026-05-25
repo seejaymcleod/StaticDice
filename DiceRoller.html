@@ -3695,8 +3695,27 @@
 
         function addOperatorToQueue(op) {
             activeLoadoutId = null;
+            const lastChip = engine.queue[engine.queue.length - 1];
+            const binaryOps = ['+', '-', '*', '/'];
+
+            if (binaryOps.includes(op)) {
+                if (!lastChip) return;
+                if (lastChip.chipType === 'operator' && lastChip.operator !== ')') return;
+            } else if (op === ')') {
+                let openCount = 0;
+                let closeCount = 0;
+                engine.queue.forEach(c => {
+                    if (c.chipType === 'operator') {
+                        if (c.operator === '(') openCount++;
+                        if (c.operator === ')') closeCount++;
+                    }
+                });
+                if (openCount <= closeCount) return;
+                if (!lastChip) return;
+                if (lastChip.chipType === 'operator' && lastChip.operator !== ')') return;
+            }
+
             if (op === '(') {
-                const lastChip = engine.queue[engine.queue.length - 1];
                 if (lastChip && (
                     lastChip.chipType === 'dice' ||
                     lastChip.chipType === 'number' ||
@@ -4129,7 +4148,7 @@
 
             const hasFlatMod = engine.queue.some(c => c.chipType === 'modifier');
             const hasDice = engine.queue.some(c => c.chipType === 'dice');
-            const canRoll = engine.queue.length > 0;
+            const canRoll = engine.isQueueValid();
             rollBtn.disabled = !canRoll;
             rollBtn.style.opacity = canRoll ? '1' : '0.4';
             rollBtn.style.filter = canRoll ? 'none' : 'grayscale(1)';

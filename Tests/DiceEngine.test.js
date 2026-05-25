@@ -326,4 +326,104 @@ describe('DiceEngine', () => {
             expect(engine.queue[1].operator).toBe('+');
         });
     });
+
+    describe('isQueueValid verification', () => {
+        test('empty queue is invalid', () => {
+            expect(engine.isQueueValid()).toBe(false);
+        });
+
+        test('operand only is valid', () => {
+            engine.changeQueue(6, 1);
+            expect(engine.isQueueValid()).toBe(true);
+        });
+
+        test('trailing operator is invalid', () => {
+            engine.changeQueue(6, 1);
+            engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            expect(engine.isQueueValid()).toBe(false);
+        });
+
+        test('unbalanced parentheses are invalid', () => {
+            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
+            engine.changeQueue(6, 1);
+            expect(engine.isQueueValid()).toBe(false);
+        });
+
+        test('balanced parentheses with operands are valid', () => {
+            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
+            engine.changeQueue(6, 1);
+            engine.queue.push({ chipType: 'operator', operator: ')', roundMode: 'none' });
+            expect(engine.isQueueValid()).toBe(true);
+        });
+
+        test('empty parenthesis group is invalid', () => {
+            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
+            engine.queue.push({ chipType: 'operator', operator: ')', roundMode: 'none' });
+            expect(engine.isQueueValid()).toBe(false);
+        });
+
+        test('operator after open parenthesis is invalid', () => {
+            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
+            engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            engine.changeQueue(6, 1);
+            engine.queue.push({ chipType: 'operator', operator: ')', roundMode: 'none' });
+            expect(engine.isQueueValid()).toBe(false);
+        });
+    });
+
+    describe('PEDMAS mathematical evaluation rules', () => {
+        test('evaluates standard operator precedence correctly', () => {
+            // 2 + 3 * 4 = 14
+            engine.queue = [
+                { chipType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { chipType: 'operator', operator: '+', roundMode: 'none' },
+                { chipType: 'number', value: 3, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { chipType: 'operator', operator: '*', roundMode: 'none' },
+                { chipType: 'number', value: 4, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+            ];
+            expect(engine.calculateRoll().total).toBe(14);
+        });
+
+        test('respects parentheses grouping', () => {
+            // (2 + 3) * 4 = 20
+            engine.queue = [
+                { chipType: 'operator', operator: '(', roundMode: 'none' },
+                { chipType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { chipType: 'operator', operator: '+', roundMode: 'none' },
+                { chipType: 'number', value: 3, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { chipType: 'operator', operator: ')', roundMode: 'none' },
+                { chipType: 'operator', operator: '*', roundMode: 'none' },
+                { chipType: 'number', value: 4, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+            ];
+            expect(engine.calculateRoll().total).toBe(20);
+        });
+
+        test('handles custom division rounding modes', () => {
+            // 5 / 2 (round down) = 2
+            engine.queue = [
+                { chipType: 'number', value: 5, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { chipType: 'operator', operator: '/', roundMode: 'down' },
+                { chipType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+            ];
+            expect(engine.calculateRoll().total).toBe(2);
+
+            // 5 / 2 (round up) = 3
+            engine.queue = [
+                { chipType: 'number', value: 5, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { chipType: 'operator', operator: '/', roundMode: 'up' },
+                { chipType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+            ];
+            expect(engine.calculateRoll().total).toBe(3);
+        });
+
+        test('handles negative/subtraction operators and negative values correctly', () => {
+            // 10 - (-5) = 15
+            engine.queue = [
+                { chipType: 'number', value: 10, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { chipType: 'operator', operator: '-', roundMode: 'none' },
+                { chipType: 'number', value: 5, operator: '-', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+            ];
+            expect(engine.calculateRoll().total).toBe(15);
+        });
+    });
 });
