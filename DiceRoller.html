@@ -1108,6 +1108,39 @@
             border-color: rgba(0,212,255,0.4);
             color: #00d4ff;
         }
+
+        /* Subpanel Display Rules */
+        #ine-dice-content,
+        #ine-number-content,
+        #ine-div-content,
+        #ine-reroll-content,
+        #ine-eval-content {
+            display: none !important;
+            flex: 1;
+        }
+        #ine-dice-content.active {
+            display: flex !important;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #ine-number-content.active {
+            display: flex !important;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        #ine-div-content.active {
+            display: flex !important;
+        }
+        #ine-reroll-content.active {
+            display: flex !important;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        #ine-eval-content.active {
+            display: flex !important;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
     </style>
 </head>
 
@@ -1369,7 +1402,7 @@
                             <span id="ine-label" class="ine-label">NODE EDITOR</span>
 
                             <!-- Dice content: count stepper + die picker in one row -->
-                            <div id="ine-dice-content" class="hidden" style="flex:1;display:flex;align-items:center;gap:0.5rem">
+                            <div id="ine-dice-content" class="hidden">
                                 <div class="ine-stepper" style="max-width:7.5rem;flex-shrink:0">
                                     <button class="ine-stepper-btn" onclick="ineAdjustDiceCount(-1)">−</button>
                                     <input id="ine-dice-count" type="number" class="ine-stepper-val" value="1" min="1" oninput="ineUpdateDice()">
@@ -1380,16 +1413,35 @@
                             </div>
 
                             <!-- Number/modifier content -->
-                            <div id="ine-number-content" class="hidden" style="flex:1;display:flex">
-                                <div class="ine-stepper">
-                                    <button class="ine-stepper-btn" onclick="ineAdjustNumber(-1)">−</button>
-                                    <input id="ine-number-val" type="number" class="ine-stepper-val" value="0" oninput="ineUpdateNumber()">
-                                    <button class="ine-stepper-btn" onclick="ineAdjustNumber(1)">+</button>
+                            <div id="ine-number-content" class="hidden flex-col gap-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0">
+                                        <button id="ine-num-toggle-num" onclick="ineSetNumVarMode('NUM')" class="px-3 py-1.5 text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
+                                        <button id="ine-num-toggle-var" onclick="ineSetNumVarMode('VAR')" class="px-3 py-1.5 text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
+                                    </div>
+                                </div>
+                                <div id="ine-num-mode-container" class="flex items-center gap-2">
+                                    <div class="ine-stepper">
+                                        <button class="ine-stepper-btn" onclick="ineAdjustNumber(-1)">−</button>
+                                        <input id="ine-number-val" type="number" class="ine-stepper-val" value="0" oninput="ineUpdateNumber()">
+                                        <button class="ine-stepper-btn" onclick="ineAdjustNumber(1)">+</button>
+                                    </div>
+                                </div>
+                                <div id="ine-var-mode-container" class="hidden flex items-center gap-2 w-full">
+                                    <select id="ine-number-var-select" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none flex-1" onchange="ineOnVarSelectChange()">
+                                    </select>
+                                    <div id="ine-var-val-container" class="hidden flex items-center gap-2 shrink-0">
+                                        <div class="ine-stepper" style="max-width: 6.5rem">
+                                            <button class="ine-stepper-btn" onclick="ineAdjustVarVal(-1)">−</button>
+                                            <input id="ine-number-var-val" type="number" class="ine-stepper-val" value="0" oninput="ineUpdateNumber()">
+                                            <button class="ine-stepper-btn" onclick="ineAdjustVarVal(1)">+</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Division rounding content -->
-                            <div id="ine-div-content" class="hidden" style="flex:1;display:flex">
+                            <div id="ine-div-content" class="hidden">
                                 <div class="ine-round-opts">
                                     <button id="ine-round-none" class="ine-round-btn" onclick="ineSetRound('none')">Don't<br>Round</button>
                                     <button id="ine-round-up" class="ine-round-btn" onclick="ineSetRound('up')">Round<br>Up ↑</button>
@@ -1397,50 +1449,91 @@
                                 </div>
                             </div>
 
-                            <!-- Reroll content: Op selector + stepper + Explode toggle -->
-                            <div id="ine-reroll-content" class="hidden" style="flex:1;display:flex;align-items:center;gap:0.5rem">
-                                <select id="ine-reroll-op" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none" onchange="ineUpdateReroll()">
-                                    <option value="">Off</option>
-                                    <option value=">">&gt;</option>
-                                    <option value=">=">&ge;</option>
-                                    <option value="=">=</option>
-                                    <option value="<=">&le;</option>
-                                    <option value="<">&lt;</option>
-                                </select>
-                                <div class="ine-stepper" style="max-width:6rem">
-                                    <button class="ine-stepper-btn" onclick="ineAdjustReroll(-1)">−</button>
-                                    <input id="ine-reroll-val" type="number" class="ine-stepper-val" value="1" min="0" oninput="ineUpdateReroll()">
-                                    <button class="ine-stepper-btn" onclick="ineAdjustReroll(1)">+</button>
+                            <!-- Reroll content: Redesigned with NUM/VAR, Explode & Apply to All checkboxes -->
+                            <div id="ine-reroll-content" class="hidden flex-col w-full gap-3">
+                                <div class="flex items-center justify-between border-b border-white/5 pb-2 mb-1">
+                                    <span class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Reroll / Explode</span>
                                 </div>
-                                <button id="ine-reroll-explode-btn" class="ine-round-btn active" style="font-size:10px;padding:0.25rem 0.5rem" onclick="ineToggleRerollExplode()">Reroll</button>
-                            </div>
 
-                            <!-- Eval content: Mode selector + op selector + value stepper -->
-                            <div id="ine-eval-content" class="hidden" style="flex:1;display:flex;align-items:center;gap:0.5rem">
-                                <select id="ine-eval-mode" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none" onchange="ineSetEvalMode(this.value)">
-                                    <option value="sum">SUM</option>
-                                    <option value="count">COUNT</option>
-                                    <option value="list">LIST</option>
-                                </select>
-                                
-                                <div id="ine-eval-controls" style="display:flex;align-items:center;gap:0.5rem;flex:1">
-                                    <select id="ine-eval-op" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none" onchange="ineUpdateEval()">
-                                        <option value="">No Target</option>
+                                <div class="flex items-center gap-2">
+                                    <!-- Op Select -->
+                                    <select id="ine-reroll-op" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none" onchange="ineUpdateReroll()">
+                                        <option value="">Off</option>
                                         <option value=">">&gt;</option>
                                         <option value=">=">&ge;</option>
                                         <option value="=">=</option>
                                         <option value="<=">&le;</option>
                                         <option value="<">&lt;</option>
                                     </select>
-                                    <div id="ine-eval-val-stepper" class="ine-stepper" style="max-width:6rem">
-                                        <button class="ine-stepper-btn" onclick="ineAdjustEval(-1)">−</button>
-                                        <input id="ine-eval-val" type="text" class="ine-stepper-val" value="0" onfocus="this.select()" oninput="ineUpdateEval()">
-                                        <button class="ine-stepper-btn" onclick="ineAdjustEval(1)">+</button>
+
+                                    <!-- NUM / VAR toggle -->
+                                    <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0">
+                                        <button id="ine-reroll-toggle-num" onclick="ineSetRerollNumVarMode('NUM')" class="px-2.5 py-1.5 text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
+                                        <button id="ine-reroll-toggle-var" onclick="ineSetRerollNumVarMode('VAR')" class="px-2.5 py-1.5 text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
                                     </div>
-                                    <select id="ine-eval-val-target" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none hidden" onchange="ineUpdateEval()">
-                                        <option value="overall">Target</option>
-                                        <option value="varX">Var X</option>
-                                    </select>
+
+                                    <!-- Value / Stepper or Variable Dropdown container -->
+                                    <div class="flex-1 flex justify-end">
+                                        <!-- Numeric Stepper -->
+                                        <div id="ine-reroll-num-container" class="ine-stepper" style="max-width: 6rem">
+                                            <button class="ine-stepper-btn" onclick="ineAdjustReroll(-1)">−</button>
+                                            <input id="ine-reroll-val" type="number" class="ine-stepper-val" value="1" min="0" oninput="ineUpdateReroll()">
+                                            <button class="ine-stepper-btn" onclick="ineAdjustReroll(1)">+</button>
+                                        </div>
+
+                                        <!-- Variable Dropdown -->
+                                        <div id="ine-reroll-var-container" class="hidden flex items-center gap-2 w-full">
+                                            <select id="ine-reroll-var-select" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none flex-1" onchange="ineOnRerollVarSelectChange()">
+                                            </select>
+                                            <!-- standard input selector when Target or unvalued var is selected -->
+                                            <div id="ine-reroll-var-val-container" class="hidden flex items-center gap-1 shrink-0">
+                                                <div class="ine-stepper" style="max-width: 5rem">
+                                                    <button class="ine-stepper-btn" onclick="ineAdjustRerollVarVal(-1)">−</button>
+                                                    <input id="ine-reroll-var-val" type="number" class="ine-stepper-val" value="0" oninput="ineUpdateReroll()">
+                                                    <button class="ine-stepper-btn" onclick="ineAdjustRerollVarVal(1)">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Checkboxes Row -->
+                                <div class="flex flex-wrap items-center gap-4 border-t border-white/5 pt-2 mt-1">
+                                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                                        <input id="ine-reroll-keep" type="checkbox" onchange="ineUpdateReroll()" class="w-3.5 h-3.5 rounded accent-sky-400 bg-[#020617] border-white/10">
+                                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Keep roll (Explode)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                                        <input id="ine-reroll-apply-all" type="checkbox" onchange="ineUpdateReroll()" class="w-3.5 h-3.5 rounded accent-sky-400 bg-[#020617] border-white/10" checked>
+                                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Apply to all</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Eval content: Evaluation subtitle + 4 Mode Buttons + multiple criteria rows -->
+                            <div id="ine-eval-content" class="hidden flex-col w-full gap-3">
+                                <div class="flex items-center justify-between border-b border-white/5 pb-2 mb-1">
+                                    <span class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Evaluation</span>
+                                    <div class="flex gap-1">
+                                        <button id="ine-eval-btn-sum" onclick="ineSetEvalTab('sum')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">Sum</button>
+                                        <button id="ine-eval-btn-count" onclick="ineSetEvalTab('count')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">Count</button>
+                                        <button id="ine-eval-btn-sets" onclick="ineSetEvalTab('sets')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">Sets</button>
+                                        <button id="ine-eval-btn-list" onclick="ineSetEvalTab('list')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">List</button>
+                                    </div>
+                                </div>
+
+                                <!-- View Only Toggle -->
+                                <div class="flex items-center justify-between">
+                                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                                        <input id="ine-eval-view-only" type="checkbox" onchange="ineToggleViewOnly(this.checked)" class="w-3.5 h-3.5 rounded accent-sky-400 bg-[#020617] border-white/10">
+                                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">View Only</span>
+                                    </label>
+                                    <button id="ine-eval-add-btn" onclick="ineAddCriteria()" class="px-2.5 py-1 text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 rounded transition-all hidden">＋ Add New</button>
+                                </div>
+
+                                <!-- Dynamic Criteria Rows -->
+                                <div id="ine-eval-criteria-list" class="flex flex-col gap-2 overflow-y-auto max-h-[12rem] custom-scroll">
+                                    <!-- criteria rows with Gates in between injected here -->
                                 </div>
                             </div>
 
@@ -2489,26 +2582,11 @@
 
             lbl.textContent = label || 'NODE EDITOR';
 
-            // Hide all sub-contents first (remove the Tailwind hidden class and force display:none via style)
-            diceContent.classList.add('hidden');
-            numberContent.classList.add('hidden');
-            divContent.classList.add('hidden');
-            if (rerollContent) rerollContent.classList.add('hidden');
-            if (evalContent) evalContent.classList.add('hidden');
-
-            // Show the relevant content by removing hidden class
-            // (inline style already has display:flex so once hidden is removed it shows)
-            if (mode === 'dice') {
-                diceContent.classList.remove('hidden');
-            } else if (mode === 'number') {
-                numberContent.classList.remove('hidden');
-            } else if (mode === 'div') {
-                divContent.classList.remove('hidden');
-            } else if (mode === 'reroll' && rerollContent) {
-                rerollContent.classList.remove('hidden');
-            } else if (mode === 'eval' && evalContent) {
-                evalContent.classList.remove('hidden');
-            }
+            if (diceContent) diceContent.classList.toggle('active', mode === 'dice');
+            if (numberContent) numberContent.classList.toggle('active', mode === 'number');
+            if (divContent) divContent.classList.toggle('active', mode === 'div');
+            if (rerollContent) rerollContent.classList.toggle('active', mode === 'reroll');
+            if (evalContent) evalContent.classList.toggle('active', mode === 'eval');
 
             editor.classList.add('open');
             vibrate(5);
@@ -2564,27 +2642,133 @@
         }
 
         // ── INE: Number/modifier chip ──
+
+        function ineSetNumVarMode(mode) {
+            numberNodeMode = mode;
+            const btnNum = document.getElementById('ine-num-toggle-num');
+            const btnVar = document.getElementById('ine-num-toggle-var');
+            const numContainer = document.getElementById('ine-num-mode-container');
+            const varContainer = document.getElementById('ine-var-mode-container');
+            
+            if (mode === 'NUM') {
+                if (btnNum) {
+                    btnNum.classList.add('bg-sky-500/20', 'text-sky-400');
+                    btnNum.classList.remove('text-slate-500');
+                }
+                if (btnVar) {
+                    btnVar.classList.remove('bg-sky-500/20', 'text-sky-400');
+                    btnVar.classList.add('text-slate-500');
+                }
+                if (numContainer) numContainer.classList.remove('hidden');
+                if (varContainer) varContainer.classList.add('hidden');
+            } else {
+                if (btnVar) {
+                    btnVar.classList.add('bg-sky-500/20', 'text-sky-400');
+                    btnVar.classList.remove('text-slate-500');
+                }
+                if (btnNum) {
+                    btnNum.classList.remove('bg-sky-500/20', 'text-sky-400');
+                    btnNum.classList.add('text-slate-500');
+                }
+                if (numContainer) numContainer.classList.add('hidden');
+                if (varContainer) varContainer.classList.remove('hidden');
+                inePopulateVarDropdown();
+                ineOnVarSelectChange();
+            }
+            ineUpdateNumber();
+        }
+
+        function inePopulateVarDropdown() {
+            const select = document.getElementById('ine-number-var-select');
+            if (!select) return;
+            select.innerHTML = '';
+            
+            // Add Target
+            const optTarget = document.createElement('option');
+            optTarget.value = 'target';
+            optTarget.textContent = 'Target';
+            select.appendChild(optTarget);
+            
+            // Add active character variables
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char && char.variables) {
+                Object.entries(char.variables).forEach(([name, val]) => {
+                    if (name === 'target') return;
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    const sign = val >= 0 ? '+' : '';
+                    opt.textContent = `${name}(${sign}${val})`;
+                    select.appendChild(opt);
+                });
+            }
+        }
+
+        function ineOnVarSelectChange() {
+            const select = document.getElementById('ine-number-var-select');
+            const valContainer = document.getElementById('ine-var-val-container');
+            const valInput = document.getElementById('ine-number-var-val');
+            if (!select) return;
+            
+            const selectedVal = select.value;
+            const char = characters.find(c => c.id === activeCharacterId);
+            const varVal = (char && char.variables) ? char.variables[selectedVal] : undefined;
+            
+            if (selectedVal === 'target' || varVal === undefined || varVal === null || varVal === "") {
+                if (valContainer) valContainer.classList.remove('hidden');
+                if (valInput) valInput.value = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
+            } else {
+                if (valContainer) valContainer.classList.add('hidden');
+            }
+            ineUpdateNumber();
+        }
+
+        function ineAdjustVarVal(delta) {
+            const inp = document.getElementById('ine-number-var-val');
+            if (inp) {
+                inp.value = (parseInt(inp.value) || 0) + delta;
+            }
+            ineUpdateNumber();
+        }
+
         function ineOpenNumber(index) {
             ineChipIndex = index;
+            inePopulateVarDropdown();
 
             if (index === null) {
                 // New number node from '#' button
-                document.getElementById('ine-number-val').value = 0;
+                const valInp = document.getElementById('ine-number-val');
+                if (valInp) valInp.value = 0;
+                ineSetNumVarMode('NUM');
                 ineOpen('number', 'NUMBER NODE');
                 return;
             }
 
             const chip = engine.queue[index];
             if (!chip) return;
-            const val = Number(chip.value) || 0;
-            document.getElementById('ine-number-val').value = val;
+            
+            if (chip.chipType === 'number' || chip.type === 'literal') {
+                const valInp = document.getElementById('ine-number-val');
+                if (valInp) valInp.value = Number(chip.value) || 0;
+                ineSetNumVarMode('NUM');
+            } else {
+                const select = document.getElementById('ine-number-var-select');
+                if (select) select.value = chip.value;
+                ineSetNumVarMode('VAR');
+                
+                const char = characters.find(c => c.id === activeCharacterId);
+                const varVal = (char && char.variables) ? char.variables[chip.value] : undefined;
+                if (chip.value === 'target' || varVal === undefined || varVal === null || varVal === "") {
+                    const varValInp = document.getElementById('ine-number-var-val');
+                    if (varValInp) varValInp.value = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
+                }
+            }
             const label = chip.chipType === 'modifier' ? 'MODIFIER NODE' : 'NUMBER NODE';
             ineOpen('number', label);
         }
 
         function ineAdjustNumber(delta) {
             const inp = document.getElementById('ine-number-val');
-            inp.value = (parseInt(inp.value) || 0) + delta;
+            if (inp) inp.value = (parseInt(inp.value) || 0) + delta;
             ineUpdateNumber();
         }
 
@@ -2592,8 +2776,27 @@
             if (ineChipIndex === null) return;
             const chip = engine.queue[ineChipIndex];
             if (!chip) return;
-            const val = parseInt(document.getElementById('ine-number-val').value) || 0;
-            chip.value = val;
+            
+            if (numberNodeMode === 'NUM') {
+                chip.chipType = 'number';
+                chip.type = 'literal';
+                const numValEl = document.getElementById('ine-number-val');
+                chip.value = numValEl ? (parseInt(numValEl.value) || 0) : 0;
+            } else {
+                const selectEl = document.getElementById('ine-number-var-select');
+                const varSelect = selectEl ? selectEl.value : 'target';
+                chip.chipType = 'modifier';
+                chip.type = 'variable';
+                chip.value = varSelect;
+                
+                const char = characters.find(c => c.id === activeCharacterId);
+                const valContainer = document.getElementById('ine-var-val-container');
+                if (char && char.variables && valContainer && !valContainer.classList.contains('hidden')) {
+                    const varValEl = document.getElementById('ine-number-var-val');
+                    const customVal = varValEl ? (parseInt(varValEl.value) || 0) : 0;
+                    char.variables[varSelect] = customVal;
+                }
+            }
             updateUI();
         }
 
@@ -2627,60 +2830,207 @@
         }
 
         // ── INE: Reroll / Explode ──
+        let rerollNodeMode = 'NUM';
+
+        function ineSetRerollNumVarMode(mode) {
+            rerollNodeMode = mode;
+            const btnNum = document.getElementById('ine-reroll-toggle-num');
+            const btnVar = document.getElementById('ine-reroll-toggle-var');
+            const numContainer = document.getElementById('ine-reroll-num-container');
+            const varContainer = document.getElementById('ine-reroll-var-container');
+            
+            if (mode === 'NUM') {
+                if (btnNum) {
+                    btnNum.classList.add('bg-sky-500/20', 'text-sky-400');
+                    btnNum.classList.remove('text-slate-500');
+                }
+                if (btnVar) {
+                    btnVar.classList.remove('bg-sky-500/20', 'text-sky-400');
+                    btnVar.classList.add('text-slate-500');
+                }
+                if (numContainer) numContainer.classList.remove('hidden');
+                if (varContainer) varContainer.classList.add('hidden');
+            } else {
+                if (btnVar) {
+                    btnVar.classList.add('bg-sky-500/20', 'text-sky-400');
+                    btnVar.classList.remove('text-slate-500');
+                }
+                if (btnNum) {
+                    btnNum.classList.remove('bg-sky-500/20', 'text-sky-400');
+                    btnNum.classList.add('text-slate-500');
+                }
+                if (numContainer) numContainer.classList.add('hidden');
+                if (varContainer) varContainer.classList.remove('hidden');
+                inePopulateRerollVarDropdown();
+                ineOnRerollVarSelectChange();
+            }
+            ineUpdateReroll();
+        }
+
+        function inePopulateRerollVarDropdown() {
+            const select = document.getElementById('ine-reroll-var-select');
+            if (!select) return;
+            select.innerHTML = '';
+            
+            // Add Target
+            const optTarget = document.createElement('option');
+            optTarget.value = 'target';
+            optTarget.textContent = 'Target';
+            select.appendChild(optTarget);
+            
+            // Add active character variables
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char && char.variables) {
+                Object.entries(char.variables).forEach(([name, val]) => {
+                    if (name === 'target') return;
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    const sign = val >= 0 ? '+' : '';
+                    opt.textContent = `${name}(${sign}${val})`;
+                    select.appendChild(opt);
+                });
+            }
+        }
+
+        function ineOnRerollVarSelectChange() {
+            const select = document.getElementById('ine-reroll-var-select');
+            const valContainer = document.getElementById('ine-reroll-var-val-container');
+            const valInput = document.getElementById('ine-reroll-var-val');
+            if (!select) return;
+            
+            const selectedVal = select.value;
+            const char = characters.find(c => c.id === activeCharacterId);
+            const varVal = (char && char.variables) ? char.variables[selectedVal] : undefined;
+            
+            if (selectedVal === 'target' || varVal === undefined || varVal === null || varVal === "") {
+                if (valContainer) valContainer.classList.remove('hidden');
+                if (valInput) valInput.value = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
+            } else {
+                if (valContainer) valContainer.classList.add('hidden');
+            }
+            ineUpdateReroll();
+        }
+
+        function ineAdjustRerollVarVal(delta) {
+            const inp = document.getElementById('ine-reroll-var-val');
+            if (inp) {
+                inp.value = Math.max(0, (parseInt(inp.value) || 0) + delta);
+            }
+            ineUpdateReroll();
+        }
+
         function ineOpenReroll() {
             ineChipIndex = null;
+            inePopulateRerollVarDropdown();
+
             const isExplode = document.getElementById('rule-explode-op').value !== "";
             const op = isExplode ? document.getElementById('rule-explode-op').value : document.getElementById('rule-reroll-op').value;
-            const val = isExplode ? (parseInt(document.getElementById('rule-explode-val').value) || 0) : (parseInt(document.getElementById('rule-reroll-val').value) || 0);
+            const val = isExplode ? document.getElementById('rule-explode-val').value : document.getElementById('rule-reroll-val').value;
 
             document.getElementById('ine-reroll-op').value = op;
-            document.getElementById('ine-reroll-val').value = val;
-
-            const modeBtn = document.getElementById('ine-reroll-explode-btn');
-            if (modeBtn) {
-                modeBtn.textContent = isExplode ? 'Explode' : 'Reroll';
-                modeBtn.classList.toggle('active', isExplode);
+            document.getElementById('ine-reroll-keep').checked = isExplode;
+            
+            // Check if val is a number or variable
+            const isVar = isNaN(parseInt(val)) && val !== "";
+            if (isVar) {
+                const select = document.getElementById('ine-reroll-var-select');
+                if (select) select.value = val;
+                ineSetRerollNumVarMode('VAR');
+                
+                const char = characters.find(c => c.id === activeCharacterId);
+                const varVal = (char && char.variables) ? char.variables[val] : undefined;
+                if (val === 'target' || varVal === undefined || varVal === null || varVal === "") {
+                    const varValInp = document.getElementById('ine-reroll-var-val');
+                    if (varValInp) varValInp.value = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
+                }
+            } else {
+                const valInp = document.getElementById('ine-reroll-val');
+                if (valInp) valInp.value = val !== "" ? (parseInt(val) || 0) : 1;
+                ineSetRerollNumVarMode('NUM');
             }
+
+            // Sync Apply to all from engine
+            document.getElementById('ine-reroll-apply-all').checked = engine.rollRules.rerollApplyAll !== false;
 
             ineOpen('reroll', isExplode ? 'EXPLODE RULE' : 'REROLL RULE');
         }
 
         function ineAdjustReroll(delta) {
             const inp = document.getElementById('ine-reroll-val');
-            inp.value = Math.max(0, (parseInt(inp.value) || 0) + delta);
+            if (inp) inp.value = Math.max(0, (parseInt(inp.value) || 0) + delta);
             ineUpdateReroll();
-        }
-
-        function ineToggleRerollExplode() {
-            const modeBtn = document.getElementById('ine-reroll-explode-btn');
-            const isCurrentlyExplode = modeBtn.textContent === 'Explode';
-
-            const newIsExplode = !isCurrentlyExplode;
-            modeBtn.textContent = newIsExplode ? 'Explode' : 'Reroll';
-            modeBtn.classList.toggle('active', newIsExplode);
-
-            const lbl = document.getElementById('ine-label');
-            if (lbl) lbl.textContent = newIsExplode ? 'EXPLODE RULE' : 'REROLL RULE';
-
-            ineUpdateReroll();
-            vibrate(5);
         }
 
         function ineUpdateReroll() {
             const op = document.getElementById('ine-reroll-op').value;
-            const val = parseInt(document.getElementById('ine-reroll-val').value) || 0;
-            const isExplode = document.getElementById('ine-reroll-explode-btn').textContent === 'Explode';
+            const isExplode = document.getElementById('ine-reroll-keep').checked;
+            const applyAll = document.getElementById('ine-reroll-apply-all').checked;
 
-            if (isExplode) {
+            let val = "";
+            if (rerollNodeMode === 'NUM') {
+                const valInp = document.getElementById('ine-reroll-val');
+                val = valInp ? (parseInt(valInp.value) || 0) : 0;
+            } else {
+                const selectEl = document.getElementById('ine-reroll-var-select');
+                val = selectEl ? selectEl.value : 'target';
+                
+                const char = characters.find(c => c.id === activeCharacterId);
+                const valContainer = document.getElementById('ine-reroll-var-val-container');
+                if (char && char.variables && valContainer && !valContainer.classList.contains('hidden')) {
+                    const varValEl = document.getElementById('ine-reroll-var-val');
+                    const customVal = varValEl ? (parseInt(varValEl.value) || 0) : 0;
+                    char.variables[val] = customVal;
+                }
+            }
+
+            // Save rerollApplyAll to engine
+            engine.rollRules.rerollApplyAll = applyAll;
+
+            if (applyAll) {
+                // Clear any local rules on dice in the queue
+                engine.queue.forEach(chip => {
+                    if (chip.chipType === 'dice') {
+                        delete chip.rerollOp;
+                        delete chip.rerollVal;
+                        delete chip.explodeOp;
+                        delete chip.explodeVal;
+                    }
+                });
+
+                if (isExplode) {
+                    document.getElementById('rule-reroll-op').value = "";
+                    document.getElementById('rule-reroll-val').value = "";
+                    document.getElementById('rule-explode-op').value = op;
+                    document.getElementById('rule-explode-val').value = op ? val : "";
+                } else {
+                    document.getElementById('rule-explode-op').value = "";
+                    document.getElementById('rule-explode-val').value = "";
+                    document.getElementById('rule-reroll-op').value = op;
+                    document.getElementById('rule-reroll-val').value = op ? val : "";
+                }
+            } else {
+                // Clear global rules
                 document.getElementById('rule-reroll-op').value = "";
                 document.getElementById('rule-reroll-val').value = "";
-                document.getElementById('rule-explode-op').value = op;
-                document.getElementById('rule-explode-val').value = op ? val : "";
-            } else {
                 document.getElementById('rule-explode-op').value = "";
                 document.getElementById('rule-explode-val').value = "";
-                document.getElementById('rule-reroll-op').value = op;
-                document.getElementById('rule-reroll-val').value = op ? val : "";
+
+                // Find the last dice chip in the queue
+                const diceChips = engine.queue.filter(c => c.chipType === 'dice');
+                if (diceChips.length > 0) {
+                    const lastDice = diceChips[diceChips.length - 1];
+                    if (isExplode) {
+                        lastDice.explodeOp = op;
+                        lastDice.explodeVal = op ? val : null;
+                        delete lastDice.rerollOp;
+                        delete lastDice.rerollVal;
+                    } else {
+                        lastDice.rerollOp = op;
+                        lastDice.rerollVal = op ? val : null;
+                        delete lastDice.explodeOp;
+                        delete lastDice.explodeVal;
+                    }
+                }
             }
             updateRulesUI();
         }
@@ -2689,67 +3039,244 @@
         function ineOpenEval() {
             ineChipIndex = null;
             const mode = currentTargetMode || 'sum';
-            document.getElementById('ine-eval-mode').value = mode;
-            ineSetEvalMode(mode);
+            ineSetEvalTab(mode);
             ineOpen('eval', 'EVALUATION');
         }
 
-        function ineSetEvalMode(mode) {
-            currentTargetMode = mode;
+        function ineSetEvalTab(tab) {
+            currentEvalTab = tab;
+            ['sum', 'count', 'sets', 'list'].forEach(t => {
+                const btn = document.getElementById('ine-eval-btn-' + t);
+                if (!btn) return;
+                if (t === tab) {
+                    btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+                    btn.classList.remove('text-slate-500');
+                } else {
+                    btn.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+                    btn.classList.add('text-slate-500');
+                }
+            });
+            if (evalCriteria[tab] === undefined) {
+                evalCriteria[tab] = [];
+            }
+            if (evalCriteria[tab].length === 0 && tab !== 'list') {
+                evalCriteria[tab].push({ op: '>=', mode: 'NUM', numVal: 0, varVal: 'target', gate: 'AND' });
+            }
+            ineRenderCriteria();
+            ineSyncEvalToEngine();
+        }
 
-            const controls = document.getElementById('ine-eval-controls');
-            if (mode === 'list') {
-                controls.classList.add('hidden');
-            } else {
-                controls.classList.remove('hidden');
+        function ineToggleViewOnly(val) {
+            if (!currentEvalTab) return;
+            if (evalCriteria[currentEvalTab] === undefined) evalCriteria[currentEvalTab] = [];
+            evalCriteria[currentEvalTab].viewOnly = val;
+            ineSyncEvalToEngine();
+        }
 
-                const opSelect = document.getElementById('ine-eval-op');
-                const valInput = document.getElementById('ine-eval-val');
-                const targetSelect = document.getElementById('ine-eval-val-target');
-                const stepper = document.getElementById('ine-eval-val-stepper');
+        function ineAddCriteria() {
+            if (!currentEvalTab) return;
+            if (evalCriteria[currentEvalTab] === undefined) evalCriteria[currentEvalTab] = [];
+            evalCriteria[currentEvalTab].push({ op: '>=', mode: 'NUM', numVal: 0, varVal: 'target', gate: 'AND' });
+            ineRenderCriteria();
+            ineSyncEvalToEngine();
+        }
 
-                if (mode === 'sum') {
-                    opSelect.value = document.getElementById('rule-sum-op').value;
-                    const sumVal = document.getElementById('rule-sum-val').value;
-                    targetSelect.classList.remove('hidden');
-                    stepper.classList.add('hidden');
-                    targetSelect.value = sumVal || 'overall';
-                } else if (mode === 'count') {
-                    opSelect.value = document.getElementById('rule-count-op').value;
-                    valInput.value = parseInt(document.getElementById('rule-count-val').value) || 0;
-                    targetSelect.classList.add('hidden');
-                    stepper.classList.remove('hidden');
+        function ineRemoveCriteria(idx) {
+            if (!currentEvalTab) return;
+            evalCriteria[currentEvalTab].splice(idx, 1);
+            ineRenderCriteria();
+            ineSyncEvalToEngine();
+        }
+
+        function ineToggleEvalGate(idx) {
+            if (!currentEvalTab) return;
+            const gates = ['AND', 'OR', 'AND/OR'];
+            const c = evalCriteria[currentEvalTab][idx];
+            c.gate = gates[(gates.indexOf(c.gate || 'AND') + 1) % gates.length];
+            ineRenderCriteria();
+            ineSyncEvalToEngine();
+        }
+
+        function ineUpdateEvalCriteria(idx, key, val) {
+            if (!currentEvalTab) return;
+            evalCriteria[currentEvalTab][idx][key] = val;
+            if (key === 'varVal' || key === 'mode') {
+                ineRenderCriteria();
+            }
+            ineSyncEvalToEngine();
+        }
+
+        function ineAdjustEvalCriteria(idx, delta) {
+            if (!currentEvalTab) return;
+            const c = evalCriteria[currentEvalTab][idx];
+            c.numVal = Math.max(0, (parseInt(c.numVal) || 0) + delta);
+            ineRenderCriteria();
+            ineSyncEvalToEngine();
+        }
+
+        function ineAdjustEvalCriteriaVarVal(idx, delta) {
+            if (!currentEvalTab) return;
+            const c = evalCriteria[currentEvalTab][idx];
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char && char.variables) {
+                const varName = c.varVal || 'target';
+                const currentVal = parseInt(char.variables[varName]) || 0;
+                char.variables[varName] = currentVal + delta;
+            }
+            ineRenderCriteria();
+            ineSyncEvalToEngine();
+        }
+
+        function ineUpdateEvalCriteriaVarVal(idx, val) {
+            if (!currentEvalTab) return;
+            const c = evalCriteria[currentEvalTab][idx];
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char && char.variables) {
+                char.variables[c.varVal || 'target'] = val;
+            }
+            ineSyncEvalToEngine();
+        }
+
+        function ineSetEvalCriteriaMode(idx, mode) {
+            if (!currentEvalTab) return;
+            evalCriteria[currentEvalTab][idx].mode = mode;
+            ineRenderCriteria();
+            ineSyncEvalToEngine();
+        }
+
+        function ineRenderCriteria() {
+            const container = document.getElementById('ine-eval-criteria-list');
+            const addBtn = document.getElementById('ine-eval-add-btn');
+            const viewOnlyChk = document.getElementById('ine-eval-view-only');
+            if (!container || !currentEvalTab) return;
+            
+            if (evalCriteria[currentEvalTab].viewOnly === undefined) {
+                evalCriteria[currentEvalTab].viewOnly = false;
+            }
+            viewOnlyChk.checked = evalCriteria[currentEvalTab].viewOnly;
+            
+            if (currentEvalTab === 'list') {
+                container.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-2">List Mode is view-only and lists all rolls individually.</p>';
+                if (addBtn) addBtn.classList.add('hidden');
+                return;
+            }
+            
+            if (addBtn) addBtn.classList.remove('hidden');
+            
+            const criteria = evalCriteria[currentEvalTab] || [];
+            if (criteria.length === 0) {
+                container.innerHTML = '<p class="text-[9px] text-slate-600 italic text-center py-2">No criteria yet — tap ＋ Add New</p>';
+                return;
+            }
+            
+            let html = '';
+            criteria.forEach((c, idx) => {
+                if (idx > 0) {
+                    html += `
+                        <div class="flex justify-center my-0.5">
+                            <button onclick="ineToggleEvalGate(${idx})" class="px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-violet-400 bg-[#020617] border border-violet-500/20 hover:border-violet-500/40 rounded transition-all">
+                                ${c.gate || 'AND'}
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                let valSection = '';
+                if (c.mode === 'NUM') {
+                    valSection = `
+                        <div class="ine-stepper" style="max-width: 6rem">
+                            <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteria(${idx}, -1)">−</button>
+                            <input type="number" class="ine-stepper-val" value="${c.numVal || 0}" oninput="ineUpdateEvalCriteria(${idx}, 'numVal', parseInt(this.value) || 0)">
+                            <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteria(${idx}, 1)">+</button>
+                        </div>
+                    `;
+                } else {
+                    let optionsHtml = '<option value="target">Target</option>';
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    if (char && char.variables) {
+                        Object.entries(char.variables).forEach(([name, val]) => {
+                            if (name === 'target') return;
+                            const sign = val >= 0 ? '+' : '';
+                            optionsHtml += `<option value="${name}" ${c.varVal === name ? 'selected' : ''}>${name}(${sign}${val})</option>`;
+                        });
+                    }
+                    
+                    const varVal = (char && char.variables) ? char.variables[c.varVal || 'target'] : undefined;
+                    let valInputHtml = '';
+                    if (c.varVal === 'target' || varVal === undefined || varVal === null || varVal === "") {
+                        const customVarVal = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
+                        valInputHtml = `
+                            <div class="ine-stepper ml-1" style="max-width: 4.5rem">
+                                <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteriaVarVal(${idx}, -1)">−</button>
+                                <input type="number" class="ine-stepper-val" value="${customVarVal}" oninput="ineUpdateEvalCriteriaVarVal(${idx}, parseInt(this.value) || 0)">
+                                <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteriaVarVal(${idx}, 1)">+</button>
+                            </div>
+                        `;
+                    }
+                    
+                    valSection = `
+                        <div class="flex items-center flex-1">
+                            <select onchange="ineUpdateEvalCriteria(${idx}, 'varVal', this.value)" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2rem] text-xs text-sky-400 font-bold outline-none flex-1">
+                                ${optionsHtml}
+                            </select>
+                            ${valInputHtml}
+                        </div>
+                    `;
+                }
+                
+                html += `
+                    <div class="flex items-center gap-1.5 bg-[#020617]/40 rounded-lg border border-white/5 p-1.5">
+                        <select onchange="ineUpdateEvalCriteria(${idx}, 'op', this.value)" class="bg-[#020617] border border-white/10 rounded-lg px-1.5 h-[2rem] text-xs text-sky-400 font-bold outline-none" style="width: 3.5rem">
+                            <option value=">=" ${c.op === '>=' ? 'selected' : ''}>&ge;</option>
+                            <option value=">" ${c.op === '>' ? 'selected' : ''}>&gt;</option>
+                            <option value="=" ${c.op === '=' ? 'selected' : ''}>=</option>
+                            <option value="<=" ${c.op === '<=' ? 'selected' : ''}>&le;</option>
+                            <option value="<" ${c.op === '<' ? 'selected' : ''}>&lt;</option>
+                        </select>
+                        
+                        <div class="flex bg-[#020617] rounded border border-white/10 overflow-hidden shrink-0">
+                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'NUM')" class="px-2 py-1 text-[8px] font-black uppercase ${c.mode === 'NUM' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">NUM</button>
+                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'VAR')" class="px-2 py-1 text-[8px] font-black uppercase border-l border-white/10 ${c.mode === 'VAR' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">VAR</button>
+                        </div>
+    
+                        <div class="flex-1 flex justify-end">
+                            ${valSection}
+                        </div>
+    
+                        <button onclick="ineRemoveCriteria(${idx})" class="text-rose-500/50 hover:text-rose-400 text-xs px-1 ml-1">✕</button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function ineSyncEvalToEngine() {
+            if (!currentEvalTab) return;
+            currentTargetMode = currentEvalTab;
+            engine.rollRules.targetMode = currentEvalTab;
+            engine.rollRules.evalCriteria = JSON.parse(JSON.stringify(evalCriteria));
+            
+            // Sync first criteria back to hidden legacy controls for backwards compatibility
+            const first = (evalCriteria[currentEvalTab] || [])[0];
+            if (first) {
+                if (currentEvalTab === 'sum') {
+                    const opEl = document.getElementById('rule-sum-op');
+                    const valEl = document.getElementById('rule-sum-val');
+                    if (opEl) opEl.value = first.op;
+                    if (valEl) valEl.value = first.mode === 'NUM' ? first.numVal : first.varVal;
+                } else if (currentEvalTab === 'count') {
+                    const opEl = document.getElementById('rule-count-op');
+                    const valEl = document.getElementById('rule-count-val');
+                    if (opEl) opEl.value = first.op;
+                    if (valEl) valEl.value = first.mode === 'NUM' ? first.numVal : first.varVal;
+                } else if (currentEvalTab === 'sets') {
+                    const opEl = document.getElementById('rule-sets-op');
+                    const valEl = document.getElementById('rule-sets-val');
+                    if (opEl) opEl.value = first.op;
+                    if (valEl) valEl.value = first.mode === 'NUM' ? first.numVal : first.varVal;
                 }
             }
-            ineUpdateEval();
-        }
-
-        function ineAdjustEval(delta) {
-            const inp = document.getElementById('ine-eval-val');
-            inp.value = Math.max(0, (parseInt(inp.value) || 0) + delta);
-            ineUpdateEval();
-        }
-
-        function ineUpdateEval() {
-            const mode = document.getElementById('ine-eval-mode').value;
-
-            if (mode === 'list') {
-                document.getElementById('rule-sum-op').value = "";
-                document.getElementById('rule-count-op').value = "";
-            } else if (mode === 'sum') {
-                const op = document.getElementById('ine-eval-op').value;
-                const tgt = document.getElementById('ine-eval-val-target').value;
-                document.getElementById('rule-sum-op').value = op;
-                document.getElementById('rule-sum-val').value = tgt;
-                document.getElementById('rule-count-op').value = "";
-            } else if (mode === 'count') {
-                const op = document.getElementById('ine-eval-op').value;
-                const val = parseInt(document.getElementById('ine-eval-val').value) || 0;
-                document.getElementById('rule-count-op').value = op;
-                document.getElementById('rule-count-val').value = val;
-                document.getElementById('rule-sum-op').value = "";
-            }
-
             updateRulesUI();
         }
 
@@ -2826,11 +3353,8 @@
             if (!chip) return;
 
             if (chip.chipType === 'dice') {
-                // If already editing this chip, close (toggle)
-                if (ineChipIndex === index && document.getElementById('inline-node-editor').classList.contains('open')) {
-                    ineClose(); return;
-                }
-                ineOpenDice(index);
+                document.getElementById('dice-section')?.scrollIntoView({ behavior: 'smooth' });
+                return;
             } else if (chip.chipType === 'modifier' || chip.chipType === 'number') {
                 if (ineChipIndex === index && document.getElementById('inline-node-editor').classList.contains('open')) {
                     ineClose(); return;
@@ -3194,7 +3718,8 @@
                 countThreshOp: countThreshOp,
                 countThreshVal: countThreshVal,
                 setsOp: document.getElementById('rule-sets-op').value,
-                setsVal: isNaN(sVal) ? null : sVal
+                setsVal: isNaN(sVal) ? null : sVal,
+                evalCriteria: JSON.parse(JSON.stringify(evalCriteria))
             });
             updateUI();
         }
@@ -3497,7 +4022,15 @@
             if (engine.queue.length > 0) {
                 basePartsHtml = engine.queue.map((chip, idx) => {
                     if (chip.chipType === 'dice') {
-                        const displayText = `${chip.count}d${chip.sides}`;
+                        let displayText = `${chip.count}d${chip.sides}`;
+                        if (chip.rerollOp && chip.rerollVal !== null) {
+                            const formattedOp = chip.rerollOp.replace('>=', '≥').replace('<=', '≤');
+                            displayText += ` rr${formattedOp}${chip.rerollVal}`;
+                        }
+                        if (chip.explodeOp && chip.explodeVal !== null) {
+                            const formattedOp = chip.explodeOp.replace('>=', '≥').replace('<=', '≤');
+                            displayText += ` ex${formattedOp}${chip.explodeVal}`;
+                        }
                         return `
                             <div class="group relative flex items-center gap-1 bg-[#020617] border border-sky-500/20 hover:border-sky-500/50 text-sky-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-pointer select-none"
                                  onclick="editQueueChip(${idx}, event)">

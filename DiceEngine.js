@@ -373,6 +373,38 @@ class DiceEngine {
         return false;
     }
 
+    evaluateCriteriaList(val, criteriaList, overallTarget) {
+        if (!Array.isArray(criteriaList) || criteriaList.length === 0) return true;
+        
+        let isSuccess = false;
+        criteriaList.forEach((c, idx) => {
+            let actualVal = c.numVal;
+            if (c.mode === 'VAR') {
+                if (c.varVal === 'target') {
+                    actualVal = overallTarget !== null ? overallTarget : 0;
+                } else {
+                    const resolved = this.resolveVariable(c.varVal);
+                    actualVal = resolved !== null ? resolved : 0;
+                }
+            }
+            const cond = this.checkCondition(val, c.op, actualVal);
+            
+            if (idx === 0) {
+                isSuccess = cond;
+            } else {
+                const gate = c.gate || 'AND';
+                if (gate === 'AND') {
+                    isSuccess = isSuccess && cond;
+                } else if (gate === 'OR') {
+                    isSuccess = isSuccess || cond;
+                } else if (gate === 'AND/OR' || gate === 'AND_OR') {
+                    isSuccess = isSuccess || cond;
+                }
+            }
+        });
+        return isSuccess;
+    }
+
     // ARSENAL LOGIC
     saveQueue(name, color = '#ef4444') {
         if (this.queue.length === 0) return null;
@@ -687,7 +719,9 @@ class DiceEngine {
 
                     // Reroll Logic
                     let rerollCount = 0;
-                    while (this.checkCondition(kept, activeRules.rerollOp, activeRules.rerollVal) && rerollCount < 10) {
+                    const rOp = (chip.rerollOp !== undefined) ? chip.rerollOp : activeRules.rerollOp;
+                    const rVal = (chip.rerollVal !== undefined) ? chip.rerollVal : activeRules.rerollVal;
+                    while (rOp && rVal !== null && this.checkCondition(kept, rOp, rVal) && rerollCount < 10) {
                         kept = this.rng(chip.sides);
                         dieLog += `r->${kept}`;
                         rerollCount++;
@@ -699,7 +733,9 @@ class DiceEngine {
                     // Explode Logic
                     let explodeCount = 0;
                     let currentExplodeDie = kept;
-                    while (this.checkCondition(currentExplodeDie, activeRules.explodeOp, activeRules.explodeVal) && explodeCount < 10) {
+                    const eOp = (chip.explodeOp !== undefined) ? chip.explodeOp : activeRules.explodeOp;
+                    const eVal = (chip.explodeVal !== undefined) ? chip.explodeVal : activeRules.explodeVal;
+                    while (eOp && eVal !== null && this.checkCondition(currentExplodeDie, eOp, eVal) && explodeCount < 10) {
                         currentExplodeDie = this.rng(chip.sides);
                         totalValueForThisDie += currentExplodeDie;
                         dieLog += `!->${currentExplodeDie}`;
@@ -731,18 +767,27 @@ class DiceEngine {
                 let filteredPool = pool;
                 
                 // 1. Apply Target Condition (Only for COUNT mode)
-                if (activeRules.targetOp && activeRules.targetMode === 'count') {
-                    filteredPool = pool.filter(v => this.checkCondition(v, activeRules.targetOp, activeRules.targetVal));
+                if (activeRules.targetMode === 'count') {
+                    if (activeRules.evalCriteria && Array.isArray(activeRules.evalCriteria.count)) {
+                        filteredPool = pool.filter(v => this.evaluateCriteriaList(v, activeRules.evalCriteria.count, activeOverallTarget));
+                    } else if (activeRules.targetOp) {
+                        filteredPool = pool.filter(v => this.checkCondition(v, activeRules.targetOp, activeRules.targetVal));
+                    }
                 }
 
                 // 2. Apply Sets Condition
                 let setGroups = {};
-                if (activeRules.setsOp && activeRules.setsVal !== null) {
+                const hasSetsCriteria = activeRules.evalCriteria && Array.isArray(activeRules.evalCriteria.sets) && activeRules.evalCriteria.sets.length > 0;
+                if (hasSetsCriteria || (activeRules.setsOp && activeRules.setsVal !== null)) {
                     const counts = {};
                     filteredPool.forEach(v => counts[v] = (counts[v] || 0) + 1);
                     
                     Object.keys(counts).forEach(v => {
-                        if (this.checkCondition(counts[v], activeRules.setsOp, activeRules.setsVal)) {
+                        if (hasSetsCriteria) {
+                            if (this.evaluateCriteriaList(counts[v], activeRules.evalCriteria.sets, activeOverallTarget)) {
+                                setGroups[v] = counts[v];
+                            }
+                        } else if (this.checkCondition(counts[v], activeRules.setsOp, activeRules.setsVal)) {
                             setGroups[v] = counts[v];
                         }
                     });
@@ -946,64 +991,65 @@ class DiceEngine {
             return [];
         }
 
+        const criteriaList = rules.evalCriteria;
+
         // Priority 2: Primary (Sum/Count) - Add this first so it's the top line
         if (rules.targetMode === 'count') {
-            const hasThresh = rules.countThreshOp && rules.countThreshVal !== null;
-            if (hasThresh) {
-                let actualThresh = rules.countThreshVal;
-                let displayThreshStr = rules.countThreshVal;
-                if (rules.countThreshVal === 'overall') {
-                    actualThresh = overallTarget !== null ? overallTarget : 0;
-                    displayThreshStr = actualThresh;
-                } else if (rules.countThreshVal === 'varX') {
-                    actualThresh = 0;
-                    displayThreshStr = 'VARIABLE X';
-                } else {
-                    const resolved = this.resolveVariable(rules.countThreshVal);
-                    if (resolved !== null) {
-                        actualThresh = resolved;
-                        displayThreshStr = `${rules.countThreshVal} (${resolved})`;
-                    } else {
-                        actualThresh = Number(rules.countThreshVal);
-                        displayThreshStr = rules.countThreshVal;
+            const hasCriteria = criteriaList && Array.isArray(criteriaList.count) && criteriaList.count.length > 0;
+            const viewOnly = criteriaList && criteriaList.count && criteriaList.count.viewOnly;
+            
+            let condStr = "";
+            if (hasCriteria) {
+                condStr = criteriaList.count.map(c => {
+                    let valDisplay = c.numVal;
+                    if (c.mode === 'VAR') {
+                        if (c.varVal === 'target') valDisplay = 'Target';
+                        else valDisplay = c.varVal;
                     }
-                }
-                const isSuccess = this.checkCondition(total, rules.countThreshOp, actualThresh);
-                const status = isSuccess ? 'SUCCESS' : 'FAIL';
-                const color = isSuccess ? 'emerald' : 'rose';
-                const threshOpDisplay = this._getDisplayOp(rules.countThreshOp);
-                const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
-                
-                let dieValDisplay = rules.targetVal;
-                const resolvedDieVal = this.resolveVariable(rules.targetVal);
-                if (resolvedDieVal !== null) {
-                    dieValDisplay = `${rules.targetVal} (${resolvedDieVal})`;
-                }
-                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? dieValDisplay : '0';
-                
-                labels.push({ text: `${total} ${dieOpDisplay} ${dieVal}, Target ${threshOpDisplay} ${displayThreshStr} ➔ ${status}`, color: color });
+                    return `${this._getDisplayOp(c.op)}${valDisplay}`;
+                }).join(` ${criteriaList.count[0].gate || 'AND'} `);
             } else {
-                // "Any" case: Just show the count
-                const dieOpDisplay = this._getDisplayOp(rules.targetOp) || '≥';
-                
-                let dieValDisplay = rules.targetVal;
-                const resolvedDieVal = this.resolveVariable(rules.targetVal);
-                if (resolvedDieVal !== null) {
-                    dieValDisplay = `${rules.targetVal} (${resolvedDieVal})`;
+                condStr = `${this._getDisplayOp(rules.targetOp) || '≥'}${rules.targetVal !== null ? rules.targetVal : '0'}`;
+            }
+
+            if (viewOnly) {
+                labels.push({ text: `${total} DICE ${condStr}`, color: 'slate' });
+            } else {
+                if (overallTarget !== null) {
+                    const isSuccess = total >= overallTarget;
+                    labels.push({ text: `${total} DICE ${condStr}, Target ≥ ${overallTarget} ➔ ${isSuccess ? 'SUCCESS' : 'FAIL'}`, color: isSuccess ? 'emerald' : 'rose' });
+                } else {
+                    labels.push({ text: `${total} DICE ${condStr}`, color: 'slate' });
                 }
-                const dieVal = (rules.targetVal !== null && rules.targetVal !== '') ? dieValDisplay : '0';
-                labels.push({ text: `${total} DICE ${dieOpDisplay} ${dieVal}`, color: 'slate' });
             }
         } else if (rules.targetMode === 'sum') {
-            if (rules.targetOp && rules.targetVal !== null && rules.targetVal !== '') {
+            const hasCriteria = criteriaList && Array.isArray(criteriaList.sum) && criteriaList.sum.length > 0;
+            const viewOnly = criteriaList && criteriaList.sum && criteriaList.sum.viewOnly;
+
+            if (viewOnly) {
+                labels.push({ text: `SUM: ${total}`, color: 'slate' });
+            } else if (hasCriteria) {
+                const isSuccess = this.evaluateCriteriaList(total, criteriaList.sum, overallTarget);
+                let desc = criteriaList.sum.map(c => {
+                    let valDisplay = c.numVal;
+                    if (c.mode === 'VAR') {
+                        if (c.varVal === 'target') {
+                            valDisplay = overallTarget !== null ? overallTarget : 'Target';
+                        } else {
+                            const resolved = this.resolveVariable(c.varVal);
+                            valDisplay = resolved !== null ? `${c.varVal}(${resolved})` : c.varVal;
+                        }
+                    }
+                    return `${this._getDisplayOp(c.op)} ${valDisplay}`;
+                }).join(` ${criteriaList.sum[0].gate || 'AND'} `);
+
+                labels.push({ text: `${total} ${desc} ➔ ${isSuccess ? 'SUCCESS' : 'FAIL'}`, color: isSuccess ? 'emerald' : 'rose' });
+            } else if (rules.targetOp && rules.targetVal !== null && rules.targetVal !== '') {
                 let actualTarget = 0;
                 let displayTargetStr = rules.targetVal;
                 if (rules.targetVal === 'overall') {
                     actualTarget = overallTarget !== null ? overallTarget : 0;
                     displayTargetStr = actualTarget;
-                } else if (rules.targetVal === 'varX') {
-                    actualTarget = 0;
-                    displayTargetStr = 'VARIABLE X';
                 } else {
                     const resolved = this.resolveVariable(rules.targetVal);
                     if (resolved !== null) {
@@ -1014,33 +1060,50 @@ class DiceEngine {
                         displayTargetStr = rules.targetVal;
                     }
                 }
-                
                 const isSuccess = this.checkCondition(total, rules.targetOp, actualTarget);
-                const status = isSuccess ? 'SUCCESS' : 'FAIL';
-                const color = isSuccess ? 'emerald' : 'rose';
-                const opDisplay = this._getDisplayOp(rules.targetOp);
-                labels.push({ text: `${total} ${opDisplay} ${displayTargetStr} ➔ ${status}`, color: color });
+                labels.push({ text: `${total} ${this._getDisplayOp(rules.targetOp)} ${displayTargetStr} ➔ ${isSuccess ? 'SUCCESS' : 'FAIL'}`, color: isSuccess ? 'emerald' : 'rose' });
             } else if (overallTarget !== null && rules.targetOp !== "") {
                 const isSuccess = total >= overallTarget;
-                const status = isSuccess ? 'SUCCESS' : 'FAIL';
-                const color = isSuccess ? 'emerald' : 'rose';
-                labels.push({ text: `${total} ≥ ${overallTarget} ➔ ${status}`, color: color });
+                labels.push({ text: `${total} ≥ ${overallTarget} ➔ ${isSuccess ? 'SUCCESS' : 'FAIL'}`, color: isSuccess ? 'emerald' : 'rose' });
             }
         }
 
         // Priority 3: Sets
-        const setsActive = rules.setsOp && rules.setsVal !== null;
+        const hasSetsCriteria = criteriaList && Array.isArray(criteriaList.sets) && criteriaList.sets.length > 0;
+        const setsActive = hasSetsCriteria || (rules.setsOp && rules.setsVal !== null);
+        
         if (setsActive) {
             const setEntries = Object.entries(setGroups);
-            const op = this._getDisplayOp(rules.setsOp);
+            const viewOnly = criteriaList && criteriaList.sets && criteriaList.sets.viewOnly;
             
-            if (setEntries.length === 0) {
-                labels.push({ text: `0 DICE SETS ${op} ${rules.setsVal} ➔ FAIL`, color: 'rose' });
+            let condStr = "";
+            if (hasSetsCriteria) {
+                condStr = criteriaList.sets.map(c => {
+                    let valDisplay = c.numVal;
+                    if (c.mode === 'VAR') {
+                        if (c.varVal === 'target') valDisplay = 'Target';
+                        else valDisplay = c.varVal;
+                    }
+                    return `${this._getDisplayOp(c.op)}${valDisplay}`;
+                }).join(` ${criteriaList.sets[0].gate || 'AND'} `);
             } else {
-                // Generate details: (Count x Value's)
+                condStr = `${this._getDisplayOp(rules.setsOp)}${rules.setsVal}`;
+            }
+
+            if (setEntries.length === 0) {
+                if (viewOnly) {
+                    labels.push({ text: `0 DICE SETS (${condStr})`, color: 'slate' });
+                } else {
+                    labels.push({ text: `0 DICE SETS ${condStr} ➔ FAIL`, color: 'rose' });
+                }
+            } else {
                 const details = setEntries.map(([val, count]) => `(${count} x ${val}'s)`).join(', ');
                 const matchingDiceCount = setEntries.reduce((sum, [_, count]) => sum + count, 0);
-                labels.push({ text: `${matchingDiceCount} DICE SETS ${op} ${rules.setsVal} ➔ ${details}`, color: 'sky' });
+                if (viewOnly) {
+                    labels.push({ text: `${matchingDiceCount} DICE SETS: ${details}`, color: 'sky' });
+                } else {
+                    labels.push({ text: `${matchingDiceCount} DICE SETS ${condStr} ➔ ${details}`, color: 'sky' });
+                }
             }
         }
 
