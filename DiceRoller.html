@@ -4296,11 +4296,10 @@
                             displayText += ` ex${formattedOp}${chip.explodeVal}`;
                         }
                         return `
-                            <div class="group relative flex items-center gap-1 bg-[#020617] border border-sky-500/20 hover:border-sky-500/50 text-sky-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-pointer select-none"
+                            <div class="group relative flex items-center justify-center gap-1 bg-[#020617] border border-sky-500/20 hover:border-sky-500/50 text-sky-400 px-3 h-[2rem] rounded-xl text-xs font-black transition-all cursor-pointer select-none"
                                  onclick="editQueueChip(${idx}, event)">
-                                <span class="text-[10px] opacity-75">🎲</span>
                                 <span>${displayText}</span>
-                                <button class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-3.5 h-3.5 ml-1 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[8px] transition-all"
+                                <button class="w-0 opacity-0 group-hover:w-4 group-hover:ml-1.5 group-hover:opacity-100 focus:w-4 focus:ml-1.5 focus:opacity-100 h-4 flex-shrink-0 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[9px] transition-all duration-200 overflow-hidden"
                                         onclick="removeQueueChip(${idx}, event)" title="Remove">✕</button>
                             </div>
                         `;
@@ -4327,11 +4326,11 @@
                         }
                         
                         return `
-                            <div class="group relative flex items-center gap-1 bg-[#020617] border border-emerald-500/20 hover:border-emerald-500/50 text-emerald-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-pointer select-none"
+                            <div class="group relative flex items-center justify-center gap-1 bg-[#020617] border border-emerald-500/20 hover:border-emerald-500/50 text-emerald-400 px-3 h-[2rem] rounded-xl text-xs font-black transition-all cursor-pointer select-none"
                                  onclick="editQueueChip(${idx}, event)">
                                 <span class="text-[10px] opacity-75">${op === '-' ? '➖' : '➕'}</span>
                                 <span>${valStr}${inlineResolved}${mathIndicator}</span>
-                                <button class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-3.5 h-3.5 ml-1 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[8px] transition-all"
+                                <button class="w-0 opacity-0 group-hover:w-4 group-hover:ml-1.5 group-hover:opacity-100 focus:w-4 focus:ml-1.5 focus:opacity-100 h-4 flex-shrink-0 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[9px] transition-all duration-200 overflow-hidden"
                                         onclick="removeQueueChip(${idx}, event)" title="Remove">✕</button>
                             </div>
                         `;
@@ -4350,9 +4349,9 @@
                         const clickHandler = isDivision ? `onclick="editQueueChip(${idx}, event)"` : '';
                         const cursorClass = isDivision ? 'cursor-pointer' : 'cursor-default';
                         return `
-                            <div class="group relative flex items-center gap-0.5 ${chipColor} px-2 py-0.5 rounded-md text-sm font-black transition-all select-none ${cursorClass}" ${clickHandler}>
+                            <div class="group relative flex items-center justify-center gap-0.5 ${chipColor} px-3 h-[2rem] rounded-xl text-sm font-black transition-all select-none ${cursorClass}" ${clickHandler}>
                                 <span>${opDisplay}${roundIndicator}</span>
-                                <button class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-3.5 h-3.5 ml-0.5 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[8px] transition-all"
+                                <button class="w-0 opacity-0 group-hover:w-4 group-hover:ml-1.5 group-hover:opacity-100 focus:w-4 focus:ml-1.5 focus:opacity-100 h-4 flex-shrink-0 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[9px] transition-all duration-200 overflow-hidden"
                                         onclick="removeQueueChip(${idx}, event)" title="Remove">✕</button>
                             </div>
                         `;
@@ -4395,7 +4394,7 @@
                 const criteriaList = rules.evalCriteria ? rules.evalCriteria[type] : [];
                 if (type === 'list' && activeMode === 'list') {
                     // List mode itself is a criteria/mode indicator
-                    evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center hover:bg-sky-500/20 transition-all">LIST</span>`);
+                    evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-xs px-2.5 h-[2rem] flex items-center justify-center rounded-xl border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center hover:bg-sky-500/20 transition-all">LIST</span>`);
                     hasAnyCriteria = true;
                 } else if (criteriaList && criteriaList.length > 0) {
                     criteriaList.forEach(c => {
@@ -4405,7 +4404,7 @@
                             valDisp = c.varVal === 'target' ? 'TGT' : c.varVal;
                         }
                         const text = `${type.toUpperCase()}${opDisp}${valDisp}`;
-                        evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)] hover:bg-sky-500/20 transition-all">${text}</span>`);
+                        evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-xs px-2.5 h-[2rem] flex items-center justify-center rounded-xl border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)] hover:bg-sky-500/20 transition-all">${text}</span>`);
                     });
                     hasAnyCriteria = true;
                 }
@@ -4423,7 +4422,7 @@
                 } else if (activeMode === 'sets' && rules.setsOp) {
                     modeLabelOnly = `SETS${fmtOp(rules.setsOp)}${rules.setsVal}`;
                 }
-                evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)] hover:bg-sky-500/20 transition-all">${modeLabelOnly}</span>`);
+                evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-xs px-2.5 h-[2rem] flex items-center justify-center rounded-xl border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)] hover:bg-sky-500/20 transition-all">${modeLabelOnly}</span>`);
             }
             const evalsHtml = evalsHtmlList.join('');
 
@@ -4431,14 +4430,14 @@
             const hasRules = rrActive || exActive;
 
             const modHtml = engine.activeModifier ? `
-                <div class="group relative flex items-center gap-1 bg-[#020617] border border-indigo-500/20 hover:border-indigo-500/50 text-indigo-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-default select-none">
+                <div class="group relative flex items-center justify-center gap-1 bg-[#020617] border border-indigo-500/20 hover:border-indigo-500/50 text-indigo-400 px-3 h-[2rem] rounded-xl text-xs font-black transition-all cursor-default select-none">
                     <span class="text-[10px] opacity-75">⚡</span>
                     <span>${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}</span>
-                    <button class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-3.5 h-3.5 ml-1 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[8px] transition-all"
+                    <button class="w-0 opacity-0 group-hover:w-4 group-hover:ml-1.5 group-hover:opacity-100 focus:w-4 focus:ml-1.5 focus:opacity-100 h-4 flex-shrink-0 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[9px] transition-all duration-200 overflow-hidden"
                             onclick="removeActiveModifier(event)" title="Remove">✕</button>
                 </div>
             ` : "";
-            const rulesHtml = rulesParts.length > 0 ? rulesParts.map(r => `<span class="bg-slate-500/10 text-slate-400 text-sm px-1.5 py-0.5 rounded border border-slate-500/20 font-bold whitespace-nowrap opacity-80">${r}</span>`).join("") : "";
+            const rulesHtml = rulesParts.length > 0 ? rulesParts.map(r => `<span class="bg-slate-500/10 text-slate-400 text-xs px-2.5 h-[2rem] flex items-center justify-center rounded-xl border border-slate-500/20 font-bold whitespace-nowrap opacity-80">${r}</span>`).join("") : "";
 
             const rightColumnContent = (hasBaseContent || hasRules)
                 ? `${basePartsHtml} ${modHtml} ${rulesHtml}`
