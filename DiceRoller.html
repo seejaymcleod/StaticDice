@@ -965,6 +965,56 @@
             border-radius: 0.85rem;
             padding: 0.5rem 0.625rem;
             margin-top: 0.625rem;
+            transition: all 0.3s ease;
+        }
+
+        /* Complex editor grid layout overrides */
+        #inline-node-editor[data-mode="eval"] .ine-panel,
+        #inline-node-editor[data-mode="reroll"] .ine-panel {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            gap: 0.85rem;
+        }
+
+        #inline-node-editor[data-mode="eval"] .ine-label,
+        #inline-node-editor[data-mode="reroll"] .ine-label {
+            grid-column: 1;
+            grid-row: 1;
+            border-right: none;
+            border-bottom: none;
+            padding-right: 0;
+            padding-bottom: 0;
+            width: auto;
+            text-align: left;
+            align-self: center;
+        }
+
+        #inline-node-editor[data-mode="eval"] #ine-eval-content,
+        #inline-node-editor[data-mode="reroll"] #ine-reroll-content {
+            grid-column: 1 / span 2;
+            grid-row: 2;
+        }
+
+        #inline-node-editor[data-mode="eval"] .ine-actions,
+        #inline-node-editor[data-mode="reroll"] .ine-actions {
+            grid-column: 2;
+            grid-row: 1;
+            border-left: none;
+            border-top: none;
+            padding-left: 0;
+            padding-top: 0;
+            flex-direction: row;
+            justify-content: flex-end;
+            gap: 0.4rem;
+            width: auto;
+        }
+
+        #inline-node-editor[data-mode="eval"] .ine-action-btn,
+        #inline-node-editor[data-mode="reroll"] .ine-action-btn {
+            width: 2rem;
+            height: 2rem;
         }
 
         .ine-label {
@@ -1018,6 +1068,21 @@
         .ine-stepper-val::-webkit-outer-spin-button,
         .ine-stepper-val::-webkit-inner-spin-button { -webkit-appearance: none; }
         .ine-stepper-val { -moz-appearance: textfield; }
+
+        /* Compact Stepper override */
+        .ine-stepper.compact {
+            height: 2rem;
+            border-radius: 0.5rem;
+        }
+        .ine-stepper.compact .ine-stepper-btn {
+            width: 2rem;
+            height: 2rem;
+            font-size: 0.95rem;
+        }
+        .ine-stepper.compact .ine-stepper-val {
+            font-size: 0.9rem;
+        }
+
 
         .ine-round-opts {
             flex: 1;
@@ -1451,13 +1516,9 @@
 
                             <!-- Reroll content: Redesigned with NUM/VAR, Explode & Apply to All checkboxes -->
                             <div id="ine-reroll-content" class="hidden flex-col w-full gap-3">
-                                <div class="flex items-center justify-between border-b border-white/5 pb-2 mb-1">
-                                    <span class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Reroll / Explode</span>
-                                </div>
-
                                 <div class="flex items-center gap-2">
                                     <!-- Op Select -->
-                                    <select id="ine-reroll-op" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none" onchange="ineUpdateReroll()">
+                                    <select id="ine-reroll-op" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2rem] text-xs text-sky-400 font-bold outline-none" onchange="ineUpdateReroll()">
                                         <option value="">Off</option>
                                         <option value=">">&gt;</option>
                                         <option value=">=">&ge;</option>
@@ -1467,15 +1528,15 @@
                                     </select>
 
                                     <!-- NUM / VAR toggle -->
-                                    <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0">
-                                        <button id="ine-reroll-toggle-num" onclick="ineSetRerollNumVarMode('NUM')" class="px-2.5 py-1.5 text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
-                                        <button id="ine-reroll-toggle-var" onclick="ineSetRerollNumVarMode('VAR')" class="px-2.5 py-1.5 text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
+                                    <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0 h-[2rem] items-center">
+                                        <button id="ine-reroll-toggle-num" onclick="ineSetRerollNumVarMode('NUM')" class="px-2.5 h-full text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
+                                        <button id="ine-reroll-toggle-var" onclick="ineSetRerollNumVarMode('VAR')" class="px-2.5 h-full text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
                                     </div>
 
                                     <!-- Value / Stepper or Variable Dropdown container -->
                                     <div class="flex-1 flex justify-end">
                                         <!-- Numeric Stepper -->
-                                        <div id="ine-reroll-num-container" class="ine-stepper" style="max-width: 6rem">
+                                        <div id="ine-reroll-num-container" class="ine-stepper compact" style="max-width: 6.5rem">
                                             <button class="ine-stepper-btn" onclick="ineAdjustReroll(-1)">−</button>
                                             <input id="ine-reroll-val" type="number" class="ine-stepper-val" value="1" min="0" oninput="ineUpdateReroll()">
                                             <button class="ine-stepper-btn" onclick="ineAdjustReroll(1)">+</button>
@@ -1483,11 +1544,11 @@
 
                                         <!-- Variable Dropdown -->
                                         <div id="ine-reroll-var-container" class="hidden flex items-center gap-2 w-full">
-                                            <select id="ine-reroll-var-select" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none flex-1" onchange="ineOnRerollVarSelectChange()">
+                                            <select id="ine-reroll-var-select" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2rem] text-xs text-sky-400 font-bold outline-none flex-1" onchange="ineOnRerollVarSelectChange()">
                                             </select>
                                             <!-- standard input selector when Target or unvalued var is selected -->
                                             <div id="ine-reroll-var-val-container" class="hidden flex items-center gap-1 shrink-0">
-                                                <div class="ine-stepper" style="max-width: 5rem">
+                                                <div class="ine-stepper compact" style="max-width: 6.5rem">
                                                     <button class="ine-stepper-btn" onclick="ineAdjustRerollVarVal(-1)">−</button>
                                                     <input id="ine-reroll-var-val" type="number" class="ine-stepper-val" value="0" oninput="ineUpdateReroll()">
                                                     <button class="ine-stepper-btn" onclick="ineAdjustRerollVarVal(1)">+</button>
@@ -1512,8 +1573,7 @@
 
                             <!-- Eval content: Evaluation subtitle + 4 Mode Buttons + multiple criteria rows -->
                             <div id="ine-eval-content" class="hidden flex-col w-full gap-3">
-                                <div class="flex items-center justify-between border-b border-white/5 pb-2 mb-1">
-                                    <span class="text-[10px] font-black text-sky-400 uppercase tracking-widest">Evaluation</span>
+                                <div class="flex items-center justify-end border-b border-white/5 pb-2 mb-1">
                                     <div class="flex gap-1">
                                         <button id="ine-eval-btn-sum" onclick="ineSetEvalTab('sum')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">Sum</button>
                                         <button id="ine-eval-btn-count" onclick="ineSetEvalTab('count')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">Count</button>
@@ -2588,13 +2648,19 @@
             if (rerollContent) rerollContent.classList.toggle('active', mode === 'reroll');
             if (evalContent) evalContent.classList.toggle('active', mode === 'eval');
 
-            editor.classList.add('open');
+            if (editor) {
+                editor.setAttribute('data-mode', mode);
+                editor.classList.add('open');
+            }
             vibrate(5);
         }
 
         function ineClose() {
             const editor = document.getElementById('inline-node-editor');
-            editor.classList.remove('open');
+            if (editor) {
+                editor.classList.remove('open');
+                editor.removeAttribute('data-mode');
+            }
             ineChipIndex = null;
         }
 
@@ -2952,7 +3018,7 @@
             // Sync Apply to all from engine
             document.getElementById('ine-reroll-apply-all').checked = engine.rollRules.rerollApplyAll !== false;
 
-            ineOpen('reroll', isExplode ? 'EXPLODE RULE' : 'REROLL RULE');
+            ineOpen('reroll', 'REROLL / EXPLODE');
         }
 
         function ineAdjustReroll(delta) {
@@ -3184,7 +3250,7 @@
                 let valSection = '';
                 if (c.mode === 'NUM') {
                     valSection = `
-                        <div class="ine-stepper" style="max-width: 6rem">
+                        <div class="ine-stepper compact" style="max-width: 6rem">
                             <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteria(${idx}, -1)">−</button>
                             <input type="number" class="ine-stepper-val" value="${c.numVal || 0}" oninput="ineUpdateEvalCriteria(${idx}, 'numVal', parseInt(this.value) || 0)">
                             <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteria(${idx}, 1)">+</button>
@@ -3206,7 +3272,7 @@
                     if (c.varVal === 'target' || varVal === undefined || varVal === null || varVal === "") {
                         const customVarVal = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
                         valInputHtml = `
-                            <div class="ine-stepper ml-1" style="max-width: 4.5rem">
+                            <div class="ine-stepper compact ml-1" style="max-width: 4.5rem">
                                 <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteriaVarVal(${idx}, -1)">−</button>
                                 <input type="number" class="ine-stepper-val" value="${customVarVal}" oninput="ineUpdateEvalCriteriaVarVal(${idx}, parseInt(this.value) || 0)">
                                 <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteriaVarVal(${idx}, 1)">+</button>
@@ -3234,9 +3300,9 @@
                             <option value="<" ${c.op === '<' ? 'selected' : ''}>&lt;</option>
                         </select>
                         
-                        <div class="flex bg-[#020617] rounded border border-white/10 overflow-hidden shrink-0">
-                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'NUM')" class="px-2 py-1 text-[8px] font-black uppercase ${c.mode === 'NUM' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">NUM</button>
-                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'VAR')" class="px-2 py-1 text-[8px] font-black uppercase border-l border-white/10 ${c.mode === 'VAR' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">VAR</button>
+                        <div class="flex bg-[#020617] rounded border border-white/10 overflow-hidden shrink-0 h-[2rem] items-center">
+                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'NUM')" class="px-2 h-full text-[8px] font-black uppercase ${c.mode === 'NUM' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">NUM</button>
+                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'VAR')" class="px-2 h-full text-[8px] font-black uppercase border-l border-white/10 ${c.mode === 'VAR' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">VAR</button>
                         </div>
     
                         <div class="flex-1 flex justify-end">
