@@ -1636,28 +1636,15 @@
                                 </div>
                             </div>
 
-                            <!-- Eval content: Evaluation subtitle + 4 Mode Buttons + multiple criteria rows -->
+                            <!-- Eval content: Evaluation subtitle + multiple criteria rows -->
                             <div id="ine-eval-content" class="hidden flex-col w-full gap-3">
-                                <div class="flex items-center justify-end border-b border-white/5 pb-2 mb-1">
-                                    <div class="flex gap-1">
-                                        <button id="ine-eval-btn-sum" onclick="ineSetEvalTab('sum')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">Sum</button>
-                                        <button id="ine-eval-btn-count" onclick="ineSetEvalTab('count')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">Count</button>
-                                        <button id="ine-eval-btn-sets" onclick="ineSetEvalTab('sets')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">Sets</button>
-                                        <button id="ine-eval-btn-list" onclick="ineSetEvalTab('list')" class="px-2.5 py-1 text-[9px] font-black uppercase rounded bg-[#020617] border border-white/10 text-slate-500 hover:text-sky-400 transition-all">List</button>
-                                    </div>
-                                </div>
-
-                                <!-- View Only Toggle -->
-                                <div class="flex items-center justify-between">
-                                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                                        <input id="ine-eval-view-only" type="checkbox" onchange="ineToggleViewOnly(this.checked)" class="w-3.5 h-3.5 rounded accent-sky-400 bg-[#020617] border-white/10">
-                                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">View Only</span>
-                                    </label>
-                                    <button id="ine-eval-add-btn" onclick="ineAddCriteria()" class="px-2.5 py-1 text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 rounded transition-all hidden">＋ Add New</button>
+                                <!-- Add Condition Container -->
+                                <div class="flex items-center justify-end pb-1 mb-1">
+                                    <button id="ine-eval-add-btn" onclick="ineAddCriteria()" class="px-2.5 py-1 text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 rounded transition-all">＋ Add Condition</button>
                                 </div>
 
                                 <!-- Dynamic Criteria Rows -->
-                                <div id="ine-eval-criteria-list" class="flex flex-col gap-2 overflow-y-auto max-h-[12rem] custom-scroll">
+                                <div id="ine-eval-criteria-list" class="flex flex-col gap-2 overflow-y-auto max-h-[16rem] custom-scroll">
                                     <!-- criteria rows with Gates in between injected here -->
                                 </div>
                             </div>
@@ -2695,6 +2682,7 @@
         let numberNodeMode = 'NUM';
         let rerollMode = 'NUM';
         const evalCriteria = { sum: [], count: [], sets: [], list: [] };
+        const ineEvalCriteria = [];
 
         function ineOpen(mode, label) {
             const editor = document.getElementById('inline-node-editor');
@@ -3189,68 +3177,64 @@
         // ── INE: Eval / Target Mode ──
         function ineOpenEval() {
             ineChipIndex = null;
-            const mode = currentTargetMode || 'sum';
-            ineSetEvalTab(mode);
+            
+            // Map structured rules from engine to unified flat array
+            ineEvalCriteria.length = 0;
+            if (engine.rollRules.evalCriteria) {
+                const structured = engine.rollRules.evalCriteria;
+                ['sum', 'count', 'sets', 'list'].forEach(type => {
+                    const list = structured[type] || [];
+                    const isViewOnly = structured[type].viewOnly || false;
+                    list.forEach(c => {
+                        ineEvalCriteria.push({
+                            type: type,
+                            op: c.op || '>=',
+                            mode: c.mode || 'NUM',
+                            numVal: c.numVal !== undefined ? c.numVal : 0,
+                            varVal: c.varVal || 'target',
+                            gate: c.gate || 'AND',
+                            viewOnly: isViewOnly
+                        });
+                    });
+                });
+            }
+            
+            if (ineEvalCriteria.length === 0) {
+                ineEvalCriteria.push({ type: 'sum', op: '>=', mode: 'NUM', numVal: 0, varVal: 'target', gate: 'AND', viewOnly: false });
+            }
+            
+            ineRenderCriteria();
             ineOpen('eval', 'EVALUATION');
         }
 
-        function ineSetEvalTab(tab) {
-            currentEvalTab = tab;
-            ['sum', 'count', 'sets', 'list'].forEach(t => {
-                const btn = document.getElementById('ine-eval-btn-' + t);
-                if (!btn) return;
-                if (t === tab) {
-                    btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
-                    btn.classList.remove('text-slate-500');
-                } else {
-                    btn.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
-                    btn.classList.add('text-slate-500');
-                }
-            });
-            if (evalCriteria[tab] === undefined) {
-                evalCriteria[tab] = [];
-            }
-            if (evalCriteria[tab].length === 0 && tab !== 'list') {
-                evalCriteria[tab].push({ op: '>=', mode: 'NUM', numVal: 0, varVal: 'target', gate: 'AND' });
-            }
+        function ineUpdateEvalCriteriaViewOnly(idx, val) {
+            ineEvalCriteria[idx].viewOnly = val;
             ineRenderCriteria();
             ineSyncEvalToEngine();
         }
 
-        function ineToggleViewOnly(val) {
-            if (!currentEvalTab) return;
-            if (evalCriteria[currentEvalTab] === undefined) evalCriteria[currentEvalTab] = [];
-            evalCriteria[currentEvalTab].viewOnly = val;
-            ineSyncEvalToEngine();
-        }
-
         function ineAddCriteria() {
-            if (!currentEvalTab) return;
-            if (evalCriteria[currentEvalTab] === undefined) evalCriteria[currentEvalTab] = [];
-            evalCriteria[currentEvalTab].push({ op: '>=', mode: 'NUM', numVal: 0, varVal: 'target', gate: 'AND' });
+            ineEvalCriteria.push({ type: 'sum', op: '>=', mode: 'NUM', numVal: 0, varVal: 'target', gate: 'AND', viewOnly: false });
             ineRenderCriteria();
             ineSyncEvalToEngine();
         }
 
         function ineRemoveCriteria(idx) {
-            if (!currentEvalTab) return;
-            evalCriteria[currentEvalTab].splice(idx, 1);
+            ineEvalCriteria.splice(idx, 1);
             ineRenderCriteria();
             ineSyncEvalToEngine();
         }
 
         function ineToggleEvalGate(idx) {
-            if (!currentEvalTab) return;
             const gates = ['AND', 'OR', 'AND/OR'];
-            const c = evalCriteria[currentEvalTab][idx];
+            const c = ineEvalCriteria[idx];
             c.gate = gates[(gates.indexOf(c.gate || 'AND') + 1) % gates.length];
             ineRenderCriteria();
             ineSyncEvalToEngine();
         }
 
         function ineUpdateEvalCriteria(idx, key, val) {
-            if (!currentEvalTab) return;
-            evalCriteria[currentEvalTab][idx][key] = val;
+            ineEvalCriteria[idx][key] = val;
             if (key === 'varVal' || key === 'mode') {
                 ineRenderCriteria();
             }
@@ -3258,16 +3242,14 @@
         }
 
         function ineAdjustEvalCriteria(idx, delta) {
-            if (!currentEvalTab) return;
-            const c = evalCriteria[currentEvalTab][idx];
+            const c = ineEvalCriteria[idx];
             c.numVal = Math.max(0, (parseInt(c.numVal) || 0) + delta);
             ineRenderCriteria();
             ineSyncEvalToEngine();
         }
 
         function ineAdjustEvalCriteriaVarVal(idx, delta) {
-            if (!currentEvalTab) return;
-            const c = evalCriteria[currentEvalTab][idx];
+            const c = ineEvalCriteria[idx];
             const char = characters.find(c => c.id === activeCharacterId);
             if (char && char.variables) {
                 const varName = c.varVal || 'target';
@@ -3279,8 +3261,7 @@
         }
 
         function ineUpdateEvalCriteriaVarVal(idx, val) {
-            if (!currentEvalTab) return;
-            const c = evalCriteria[currentEvalTab][idx];
+            const c = ineEvalCriteria[idx];
             const char = characters.find(c => c.id === activeCharacterId);
             if (char && char.variables) {
                 char.variables[c.varVal || 'target'] = val;
@@ -3289,8 +3270,16 @@
         }
 
         function ineSetEvalCriteriaMode(idx, mode) {
-            if (!currentEvalTab) return;
-            evalCriteria[currentEvalTab][idx].mode = mode;
+            ineEvalCriteria[idx].mode = mode;
+            ineRenderCriteria();
+            ineSyncEvalToEngine();
+        }
+
+        function ineUpdateEvalCriteriaType(idx, type) {
+            ineEvalCriteria[idx].type = type;
+            if (type === 'list') {
+                ineEvalCriteria[idx].viewOnly = true;
+            }
             ineRenderCriteria();
             ineSyncEvalToEngine();
         }
@@ -3298,103 +3287,148 @@
         function ineRenderCriteria() {
             const container = document.getElementById('ine-eval-criteria-list');
             const addBtn = document.getElementById('ine-eval-add-btn');
-            const viewOnlyChk = document.getElementById('ine-eval-view-only');
-            if (!container || !currentEvalTab) return;
-            
-            if (evalCriteria[currentEvalTab].viewOnly === undefined) {
-                evalCriteria[currentEvalTab].viewOnly = false;
-            }
-            viewOnlyChk.checked = evalCriteria[currentEvalTab].viewOnly;
-            
-            if (currentEvalTab === 'list') {
-                container.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-2">List Mode is view-only and lists all rolls individually.</p>';
-                if (addBtn) addBtn.classList.add('hidden');
-                return;
-            }
+            if (!container) return;
             
             if (addBtn) addBtn.classList.remove('hidden');
             
-            const criteria = evalCriteria[currentEvalTab] || [];
-            if (criteria.length === 0) {
-                container.innerHTML = '<p class="text-[9px] text-slate-600 italic text-center py-2">No criteria yet — tap ＋ Add New</p>';
+            if (ineEvalCriteria.length === 0) {
+                container.innerHTML = '<p class="text-[9px] text-slate-600 italic text-center py-2">No conditions configured.</p>';
                 return;
             }
             
             let html = '';
-            criteria.forEach((c, idx) => {
+            ineEvalCriteria.forEach((c, idx) => {
                 if (idx > 0) {
                     html += `
-                        <div class="flex justify-center my-0.5">
-                            <button onclick="ineToggleEvalGate(${idx})" class="px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-violet-400 bg-[#020617] border border-violet-500/20 hover:border-violet-500/40 rounded transition-all">
+                        <div class="flex justify-center my-1">
+                            <button onclick="ineToggleEvalGate(${idx})" class="px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-violet-400 bg-[#020617] border border-violet-500/20 hover:border-violet-500/40 rounded transition-all">
                                 ${c.gate || 'AND'}
                             </button>
                         </div>
                     `;
                 }
                 
-                let valSection = '';
-                if (c.mode === 'NUM') {
-                    valSection = `
-                        <div class="ine-stepper compact" style="max-width: 6rem">
-                            <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteria(${idx}, -1)">−</button>
-                            <input type="number" class="ine-stepper-val" value="${c.numVal || 0}" oninput="ineUpdateEvalCriteria(${idx}, 'numVal', parseInt(this.value) || 0)">
-                            <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteria(${idx}, 1)">+</button>
-                        </div>
-                    `;
-                } else {
-                    let optionsHtml = '<option value="target">Target</option>';
-                    const char = characters.find(c => c.id === activeCharacterId);
-                    if (char && char.variables) {
-                        Object.entries(char.variables).forEach(([name, val]) => {
-                            if (name === 'target') return;
-                            const sign = val >= 0 ? '+' : '';
-                            optionsHtml += `<option value="${name}" ${c.varVal === name ? 'selected' : ''}>${name}(${sign}${val})</option>`;
-                        });
-                    }
-                    
-                    const varVal = (char && char.variables) ? char.variables[c.varVal || 'target'] : undefined;
-                    let valInputHtml = '';
-                    if (c.varVal === 'target' || varVal === undefined || varVal === null || varVal === "") {
-                        const customVarVal = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
-                        valInputHtml = `
-                            <div class="ine-stepper compact ml-1" style="max-width: 4.5rem">
-                                <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteriaVarVal(${idx}, -1)">−</button>
-                                <input type="number" class="ine-stepper-val" value="${customVarVal}" oninput="ineUpdateEvalCriteriaVarVal(${idx}, parseInt(this.value) || 0)">
-                                <button class="ine-stepper-btn" onclick="ineAdjustEvalCriteriaVarVal(${idx}, 1)">+</button>
+                let row2Content = '';
+                if (c.type !== 'list') {
+                    let valSection = '';
+                    if (c.mode === 'NUM') {
+                        valSection = `
+                            <div class="ine-stepper flex-1" style="max-width: 9.5rem; height: 2.2rem;">
+                                <button class="ine-stepper-btn" style="width: 2.2rem; height: 2.2rem;" onclick="ineAdjustEvalCriteria(${idx}, -1)">−</button>
+                                <input type="number" class="ine-stepper-val" style="font-size: 0.9rem;" value="${c.numVal || 0}" oninput="ineUpdateEvalCriteria(${idx}, 'numVal', parseInt(this.value) || 0)">
+                                <button class="ine-stepper-btn" style="width: 2.2rem; height: 2.2rem;" onclick="ineAdjustEvalCriteria(${idx}, 1)">+</button>
+                            </div>
+                        `;
+                    } else {
+                        let optionsHtml = '<option value="target">Target</option>';
+                        const char = characters.find(c => c.id === activeCharacterId);
+                        if (char && char.variables) {
+                            Object.entries(char.variables).forEach(([name, val]) => {
+                                if (name === 'target') return;
+                                const sign = val >= 0 ? '+' : '';
+                                optionsHtml += `<option value="${name}" ${c.varVal === name ? 'selected' : ''}>${name}(${sign}${val})</option>`;
+                            });
+                        }
+                        
+                        const varVal = (char && char.variables) ? char.variables[c.varVal || 'target'] : undefined;
+                        let valInputHtml = '';
+                        if (c.varVal === 'target' || varVal === undefined || varVal === null || varVal === "") {
+                            const customVarVal = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
+                            valInputHtml = `
+                                <div class="ine-stepper ml-1" style="max-width: 6.5rem; height: 2.2rem;">
+                                    <button class="ine-stepper-btn" style="width: 2.2rem; height: 2.2rem;" onclick="ineAdjustEvalCriteriaVarVal(${idx}, -1)">−</button>
+                                    <input type="number" class="ine-stepper-val" style="font-size: 0.9rem;" value="${customVarVal}" oninput="ineUpdateEvalCriteriaVarVal(${idx}, parseInt(this.value) || 0)">
+                                    <button class="ine-stepper-btn" style="width: 2.2rem; height: 2.2rem;" onclick="ineAdjustEvalCriteriaVarVal(${idx}, 1)">+</button>
+                                </div>
+                            `;
+                        }
+                        
+                        valSection = `
+                            <div class="flex items-center flex-1">
+                                <select onchange="ineUpdateEvalCriteria(${idx}, 'varVal', this.value)" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.2rem] text-xs text-sky-400 font-bold outline-none flex-1">
+                                    ${optionsHtml}
+                                </select>
+                                ${valInputHtml}
                             </div>
                         `;
                     }
                     
-                    valSection = `
-                        <div class="flex items-center flex-1">
-                            <select onchange="ineUpdateEvalCriteria(${idx}, 'varVal', this.value)" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2rem] text-xs text-sky-400 font-bold outline-none flex-1">
-                                ${optionsHtml}
-                            </select>
-                            ${valInputHtml}
+                    row2Content = `
+                        <!-- Row 2: Value Selector, View Only, and Delete -->
+                        <div class="flex items-center justify-between gap-2 border-t border-white/5 pt-2 mt-2">
+                            <div class="flex-1 flex items-center justify-start">
+                                ${valSection}
+                            </div>
+                            
+                            <div class="flex items-center gap-2 select-none shrink-0 pl-2">
+                                <label class="toggle-switch" style="transform: scale(0.85); transform-origin: center;">
+                                    <input type="checkbox" ${c.viewOnly ? 'checked' : ''} onchange="ineUpdateEvalCriteriaViewOnly(${idx}, this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider">View Only</span>
+                            </div>
+                            
+                            ${ineEvalCriteria.length > 1 ? `
+                                <button onclick="ineRemoveCriteria(${idx})" class="text-rose-500/60 hover:text-rose-400 text-xs px-2 h-[2.2rem] flex items-center justify-center border border-rose-500/20 hover:bg-rose-500/10 rounded-lg transition-all ml-1">✕</button>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    // List Mode Row 2 (only View Only and Delete)
+                    row2Content = `
+                        <div class="flex items-center justify-between gap-2 border-t border-white/5 pt-2 mt-2">
+                            <span class="text-[9px] text-slate-500 italic">Lists all rolls individually.</span>
+                            <div class="flex items-center gap-2 select-none shrink-0 pl-2">
+                                <label class="toggle-switch" style="transform: scale(0.85); transform-origin: center;">
+                                    <input type="checkbox" checked disabled>
+                                    <span class="toggle-slider opacity-60"></span>
+                                </label>
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider">View Only</span>
+                            </div>
+                            ${ineEvalCriteria.length > 1 ? `
+                                <button onclick="ineRemoveCriteria(${idx})" class="text-rose-500/60 hover:text-rose-400 text-xs px-2 h-[2.2rem] flex items-center justify-center border border-rose-500/20 hover:bg-rose-500/10 rounded-lg transition-all ml-1">✕</button>
+                            ` : ''}
                         </div>
                     `;
                 }
                 
-                html += `
-                    <div class="flex items-center gap-1.5 bg-[#020617]/40 rounded-lg border border-white/5 p-1.5">
-                        <select onchange="ineUpdateEvalCriteria(${idx}, 'op', this.value)" class="bg-[#020617] border border-white/10 rounded-lg px-1.5 h-[2rem] text-xs text-sky-400 font-bold outline-none" style="width: 3.5rem">
+                let opSelectHtml = '';
+                let numVarToggleHtml = '';
+                if (c.type !== 'list') {
+                    opSelectHtml = `
+                        <select onchange="ineUpdateEvalCriteria(${idx}, 'op', this.value)" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.2rem] text-xs text-sky-400 font-bold outline-none" style="width: 3.5rem">
                             <option value=">=" ${c.op === '>=' ? 'selected' : ''}>&ge;</option>
                             <option value=">" ${c.op === '>' ? 'selected' : ''}>&gt;</option>
                             <option value="=" ${c.op === '=' ? 'selected' : ''}>=</option>
                             <option value="<=" ${c.op === '<=' ? 'selected' : ''}>&le;</option>
                             <option value="<" ${c.op === '<' ? 'selected' : ''}>&lt;</option>
                         </select>
+                    `;
+                    
+                    numVarToggleHtml = `
+                        <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0 h-[2.2rem] items-center">
+                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'NUM')" class="px-3 h-full text-[9px] font-black uppercase ${c.mode === 'NUM' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">NUM</button>
+                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'VAR')" class="px-3 h-full text-[9px] font-black uppercase border-l border-white/10 ${c.mode === 'VAR' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">VAR</button>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                    <div class="bg-[#020617]/50 rounded-xl border border-white/10 p-3 space-y-2.5">
+                        <!-- Row 1: Type dropdown, Operator, and NUM/VAR toggle -->
+                        <div class="flex items-center gap-2">
+                            <select onchange="ineUpdateEvalCriteriaType(${idx}, this.value)" class="bg-[#020617] border border-white/15 rounded-lg px-2.5 h-[2.2rem] text-xs text-sky-400 font-extrabold outline-none shrink-0" style="width: 6.5rem">
+                                <option value="sum" ${c.type === 'sum' ? 'selected' : ''}>SUM</option>
+                                <option value="count" ${c.type === 'count' ? 'selected' : ''}>COUNT</option>
+                                <option value="sets" ${c.type === 'sets' ? 'selected' : ''}>SETS</option>
+                                <option value="list" ${c.type === 'list' ? 'selected' : ''}>LIST</option>
+                            </select>
+                            
+                            ${opSelectHtml}
+                            ${numVarToggleHtml}
+                        </div>
                         
-                        <div class="flex bg-[#020617] rounded border border-white/10 overflow-hidden shrink-0 h-[2rem] items-center">
-                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'NUM')" class="px-2 h-full text-[8px] font-black uppercase ${c.mode === 'NUM' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">NUM</button>
-                            <button onclick="ineSetEvalCriteriaMode(${idx}, 'VAR')" class="px-2 h-full text-[8px] font-black uppercase border-l border-white/10 ${c.mode === 'VAR' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">VAR</button>
-                        </div>
-    
-                        <div class="flex-1 flex justify-end">
-                            ${valSection}
-                        </div>
-    
-                        <button onclick="ineRemoveCriteria(${idx})" class="text-rose-500/50 hover:text-rose-400 text-xs px-1 ml-1">✕</button>
+                        ${row2Content}
                     </div>
                 `;
             });
@@ -3403,25 +3437,48 @@
         }
 
         function ineSyncEvalToEngine() {
-            if (!currentEvalTab) return;
-            currentTargetMode = currentEvalTab;
-            engine.rollRules.targetMode = currentEvalTab;
-            engine.rollRules.evalCriteria = JSON.parse(JSON.stringify(evalCriteria));
+            // Find the main (non-view-only) condition to set targetMode
+            const mainCond = ineEvalCriteria.find(c => !c.viewOnly) || ineEvalCriteria[0];
+            const targetMode = mainCond ? mainCond.type : 'sum';
+            currentTargetMode = targetMode;
+            engine.rollRules.targetMode = targetMode;
+            
+            // Reconstruct structured evalCriteria object for the engine
+            const structured = { sum: [], count: [], sets: [], list: [] };
+            
+            structured.sum.viewOnly = !ineEvalCriteria.some(c => c.type === 'sum' && !c.viewOnly);
+            structured.count.viewOnly = !ineEvalCriteria.some(c => c.type === 'count' && !c.viewOnly);
+            structured.sets.viewOnly = !ineEvalCriteria.some(c => c.type === 'sets' && !c.viewOnly);
+            structured.list.viewOnly = !ineEvalCriteria.some(c => c.type === 'list' && !c.viewOnly);
+            
+            ineEvalCriteria.forEach(c => {
+                if (structured[c.type]) {
+                    structured[c.type].push({
+                        op: c.op,
+                        mode: c.mode,
+                        numVal: c.numVal,
+                        varVal: c.varVal,
+                        gate: c.gate
+                    });
+                }
+            });
+            
+            engine.rollRules.evalCriteria = structured;
             
             // Sync first criteria back to hidden legacy controls for backwards compatibility
-            const first = (evalCriteria[currentEvalTab] || [])[0];
+            const first = ineEvalCriteria[0];
             if (first) {
-                if (currentEvalTab === 'sum') {
+                if (first.type === 'sum') {
                     const opEl = document.getElementById('rule-sum-op');
                     const valEl = document.getElementById('rule-sum-val');
                     if (opEl) opEl.value = first.op;
                     if (valEl) valEl.value = first.mode === 'NUM' ? first.numVal : first.varVal;
-                } else if (currentEvalTab === 'count') {
+                } else if (first.type === 'count') {
                     const opEl = document.getElementById('rule-count-op');
                     const valEl = document.getElementById('rule-count-val');
                     if (opEl) opEl.value = first.op;
                     if (valEl) valEl.value = first.mode === 'NUM' ? first.numVal : first.varVal;
-                } else if (currentEvalTab === 'sets') {
+                } else if (first.type === 'sets') {
                     const opEl = document.getElementById('rule-sets-op');
                     const valEl = document.getElementById('rule-sets-val');
                     if (opEl) opEl.value = first.op;
@@ -3447,9 +3504,15 @@
                     document.getElementById('rule-explode-val').value = "";
                     updateRulesUI();
                 } else if (evalContent && !evalContent.classList.contains('hidden')) {
-                    document.getElementById('ine-eval-op').value = "";
-                    document.getElementById('rule-sum-op').value = "";
-                    document.getElementById('rule-count-op').value = "";
+                    ineEvalCriteria.length = 0;
+                    ineRenderCriteria();
+                    ineSyncEvalToEngine();
+                    if (document.getElementById('rule-sum-op')) document.getElementById('rule-sum-op').value = "";
+                    if (document.getElementById('rule-sum-val')) document.getElementById('rule-sum-val').value = "overall";
+                    if (document.getElementById('rule-count-op')) document.getElementById('rule-count-op').value = ">=";
+                    if (document.getElementById('rule-count-val')) document.getElementById('rule-count-val').value = "";
+                    if (document.getElementById('rule-sets-op')) document.getElementById('rule-sets-op').value = "";
+                    if (document.getElementById('rule-sets-val')) document.getElementById('rule-sets-val').value = "";
                     updateRulesUI();
                 }
             }
@@ -3459,7 +3522,9 @@
 
         function ineConfirm() {
             // For number node from '#' button (new chip)
-            if (ineChipIndex === null) {
+            const editor = document.getElementById('inline-node-editor');
+            const mode = editor ? editor.getAttribute('data-mode') : null;
+            if (ineChipIndex === null && mode === 'number') {
                 const val = parseInt(document.getElementById('ine-number-val').value) || 0;
                 activeLoadoutId = null;
                 engine.queue.push({ chipType: 'number', value: val, operator: '+', type: 'literal',
@@ -3918,7 +3983,7 @@
                 countThreshVal: countThreshVal,
                 setsOp: document.getElementById('rule-sets-op').value,
                 setsVal: isNaN(sVal) ? null : sVal,
-                evalCriteria: JSON.parse(JSON.stringify(evalCriteria))
+                evalCriteria: JSON.parse(JSON.stringify(engine.rollRules.evalCriteria || evalCriteria))
             });
             updateUI();
         }
@@ -4296,16 +4361,14 @@
                 }).join("");
             }
 
-            // 2. Build Rules (RR, EX, SET)
+            // 2. Build Rules (RR, EX)
             let rulesParts = [];
             const rules = engine.rollRules;
             const rrActive = rules.rerollOp && rules.rerollVal !== null;
             const exActive = rules.explodeOp && rules.explodeVal !== null;
-            const setsActive = rules.setsOp && rules.setsVal !== null;
 
             if (rrActive) rulesParts.push(`RR${fmtOp(rules.rerollOp)}${rules.rerollVal}`);
             if (exActive) rulesParts.push(`EX${fmtOp(rules.explodeOp)}${rules.explodeVal}`);
-            if (setsActive) rulesParts.push(`SET${fmtOp(rules.setsOp)}${rules.setsVal}`);
 
             // 3. Build Mode & Target
             let modeLabel = "";
@@ -4325,21 +4388,31 @@
             // Build Evals HTML for Left Column
             let evalsHtmlList = [];
             const activeMode = rules.targetMode || 'sum';
-            const criteriaList = rules.evalCriteria ? rules.evalCriteria[activeMode] : [];
 
-            if (activeMode === 'list') {
-                evalsHtmlList.push(`<span class="bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center">LIST</span>`);
-            } else if (criteriaList && criteriaList.length > 0) {
-                criteriaList.forEach(c => {
-                    let opDisp = fmtOp(c.op || '>=');
-                    let valDisp = c.numVal;
-                    if (c.mode === 'VAR') {
-                        valDisp = c.varVal === 'target' ? 'TGT' : c.varVal;
-                    }
-                    const text = `${activeMode.toUpperCase()}${opDisp}${valDisp}`;
-                    evalsHtmlList.push(`<span class="bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)]">${text}</span>`);
-                });
-            } else {
+            // Collect all criteria from all types
+            let hasAnyCriteria = false;
+            ['sum', 'count', 'sets', 'list'].forEach(type => {
+                const criteriaList = rules.evalCriteria ? rules.evalCriteria[type] : [];
+                if (type === 'list' && activeMode === 'list') {
+                    // List mode itself is a criteria/mode indicator
+                    evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center hover:bg-sky-500/20 transition-all">LIST</span>`);
+                    hasAnyCriteria = true;
+                } else if (criteriaList && criteriaList.length > 0) {
+                    criteriaList.forEach(c => {
+                        let opDisp = fmtOp(c.op || '>=');
+                        let valDisp = c.numVal;
+                        if (c.mode === 'VAR') {
+                            valDisp = c.varVal === 'target' ? 'TGT' : c.varVal;
+                        }
+                        const text = `${type.toUpperCase()}${opDisp}${valDisp}`;
+                        evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)] hover:bg-sky-500/20 transition-all">${text}</span>`);
+                    });
+                    hasAnyCriteria = true;
+                }
+            });
+
+            // Fallback if no criteria are defined in any list
+            if (!hasAnyCriteria) {
                 let modeLabelOnly = activeMode.toUpperCase();
                 if (activeMode === 'count' && rules.targetOp) {
                     modeLabelOnly += `${fmtOp(rules.targetOp)}${rules.targetVal}`;
@@ -4347,13 +4420,15 @@
                     modeLabelOnly = `SUM${fmtOp(rules.targetOp)}${rules.targetVal}`;
                 } else if (activeMode === 'sum' && engine.overallTarget !== null) {
                     modeLabelOnly = `SUM≥${engine.overallTarget}`;
+                } else if (activeMode === 'sets' && rules.setsOp) {
+                    modeLabelOnly = `SETS${fmtOp(rules.setsOp)}${rules.setsVal}`;
                 }
-                evalsHtmlList.push(`<span class="bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)]">${modeLabelOnly}</span>`);
+                evalsHtmlList.push(`<span onclick="openNodeEditor('eval')" class="cursor-pointer bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)] hover:bg-sky-500/20 transition-all">${modeLabelOnly}</span>`);
             }
             const evalsHtml = evalsHtmlList.join('');
 
             const hasBaseContent = basePartsHtml !== "" || engine.activeModifier !== null || engine.overallTarget !== null;
-            const hasRules = rrActive || exActive || setsActive;
+            const hasRules = rrActive || exActive;
 
             const modHtml = engine.activeModifier ? `
                 <div class="group relative flex items-center gap-1 bg-[#020617] border border-indigo-500/20 hover:border-indigo-500/50 text-indigo-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-default select-none">
@@ -4916,6 +4991,22 @@
 
             activeLoadoutId = id;
             engine.loadQueue(id);
+            if (engine.rollRules.evalCriteria) {
+                Object.assign(evalCriteria, JSON.parse(JSON.stringify(engine.rollRules.evalCriteria)));
+                ['sum', 'count', 'sets'].forEach(tab => {
+                    if (evalCriteria[tab]) {
+                        const parentViewOnly = evalCriteria[tab].viewOnly || false;
+                        evalCriteria[tab].forEach(c => {
+                            c.viewOnly = parentViewOnly;
+                        });
+                    }
+                });
+            } else {
+                evalCriteria.sum = [];
+                evalCriteria.count = [];
+                evalCriteria.sets = [];
+                evalCriteria.list = [];
+            }
             document.getElementById('rule-reroll-op').value = engine.rollRules.rerollOp;
             document.getElementById('rule-reroll-val').value = engine.rollRules.rerollVal ?? '';
             document.getElementById('rule-explode-op').value = engine.rollRules.explodeOp;
@@ -5586,12 +5677,16 @@
             // Close inline node editor when clicking outside it and outside the queue
             const ineEl = document.getElementById('inline-node-editor');
             if (ineEl && ineEl.classList.contains('open')) {
+                if (!document.body.contains(e.target)) {
+                    // Detached element (re-rendered during click), keep open
+                    return;
+                }
                 if (!ineEl.contains(e.target) && 
                     !e.target.closest('#queue-display') && 
                     !e.target.closest('#hash-btn') && 
                     !e.target.closest('#eval-btn') && 
                     !e.target.closest('#reroll-btn')) {
-                    ineClose();
+                    ineConfirm();
                 }
             }
 
