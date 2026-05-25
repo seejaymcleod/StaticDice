@@ -970,7 +970,8 @@
 
         /* Complex editor grid layout overrides */
         #inline-node-editor[data-mode="eval"] .ine-panel,
-        #inline-node-editor[data-mode="reroll"] .ine-panel {
+        #inline-node-editor[data-mode="reroll"] .ine-panel,
+        #inline-node-editor[data-mode="number"] .ine-panel {
             display: grid;
             grid-template-columns: 1fr auto;
             align-items: center;
@@ -979,7 +980,8 @@
         }
 
         #inline-node-editor[data-mode="eval"] .ine-label,
-        #inline-node-editor[data-mode="reroll"] .ine-label {
+        #inline-node-editor[data-mode="reroll"] .ine-label,
+        #inline-node-editor[data-mode="number"] .ine-label {
             grid-column: 1;
             grid-row: 1;
             border-right: none;
@@ -992,13 +994,15 @@
         }
 
         #inline-node-editor[data-mode="eval"] #ine-eval-content,
-        #inline-node-editor[data-mode="reroll"] #ine-reroll-content {
+        #inline-node-editor[data-mode="reroll"] #ine-reroll-content,
+        #inline-node-editor[data-mode="number"] #ine-number-content {
             grid-column: 1 / span 2;
             grid-row: 2;
         }
 
         #inline-node-editor[data-mode="eval"] .ine-actions,
-        #inline-node-editor[data-mode="reroll"] .ine-actions {
+        #inline-node-editor[data-mode="reroll"] .ine-actions,
+        #inline-node-editor[data-mode="number"] .ine-actions {
             grid-column: 2;
             grid-row: 1;
             border-left: none;
@@ -1012,7 +1016,8 @@
         }
 
         #inline-node-editor[data-mode="eval"] .ine-action-btn,
-        #inline-node-editor[data-mode="reroll"] .ine-action-btn {
+        #inline-node-editor[data-mode="reroll"] .ine-action-btn,
+        #inline-node-editor[data-mode="number"] .ine-action-btn {
             width: 2rem;
             height: 2rem;
         }
@@ -1480,23 +1485,23 @@
                             <!-- Number/modifier content -->
                             <div id="ine-number-content" class="hidden flex-col gap-2">
                                 <div class="flex items-center justify-between gap-2">
-                                    <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0">
-                                        <button id="ine-num-toggle-num" onclick="ineSetNumVarMode('NUM')" class="px-3 py-1.5 text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
-                                        <button id="ine-num-toggle-var" onclick="ineSetNumVarMode('VAR')" class="px-3 py-1.5 text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
+                                    <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0 h-[2rem] items-center">
+                                        <button id="ine-num-toggle-num" onclick="ineSetNumVarMode('NUM')" class="px-3 h-full text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
+                                        <button id="ine-num-toggle-var" onclick="ineSetNumVarMode('VAR')" class="px-3 h-full text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
                                     </div>
                                 </div>
                                 <div id="ine-num-mode-container" class="flex items-center gap-2">
-                                    <div class="ine-stepper">
+                                    <div class="ine-stepper compact">
                                         <button class="ine-stepper-btn" onclick="ineAdjustNumber(-1)">−</button>
                                         <input id="ine-number-val" type="number" class="ine-stepper-val" value="0" oninput="ineUpdateNumber()">
                                         <button class="ine-stepper-btn" onclick="ineAdjustNumber(1)">+</button>
                                     </div>
                                 </div>
                                 <div id="ine-var-mode-container" class="hidden flex items-center gap-2 w-full">
-                                    <select id="ine-number-var-select" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.5rem] text-xs text-sky-400 font-bold outline-none flex-1" onchange="ineOnVarSelectChange()">
+                                    <select id="ine-number-var-select" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2rem] text-xs text-sky-400 font-bold outline-none flex-1" onchange="ineOnVarSelectChange()">
                                     </select>
                                     <div id="ine-var-val-container" class="hidden flex items-center gap-2 shrink-0">
-                                        <div class="ine-stepper" style="max-width: 6.5rem">
+                                        <div class="ine-stepper compact" style="max-width: 6.5rem">
                                             <button class="ine-stepper-btn" onclick="ineAdjustVarVal(-1)">−</button>
                                             <input id="ine-number-var-val" type="number" class="ine-stepper-val" value="0" oninput="ineUpdateNumber()">
                                             <button class="ine-stepper-btn" onclick="ineAdjustVarVal(1)">+</button>
@@ -2642,11 +2647,26 @@
 
             lbl.textContent = label || 'NODE EDITOR';
 
-            if (diceContent) diceContent.classList.toggle('active', mode === 'dice');
-            if (numberContent) numberContent.classList.toggle('active', mode === 'number');
-            if (divContent) divContent.classList.toggle('active', mode === 'div');
-            if (rerollContent) rerollContent.classList.toggle('active', mode === 'reroll');
-            if (evalContent) evalContent.classList.toggle('active', mode === 'eval');
+            if (diceContent) {
+                diceContent.classList.toggle('active', mode === 'dice');
+                diceContent.classList.toggle('hidden', mode !== 'dice');
+            }
+            if (numberContent) {
+                numberContent.classList.toggle('active', mode === 'number');
+                numberContent.classList.toggle('hidden', mode !== 'number');
+            }
+            if (divContent) {
+                divContent.classList.toggle('active', mode === 'div');
+                divContent.classList.toggle('hidden', mode !== 'div');
+            }
+            if (rerollContent) {
+                rerollContent.classList.toggle('active', mode === 'reroll');
+                rerollContent.classList.toggle('hidden', mode !== 'reroll');
+            }
+            if (evalContent) {
+                evalContent.classList.toggle('active', mode === 'eval');
+                evalContent.classList.toggle('hidden', mode !== 'eval');
+            }
 
             if (editor) {
                 editor.setAttribute('data-mode', mode);
@@ -3688,6 +3708,9 @@
             }
             engine.queue.push({ chipType: 'operator', operator: op, roundMode: 'none' });
             updateUI(); vibrate(5);
+            if (op === '/') {
+                editQueueChip(engine.queue.length - 1);
+            }
         }
 
 
