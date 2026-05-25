@@ -1134,14 +1134,12 @@ class DiceEngine {
                     let breakdownFormulaName = `${op} ${chip.type === 'variable' ? chip.value : Math.abs(Number(chip.value))}${chip.multiplierType && chip.multiplierType !== 'none' ? ' * ' + chip.multiplierValue : ''}${chip.divisorType && chip.divisorType !== 'none' ? ' / ' + chip.divisorValue : ''}${roundStr}`;
                     let breakdownSubtotal = `${op === '-' ? '-' : '+'}${termVal}`;
                     
-                    // Keep backward compatibility for single-chip flat mod descriptions in tests
-                    const totalModifiers = evalChips.filter(c => c.chipType === 'modifier' || c.chipType === 'number').length;
-                    if (totalModifiers === 1) {
-                        if (chip.type === 'variable' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
-                            breakdownFormulaName = 'Flat Mod';
-                            breakdownSubtotal = `${chip.value} (${signedVal >= 0 ? '+' : ''}${signedVal})`;
-                        } else if (chip.type === 'literal' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
-                            breakdownFormulaName = 'Flat Mod';
+                    if ((!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
+                        if (chip.type === 'variable') {
+                            breakdownFormulaName = chip.value;
+                            breakdownSubtotal = `${signedVal >= 0 ? '+' : ''}${signedVal}`;
+                        } else if (chip.type === 'literal') {
+                            breakdownFormulaName = 'Flat';
                             breakdownSubtotal = `${signedVal >= 0 ? '+' : ''}${signedVal}`;
                         }
                     }

@@ -3525,10 +3525,25 @@
             const editor = document.getElementById('inline-node-editor');
             const mode = editor ? editor.getAttribute('data-mode') : null;
             if (ineChipIndex === null && mode === 'number') {
-                const val = parseInt(document.getElementById('ine-number-val').value) || 0;
                 activeLoadoutId = null;
-                engine.queue.push({ chipType: 'number', value: val, operator: '+', type: 'literal',
-                    multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' });
+                if (numberNodeMode === 'NUM') {
+                    const val = parseInt(document.getElementById('ine-number-val').value) || 0;
+                    engine.queue.push({ chipType: 'number', value: val, operator: '+', type: 'literal',
+                        multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' });
+                } else {
+                    const selectEl = document.getElementById('ine-number-var-select');
+                    const varSelect = selectEl ? selectEl.value : 'target';
+                    engine.queue.push({ chipType: 'modifier', type: 'variable', value: varSelect, operator: '+',
+                        multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' });
+                    
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    const valContainer = document.getElementById('ine-var-val-container');
+                    if (char && char.variables && valContainer && !valContainer.classList.contains('hidden')) {
+                        const varValEl = document.getElementById('ine-number-var-val');
+                        const customVal = varValEl ? (parseInt(varValEl.value) || 0) : 0;
+                        char.variables[varSelect] = customVal;
+                    }
+                }
                 updateUI();
                 vibrate(10);
             }
@@ -4924,35 +4939,10 @@
                 }
             }
             
-            // 2. Render on main screen below steppers
+            // 2. Render on main screen below steppers (always hidden since they are in the queue now)
             if (mainActiveRow) {
-                if (chips.length === 0) {
-                    mainActiveRow.classList.add('hidden');
-                    mainActiveRow.innerHTML = '';
-                } else {
-                    mainActiveRow.classList.remove('hidden');
-                    mainActiveRow.innerHTML = chips.map((chip, index) => {
-                        const termStr = engine.getModifierTermString(chip);
-                        let resolvedStr = "";
-                        if (chip.type === 'variable') {
-                            const resolved = window.getActiveCharacterVariable(chip.value);
-                            if (resolved !== null) {
-                                resolvedStr = ` <span class="opacity-60">(${resolved >= 0 ? '+' : ''}${resolved})</span>`;
-                            }
-                        }
-                        return `
-                            <div draggable="true" 
-                                ondragstart="handleChipDragStart(event, ${index})" 
-                                ondragend="handleChipDragEnd(event)" 
-                                ondragover="handleChipDragOver(event)" 
-                                ondrop="handleChipDrop(event, ${index})"
-                                class="flex items-center gap-1 bg-[#020617] border border-[#00d4ff]/20 text-sky-400 rounded-md px-1.5 py-0.5 text-[10px] font-bold shadow-[0_0_10px_rgba(0,212,255,0.02)] transition-all hover:border-[#00d4ff]/40 cursor-grab active:cursor-grabbing">
-                                <span>${termStr}</span>${resolvedStr}
-                                <button onclick="removeModifierChip(${index}, event)" class="text-slate-500 hover:text-rose-400 transition-colors ml-0.5 shrink-0" title="Remove Chip">✕</button>
-                            </div>
-                        `;
-                    }).join('');
-                }
+                mainActiveRow.classList.add('hidden');
+                mainActiveRow.innerHTML = '';
             }
         }
 

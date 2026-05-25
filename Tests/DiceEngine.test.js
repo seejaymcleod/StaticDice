@@ -230,9 +230,9 @@ describe('DiceEngine', () => {
             const result = engine.calculateRoll();
             expect(result.total).toBe(17);
             expect(result.breakdown[1]).toEqual({
-                formula: 'Flat Mod',
+                formula: 'STR',
                 rolls: '',
-                subtotal: 'STR (+2)'
+                subtotal: '+2'
             });
         });
 
