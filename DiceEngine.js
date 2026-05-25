@@ -812,7 +812,7 @@ class DiceEngine {
                 } else {
                     total += sum;
                 }
-            } else if (chip.chipType === 'modifier' && !isListMode) {
+            } else if ((chip.chipType === 'modifier' || chip.chipType === 'number') && !isListMode) {
                 let base = 0;
                 let baseStr = "";
                 if (chip.type === 'variable') {
@@ -874,7 +874,7 @@ class DiceEngine {
                 let breakdownSubtotal = `${op === '-' ? '-' : '+'}${termVal}`;
                 
                 // Keep backward compatibility for single-chip flat mod descriptions in tests
-                const totalModifiers = evalChips.filter(c => c.chipType === 'modifier').length;
+                const totalModifiers = evalChips.filter(c => c.chipType === 'modifier' || c.chipType === 'number').length;
                 if (totalModifiers === 1) {
                     if (chip.type === 'variable' && (!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
                         breakdownFormulaName = 'Flat Mod';
