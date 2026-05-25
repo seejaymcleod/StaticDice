@@ -317,4 +317,13 @@ describe('DiceEngine', () => {
             expect(engine.savedQueues[0].queue).toEqual([{ sides: 6, count: 2 }]);
         });
     });
+
+    describe('Auto-operator insertion logic', () => {
+        test('adds "+" when adding a new dice group next to another dice group', () => {
+            engine.changeQueue(6, 1);
+            engine.changeQueue(8, 1);
+            expect(engine.queue.map(c => c.chipType)).toEqual(['dice', 'operator', 'dice']);
+            expect(engine.queue[1].operator).toBe('+');
+        });
+    });
 });

@@ -1386,12 +1386,12 @@
 
                     <!-- ROW 5: MATH OPERATORS -->
                     <div class="grid grid-cols-6 gap-2">
-                        <button onclick="addOperatorToQueue('+')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">+</button>
-                        <button onclick="addOperatorToQueue('-')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">-</button>
-                        <button onclick="addOperatorToQueue('*')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">*</button>
-                        <button onclick="addOperatorToQueue('/')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">/</button>
-                        <button onclick="addOperatorToQueue('(')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">(</button>
-                        <button onclick="addOperatorToQueue(')')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">)</button>
+                        <button id="op-plus-btn" onclick="addOperatorToQueue('+')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">+</button>
+                        <button id="op-minus-btn" onclick="addOperatorToQueue('-')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">-</button>
+                        <button id="op-mult-btn" onclick="addOperatorToQueue('*')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">*</button>
+                        <button id="op-div-btn" onclick="addOperatorToQueue('/')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">/</button>
+                        <button id="op-open-paren-btn" onclick="addOperatorToQueue('(')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">(</button>
+                        <button id="op-close-paren-btn" onclick="addOperatorToQueue(')')" class="h-[2.75rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 text-xl font-black">)</button>
                     </div>
                 </div>
 
@@ -3434,6 +3434,15 @@
         function addNumberNodeToQueue() {
             const val = parseInt(document.getElementById('ne-num-input').value) || 0;
             activeLoadoutId = null;
+            const lastChip = engine.queue[engine.queue.length - 1];
+            if (lastChip && (
+                lastChip.chipType === 'dice' ||
+                lastChip.chipType === 'number' ||
+                lastChip.chipType === 'modifier' ||
+                (lastChip.chipType === 'operator' && lastChip.operator === ')')
+            )) {
+                engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            }
             engine.queue.push({ chipType: 'number', value: val, operator: '+', type: 'literal',
                 multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' });
             updateUI(); vibrate(10);
@@ -3443,6 +3452,15 @@
             const sel = document.getElementById('ne-var-select');
             if (!sel) return;
             activeLoadoutId = null;
+            const lastChip = engine.queue[engine.queue.length - 1];
+            if (lastChip && (
+                lastChip.chipType === 'dice' ||
+                lastChip.chipType === 'number' ||
+                lastChip.chipType === 'modifier' ||
+                (lastChip.chipType === 'operator' && lastChip.operator === ')')
+            )) {
+                engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            }
             engine.queue.push({ chipType: 'modifier', type: sel.value === 'target' ? 'target' : 'variable',
                 variableId: sel.value, operator: '+', value: 0,
                 multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' });
@@ -3591,6 +3609,17 @@
 
         function addOperatorToQueue(op) {
             activeLoadoutId = null;
+            if (op === '(') {
+                const lastChip = engine.queue[engine.queue.length - 1];
+                if (lastChip && (
+                    lastChip.chipType === 'dice' ||
+                    lastChip.chipType === 'number' ||
+                    lastChip.chipType === 'modifier' ||
+                    (lastChip.chipType === 'operator' && lastChip.operator === ')')
+                )) {
+                    engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+                }
+            }
             engine.queue.push({ chipType: 'operator', operator: op, roundMode: 'none' });
             updateUI(); vibrate(5);
         }
@@ -4123,29 +4152,67 @@
                 modeLabel += ` ≥${engine.overallTarget}`;
             }
 
+            // Build Evals HTML for Left Column
+            let evalsHtmlList = [];
+            const activeMode = rules.targetMode || 'sum';
+            const criteriaList = rules.evalCriteria ? rules.evalCriteria[activeMode] : [];
+
+            if (activeMode === 'list') {
+                evalsHtmlList.push(`<span class="bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center">LIST</span>`);
+            } else if (criteriaList && criteriaList.length > 0) {
+                criteriaList.forEach(c => {
+                    let opDisp = fmtOp(c.op || '>=');
+                    let valDisp = c.numVal;
+                    if (c.mode === 'VAR') {
+                        valDisp = c.varVal === 'target' ? 'TGT' : c.varVal;
+                    }
+                    const text = `${activeMode.toUpperCase()}${opDisp}${valDisp}`;
+                    evalsHtmlList.push(`<span class="bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)]">${text}</span>`);
+                });
+            } else {
+                let modeLabelOnly = activeMode.toUpperCase();
+                if (activeMode === 'count' && rules.targetOp) {
+                    modeLabelOnly += `${fmtOp(rules.targetOp)}${rules.targetVal}`;
+                } else if (activeMode === 'sum' && rules.targetOp) {
+                    modeLabelOnly = `SUM${fmtOp(rules.targetOp)}${rules.targetVal}`;
+                } else if (activeMode === 'sum' && engine.overallTarget !== null) {
+                    modeLabelOnly = `SUM≥${engine.overallTarget}`;
+                }
+                evalsHtmlList.push(`<span class="bg-sky-500/10 text-sky-400 text-[10px] px-2 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90 text-center shadow-[0_0_8px_rgba(0,212,255,0.15)]">${modeLabelOnly}</span>`);
+            }
+            const evalsHtml = evalsHtmlList.join('');
+
             const hasBaseContent = basePartsHtml !== "" || engine.activeModifier !== null || engine.overallTarget !== null;
             const hasRules = rrActive || exActive || setsActive;
 
-            if (hasBaseContent || hasRules) {
-                const modHtml = engine.activeModifier ? `
-                    <div class="group relative flex items-center gap-1 bg-[#020617] border border-indigo-500/20 hover:border-indigo-500/50 text-indigo-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-default select-none">
-                        <span class="text-[10px] opacity-75">⚡</span>
-                        <span>${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}</span>
-                        <button class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-3.5 h-3.5 ml-1 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[8px] transition-all"
-                                onclick="removeActiveModifier(event)" title="Remove">✕</button>
-                    </div>
-                ` : "";
-                const rulesHtml = rulesParts.length > 0 ? rulesParts.map(r => `<span class="bg-slate-500/10 text-slate-400 text-sm px-1.5 py-0.5 rounded border border-slate-500/20 font-bold whitespace-nowrap opacity-80">${r}</span>`).join("") : "";
-                const modeHtml = modeLabel !== "" ? `<span class="bg-sky-500/10 text-sky-400 text-sm px-1.5 py-0.5 rounded border border-sky-500/20 font-black whitespace-nowrap opacity-90">${modeLabel}</span>` : "";
+            const modHtml = engine.activeModifier ? `
+                <div class="group relative flex items-center gap-1 bg-[#020617] border border-indigo-500/20 hover:border-indigo-500/50 text-indigo-400 px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-default select-none">
+                    <span class="text-[10px] opacity-75">⚡</span>
+                    <span>${engine.activeModifier}${engine.modifierLevel > 1 ? '+' + (engine.modifierLevel - 1) : ''}</span>
+                    <button class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-3.5 h-3.5 ml-1 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white rounded-full text-[8px] transition-all"
+                            onclick="removeActiveModifier(event)" title="Remove">✕</button>
+                </div>
+            ` : "";
+            const rulesHtml = rulesParts.length > 0 ? rulesParts.map(r => `<span class="bg-slate-500/10 text-slate-400 text-sm px-1.5 py-0.5 rounded border border-slate-500/20 font-bold whitespace-nowrap opacity-80">${r}</span>`).join("") : "";
 
-                display.innerHTML = `
-                    <div class="flex flex-wrap items-center justify-center gap-1.5">
-                        ${basePartsHtml} ${modHtml} ${rulesHtml} ${modeHtml}
+            const rightColumnContent = (hasBaseContent || hasRules)
+                ? `${basePartsHtml} ${modHtml} ${rulesHtml}`
+                : '<span class="text-sky-400/20">EMPTY QUEUE</span>';
+
+            display.innerHTML = `
+                <div class="flex items-center gap-3.5 w-full justify-between">
+                    <!-- Left Column: Evals Stack -->
+                    <div class="flex flex-col gap-1 items-stretch justify-center min-w-[5rem] max-w-[8rem] shrink-0">
+                        ${evalsHtml}
                     </div>
-                `;
-            } else {
-                display.innerHTML = '<span class="text-sky-400/20">EMPTY QUEUE</span>';
-            }
+                    <!-- Vertical Divider Line -->
+                    <div class="w-px h-8 self-stretch bg-white/10"></div>
+                    <!-- Right Column: Queue Chips -->
+                    <div class="flex flex-wrap items-center justify-center gap-1.5 flex-1">
+                        ${rightColumnContent}
+                    </div>
+                </div>
+            `;
 
             if (modInput && document.activeElement !== modInput) {
                 let resolvedVal = 0;
@@ -4260,6 +4327,54 @@
 
             syncAuditorLabels();
             renderModifierChips();
+            updateKeypadValidation();
+        }
+
+        function updateKeypadValidation() {
+            const plusBtn = document.getElementById('op-plus-btn');
+            const minusBtn = document.getElementById('op-minus-btn');
+            const multBtn = document.getElementById('op-mult-btn');
+            const divBtn = document.getElementById('op-div-btn');
+            const openBtn = document.getElementById('op-open-paren-btn');
+            const closeBtn = document.getElementById('op-close-paren-btn');
+
+            if (!plusBtn) return;
+
+            const queue = engine.queue || [];
+            const lastChip = queue[queue.length - 1];
+            
+            const openCount = queue.filter(c => c.chipType === 'operator' && c.operator === '(').length;
+            const closeCount = queue.filter(c => c.chipType === 'operator' && c.operator === ')').length;
+
+            const isLastDataOrClose = lastChip && (
+                lastChip.chipType === 'dice' ||
+                lastChip.chipType === 'number' ||
+                lastChip.chipType === 'modifier' ||
+                (lastChip.chipType === 'operator' && lastChip.operator === ')')
+            );
+
+            const mathValid = isLastDataOrClose;
+
+            [plusBtn, minusBtn, multBtn, divBtn].forEach(btn => {
+                if (btn) {
+                    btn.disabled = !mathValid;
+                    btn.style.opacity = mathValid ? '1' : '0.35';
+                    btn.style.pointerEvents = mathValid ? 'auto' : 'none';
+                }
+            });
+
+            if (openBtn) {
+                openBtn.disabled = false;
+                openBtn.style.opacity = '1';
+                openBtn.style.pointerEvents = 'auto';
+            }
+
+            const closeValid = (openCount > closeCount) && isLastDataOrClose;
+            if (closeBtn) {
+                closeBtn.disabled = !closeValid;
+                closeBtn.style.opacity = closeValid ? '1' : '0.35';
+                closeBtn.style.pointerEvents = closeValid ? 'auto' : 'none';
+            }
         }
 
         function syncAuditorLabels() {

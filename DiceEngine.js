@@ -243,6 +243,18 @@ class DiceEngine {
             if (lastChip && lastChip.chipType === 'dice' && lastChip.sides === sides) {
                 lastChip.count += delta;
             } else {
+                if (lastChip && (
+                    lastChip.chipType === 'dice' ||
+                    lastChip.chipType === 'number' ||
+                    lastChip.chipType === 'modifier' ||
+                    (lastChip.chipType === 'operator' && lastChip.operator === ')')
+                )) {
+                    this.queue.push({
+                        chipType: 'operator',
+                        operator: '+',
+                        roundMode: 'none'
+                    });
+                }
                 this.queue.push({
                     chipType: 'dice',
                     id: 'dice_' + Date.now() + Math.random(),
