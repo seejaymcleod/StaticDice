@@ -4391,7 +4391,7 @@
                             roundIndicator = `<span class="ml-0.5 opacity-70">${chip.roundMode === 'up' ? '↑' : '↓'}</span>`;
                         }
                         
-                        const opDisplay = op === '*' ? '×' : op === '/' ? '÷' : (isAdvDis ? `${op}${chip.modifierLevel > 1 ? '+' + (chip.modifierLevel - 1) : ''}` : op);
+                        const opDisplay = op === '*' ? '×' : op === '/' ? '/' : (isAdvDis ? `${op}${chip.modifierLevel > 1 ? '+' + (chip.modifierLevel - 1) : ''}` : op);
                         
                         let chipColor = 'border-slate-600/30 hover:border-slate-500/40 text-slate-400 bg-[#020617]';
                         if (isDivision) {
@@ -5744,6 +5744,7 @@
                     !e.target.closest('#queue-display') && 
                     !e.target.closest('#hash-btn') && 
                     !e.target.closest('#eval-btn') && 
+                    !e.target.closest('#op-div-btn') && 
                     !e.target.closest('#reroll-btn')) {
                     const mode = ineEl.getAttribute('data-mode');
                     if (ineChipIndex === null && mode === 'number') {
