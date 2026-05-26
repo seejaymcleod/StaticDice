@@ -1764,12 +1764,7 @@
             <div class="flex justify-between items-center px-1">
                 <h3 class="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Quick Dice</h3>
                 <div class="flex gap-2">
-                    <button id="modded-quick-btn" onclick="toggleModdedQuick()"
-                        class="toggle-btn px-2.5 py-1.5 rounded-lg transition-all hover:bg-white/5 border border-white/10 bg-[#020617]/30 min-w-[70px]">
-                        <span id="modded-quick-label"
-                            class="text-[10px] font-black text-slate-500 uppercase tracking-wider leading-none">Ignore
-                            Mod</span>
-                    </button>
+
                     <button id="insta-queue-btn" onclick="toggleInstaQueue()"
                         class="toggle-btn px-2.5 py-1.5 rounded-lg transition-all hover:bg-white/5 border border-white/10 bg-[#020617]/30 min-w-[70px]">
                         <span id="insta-queue-label"
@@ -2355,8 +2350,8 @@
         rollSound.volume = volume;
 
         let isModdedQuick = false;
-        let isInstaQueue = false;
-        let isArsenalQueue = false;
+        let isInstaQueue = 'Roll Only';
+        let isArsenalQueue = 'Roll Only';
         let customDice = [];
         let stressCount = 100000;
         let activeLoadoutId = null;
@@ -2482,7 +2477,7 @@
                 html += `
                     <div class="segmented-row">
                         ${minusButtonHtml}
-                        <button onclick="triggerRoll(event, { sides: ${cfg.d}, count: 1, isInstant: !isModdedQuick })" class="segmented-btn btn-center group/dice relative">
+                        <button onclick="triggerRoll(event, { sides: ${cfg.d}, count: 1, isInstant: true })" class="segmented-btn btn-center group/dice relative">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="${path}" />
                             </svg>
@@ -2584,22 +2579,29 @@
             });
         }
 
-        function toggleModdedQuick() {
-            isModdedQuick = !isModdedQuick;
-            saveSettings();
-            updateUI();
-            vibrate(5);
-        }
+
 
         function toggleInstaQueue() {
-            isInstaQueue = !isInstaQueue;
+            if (isInstaQueue === 'Roll Only') {
+                isInstaQueue = 'Queue Only';
+            } else if (isInstaQueue === 'Queue Only') {
+                isInstaQueue = 'Roll & Queue';
+            } else {
+                isInstaQueue = 'Roll Only';
+            }
             saveSettings();
             updateUI();
             vibrate(5);
         }
 
         function toggleArsenalQueue() {
-            isArsenalQueue = !isArsenalQueue;
+            if (isArsenalQueue === 'Roll Only') {
+                isArsenalQueue = 'Queue Only';
+            } else if (isArsenalQueue === 'Queue Only') {
+                isArsenalQueue = 'Roll & Queue';
+            } else {
+                isArsenalQueue = 'Roll Only';
+            }
             saveSettings();
             updateUI();
             renderSavedQueues();
@@ -4550,32 +4552,38 @@
                 disBtn.title = "Disadvantage (Locked): Add dice to the queue to enable.";
             }
 
-            const mqLabel = document.getElementById('modded-quick-label');
-            if (isModdedQuick) {
-                mqLabel.innerHTML = 'Uses Mod';
-            } else {
-                mqLabel.innerHTML = 'Ignore Mod';
-            }
+
 
             const iqBtn = document.getElementById('insta-queue-btn');
             const iqLabel = document.getElementById('insta-queue-label');
-            if (isInstaQueue) {
-                iqLabel.innerHTML = 'Queue Only';
-            } else {
-                iqLabel.innerHTML = 'Roll Only';
+            if (iqLabel) {
+                iqLabel.innerHTML = isInstaQueue;
             }
 
             const aqBtn = document.getElementById('arsenal-queue-btn');
             const aqLabel = document.getElementById('arsenal-queue-label');
+            if (aqLabel) {
+                aqLabel.innerHTML = isArsenalQueue;
+            }
 
             // Tooltips
-            if (iqBtn) iqBtn.title = isInstaQueue ? "Quick rolls are added to the queue without rolling." : "Quick rolls fire immediately and do not touch your active queue.";
-            if (aqBtn) aqBtn.title = isArsenalQueue ? "Clicking an arsenal rolls it AND replaces your active queue." : "Clicking an arsenal rolls it WITHOUT changing your active queue.";
-
-            if (isArsenalQueue) {
-                aqLabel.innerHTML = 'Roll & Queue';
-            } else {
-                aqLabel.innerHTML = 'Roll Only';
+            if (iqBtn) {
+                if (isInstaQueue === 'Queue Only') {
+                    iqBtn.title = "Quick rolls are added to the queue without rolling.";
+                } else if (isInstaQueue === 'Roll & Queue') {
+                    iqBtn.title = "Quick rolls are added to the queue and rolled immediately.";
+                } else {
+                    iqBtn.title = "Quick rolls fire immediately and do not touch your active queue.";
+                }
+            }
+            if (aqBtn) {
+                if (isArsenalQueue === 'Queue Only') {
+                    aqBtn.title = "Clicking an arsenal loads/replaces your active queue without rolling.";
+                } else if (isArsenalQueue === 'Roll & Queue') {
+                    aqBtn.title = "Clicking an arsenal rolls it AND replaces your active queue.";
+                } else {
+                    aqBtn.title = "Clicking an arsenal rolls it WITHOUT changing your active queue.";
+                }
             }
 
             advSub.innerText = (canMod && engine.activeModifier === 'ADV' && engine.modifierLevel > 1) ? `PLUS ${engine.modifierLevel - 1}` : '';
@@ -5338,8 +5346,8 @@
                 volume = 0.5;
                 headerHidden = false;
                 isModdedQuick = false;
-                isInstaQueue = false;
-                isArsenalQueue = false;
+                isInstaQueue = 'Roll Only';
+                isArsenalQueue = 'Roll Only';
                 customDice = [];
                 currentTargetMode = 'sum';
                 engine.setSavedQueues([]);
@@ -5599,9 +5607,13 @@
                             }
                             if (importedSettings.instaQueue !== undefined) {
                                 isInstaQueue = importedSettings.instaQueue;
+                                if (isInstaQueue === true) isInstaQueue = 'Queue Only';
+                                else if (isInstaQueue === false) isInstaQueue = 'Roll Only';
                             }
                             if (importedSettings.arsenalQueue !== undefined) {
                                 isArsenalQueue = importedSettings.arsenalQueue;
+                                if (isArsenalQueue === true) isArsenalQueue = 'Roll & Queue';
+                                else if (isArsenalQueue === false) isArsenalQueue = 'Roll Only';
                             }
                             if (importedSettings.moddedQuick !== undefined) {
                                 isModdedQuick = importedSettings.moddedQuick;
@@ -6705,15 +6717,6 @@
                     <div class="flex-grow min-w-0 pl-2">
                         <div class="flex items-center gap-1.5">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            ${isArsenalQueue ? `
-                                <div class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 text-indigo-400" title="Roll &amp; Queue">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 1 1 2.12 9.36L1 14"/></svg>
-                                </div>
-                            ` : `
-                                <div class="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-sky-500/20 text-sky-400" title="Roll Only">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" class="w-2.5 h-2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
-                                </div>
-                            `}
                         </div>
                         <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
                     </div>
@@ -7063,13 +7066,16 @@
                 const item = engine.savedQueues.find(q => q.id === options.arsenalId);
                 if (item) {
                     activeLoadoutId = options.arsenalId;
-                    if (isArsenalQueue) {
+                    if (isArsenalQueue === 'Roll & Queue' || isArsenalQueue === 'Queue Only') {
                         loadQueue(options.arsenalId);
                         if (options.forcedModifier) {
                             engine.activeModifier = options.forcedModifier;
                             engine.modifierLevel = 1;
                             updateUI();
                         }
+                    }
+                    if (isArsenalQueue === 'Queue Only') {
+                        return;
                     }
                     
                     // Check if there is an active chain config
@@ -7098,9 +7104,12 @@
                     };
                 }
             } else if (options.sides) {
-                if (isInstaQueue) {
+                if (isInstaQueue === 'Queue Only') {
                     changeQueue(options.sides, 1);
-                    return; // Added to queue, exit triggerRoll
+                    return;
+                }
+                if (isInstaQueue === 'Roll & Queue') {
+                    changeQueue(options.sides, 1);
                 }
                 forcedQueue = [{ sides: options.sides, count: options.count || 1 }];
                 isInstant = options.isInstant || false;
@@ -8052,9 +8061,13 @@
                     }
                     if (savedSettings.instaQueue !== undefined) {
                         isInstaQueue = savedSettings.instaQueue;
+                        if (isInstaQueue === true) isInstaQueue = 'Queue Only';
+                        else if (isInstaQueue === false) isInstaQueue = 'Roll Only';
                     }
                     if (savedSettings.arsenalQueue !== undefined) {
                         isArsenalQueue = savedSettings.arsenalQueue;
+                        if (isArsenalQueue === true) isArsenalQueue = 'Roll & Queue';
+                        else if (isArsenalQueue === false) isArsenalQueue = 'Roll Only';
                     }
                     if (savedSettings.moddedQuick !== undefined) {
                         isModdedQuick = savedSettings.moddedQuick;
@@ -8078,7 +8091,7 @@
             if (!savedSettingsStr || !JSON.parse(savedSettingsStr).hasOwnProperty('instaQueue')) {
                 const savedInstaQueue = localStorage.getItem('instaQueueState');
                 if (savedInstaQueue !== null) {
-                    isInstaQueue = savedInstaQueue === 'true';
+                    isInstaQueue = savedInstaQueue === 'true' ? 'Queue Only' : 'Roll Only';
                 }
             }
 
