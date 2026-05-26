@@ -7,7 +7,7 @@
 
 ---
 
-## 💎 The Experience
+##  The Experience
 Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a high-contrast, glowing interface designed for dark-mode gaming environments. It features:
 - **Glassmorphism UI**: Frosted glass panels and glowing accents.
 - **Micro-Animations**: Weight-based bouncy transitions and haptic-style visual feedback.
