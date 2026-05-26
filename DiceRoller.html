@@ -960,53 +960,33 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            background: rgba(2, 6, 23, 0.8);
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            border-radius: 0.85rem;
-            padding: 0.5rem 0.625rem;
-            margin-top: 0.625rem;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 212, 255, 0.25);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: 0.75rem;
             transition: all 0.3s ease;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
         }
 
-        /* Complex editor grid layout overrides */
-        #inline-node-editor[data-mode="eval"] .ine-panel {
+        /* Complex/cohesive editor grid layout overrides */
+        #inline-node-editor[data-mode="eval"] .ine-panel,
+        #inline-node-editor[data-mode="reroll"] .ine-panel,
+        #inline-node-editor[data-mode="number"] .ine-panel,
+        #inline-node-editor[data-mode="div"] .ine-panel {
             display: grid;
             grid-template-columns: auto 1fr auto;
             align-items: center;
-            padding: 0.85rem 1rem;
-            gap: 0.85rem;
-        }
-
-        #inline-node-editor[data-mode="reroll"] .ine-panel {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: center;
-            padding: 0.85rem 1rem;
-            gap: 0.85rem;
-        }
-
-        #inline-node-editor[data-mode="number"] .ine-panel {
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            align-items: center;
-            padding: 0.85rem 1rem;
-            gap: 0.85rem;
+            padding: 1rem;
+            gap: 1rem;
         }
 
         #inline-node-editor[data-mode="eval"] .ine-label,
-        #inline-node-editor[data-mode="reroll"] .ine-label {
-            grid-column: 1;
-            grid-row: 1;
-            border-right: none;
-            border-bottom: none;
-            padding-right: 0;
-            padding-bottom: 0;
-            width: auto;
-            text-align: left;
-            align-self: center;
-        }
-
-        #inline-node-editor[data-mode="number"] .ine-label {
+        #inline-node-editor[data-mode="reroll"] .ine-label,
+        #inline-node-editor[data-mode="number"] .ine-label,
+        #inline-node-editor[data-mode="div"] .ine-label {
             grid-column: 1;
             grid-row: 1;
             border-right: none;
@@ -1035,22 +1015,18 @@
             display: flex !important;
         }
 
-        #inline-node-editor[data-mode="eval"] #ine-eval-content {
+        #inline-node-editor[data-mode="eval"] #ine-eval-content,
+        #inline-node-editor[data-mode="reroll"] #ine-reroll-content,
+        #inline-node-editor[data-mode="number"] #ine-number-content,
+        #inline-node-editor[data-mode="div"] #ine-div-content {
             grid-column: 1 / span 3;
             grid-row: 2;
         }
 
-        #inline-node-editor[data-mode="reroll"] #ine-reroll-content {
-            grid-column: 1 / span 2;
-            grid-row: 2;
-        }
-
-        #inline-node-editor[data-mode="number"] #ine-number-content {
-            grid-column: 1 / span 3;
-            grid-row: 2;
-        }
-
-        #inline-node-editor[data-mode="eval"] .ine-actions {
+        #inline-node-editor[data-mode="eval"] .ine-actions,
+        #inline-node-editor[data-mode="reroll"] .ine-actions,
+        #inline-node-editor[data-mode="number"] .ine-actions,
+        #inline-node-editor[data-mode="div"] .ine-actions {
             grid-column: 3;
             grid-row: 1;
             border-left: none;
@@ -1061,50 +1037,16 @@
             justify-content: flex-end;
             gap: 0.4rem;
             width: auto;
-        }
-
-        #inline-node-editor[data-mode="reroll"] .ine-actions {
-            grid-column: 2;
-            grid-row: 1;
-            border-left: none;
-            border-top: none;
-            padding-left: 0;
-            padding-top: 0;
-            flex-direction: row;
-            justify-content: flex-end;
-            gap: 0.4rem;
-            width: auto;
-        }
-
-        #inline-node-editor[data-mode="number"] .ine-actions {
-            grid-column: 3;
-            grid-row: 1;
-            border-left: none;
-            border-top: none;
-            padding-left: 0;
-            padding-top: 0;
-            flex-direction: row;
-            justify-content: flex-end;
-            gap: 0.4rem;
-            width: auto;
-        }
-
-        #inline-node-editor[data-mode="eval"] .ine-action-btn,
-        #inline-node-editor[data-mode="reroll"] .ine-action-btn,
-        #inline-node-editor[data-mode="number"] .ine-action-btn {
-            width: 2rem;
-            height: 2rem;
         }
 
         .ine-label {
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.12em;
             color: #00d4ff;
+            text-shadow: 0 0 8px rgba(0, 212, 255, 0.35);
             white-space: nowrap;
-            padding-right: 0.5rem;
-            border-right: 1px solid rgba(0, 212, 255, 0.15);
         }
 
         .ine-stepper {
@@ -1112,9 +1054,10 @@
             display: flex;
             align-items: center;
             background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 0.65rem;
             overflow: hidden;
+            height: 2.5rem;
         }
         .ine-stepper-btn {
             width: 2.5rem;
@@ -1129,9 +1072,9 @@
             border: none;
             cursor: pointer;
             flex-shrink: 0;
-            transition: color 0.15s ease;
+            transition: all 0.15s ease;
         }
-        .ine-stepper-btn:hover { color: #00d4ff; }
+        .ine-stepper-btn:hover { color: #00d4ff; background: rgba(0, 212, 255, 0.05); }
         .ine-stepper-val {
             flex: 1;
             text-align: center;
@@ -1148,41 +1091,39 @@
         .ine-stepper-val::-webkit-inner-spin-button { -webkit-appearance: none; }
         .ine-stepper-val { -moz-appearance: textfield; }
 
-        /* Compact Stepper override */
+        /* Compact Stepper override - unified to 2.5rem height */
         .ine-stepper.compact {
-            height: 2rem;
-            border-radius: 0.5rem;
+            height: 2.5rem;
+            border-radius: 0.65rem;
         }
         .ine-stepper.compact .ine-stepper-btn {
-            width: 2rem;
-            height: 2rem;
-            font-size: 0.95rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1.1rem;
         }
         .ine-stepper.compact .ine-stepper-val {
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
-        /* 3rem number node editor stepper & select height matched to Roll button */
+        /* Number node editor stepper unified to 2.5rem */
         .number-editor-stepper {
-            height: 3rem;
-            border-radius: 0.75rem;
+            height: 2.5rem;
+            border-radius: 0.65rem;
             width: 100%;
         }
         .number-editor-stepper .ine-stepper-btn {
-            width: 3rem;
-            height: 3rem;
-            font-size: 1.25rem;
-        }
-        .number-editor-stepper .ine-stepper-val {
+            width: 2.5rem;
+            height: 2.5rem;
             font-size: 1.1rem;
         }
-
-
+        .number-editor-stepper .ine-stepper-val {
+            font-size: 1rem;
+        }
 
         .ine-round-opts {
             flex: 1;
             display: flex;
-            gap: 0.35rem;
+            gap: 0.5rem;
         }
         .ine-round-btn {
             flex: 1;
@@ -1193,19 +1134,20 @@
             font-size: 9px;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.07em;
-            border-radius: 0.5rem;
-            border: 1px solid rgba(255,255,255,0.07);
+            letter-spacing: 0.08em;
+            border-radius: 0.65rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(15, 23, 42, 0.6);
             color: #64748b;
             cursor: pointer;
             transition: all 0.15s ease;
         }
-        .ine-round-btn:hover { color: #00d4ff; border-color: rgba(0,212,255,0.25); }
+        .ine-round-btn:hover { color: #00d4ff; border-color: rgba(0, 212, 255, 0.25); background: rgba(0, 212, 255, 0.03); }
         .ine-round-btn.active {
-            background: rgba(0,212,255,0.12);
-            border-color: rgba(0,212,255,0.4);
+            background: rgba(0, 212, 255, 0.12);
+            border-color: rgba(0, 212, 255, 0.4);
             color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
         }
 
         .ine-die-grid {
@@ -1215,13 +1157,13 @@
             gap: 0.3rem;
         }
         .ine-die-btn {
-            height: 2rem;
+            height: 2.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 9px;
             font-weight: 900;
-            border-radius: 0.45rem;
+            border-radius: 0.5rem;
             border: 1px solid rgba(255,255,255,0.07);
             background: rgba(15, 23, 42, 0.6);
             color: #64748b;
@@ -1238,35 +1180,35 @@
 
         .ine-actions {
             display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-            padding-left: 0.5rem;
-            border-left: 1px solid rgba(0, 212, 255, 0.1);
+            flex-direction: row;
+            gap: 0.4rem;
             flex-shrink: 0;
         }
         .ine-action-btn {
-            width: 2.25rem;
-            height: 2.25rem;
+            width: 2.5rem;
+            height: 2.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 0.5rem;
-            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 0.65rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(15, 23, 42, 0.6);
             color: #64748b;
             cursor: pointer;
             transition: all 0.15s ease;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         .ine-action-btn.delete:hover {
             background: rgba(244,63,94,0.15);
             border-color: rgba(244,63,94,0.4);
             color: #f43f5e;
+            box-shadow: 0 0 10px rgba(244,63,94,0.15);
         }
         .ine-action-btn.confirm:hover {
             background: rgba(0,212,255,0.15);
             border-color: rgba(0,212,255,0.4);
             color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
         }
 
         /* Subpanel Display Rules */
@@ -1562,13 +1504,13 @@
                             <span id="ine-label" class="ine-label">NODE EDITOR</span>
                             
                             <!-- NUM/VAR toggle placed in header row (only shown when mode is number) -->
-                            <div id="ine-number-toggle-container" class="hidden bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.25rem] items-center">
+                            <div id="ine-number-toggle-container" class="hidden bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
                                 <button id="ine-num-toggle-num" onclick="ineSetNumVarMode('NUM')" class="px-4 h-full text-[10px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
                                 <button id="ine-num-toggle-var" onclick="ineSetNumVarMode('VAR')" class="px-4 h-full text-[10px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
                             </div>
 
                             <!-- Add Condition header container (only shown when mode is eval) -->
-                            <div id="ine-eval-header-btn-container" class="hidden bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.25rem] items-center">
+                            <div id="ine-eval-header-btn-container" class="hidden bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
                                 <button id="ine-eval-add-btn" onclick="ineAddCriteria()" class="h-full px-3 text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border-none hover:bg-sky-500/20 transition-all">＋ Add Condition</button>
                             </div>
 
@@ -1593,7 +1535,7 @@
                                     </div>
                                 </div>
                                 <div id="ine-var-mode-container" class="hidden flex items-center justify-center gap-3 w-full max-w-[18rem]">
-                                    <select id="ine-number-var-select" class="bg-[#020617] border border-white/10 rounded-xl px-3 h-[3rem] text-sm text-sky-400 font-bold outline-none flex-1" onchange="ineOnVarSelectChange()">
+                                    <select id="ine-number-var-select" class="bg-[#020617] border border-white/10 rounded-xl px-3 h-[2.5rem] text-sm text-sky-400 font-bold outline-none flex-1" onchange="ineOnVarSelectChange()">
                                     </select>
                                     <div id="ine-var-val-container" class="hidden flex items-center gap-2 shrink-0">
                                         <div class="ine-stepper number-editor-stepper" style="max-width: 7.5rem">
@@ -1618,19 +1560,19 @@
                             <div id="ine-reroll-content" class="hidden flex-col w-full gap-3">
                                 <div class="flex items-center gap-2">
                                     <!-- Op Select -->
-                                    <select id="ine-reroll-op" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2rem] text-xs text-sky-400 font-bold outline-none" onchange="ineUpdateReroll()">
+                                    <select id="ine-reroll-op" class="bg-[#020617] border border-white/10 rounded-xl px-2.5 h-[2.5rem] text-xs text-sky-400 font-bold outline-none" onchange="ineUpdateReroll()">
                                         <option value="">Off</option>
                                         <option value=">">&gt;</option>
                                         <option value=">=">&ge;</option>
                                         <option value="=">=</option>
-                                        <option value="<=">&le;</option>
-                                        <option value="<">&lt;</option>
+                                        <option value="&lt;=">&le;</option>
+                                        <option value="&lt;">&lt;</option>
                                     </select>
 
                                     <!-- NUM / VAR toggle -->
-                                    <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0 h-[2rem] items-center">
-                                        <button id="ine-reroll-toggle-num" onclick="ineSetRerollNumVarMode('NUM')" class="px-2.5 h-full text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
-                                        <button id="ine-reroll-toggle-var" onclick="ineSetRerollNumVarMode('VAR')" class="px-2.5 h-full text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
+                                    <div class="flex bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
+                                        <button id="ine-reroll-toggle-num" onclick="ineSetRerollNumVarMode('NUM')" class="px-3 h-full text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
+                                        <button id="ine-reroll-toggle-var" onclick="ineSetRerollNumVarMode('VAR')" class="px-3 h-full text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
                                     </div>
 
                                     <!-- Value / Stepper or Variable Dropdown container -->
@@ -1644,7 +1586,7 @@
 
                                         <!-- Variable Dropdown -->
                                         <div id="ine-reroll-var-container" class="hidden flex items-center gap-2 w-full">
-                                            <select id="ine-reroll-var-select" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2rem] text-xs text-sky-400 font-bold outline-none flex-1" onchange="ineOnRerollVarSelectChange()">
+                                            <select id="ine-reroll-var-select" class="bg-[#020617] border border-white/10 rounded-xl px-2.5 h-[2.5rem] text-xs text-sky-400 font-bold outline-none flex-1" onchange="ineOnRerollVarSelectChange()">
                                             </select>
                                             <!-- standard input selector when Target or unvalued var is selected -->
                                             <div id="ine-reroll-var-val-container" class="hidden flex items-center gap-1 shrink-0">
@@ -1660,14 +1602,20 @@
 
                                 <!-- Checkboxes Row -->
                                 <div class="flex flex-wrap items-center gap-4 border-t border-white/5 pt-2 mt-1">
-                                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                                        <input id="ine-reroll-keep" type="checkbox" onchange="ineUpdateReroll()" class="w-3.5 h-3.5 rounded accent-sky-400 bg-[#020617] border-white/10">
+                                    <div class="flex items-center gap-2 select-none">
+                                        <label class="toggle-switch" style="transform: scale(0.85); transform-origin: center;">
+                                            <input id="ine-reroll-keep" type="checkbox" onchange="ineUpdateReroll()">
+                                            <span class="toggle-slider"></span>
+                                        </label>
                                         <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Keep roll (Explode)</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                                        <input id="ine-reroll-apply-all" type="checkbox" onchange="ineUpdateReroll()" class="w-3.5 h-3.5 rounded accent-sky-400 bg-[#020617] border-white/10" checked>
+                                    </div>
+                                    <div class="flex items-center gap-2 select-none">
+                                        <label class="toggle-switch" style="transform: scale(0.85); transform-origin: center;">
+                                            <input id="ine-reroll-apply-all" type="checkbox" onchange="ineUpdateReroll()" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
                                         <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Apply to all</span>
-                                    </label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -3333,7 +3281,7 @@
                 if (idx > 0) {
                     html += `
                         <div class="flex justify-center my-1">
-                            <button onclick="ineToggleEvalGate(${idx})" class="px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-violet-400 bg-[#020617] border border-violet-500/20 hover:border-violet-500/40 rounded transition-all">
+                            <button onclick="ineToggleEvalGate(${idx})" class="px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-violet-400 bg-[#020617] border border-violet-500/20 hover:border-violet-500/40 rounded-lg transition-all">
                                 ${c.gate || 'AND'}
                             </button>
                         </div>
@@ -3345,21 +3293,21 @@
                     let valSection = '';
                     if (c.mode === 'NUM') {
                         valSection = `
-                            <div class="ine-stepper flex-1" style="max-width: 9.5rem; height: 2.2rem;">
-                                <button class="ine-stepper-btn" style="width: 2.2rem; height: 2.2rem;" onclick="ineAdjustEvalCriteria(${idx}, -1)">−</button>
-                                <input type="number" class="ine-stepper-val" style="font-size: 0.9rem;" value="${c.numVal || 0}" oninput="ineUpdateEvalCriteria(${idx}, 'numVal', parseInt(this.value) || 0)">
-                                <button class="ine-stepper-btn" style="width: 2.2rem; height: 2.2rem;" onclick="ineAdjustEvalCriteria(${idx}, 1)">+</button>
+                            <div class="ine-stepper flex-1" style="max-width: 9.5rem; height: 2.5rem;">
+                                <button class="ine-stepper-btn" style="width: 2.5rem; height: 2.5rem;" onclick="ineAdjustEvalCriteria(${idx}, -1)">−</button>
+                                <input type="number" class="ine-stepper-val" style="font-size: 1rem;" value="${c.numVal || 0}" oninput="ineUpdateEvalCriteria(${idx}, 'numVal', parseInt(this.value) || 0)">
+                                <button class="ine-stepper-btn" style="width: 2.5rem; height: 2.5rem;" onclick="ineAdjustEvalCriteria(${idx}, 1)">+</button>
                             </div>
                         `;
                     } else {
                         let optionsHtml = '<option value="target">Target</option>';
                         const char = characters.find(c => c.id === activeCharacterId);
                         if (char && char.variables) {
-                            Object.entries(char.variables).forEach(([name, val]) => {
-                                if (name === 'target') return;
-                                const sign = val >= 0 ? '+' : '';
-                                optionsHtml += `<option value="${name}" ${c.varVal === name ? 'selected' : ''}>${name}(${sign}${val})</option>`;
-                            });
+                             Object.entries(char.variables).forEach(([name, val]) => {
+                                 if (name === 'target') return;
+                                 const sign = val >= 0 ? '+' : '';
+                                 optionsHtml += `<option value="${name}" ${c.varVal === name ? 'selected' : ''}>${name}(${sign}${val})</option>`;
+                             });
                         }
                         
                         const varVal = (char && char.variables) ? char.variables[c.varVal || 'target'] : undefined;
@@ -3367,17 +3315,17 @@
                         if (c.varVal === 'target' || varVal === undefined || varVal === null || varVal === "") {
                             const customVarVal = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
                             valInputHtml = `
-                                <div class="ine-stepper ml-1" style="max-width: 6.5rem; height: 2.2rem;">
-                                    <button class="ine-stepper-btn" style="width: 2.2rem; height: 2.2rem;" onclick="ineAdjustEvalCriteriaVarVal(${idx}, -1)">−</button>
-                                    <input type="number" class="ine-stepper-val" style="font-size: 0.9rem;" value="${customVarVal}" oninput="ineUpdateEvalCriteriaVarVal(${idx}, parseInt(this.value) || 0)">
-                                    <button class="ine-stepper-btn" style="width: 2.2rem; height: 2.2rem;" onclick="ineAdjustEvalCriteriaVarVal(${idx}, 1)">+</button>
+                                <div class="ine-stepper ml-1" style="max-width: 6.5rem; height: 2.5rem;">
+                                    <button class="ine-stepper-btn" style="width: 2.5rem; height: 2.5rem;" onclick="ineAdjustEvalCriteriaVarVal(${idx}, -1)">−</button>
+                                    <input type="number" class="ine-stepper-val" style="font-size: 1rem;" value="${customVarVal}" oninput="ineUpdateEvalCriteriaVarVal(${idx}, parseInt(this.value) || 0)">
+                                    <button class="ine-stepper-btn" style="width: 2.5rem; height: 2.5rem;" onclick="ineAdjustEvalCriteriaVarVal(${idx}, 1)">+</button>
                                 </div>
                             `;
                         }
                         
                         valSection = `
                             <div class="flex items-center flex-1">
-                                <select onchange="ineUpdateEvalCriteria(${idx}, 'varVal', this.value)" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.2rem] text-xs text-sky-400 font-bold outline-none flex-1">
+                                <select onchange="ineUpdateEvalCriteria(${idx}, 'varVal', this.value)" class="bg-[#020617] border border-white/10 rounded-xl px-2.5 h-[2.5rem] text-xs text-sky-400 font-bold outline-none flex-1">
                                     ${optionsHtml}
                                 </select>
                                 ${valInputHtml}
@@ -3401,7 +3349,7 @@
                             </div>
                             
                             ${ineEvalCriteria.length > 1 ? `
-                                <button onclick="ineRemoveCriteria(${idx})" class="text-rose-500/60 hover:text-rose-400 text-xs px-2 h-[2.2rem] flex items-center justify-center border border-rose-500/20 hover:bg-rose-500/10 rounded-lg transition-all ml-1">✕</button>
+                                <button onclick="ineRemoveCriteria(${idx})" class="text-rose-500/60 hover:text-rose-400 text-xs px-2 h-[2.5rem] flex items-center justify-center border border-rose-500/20 hover:bg-rose-500/10 rounded-xl transition-all ml-1">✕</button>
                             ` : ''}
                         </div>
                     `;
@@ -3418,7 +3366,7 @@
                                 <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider">View Only</span>
                             </div>
                             ${ineEvalCriteria.length > 1 ? `
-                                <button onclick="ineRemoveCriteria(${idx})" class="text-rose-500/60 hover:text-rose-400 text-xs px-2 h-[2.2rem] flex items-center justify-center border border-rose-500/20 hover:bg-rose-500/10 rounded-lg transition-all ml-1">✕</button>
+                                <button onclick="ineRemoveCriteria(${idx})" class="text-rose-500/60 hover:text-rose-400 text-xs px-2 h-[2.5rem] flex items-center justify-center border border-rose-500/20 hover:bg-rose-500/10 rounded-xl transition-all ml-1">✕</button>
                             ` : ''}
                         </div>
                     `;
@@ -3428,7 +3376,7 @@
                 let numVarToggleHtml = '';
                 if (c.type !== 'list') {
                     opSelectHtml = `
-                        <select onchange="ineUpdateEvalCriteria(${idx}, 'op', this.value)" class="bg-[#020617] border border-white/10 rounded-lg px-2 h-[2.2rem] text-xs text-sky-400 font-bold outline-none" style="width: 3.5rem">
+                        <select onchange="ineUpdateEvalCriteria(${idx}, 'op', this.value)" class="bg-[#020617] border border-white/10 rounded-xl px-2.5 h-[2.5rem] text-xs text-sky-400 font-bold outline-none" style="width: 3.5rem">
                             <option value=">=" ${c.op === '>=' ? 'selected' : ''}>&ge;</option>
                             <option value=">" ${c.op === '>' ? 'selected' : ''}>&gt;</option>
                             <option value="=" ${c.op === '=' ? 'selected' : ''}>=</option>
@@ -3438,7 +3386,7 @@
                     `;
                     
                     numVarToggleHtml = `
-                        <div class="flex bg-[#020617] rounded-lg border border-white/10 overflow-hidden shrink-0 h-[2.2rem] items-center">
+                        <div class="flex bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
                             <button onclick="ineSetEvalCriteriaMode(${idx}, 'NUM')" class="px-3 h-full text-[9px] font-black uppercase ${c.mode === 'NUM' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">NUM</button>
                             <button onclick="ineSetEvalCriteriaMode(${idx}, 'VAR')" class="px-3 h-full text-[9px] font-black uppercase border-l border-white/10 ${c.mode === 'VAR' ? 'bg-sky-500/20 text-sky-400' : 'text-slate-600'} transition-all">VAR</button>
                         </div>
@@ -3449,7 +3397,7 @@
                     <div class="bg-[#020617]/50 rounded-xl border border-white/10 p-3 space-y-2.5">
                         <!-- Row 1: Type dropdown, Operator, and NUM/VAR toggle -->
                         <div class="flex items-center gap-2">
-                            <select onchange="ineUpdateEvalCriteriaType(${idx}, this.value)" class="bg-[#020617] border border-white/15 rounded-lg px-2.5 h-[2.2rem] text-xs text-sky-400 font-extrabold outline-none shrink-0" style="width: 6.5rem">
+                            <select onchange="ineUpdateEvalCriteriaType(${idx}, this.value)" class="bg-[#020617] border border-white/15 rounded-xl px-3 h-[2.5rem] text-xs text-sky-400 font-extrabold outline-none shrink-0" style="width: 6.5rem">
                                 <option value="sum" ${c.type === 'sum' ? 'selected' : ''}>SUM</option>
                                 <option value="count" ${c.type === 'count' ? 'selected' : ''}>COUNT</option>
                                 <option value="sets" ${c.type === 'sets' ? 'selected' : ''}>SETS</option>
