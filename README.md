@@ -1,4 +1,5 @@
 # ⚡ STATIC DICE
+[[AI-generated, obviously. Once the code is stable, I'll look into make proper readme.]]
 ### High-Fidelity TTRPG Intelligence • Raw Electrical Entropy
 
 **Static Dice** is a premium, web-based TTRPG dice roller designed for speed, precision, and tactile satisfaction. It replaces standard `Math.random()` calls with cryptographically secure pseudo-random numbers (CSPRNG), ensuring your critical hits (and failures) are driven by high-quality entropy.
