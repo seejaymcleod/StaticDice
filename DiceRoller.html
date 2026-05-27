@@ -495,14 +495,15 @@
             left: 50%;
             transform: translateX(-50%) translateY(0);
             width: calc(100% - 2rem);
-            max-width: 26rem; /* 416px: perfectly matches max-w-md minus px-4 padding */
+            max-width: 26rem;
+            /* 416px: perfectly matches max-w-md minus px-4 padding */
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(0, 212, 255, 0.1);
             border-radius: 1.5rem;
             padding: 0.25rem 0.5rem 1rem 0.5rem;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.05);
             z-index: 100;
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: flex;
@@ -648,6 +649,49 @@
 
         input:checked+.toggle-slider:before {
             transform: translateX(16px);
+        }
+
+        /* Addon Widget Radio Buttons */
+        .addon-radio-input {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            background: #020617;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .addon-radio-input:checked {
+            border-color: #00d4ff;
+            background: #020617;
+        }
+
+        .addon-radio-input:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00d4ff;
+            box-shadow: 0 0 6px rgba(0, 212, 255, 0.5);
+        }
+
+        .addon-radio-input:hover {
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+
+        .addon-radio-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15);
         }
 
         .volume-slider-overlay {
@@ -1374,19 +1418,21 @@
 
 <body class="flex flex-col items-center">
     <!-- Binder Backdrop Overlay -->
-    <div id="binder-overlay" onclick="toggleBinderDrawer()" 
-        class="fixed inset-0 bg-[#020617]/80 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="binder-overlay" onclick="toggleBinderDrawer()"
+        class="fixed inset-0 bg-[#020617]/80 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300">
+    </div>
 
     <!-- Binder Slide-Out Drawer -->
-    <div id="binder-drawer" 
+    <div id="binder-drawer"
         class="fixed top-0 left-0 h-full w-[280px] bg-[#090d16] border-r border-white/10 z-[100] transform -translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
-        
+
         <!-- Drawer Header -->
         <div class="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
             <h2 class="text-sm font-black text-[#00d4ff] uppercase tracking-widest flex items-center gap-2">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-sky-400">
-                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
-                    <path d="M6 6h10M6 10h10"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" class="w-4 h-4 text-sky-400">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                    <path d="M6 6h10M6 10h10" />
                 </svg>
                 <span>Dice Binder</span>
             </h2>
@@ -1403,22 +1449,30 @@
             <div class="space-y-2">
                 <div class="flex items-center justify-between">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Campaigns</label>
-                    <button onclick="createNewCampaign(event)" class="text-sky-400 hover:text-sky-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <button onclick="createNewCampaign(event)"
+                        class="text-sky-400 hover:text-sky-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                         + New
                     </button>
                 </div>
                 <div class="flex items-center gap-1.5">
-                    <select id="campaign-select" onchange="selectCampaign(this.value)" class="char-select w-full flex-grow">
+                    <select id="campaign-select" onchange="selectCampaign(this.value)"
+                        class="char-select w-full flex-grow">
                         <!-- Injected via JS -->
                     </select>
-                    <button onclick="renameActiveCampaign(event)" title="Rename Campaign" class="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:text-sky-400 hover:border-sky-500/30 rounded-xl transition-all active:scale-95 shrink-0">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                    <button onclick="renameActiveCampaign(event)" title="Rename Campaign"
+                        class="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:text-sky-400 hover:border-sky-500/30 rounded-xl transition-all active:scale-95 shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                         </svg>
                     </button>
-                    <button onclick="deleteActiveCampaign(event)" title="Delete Campaign" class="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:text-rose-500 hover:border-rose-500/30 rounded-xl transition-all active:scale-95 shrink-0">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    <button onclick="deleteActiveCampaign(event)" title="Delete Campaign"
+                        class="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:text-rose-500 hover:border-rose-500/30 rounded-xl transition-all active:scale-95 shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                         </svg>
                     </button>
                 </div>
@@ -1427,7 +1481,8 @@
             <!-- Instanced Sheets List -->
             <div class="space-y-2">
                 <div class="flex items-center justify-between">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Campaign Folders</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Campaign
+                        Folders</label>
                 </div>
                 <div id="binder-sheets-list" class="space-y-2">
                     <!-- Instanced sheets listed here -->
@@ -1436,19 +1491,29 @@
 
             <!-- Blueprints (Templates) Library -->
             <div class="space-y-2 pt-2 border-t border-white/5">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Templates Library</label>
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Templates
+                    Library</label>
                 <div class="grid grid-cols-1 gap-2">
-                    <button onclick="spawnTemplate('fighter')" class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
+                    <button onclick="spawnTemplate('fighter')"
+                        class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
                         <span>⚔️ Spawn Fighter</span>
-                        <span class="text-[9px] font-black text-sky-400 group-hover:translate-x-0.5 transition-transform">SPAWN &rarr;</span>
+                        <span
+                            class="text-[9px] font-black text-sky-400 group-hover:translate-x-0.5 transition-transform">SPAWN
+                            &rarr;</span>
                     </button>
-                    <button onclick="spawnTemplate('mage')" class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:bg-purple-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
+                    <button onclick="spawnTemplate('mage')"
+                        class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:bg-purple-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
                         <span>🔮 Spawn Mage</span>
-                        <span class="text-[9px] font-black text-purple-400 group-hover:translate-x-0.5 transition-transform">SPAWN &rarr;</span>
+                        <span
+                            class="text-[9px] font-black text-purple-400 group-hover:translate-x-0.5 transition-transform">SPAWN
+                            &rarr;</span>
                     </button>
-                    <button onclick="spawnTemplate('goblin')" class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
+                    <button onclick="spawnTemplate('goblin')"
+                        class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
                         <span>👹 Spawn Goblin</span>
-                        <span class="text-[9px] font-black text-emerald-400 group-hover:translate-x-0.5 transition-transform">SPAWN &rarr;</span>
+                        <span
+                            class="text-[9px] font-black text-emerald-400 group-hover:translate-x-0.5 transition-transform">SPAWN
+                            &rarr;</span>
                     </button>
                 </div>
             </div>
@@ -1456,19 +1521,24 @@
 
         <!-- Drawer Footer -->
         <div class="p-4 border-t border-white/10 grid grid-cols-2 gap-2 shrink-0">
-            <button onclick="toggleBinderDrawer(); document.getElementById('import-input').click();" class="py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbd5e1] hover:text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <button onclick="toggleBinderDrawer(); document.getElementById('import-input').click();"
+                class="py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbd5e1] hover:text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                </svg>
                 <span>Import</span>
             </button>
-            <button onclick="exportSettings()" class="py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbd5e1] hover:text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 14l-5 5-5-5M12 19V3"/></svg>
+            <button onclick="exportSettings()"
+                class="py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbd5e1] hover:text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 14l-5 5-5-5M12 19V3" />
+                </svg>
                 <span>Export</span>
             </button>
         </div>
     </div>
 
-    <div id="main-container"
-        class="w-full max-w-md px-4 pb-4 pt-0 space-y-3 flex flex-col mode-dice relative">
+    <div id="main-container" class="w-full max-w-md px-4 pb-4 pt-0 space-y-3 flex flex-col mode-dice relative">
 
         <!-- HEADER -->
         <header
@@ -1476,10 +1546,11 @@
             <div class="flex items-center gap-3">
                 <button onclick="toggleBinderDrawer()" title="Open Dice Binder"
                     class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95 transition-all">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
-                        <line x1="4" x2="20" y1="12" y2="12"/>
-                        <line x1="4" x2="20" y1="6" y2="6"/>
-                        <line x1="4" x2="20" y1="18" y2="18"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round" class="w-5 h-5">
+                        <line x1="4" x2="20" y1="12" y2="12" />
+                        <line x1="4" x2="20" y1="6" y2="6" />
+                        <line x1="4" x2="20" y1="18" y2="18" />
                     </svg>
                 </button>
                 <h1 class="text-xl font-black text-[#e2e8f0] tracking-tighter leading-none">STATIC<span
@@ -1506,10 +1577,11 @@
                 <div class="absolute top-2 left-2 flex items-center gap-1 z-20">
                     <button onclick="toggleBinderDrawer()" title="Open Dice Binder"
                         class="text-[#94a3b8]/40 h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:text-[#00d4ff]/70 active:scale-95 bg-transparent border-none">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4.5 h-4.5">
-                            <line x1="4" x2="20" y1="12" y2="12"/>
-                            <line x1="4" x2="20" y1="6" y2="6"/>
-                            <line x1="4" x2="20" y1="18" y2="18"/>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round" class="w-4.5 h-4.5">
+                            <line x1="4" x2="20" y1="12" y2="12" />
+                            <line x1="4" x2="20" y1="6" y2="6" />
+                            <line x1="4" x2="20" y1="18" y2="18" />
                         </svg>
                     </button>
                     <button id="toggle-header-btn" onclick="toggleHeader()"
@@ -1780,186 +1852,191 @@
                 </div>
             </div>
 
-        <!-- INLINE NODE EDITOR (Inside Drawer) -->
-        <div id="inline-node-editor" role="region" aria-label="Node Editor">
-            <div class="ine-inner">
-                <div class="ine-panel">
-                    <span id="ine-label" class="ine-label">NODE EDITOR</span>
+            <!-- INLINE NODE EDITOR (Inside Drawer) -->
+            <div id="inline-node-editor" role="region" aria-label="Node Editor">
+                <div class="ine-inner">
+                    <div class="ine-panel">
+                        <span id="ine-label" class="ine-label">NODE EDITOR</span>
 
-                    <!-- NUM/VAR toggle placed in header row (only shown when mode is number) -->
-                    <div id="ine-number-toggle-container"
-                        class="hidden bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
-                        <button id="ine-num-toggle-num" onclick="ineSetNumVarMode('NUM')"
-                            class="px-4 h-full text-[10px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
-                        <button id="ine-num-toggle-var" onclick="ineSetNumVarMode('VAR')"
-                            class="px-4 h-full text-[10px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
-                    </div>
-
-                    <!-- Add Condition header container (only shown when mode is eval) -->
-                    <div id="ine-eval-header-btn-container"
-                        class="hidden bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
-                        <button id="ine-eval-add-btn" onclick="ineAddCriteria()"
-                            class="h-full px-3 text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border-none hover:bg-sky-500/20 transition-all">＋
-                            Add Condition</button>
-                    </div>
-
-                    <!-- Dice content: count stepper + die picker in one row -->
-                    <div id="ine-dice-content" class="hidden">
-                        <div class="ine-stepper" style="max-width:7.5rem;flex-shrink:0">
-                            <button class="ine-stepper-btn" onclick="ineAdjustDiceCount(-1)">−</button>
-                            <input id="ine-dice-count" type="number" class="ine-stepper-val" value="1" min="1"
-                                oninput="ineUpdateDice()">
-                            <button class="ine-stepper-btn" onclick="ineAdjustDiceCount(1)">+</button>
+                        <!-- NUM/VAR toggle placed in header row (only shown when mode is number) -->
+                        <div id="ine-number-toggle-container"
+                            class="hidden bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
+                            <button id="ine-num-toggle-num" onclick="ineSetNumVarMode('NUM')"
+                                class="px-4 h-full text-[10px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
+                            <button id="ine-num-toggle-var" onclick="ineSetNumVarMode('VAR')"
+                                class="px-4 h-full text-[10px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
                         </div>
-                        <span class="text-[8px] font-black text-slate-600 uppercase">d</span>
-                        <div id="ine-die-grid" class="ine-die-grid"></div>
-                    </div>
 
-                    <!-- Number/modifier content -->
-                    <div id="ine-number-content" class="hidden flex-col items-center justify-center w-full gap-3">
-                        <div id="ine-num-mode-container" class="flex items-center justify-center w-full max-w-[12rem]">
-                            <div class="ine-stepper number-editor-stepper">
-                                <button class="ine-stepper-btn" onclick="ineAdjustNumber(-1)">−</button>
-                                <input id="ine-number-val" type="number" class="ine-stepper-val" value="0"
-                                    oninput="ineUpdateNumber()">
-                                <button class="ine-stepper-btn" onclick="ineAdjustNumber(1)">+</button>
+                        <!-- Add Condition header container (only shown when mode is eval) -->
+                        <div id="ine-eval-header-btn-container"
+                            class="hidden bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
+                            <button id="ine-eval-add-btn" onclick="ineAddCriteria()"
+                                class="h-full px-3 text-[9px] font-black uppercase bg-sky-500/10 text-sky-400 border-none hover:bg-sky-500/20 transition-all">＋
+                                Add Condition</button>
+                        </div>
+
+                        <!-- Dice content: count stepper + die picker in one row -->
+                        <div id="ine-dice-content" class="hidden">
+                            <div class="ine-stepper" style="max-width:7.5rem;flex-shrink:0">
+                                <button class="ine-stepper-btn" onclick="ineAdjustDiceCount(-1)">−</button>
+                                <input id="ine-dice-count" type="number" class="ine-stepper-val" value="1" min="1"
+                                    oninput="ineUpdateDice()">
+                                <button class="ine-stepper-btn" onclick="ineAdjustDiceCount(1)">+</button>
                             </div>
+                            <span class="text-[8px] font-black text-slate-600 uppercase">d</span>
+                            <div id="ine-die-grid" class="ine-die-grid"></div>
                         </div>
-                        <div id="ine-var-mode-container"
-                            class="hidden flex items-center justify-center gap-3 w-full max-w-[18rem]">
-                            <select id="ine-number-var-select"
-                                class="bg-[#020617] border border-white/10 rounded-xl px-3 h-[2.5rem] text-sm text-sky-400 font-bold outline-none flex-1"
-                                onchange="ineOnVarSelectChange()">
-                            </select>
-                            <div id="ine-var-val-container" class="hidden flex items-center gap-2 shrink-0">
-                                <div class="ine-stepper number-editor-stepper" style="max-width: 7.5rem">
-                                    <button class="ine-stepper-btn" onclick="ineAdjustVarVal(-1)">−</button>
-                                    <input id="ine-number-var-val" type="number" class="ine-stepper-val" value="0"
+
+                        <!-- Number/modifier content -->
+                        <div id="ine-number-content" class="hidden flex-col items-center justify-center w-full gap-3">
+                            <div id="ine-num-mode-container"
+                                class="flex items-center justify-center w-full max-w-[12rem]">
+                                <div class="ine-stepper number-editor-stepper">
+                                    <button class="ine-stepper-btn" onclick="ineAdjustNumber(-1)">−</button>
+                                    <input id="ine-number-val" type="number" class="ine-stepper-val" value="0"
                                         oninput="ineUpdateNumber()">
-                                    <button class="ine-stepper-btn" onclick="ineAdjustVarVal(1)">+</button>
+                                    <button class="ine-stepper-btn" onclick="ineAdjustNumber(1)">+</button>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Division rounding content -->
-                    <div id="ine-div-content" class="hidden">
-                        <div class="ine-round-opts">
-                            <button id="ine-round-none" class="ine-round-btn"
-                                onclick="ineSetRound('none')">Don't<br>Round</button>
-                            <button id="ine-round-up" class="ine-round-btn" onclick="ineSetRound('up')">Round<br>Up
-                                ↑</button>
-                            <button id="ine-round-down" class="ine-round-btn"
-                                onclick="ineSetRound('down')">Round<br>Down ↓</button>
-                        </div>
-                    </div>
-
-                    <!-- Reroll content: Redesigned with NUM/VAR, Explode & Apply to All checkboxes -->
-                    <div id="ine-reroll-content" class="hidden flex-col w-full gap-3">
-                        <div class="flex items-center gap-2">
-                            <!-- Op Select -->
-                            <select id="ine-reroll-op"
-                                class="bg-[#020617] border border-white/10 rounded-xl px-2.5 h-[2.5rem] text-xs text-sky-400 font-bold outline-none"
-                                onchange="ineUpdateReroll()">
-                                <option value="">Off</option>
-                                <option value=">">&gt;</option>
-                                <option value=">=">&ge;</option>
-                                <option value="=">=</option>
-                                <option value="&lt;=">&le;</option>
-                                <option value="&lt;">&lt;</option>
-                            </select>
-
-                            <!-- NUM / VAR toggle -->
-                            <div
-                                class="flex bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
-                                <button id="ine-reroll-toggle-num" onclick="ineSetRerollNumVarMode('NUM')"
-                                    class="px-3 h-full text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
-                                <button id="ine-reroll-toggle-var" onclick="ineSetRerollNumVarMode('VAR')"
-                                    class="px-3 h-full text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
-                            </div>
-
-                            <!-- Value / Stepper or Variable Dropdown container -->
-                            <div class="flex-1 flex justify-end">
-                                <!-- Numeric Stepper -->
-                                <div id="ine-reroll-num-container" class="ine-stepper compact"
-                                    style="max-width: 6.5rem">
-                                    <button class="ine-stepper-btn" onclick="ineAdjustReroll(-1)">−</button>
-                                    <input id="ine-reroll-val" type="number" class="ine-stepper-val" value="1" min="0"
-                                        oninput="ineUpdateReroll()">
-                                    <button class="ine-stepper-btn" onclick="ineAdjustReroll(1)">+</button>
-                                </div>
-
-                                <!-- Variable Dropdown -->
-                                <div id="ine-reroll-var-container" class="hidden flex items-center gap-2 w-full">
-                                    <select id="ine-reroll-var-select"
-                                        class="bg-[#020617] border border-white/10 rounded-xl px-2.5 h-[2.5rem] text-xs text-sky-400 font-bold outline-none flex-1"
-                                        onchange="ineOnRerollVarSelectChange()">
-                                    </select>
-                                    <!-- standard input selector when Target or unvalued var is selected -->
-                                    <div id="ine-reroll-var-val-container"
-                                        class="hidden flex items-center gap-1 shrink-0">
-                                        <div class="ine-stepper compact" style="max-width: 6.5rem">
-                                            <button class="ine-stepper-btn"
-                                                onclick="ineAdjustRerollVarVal(-1)">−</button>
-                                            <input id="ine-reroll-var-val" type="number" class="ine-stepper-val"
-                                                value="0" oninput="ineUpdateReroll()">
-                                            <button class="ine-stepper-btn"
-                                                onclick="ineAdjustRerollVarVal(1)">+</button>
-                                        </div>
+                            <div id="ine-var-mode-container"
+                                class="hidden flex items-center justify-center gap-3 w-full max-w-[18rem]">
+                                <select id="ine-number-var-select"
+                                    class="bg-[#020617] border border-white/10 rounded-xl px-3 h-[2.5rem] text-sm text-sky-400 font-bold outline-none flex-1"
+                                    onchange="ineOnVarSelectChange()">
+                                </select>
+                                <div id="ine-var-val-container" class="hidden flex items-center gap-2 shrink-0">
+                                    <div class="ine-stepper number-editor-stepper" style="max-width: 7.5rem">
+                                        <button class="ine-stepper-btn" onclick="ineAdjustVarVal(-1)">−</button>
+                                        <input id="ine-number-var-val" type="number" class="ine-stepper-val" value="0"
+                                            oninput="ineUpdateNumber()">
+                                        <button class="ine-stepper-btn" onclick="ineAdjustVarVal(1)">+</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Checkboxes Row -->
-                        <div class="flex flex-wrap items-center gap-4 border-t border-white/5 pt-1.5 mt-1">
-                            <div class="flex items-center gap-2 select-none">
-                                <label class="toggle-switch" style="transform: scale(0.85); transform-origin: center;">
-                                    <input id="ine-reroll-keep" type="checkbox" onchange="ineUpdateReroll()">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Keep roll
-                                    (Explode)</span>
-                            </div>
-                            <div class="flex items-center gap-2 select-none">
-                                <label class="toggle-switch" style="transform: scale(0.85); transform-origin: center;">
-                                    <input id="ine-reroll-apply-all" type="checkbox" onchange="ineUpdateReroll()"
-                                        checked>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Apply to
-                                    all</span>
+                        <!-- Division rounding content -->
+                        <div id="ine-div-content" class="hidden">
+                            <div class="ine-round-opts">
+                                <button id="ine-round-none" class="ine-round-btn"
+                                    onclick="ineSetRound('none')">Don't<br>Round</button>
+                                <button id="ine-round-up" class="ine-round-btn" onclick="ineSetRound('up')">Round<br>Up
+                                    ↑</button>
+                                <button id="ine-round-down" class="ine-round-btn"
+                                    onclick="ineSetRound('down')">Round<br>Down ↓</button>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Eval content: Evaluation subtitle + multiple criteria rows -->
-                    <div id="ine-eval-content" class="hidden flex-col w-full gap-3">
-                        <!-- Dynamic Criteria Rows -->
-                        <div id="ine-eval-criteria-list"
-                            class="flex flex-col gap-2 overflow-y-auto max-h-[16rem] custom-scroll">
-                            <!-- criteria rows with Gates in between injected here -->
+                        <!-- Reroll content: Redesigned with NUM/VAR, Explode & Apply to All checkboxes -->
+                        <div id="ine-reroll-content" class="hidden flex-col w-full gap-3">
+                            <div class="flex items-center gap-2">
+                                <!-- Op Select -->
+                                <select id="ine-reroll-op"
+                                    class="bg-[#020617] border border-white/10 rounded-xl px-2.5 h-[2.5rem] text-xs text-sky-400 font-bold outline-none"
+                                    onchange="ineUpdateReroll()">
+                                    <option value="">Off</option>
+                                    <option value=">">&gt;</option>
+                                    <option value=">=">&ge;</option>
+                                    <option value="=">=</option>
+                                    <option value="&lt;=">&le;</option>
+                                    <option value="&lt;">&lt;</option>
+                                </select>
+
+                                <!-- NUM / VAR toggle -->
+                                <div
+                                    class="flex bg-[#020617] rounded-xl border border-white/10 overflow-hidden shrink-0 h-[2.5rem] items-center">
+                                    <button id="ine-reroll-toggle-num" onclick="ineSetRerollNumVarMode('NUM')"
+                                        class="px-3 h-full text-[9px] font-black uppercase bg-sky-500/20 text-sky-400 transition-all">NUM</button>
+                                    <button id="ine-reroll-toggle-var" onclick="ineSetRerollNumVarMode('VAR')"
+                                        class="px-3 h-full text-[9px] font-black uppercase border-l border-white/10 text-slate-500 hover:text-sky-400 transition-all">VAR</button>
+                                </div>
+
+                                <!-- Value / Stepper or Variable Dropdown container -->
+                                <div class="flex-1 flex justify-end">
+                                    <!-- Numeric Stepper -->
+                                    <div id="ine-reroll-num-container" class="ine-stepper compact"
+                                        style="max-width: 6.5rem">
+                                        <button class="ine-stepper-btn" onclick="ineAdjustReroll(-1)">−</button>
+                                        <input id="ine-reroll-val" type="number" class="ine-stepper-val" value="1"
+                                            min="0" oninput="ineUpdateReroll()">
+                                        <button class="ine-stepper-btn" onclick="ineAdjustReroll(1)">+</button>
+                                    </div>
+
+                                    <!-- Variable Dropdown -->
+                                    <div id="ine-reroll-var-container" class="hidden flex items-center gap-2 w-full">
+                                        <select id="ine-reroll-var-select"
+                                            class="bg-[#020617] border border-white/10 rounded-xl px-2.5 h-[2.5rem] text-xs text-sky-400 font-bold outline-none flex-1"
+                                            onchange="ineOnRerollVarSelectChange()">
+                                        </select>
+                                        <!-- standard input selector when Target or unvalued var is selected -->
+                                        <div id="ine-reroll-var-val-container"
+                                            class="hidden flex items-center gap-1 shrink-0">
+                                            <div class="ine-stepper compact" style="max-width: 6.5rem">
+                                                <button class="ine-stepper-btn"
+                                                    onclick="ineAdjustRerollVarVal(-1)">−</button>
+                                                <input id="ine-reroll-var-val" type="number" class="ine-stepper-val"
+                                                    value="0" oninput="ineUpdateReroll()">
+                                                <button class="ine-stepper-btn"
+                                                    onclick="ineAdjustRerollVarVal(1)">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Checkboxes Row -->
+                            <div class="flex flex-wrap items-center gap-4 border-t border-white/5 pt-1.5 mt-1">
+                                <div class="flex items-center gap-2 select-none">
+                                    <label class="toggle-switch"
+                                        style="transform: scale(0.85); transform-origin: center;">
+                                        <input id="ine-reroll-keep" type="checkbox" onchange="ineUpdateReroll()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Keep
+                                        roll
+                                        (Explode)</span>
+                                </div>
+                                <div class="flex items-center gap-2 select-none">
+                                    <label class="toggle-switch"
+                                        style="transform: scale(0.85); transform-origin: center;">
+                                        <input id="ine-reroll-apply-all" type="checkbox" onchange="ineUpdateReroll()"
+                                            checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Apply
+                                        to
+                                        all</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Actions -->
-                    <div class="ine-actions">
-                        <button class="ine-action-btn delete" onclick="ineDelete()" title="Delete Node">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
-                        <button class="ine-action-btn confirm" onclick="ineConfirm()" title="Done">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 13l4 4L19 7" />
-                            </svg>
-                        </button>
+                        <!-- Eval content: Evaluation subtitle + multiple criteria rows -->
+                        <div id="ine-eval-content" class="hidden flex-col w-full gap-3">
+                            <!-- Dynamic Criteria Rows -->
+                            <div id="ine-eval-criteria-list"
+                                class="flex flex-col gap-2 overflow-y-auto max-h-[16rem] custom-scroll">
+                                <!-- criteria rows with Gates in between injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="ine-actions">
+                            <button class="ine-action-btn delete" onclick="ineDelete()" title="Delete Node">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                            <button class="ine-action-btn confirm" onclick="ineConfirm()" title="Done">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         </div> <!-- Close roll-pad-container -->
 
         <!-- Hidden legacy rule inputs still referenced by engine JS -->
@@ -2178,9 +2255,10 @@
                 <div class="relative shrink-0 flex gap-1">
                     <button onclick="openWidgetCreationModal()" title="Add Widget"
                         class="w-[2rem] h-[2rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
                     </button>
                     <button onclick="toggleGroupMenu(event)" id="group-menu-btn"
@@ -2699,8 +2777,8 @@
                 <h3 class="text-sm font-black text-[#94a3b8] uppercase tracking-widest flex items-center gap-1.5">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                         stroke-linejoin="round" class="w-4 h-4 text-sky-400">
-                        <rect width="18" height="18" x="3" y="3" rx="2"/>
-                        <path d="M12 8v8M8 12h8"/>
+                        <rect width="18" height="18" x="3" y="3" rx="2" />
+                        <path d="M12 8v8M8 12h8" />
                     </svg>
                     <span>Create Widget</span>
                 </h3>
@@ -2715,14 +2793,16 @@
             <div class="space-y-4 max-h-[350px] overflow-y-auto custom-scroll pr-1">
                 <!-- Name -->
                 <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Widget Name</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Widget
+                        Name</label>
                     <input type="text" id="widget-name" placeholder="E.g., HP Tracker, Longsword"
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors">
                 </div>
 
                 <!-- Type Selector -->
                 <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Widget Type</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Widget
+                        Type</label>
                     <select id="widget-type" onchange="onWidgetTypeChange(this.value)" class="char-select w-full">
                         <option value="roller">Dice Roller (Card)</option>
                         <option value="stepper">Resource Stepper</option>
@@ -2733,113 +2813,164 @@
 
                 <!-- Dice Roller Addons Container -->
                 <div id="widget-roller-addons" class="space-y-3">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Addon Widgets (Optional)</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Addon Widget
+                        (Optional – pick one)</label>
                     <div class="space-y-2">
-                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
-                            <input type="checkbox" id="addon-advdis" class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                        <label
+                            class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="radio" name="addon-widget" id="addon-none" value="none"
+                                onchange="selectAddonWidget('none')" checked
+                                class="addon-radio-input">
                             <div class="flex flex-col">
-                                <span class="text-xs font-bold text-slate-200 uppercase">ADV / DIS Buttons</span>
-                                <span class="text-[9px] text-slate-400 font-medium">Adds secondary buttons to roll with advantage or disadvantage.</span>
+                                <span class="text-xs font-bold text-slate-200 uppercase">None</span>
+                                <span class="text-[9px] text-slate-400 font-medium">No addon widget on this card.</span>
                             </div>
                         </label>
-                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
-                            <input type="checkbox" id="addon-stepper-check" onchange="toggleAddonStepperInput(this.checked)" class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                        <label
+                            class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="radio" name="addon-widget" id="addon-advdis" value="advdis"
+                                onchange="selectAddonWidget('advdis')"
+                                class="addon-radio-input">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-200 uppercase">ADV / DIS Buttons</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds secondary buttons to roll with
+                                    advantage or disadvantage.</span>
+                            </div>
+                        </label>
+                        <label
+                            class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="radio" name="addon-widget" id="addon-stepper-check" value="stepper"
+                                onchange="selectAddonWidget('stepper')"
+                                class="addon-radio-input">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-slate-200 uppercase">Resource Counter (Ammo)</span>
-                                <span class="text-[9px] text-slate-400 font-medium">Adds an inline counter (e.g. ammo, slots) inside the card.</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds an inline counter (e.g. ammo,
+                                    slots) inside the card.</span>
                             </div>
                         </label>
                         <div id="addon-stepper-config" class="hidden pl-6 space-y-2">
                             <div>
-                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Counter Label</label>
-                                <input type="text" id="addon-stepper-label" value="Ammo" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Counter
+                                    Label</label>
+                                <input type="text" id="addon-stepper-label" value="Ammo"
+                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Max Value</label>
-                                    <input type="number" id="addon-stepper-max" value="20" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Max
+                                        Value</label>
+                                    <input type="number" id="addon-stepper-max" value="20"
+                                        class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                                 </div>
                                 <div>
-                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Initial Value</label>
-                                    <input type="number" id="addon-stepper-val" value="20" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Initial
+                                        Value</label>
+                                    <input type="number" id="addon-stepper-val" value="20"
+                                        class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                                 </div>
                             </div>
                         </div>
 
-                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
-                            <input type="checkbox" id="addon-toggle-check" onchange="toggleAddonToggleInput(this.checked)" class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                        <label
+                            class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="radio" name="addon-widget" id="addon-toggle-check" value="toggle"
+                                onchange="selectAddonWidget('toggle')"
+                                class="addon-radio-input">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-slate-200 uppercase">Usability Toggle Switch</span>
-                                <span class="text-[9px] text-slate-400 font-medium">Adds a mini switch (e.g. Prepared/Miscast) inside the card.</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds a mini switch (e.g.
+                                    Prepared/Miscast) inside the card.</span>
                             </div>
                         </label>
                         <div id="addon-toggle-config" class="hidden pl-6 grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Active Label</label>
-                                <input type="text" id="addon-toggle-on" value="Ready" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Active
+                                    Label</label>
+                                <input type="text" id="addon-toggle-on" value="Ready"
+                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                             </div>
                             <div>
-                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Inactive Label</label>
-                                <input type="text" id="addon-toggle-off" value="Miscast" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Inactive
+                                    Label</label>
+                                <input type="text" id="addon-toggle-off" value="Miscast"
+                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                             </div>
                         </div>
 
-                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
-                            <input type="checkbox" id="addon-note-check" onchange="toggleAddonNoteInput(this.checked)" class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                        <label
+                            class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="radio" name="addon-widget" id="addon-note-check" value="note"
+                                onchange="selectAddonWidget('note')"
+                                class="addon-radio-input">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-slate-200 uppercase">Text Note Addon</span>
-                                <span class="text-[9px] text-slate-400 font-medium">Adds a small text description below the formula.</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds a small text description below
+                                    the formula.</span>
                             </div>
                         </label>
                         <div id="addon-note-config" class="hidden pl-6">
-                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Note Description</label>
-                            <input type="text" id="addon-note-text" placeholder="E.g., Deals double damage on crit" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Note
+                                Description</label>
+                            <input type="text" id="addon-note-text" placeholder="E.g., Deals double damage on crit"
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                         </div>
                     </div>
                 </div>
 
                 <!-- Resource Stepper Config -->
                 <div id="widget-stepper-config" class="hidden space-y-3">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Stepper Settings</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Stepper
+                        Settings</label>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Min</label>
-                            <input type="number" id="stepper-min" value="0" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                            <input type="number" id="stepper-min" value="0"
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
                         <div>
                             <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Max</label>
-                            <input type="number" id="stepper-max" value="20" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                            <input type="number" id="stepper-max" value="20"
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
                         <div>
                             <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Initial</label>
-                            <input type="number" id="stepper-val" value="20" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                            <input type="number" id="stepper-val" value="20"
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
                     </div>
                 </div>
 
                 <!-- Toggle Switch Config -->
                 <div id="widget-toggle-config" class="hidden space-y-3">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Toggle Settings</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Toggle
+                        Settings</label>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Active Label</label>
-                            <input type="text" id="toggle-label-on" value="On" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Active
+                                Label</label>
+                            <input type="text" id="toggle-label-on" value="On"
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
                         <div>
-                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Inactive Label</label>
-                            <input type="text" id="toggle-label-off" value="Off" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Inactive
+                                Label</label>
+                            <input type="text" id="toggle-label-off" value="Off"
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
                     </div>
                     <label class="flex items-center gap-2 cursor-pointer pt-1">
-                        <input type="checkbox" id="toggle-initial" checked class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                        <input type="checkbox" id="toggle-initial" checked
+                            class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
                         <span class="text-xs font-bold text-slate-300 uppercase">Initially Active</span>
                     </label>
                 </div>
 
                 <!-- Text Card Config -->
                 <div id="widget-text-config" class="hidden space-y-3">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Note / Journal Text</label>
-                    <textarea id="text-card-content" placeholder="Type notes here..." rows="3" class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Note / Journal
+                        Text</label>
+                    <textarea id="text-card-content" placeholder="Type notes here..." rows="3"
+                        class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
                 </div>
             </div>
 
@@ -6640,15 +6771,14 @@
             campaigns.forEach(camp => {
                 const isExpanded = openTabs.includes(camp.id);
                 const isActiveCampaign = camp.id === activeCampaignId;
-                
+
                 const folderWrapper = document.createElement('div');
                 folderWrapper.className = 'border border-white/5 rounded-xl bg-white/[0.01] overflow-hidden space-y-1';
 
                 // Campaign Folder Header
                 const folderHeader = document.createElement('div');
-                folderHeader.className = `p-2.5 flex items-center justify-between cursor-pointer transition-all hover:bg-white/5 ${
-                    isActiveCampaign ? 'bg-[#00d4ff]/5 border-b border-[#00d4ff]/10' : 'border-b border-white/5'
-                }`;
+                folderHeader.className = `p-2.5 flex items-center justify-between cursor-pointer transition-all hover:bg-white/5 ${isActiveCampaign ? 'bg-[#00d4ff]/5 border-b border-[#00d4ff]/10' : 'border-b border-white/5'
+                    }`;
 
                 folderHeader.ondblclick = (e) => {
                     e.stopPropagation();
@@ -6677,7 +6807,7 @@
                 if (isExpanded) {
                     const sheetsContainer = document.createElement('div');
                     sheetsContainer.className = 'p-1.5 space-y-1';
-                    
+
                     const campChars = characters.filter(c => c.campaignId === camp.id);
                     if (campChars.length === 0) {
                         sheetsContainer.innerHTML = `<div class="text-[9px] text-slate-600 italic py-2 text-center">Empty campaign.</div>`;
@@ -6685,11 +6815,10 @@
                         campChars.forEach(char => {
                             const charEl = document.createElement('div');
                             const isCharActive = char.id === activeCharacterId;
-                            charEl.className = `p-2 rounded-lg flex items-center justify-between cursor-pointer transition-all ${
-                                isCharActive 
-                                    ? 'bg-[#00d4ff]/10 text-white font-bold' 
-                                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                            }`;
+                            charEl.className = `p-2 rounded-lg flex items-center justify-between cursor-pointer transition-all ${isCharActive
+                                ? 'bg-[#00d4ff]/10 text-white font-bold'
+                                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                                }`;
 
                             charEl.ondblclick = (e) => {
                                 e.stopPropagation();
@@ -6761,10 +6890,10 @@
                 const id = 'camp_' + Date.now();
                 campaigns.push({ id, name: name.trim() });
                 activeCampaignId = id;
-                
+
                 const charId = 'char_' + Date.now();
                 characters.push({ id: charId, name: 'Primary Character', dndType: 'standard', campaignId: id });
-                
+
                 const baseTime = Date.now();
                 const charGroups = [
                     { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: charId },
@@ -6970,7 +7099,7 @@
                 if (activeCampaignId === campId) {
                     activeCampaignId = campaigns[0].id;
                 }
-                
+
                 if (charIdsToDelete.includes(activeCharacterId)) {
                     const remaining = characters.filter(c => c.campaignId === activeCampaignId);
                     if (remaining.length > 0) {
@@ -7002,7 +7131,7 @@
             const existingCount = characters.filter(c => c.name.toLowerCase().startsWith(type)).length + 1;
             const charName = type.charAt(0).toUpperCase() + type.slice(1) + ' ' + existingCount;
             const charId = 'char_' + Date.now();
-            
+
             const newChar = {
                 id: charId,
                 name: charName,
@@ -7276,23 +7405,21 @@
 
             document.getElementById('widget-name').value = isSavingQueue ? `Loadout ${engine.savedQueues.length + 1}` : '';
             const typeSelect = document.getElementById('widget-type');
-            
+
             if (isSavingQueue && engine.queue.length > 0) {
                 typeSelect.value = 'roller';
             } else {
                 typeSelect.value = 'stepper';
             }
 
-            document.getElementById('addon-advdis').checked = false;
-            document.getElementById('addon-stepper-check').checked = false;
+            document.getElementById('addon-none').checked = true;
             document.getElementById('addon-stepper-label').value = 'Ammo';
             document.getElementById('addon-stepper-max').value = '20';
             document.getElementById('addon-stepper-val').value = '20';
-            document.getElementById('addon-toggle-check').checked = false;
             document.getElementById('addon-toggle-on').value = 'Ready';
             document.getElementById('addon-toggle-off').value = 'Miscast';
-            document.getElementById('addon-note-check').checked = false;
             document.getElementById('addon-note-text').value = '';
+            selectAddonWidget('none');
 
             document.getElementById('stepper-min').value = '0';
             document.getElementById('stepper-max').value = '20';
@@ -7308,7 +7435,7 @@
 
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
-            
+
             setTimeout(() => {
                 document.getElementById('widget-name').focus();
             }, 50);
@@ -7318,48 +7445,50 @@
         function configureSavedWidget(widgetId, event) {
             if (event) event.stopPropagation();
             closeAllArsenalMenus();
-            
+
             const q = engine.savedQueues.find(x => x.id === widgetId);
             if (!q) return;
 
             editingWidgetId = widgetId;
-            
+
             const overlay = document.getElementById('widget-creation-overlay');
             if (!overlay) return;
 
             // Change title in modal
             const titleEl = overlay.querySelector('h3 span');
             if (titleEl) titleEl.textContent = 'Configure Widget';
-            
+
             const submitBtn = overlay.querySelector('button[onclick="submitWidgetCreation()"]');
             if (submitBtn) submitBtn.textContent = 'Save Changes';
 
             // Populate fields
             document.getElementById('widget-name').value = q.name || '';
-            
+
             const typeSelect = document.getElementById('widget-type');
             typeSelect.value = q.widgetType || 'roller';
-            
+
             // Populate roller addons
-            document.getElementById('addon-advdis').checked = !!q.includeAdvDis;
-            
+            // Determine which addon radio to select
             const hasCounter = !!q.addonCounter;
-            document.getElementById('addon-stepper-check').checked = hasCounter;
+            const hasToggle = !!q.addonToggle;
+            const hasNote = !!q.addonNote;
+            let activeAddon = 'none';
+            if (q.includeAdvDis) activeAddon = 'advdis';
+            else if (hasCounter) activeAddon = 'stepper';
+            else if (hasToggle) activeAddon = 'toggle';
+            else if (hasNote) activeAddon = 'note';
+
             document.getElementById('addon-stepper-label').value = hasCounter ? q.addonCounter.label : 'Ammo';
             document.getElementById('addon-stepper-max').value = hasCounter ? q.addonCounter.max : '20';
             document.getElementById('addon-stepper-val').value = hasCounter ? q.addonCounter.value : '20';
-            document.getElementById('addon-stepper-config').classList.toggle('hidden', !hasCounter);
-
-            const hasToggle = !!q.addonToggle;
-            document.getElementById('addon-toggle-check').checked = hasToggle;
             document.getElementById('addon-toggle-on').value = hasToggle ? q.addonToggle.labelOn : 'Ready';
             document.getElementById('addon-toggle-off').value = hasToggle ? q.addonToggle.labelOff : 'Miscast';
-            document.getElementById('addon-toggle-config').classList.toggle('hidden', !hasToggle);
-
-            const hasNote = !!q.addonNote;
-            document.getElementById('addon-note-check').checked = hasNote;
             document.getElementById('addon-note-text').value = hasNote ? q.addonNote : '';
-            document.getElementById('addon-note-config').classList.toggle('hidden', !hasNote);
+
+            // Set the correct radio and show its config
+            const radioEl = document.querySelector(`input[name="addon-widget"][value="${activeAddon}"]`);
+            if (radioEl) radioEl.checked = true;
+            selectAddonWidget(activeAddon);
 
             // Populate standalone stepper configs
             document.getElementById('stepper-min').value = q.min !== undefined ? q.min : '0';
@@ -7378,7 +7507,7 @@
 
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
-            
+
             setTimeout(() => {
                 document.getElementById('widget-name').focus();
             }, 50);
@@ -7412,17 +7541,38 @@
             }
         }
 
-        function toggleAddonStepperInput(checked) {
-            document.getElementById('addon-stepper-config').classList.toggle('hidden', !checked);
+        function selectAddonWidget(type) {
+            // Hide all addon config panels
+            document.getElementById('addon-stepper-config').classList.add('hidden');
+            document.getElementById('addon-toggle-config').classList.add('hidden');
+            document.getElementById('addon-note-config').classList.add('hidden');
+
+            // Highlight the selected radio label
+            document.querySelectorAll('.addon-radio-label').forEach(lbl => {
+                const radio = lbl.querySelector('input[type="radio"]');
+                if (radio && radio.checked) {
+                    lbl.classList.add('border-sky-500/40', 'bg-sky-500/5');
+                    lbl.classList.remove('border-white/5', 'bg-[#090d16]/40');
+                } else {
+                    lbl.classList.remove('border-sky-500/40', 'bg-sky-500/5');
+                    lbl.classList.add('border-white/5', 'bg-[#090d16]/40');
+                }
+            });
+
+            // Show the relevant config panel
+            if (type === 'stepper') {
+                document.getElementById('addon-stepper-config').classList.remove('hidden');
+            } else if (type === 'toggle') {
+                document.getElementById('addon-toggle-config').classList.remove('hidden');
+            } else if (type === 'note') {
+                document.getElementById('addon-note-config').classList.remove('hidden');
+            }
         }
 
-        function toggleAddonToggleInput(checked) {
-            document.getElementById('addon-toggle-config').classList.toggle('hidden', !checked);
-        }
-
-        function toggleAddonNoteInput(checked) {
-            document.getElementById('addon-note-config').classList.toggle('hidden', !checked);
-        }
+        // Legacy aliases (kept for safety)
+        function toggleAddonStepperInput(checked) { selectAddonWidget(checked ? 'stepper' : 'none'); }
+        function toggleAddonToggleInput(checked) { selectAddonWidget(checked ? 'toggle' : 'none'); }
+        function toggleAddonNoteInput(checked) { selectAddonWidget(checked ? 'note' : 'none'); }
 
         function submitWidgetCreation() {
             const nameEl = document.getElementById('widget-name');
@@ -7435,11 +7585,12 @@
                 if (q) {
                     q.name = name;
                     q.widgetType = type;
-                    
+
                     if (type === 'roller') {
-                        q.includeAdvDis = document.getElementById('addon-advdis').checked;
-                        
-                        if (document.getElementById('addon-stepper-check').checked) {
+                        const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
+                        q.includeAdvDis = selectedAddon === 'advdis';
+
+                        if (selectedAddon === 'stepper') {
                             q.addonCounter = {
                                 label: document.getElementById('addon-stepper-label').value.trim() || 'Ammo',
                                 max: parseInt(document.getElementById('addon-stepper-max').value) || 20,
@@ -7449,7 +7600,7 @@
                             q.addonCounter = null;
                         }
 
-                        if (document.getElementById('addon-toggle-check').checked) {
+                        if (selectedAddon === 'toggle') {
                             q.addonToggle = {
                                 checked: q.addonToggle ? q.addonToggle.checked : true,
                                 labelOn: document.getElementById('addon-toggle-on').value.trim() || 'Ready',
@@ -7459,7 +7610,7 @@
                             q.addonToggle = null;
                         }
 
-                        if (document.getElementById('addon-note-check').checked) {
+                        if (selectedAddon === 'note') {
                             q.addonNote = document.getElementById('addon-note-text').value.trim() || null;
                         } else {
                             q.addonNote = null;
@@ -7468,7 +7619,7 @@
                         q.min = parseInt(document.getElementById('stepper-min').value) || 0;
                         q.max = parseInt(document.getElementById('stepper-max').value) || 20;
                         q.value = Math.max(q.min, Math.min(q.max, parseInt(document.getElementById('stepper-val').value) || 20));
-                        
+
                         if (name.toLowerCase() === 'hit points' || name.toLowerCase() === 'hp') {
                             const char = characters.find(c => c.id === activeCharacterId);
                             if (char) {
@@ -7518,10 +7669,11 @@
                         engine.savedQueues = engine.savedQueues.filter(q => q.id !== saved.id);
                     }
                 }
-                
-                newWidget.includeAdvDis = document.getElementById('addon-advdis').checked;
-                
-                if (document.getElementById('addon-stepper-check').checked) {
+
+                const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
+                newWidget.includeAdvDis = selectedAddon === 'advdis';
+
+                if (selectedAddon === 'stepper') {
                     newWidget.addonCounter = {
                         label: document.getElementById('addon-stepper-label').value.trim() || 'Ammo',
                         max: parseInt(document.getElementById('addon-stepper-max').value) || 20,
@@ -7531,7 +7683,7 @@
                     newWidget.addonCounter = null;
                 }
 
-                if (document.getElementById('addon-toggle-check').checked) {
+                if (selectedAddon === 'toggle') {
                     newWidget.addonToggle = {
                         checked: true,
                         labelOn: document.getElementById('addon-toggle-on').value.trim() || 'Ready',
@@ -7541,7 +7693,7 @@
                     newWidget.addonToggle = null;
                 }
 
-                if (document.getElementById('addon-note-check').checked) {
+                if (selectedAddon === 'note') {
                     newWidget.addonNote = document.getElementById('addon-note-text').value.trim() || null;
                 } else {
                     newWidget.addonNote = null;
@@ -7551,7 +7703,7 @@
                 newWidget.min = parseInt(document.getElementById('stepper-min').value) || 0;
                 newWidget.max = parseInt(document.getElementById('stepper-max').value) || 20;
                 newWidget.value = parseInt(document.getElementById('stepper-val').value) || 20;
-                
+
                 if (name.toLowerCase() === 'hit points' || name.toLowerCase() === 'hp') {
                     const char = characters.find(c => c.id === activeCharacterId);
                     if (char) {
@@ -7588,7 +7740,7 @@
                     q.max = parsed;
                     q.value = Math.max(q.min ?? 0, Math.min(q.max, q.value));
                 }
-                
+
                 if (q.name.toLowerCase() === 'hit points' || q.name.toLowerCase() === 'hp') {
                     const char = characters.find(c => c.id === activeCharacterId);
                     if (char) {
@@ -8359,7 +8511,7 @@
                 item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                 item.style.setProperty('--item-color', q.color);
                 item.dataset.id = q.id;
-                
+
                 const type = q.widgetType || 'roller';
                 if (type === 'roller') {
                     item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
@@ -8462,10 +8614,10 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            <div class="flex items-center gap-2 mt-0.5 -mb-1.5" onclick="event.stopPropagation()">
-                                <input type="number" value="${q.value}" onchange="changeStepperValueDirect(${q.id}, this.value, true)" class="w-14 h-6 bg-black/40 border border-white/10 rounded-md px-1 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-base leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                                <span class="text-slate-500 font-black text-base leading-none">/</span>
-                                <input type="number" value="${q.max}" onchange="changeStepperValueDirect(${q.id}, this.value, false)" class="w-14 h-6 bg-black/40 border border-white/10 rounded-md px-1 text-center outline-none focus:border-[#00d4ff] text-slate-400 font-black tabular-nums transition-colors text-base leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <div class="flex items-center gap-2 mt-1" onclick="event.stopPropagation()">
+                                <input type="number" value="${q.value}" onchange="changeStepperValueDirect(${q.id}, this.value, true)" class="w-14 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <span class="text-slate-500 font-black text-lg">/</span>
+                                <input type="number" value="${q.max}" onchange="changeStepperValueDirect(${q.id}, this.value, false)" class="w-14 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-slate-400 font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                             </div>
                         </div>
                     `;
@@ -8523,7 +8675,7 @@
                     disBtn.innerHTML = `
                         <span class="text-[10px] font-black text-slate-400 group-hover/dis:text-[#6366f1] transition-colors uppercase tracking-widest">DIS</span>
                     `;
-                    
+
                     wrapper.appendChild(advBtn);
                     wrapper.appendChild(disBtn);
                 } else if (type === 'stepper') {
@@ -8542,7 +8694,7 @@
                         changeStepperValue(q.id, 1);
                     };
                     incBtn.innerHTML = `+`;
-                    
+
                     wrapper.appendChild(decBtn);
                     wrapper.appendChild(incBtn);
                 }
@@ -9845,7 +9997,7 @@
 
         window.onload = () => {
             initRollPad();
-            
+
             updateScrollSpacer();
             const padContainer = document.getElementById('roll-pad-container');
             if (padContainer) {
