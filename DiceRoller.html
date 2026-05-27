@@ -7578,6 +7578,33 @@
             vibrate(10);
         }
 
+        function changeStepperValueDirect(widgetId, newValue, isCurrent) {
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (q && q.widgetType === 'stepper') {
+                const parsed = parseInt(newValue, 10) || 0;
+                if (isCurrent) {
+                    q.value = Math.max(q.min ?? 0, Math.min(q.max ?? 100, parsed));
+                } else {
+                    q.max = parsed;
+                    q.value = Math.max(q.min ?? 0, Math.min(q.max, q.value));
+                }
+                
+                if (q.name.toLowerCase() === 'hit points' || q.name.toLowerCase() === 'hp') {
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    if (char) {
+                        if (!char.variables) char.variables = {};
+                        char.variables.HP = q.value;
+                        char.variables.MaxHP = q.max;
+                        persistArsenal();
+                        renderBinder();
+                    }
+                }
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+
         function changeStepperValue(widgetId, delta) {
             const q = engine.savedQueues.find(x => x.id === widgetId);
             if (q && q.widgetType === 'stepper') {
@@ -8433,15 +8460,13 @@
                     }
                 } else if (type === 'stepper') {
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2">
+                        <div class="flex-grow min-w-0 pl-2 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            <div class="text-xs mono text-[#94a3b8] mt-0.5 opacity-80">${q.value} / ${q.max}</div>
-                        </div>
-                        <div class="flex items-center gap-1 mr-2 shrink-0" onclick="event.stopPropagation()">
-                            <button onclick="event.stopPropagation(); changeStepperValue(${q.id}, -1)" 
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white transition-all text-sm font-bold">-</button>
-                            <button onclick="event.stopPropagation(); changeStepperValue(${q.id}, 1)" 
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white transition-all text-sm font-bold">+</button>
+                            <div class="flex items-center gap-2 mt-0.5 -mb-1.5" onclick="event.stopPropagation()">
+                                <input type="number" value="${q.value}" onchange="changeStepperValueDirect(${q.id}, this.value, true)" class="w-14 h-6 bg-black/40 border border-white/10 rounded-md px-1 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-base leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <span class="text-slate-500 font-black text-base leading-none">/</span>
+                                <input type="number" value="${q.max}" onchange="changeStepperValueDirect(${q.id}, this.value, false)" class="w-14 h-6 bg-black/40 border border-white/10 rounded-md px-1 text-center outline-none focus:border-[#00d4ff] text-slate-400 font-black tabular-nums transition-colors text-base leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            </div>
                         </div>
                     `;
                 } else if (type === 'toggle') {
@@ -8501,6 +8526,25 @@
                     
                     wrapper.appendChild(advBtn);
                     wrapper.appendChild(disBtn);
+                } else if (type === 'stepper') {
+                    const decBtn = document.createElement('button');
+                    decBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
+                    decBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        changeStepperValue(q.id, -1);
+                    };
+                    decBtn.innerHTML = `−`;
+
+                    const incBtn = document.createElement('button');
+                    incBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
+                    incBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        changeStepperValue(q.id, 1);
+                    };
+                    incBtn.innerHTML = `+`;
+                    
+                    wrapper.appendChild(decBtn);
+                    wrapper.appendChild(incBtn);
                 }
 
                 const gearContainer = document.createElement('div');
