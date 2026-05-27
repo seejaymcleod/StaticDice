@@ -1,6 +1,6 @@
 class DiceEngine {
     constructor() {
-        this.queue = []; // Unified queue of chips (dice and modifier chips in exact visual/chronological order)
+        this.queue = []; // Unified queue of nodes (dice and modifier nodes in exact visual/chronological order)
         this.activeModifier = null; // 'ADV', 'DIS', or null
         this.modifierLevel = 0;
         this.rollRules = {
@@ -18,7 +18,7 @@ class DiceEngine {
     get rollingQueue() {
         const self = this;
         const filtered = this.queue
-            .filter(c => c.chipType === 'dice')
+            .filter(c => c.nodeType === 'node')
             .map(c => ({ sides: c.sides, count: c.count }));
 
         return new Proxy(filtered, {
@@ -27,19 +27,19 @@ class DiceEngine {
                     return function(...args) {
                         args.forEach(item => {
                             self.queue.push({
-                                chipType: 'dice',
+                                nodeType: 'node',
                                 id: 'dice_' + Math.random(),
                                 sides: item.sides,
                                 count: item.count
                             });
                         });
-                        return self.queue.filter(c => c.chipType === 'dice').length;
+                        return self.queue.filter(c => c.nodeType === 'node').length;
                     };
                 }
                 if (prop === 'pop') {
                     return function() {
                         for (let i = self.queue.length - 1; i >= 0; i--) {
-                            if (self.queue[i].chipType === 'dice') {
+                            if (self.queue[i].nodeType === 'node') {
                                 const popped = self.queue.splice(i, 1)[0];
                                 return { sides: popped.sides, count: popped.count };
                             }
@@ -51,7 +51,7 @@ class DiceEngine {
                     return function(start, deleteCount, ...items) {
                         const diceIndices = [];
                         self.queue.forEach((c, idx) => {
-                            if (c.chipType === 'dice') diceIndices.push(idx);
+                            if (c.nodeType === 'node') diceIndices.push(idx);
                         });
                         const targetIndices = diceIndices.slice(start, start + deleteCount);
                         targetIndices.sort((a, b) => b - a).forEach(idx => {
@@ -59,7 +59,7 @@ class DiceEngine {
                         });
                         const insertIndex = diceIndices[start] !== undefined ? diceIndices[start] : self.queue.length;
                         const preparedItems = items.map(item => ({
-                            chipType: 'dice',
+                            nodeType: 'node',
                             id: 'dice_' + Math.random(),
                             sides: item.sides,
                             count: item.count
@@ -78,11 +78,11 @@ class DiceEngine {
     }
 
     set rollingQueue(val) {
-        this.queue = this.queue.filter(c => c.chipType !== 'dice');
+        this.queue = this.queue.filter(c => c.nodeType !== 'node');
         if (Array.isArray(val)) {
             val.forEach(item => {
                 this.queue.push({
-                    chipType: 'dice',
+                    nodeType: 'node',
                     id: 'dice_' + Math.random(),
                     sides: item.sides,
                     count: item.count
@@ -93,7 +93,7 @@ class DiceEngine {
 
     get _flatMod() {
         const self = this;
-        const filtered = this.queue.filter(c => c.chipType === 'modifier');
+        const filtered = this.queue.filter(c => c.nodeType === 'modifier');
         
         return new Proxy(filtered, {
             get(target, prop, receiver) {
@@ -102,17 +102,17 @@ class DiceEngine {
                         args.forEach(item => {
                             self.queue.push({
                                 ...item,
-                                chipType: 'modifier',
+                                nodeType: 'modifier',
                                 id: item.id || ('mod_' + Math.random())
                             });
                         });
-                        return self.queue.filter(c => c.chipType === 'modifier').length;
+                        return self.queue.filter(c => c.nodeType === 'modifier').length;
                     };
                 }
                 if (prop === 'pop') {
                     return function() {
                         for (let i = self.queue.length - 1; i >= 0; i--) {
-                            if (self.queue[i].chipType === 'modifier') {
+                            if (self.queue[i].nodeType === 'modifier') {
                                 const popped = self.queue.splice(i, 1)[0];
                                 return popped;
                             }
@@ -124,7 +124,7 @@ class DiceEngine {
                     return function(start, deleteCount, ...items) {
                         const modIndices = [];
                         self.queue.forEach((c, idx) => {
-                            if (c.chipType === 'modifier') modIndices.push(idx);
+                            if (c.nodeType === 'modifier') modIndices.push(idx);
                         });
                         
                         const targetIndices = modIndices.slice(start, start + deleteCount);
@@ -135,7 +135,7 @@ class DiceEngine {
                         const insertIndex = modIndices[start] !== undefined ? modIndices[start] : self.queue.length;
                         const preparedItems = items.map(item => ({
                             ...item,
-                            chipType: 'modifier',
+                            nodeType: 'modifier',
                             id: item.id || ('mod_' + Math.random())
                         }));
                         self.queue.splice(insertIndex, 0, ...preparedItems);
@@ -153,12 +153,12 @@ class DiceEngine {
     }
 
     set _flatMod(val) {
-        this.queue = this.queue.filter(c => c.chipType !== 'modifier');
+        this.queue = this.queue.filter(c => c.nodeType !== 'modifier');
         if (Array.isArray(val)) {
             val.forEach(item => {
                 this.queue.push({
                     ...item,
-                    chipType: 'modifier',
+                    nodeType: 'modifier',
                     id: item.id || ('mod_' + Math.random())
                 });
             });
@@ -166,7 +166,7 @@ class DiceEngine {
     }
 
     get flatMod() {
-        const flatList = this.queue.filter(c => c.chipType === 'modifier');
+        const flatList = this.queue.filter(c => c.nodeType === 'modifier');
         if (flatList.length === 0) {
             return 0;
         }
@@ -239,24 +239,24 @@ class DiceEngine {
 
     changeQueue(sides, delta) {
         if (delta > 0) {
-            const lastChip = this.queue[this.queue.length - 1];
-            if (lastChip && lastChip.chipType === 'dice' && lastChip.sides === sides) {
-                lastChip.count += delta;
+            const lastNode = this.queue[this.queue.length - 1];
+            if (lastNode && lastNode.nodeType === 'node' && lastNode.sides === sides) {
+                lastNode.count += delta;
             } else {
-                if (lastChip && (
-                    lastChip.chipType === 'dice' ||
-                    lastChip.chipType === 'number' ||
-                    lastChip.chipType === 'modifier' ||
-                    (lastChip.chipType === 'operator' && lastChip.operator === ')')
+                if (lastNode && (
+                    lastNode.nodeType === 'node' ||
+                    lastNode.nodeType === 'number' ||
+                    lastNode.nodeType === 'modifier' ||
+                    (lastNode.nodeType === 'operator' && lastNode.operator === ')')
                 )) {
                     this.queue.push({
-                        chipType: 'operator',
+                        nodeType: 'operator',
                         operator: '+',
                         roundMode: 'none'
                     });
                 }
                 this.queue.push({
-                    chipType: 'dice',
+                    nodeType: 'node',
                     id: 'dice_' + Date.now() + Math.random(),
                     sides: sides,
                     count: delta
@@ -264,10 +264,10 @@ class DiceEngine {
             }
         } else if (delta < 0) {
             for (let i = this.queue.length - 1; i >= 0; i--) {
-                const chip = this.queue[i];
-                if (chip.chipType === 'dice' && chip.sides === sides) {
-                    chip.count += delta;
-                    if (chip.count <= 0) {
+                const node = this.queue[i];
+                if (node.nodeType === 'node' && node.sides === sides) {
+                    node.count += delta;
+                    if (node.count <= 0) {
                         this.queue.splice(i, 1);
                     }
                     break;
@@ -288,23 +288,23 @@ class DiceEngine {
     }
 
     adjustFlatMod(val) {
-        const lastChip = this.queue[this.queue.length - 1];
-        if (lastChip && lastChip.chipType === 'modifier' && lastChip.type === 'literal' && lastChip.multiplierType === 'none' && lastChip.divisorType === 'none') {
-            let currentVal = Number(lastChip.value) || 0;
-            let op = lastChip.operator || '+';
+        const lastNode = this.queue[this.queue.length - 1];
+        if (lastNode && lastNode.nodeType === 'modifier' && lastNode.type === 'literal' && lastNode.multiplierType === 'none' && lastNode.divisorType === 'none') {
+            let currentVal = Number(lastNode.value) || 0;
+            let op = lastNode.operator || '+';
             if (op === '-') currentVal = -currentVal;
             
             currentVal += val;
             if (currentVal === 0) {
                 this.queue.pop();
             } else {
-                lastChip.operator = currentVal >= 0 ? '+' : '-';
-                lastChip.value = Math.abs(currentVal);
+                lastNode.operator = currentVal >= 0 ? '+' : '-';
+                lastNode.value = Math.abs(currentVal);
             }
         } else {
             if (val !== 0) {
                 this.queue.push({
-                    chipType: 'modifier',
+                    nodeType: 'modifier',
                     id: 'mod_' + Date.now() + Math.random(),
                     type: 'literal',
                     value: Math.abs(val),
@@ -326,21 +326,21 @@ class DiceEngine {
 
     applyModifier(type) {
         if (this.queue.length === 0) return;
-        const lastChip = this.queue[this.queue.length - 1];
-        if (lastChip && lastChip.chipType === 'operator' && (lastChip.operator === 'ADV' || lastChip.operator === 'DIS')) {
-            if (lastChip.operator === type) {
-                lastChip.modifierLevel = (lastChip.modifierLevel || 1) + 1;
+        const lastNode = this.queue[this.queue.length - 1];
+        if (lastNode && lastNode.nodeType === 'operator' && (lastNode.operator === 'ADV' || lastNode.operator === 'DIS')) {
+            if (lastNode.operator === type) {
+                lastNode.modifierLevel = (lastNode.modifierLevel || 1) + 1;
             } else {
-                lastChip.operator = type;
-                lastChip.modifierLevel = 1;
+                lastNode.operator = type;
+                lastNode.modifierLevel = 1;
             }
         } else {
             // Check if we can append ADV/DIS: must have a dice or closing parenthesis to the left
             const last = this.queue[this.queue.length - 1];
-            const isValidLeft = last && (last.chipType === 'dice' || (last.chipType === 'operator' && last.operator === ')'));
+            const isValidLeft = last && (last.nodeType === 'node' || (last.nodeType === 'operator' && last.operator === ')'));
             if (isValidLeft) {
                 this.queue.push({
-                    chipType: 'operator',
+                    nodeType: 'operator',
                     operator: type,
                     modifierLevel: 1
                 });
@@ -374,13 +374,13 @@ class DiceEngine {
             const current = this.queue[i];
             const next = this.queue[i + 1];
 
-            if (current.chipType === 'operator') {
+            if (current.nodeType === 'operator') {
                 if (current.operator === '(') {
                     openParenCount++;
-                    if (next && next.chipType === 'operator' && next.operator === ')') {
+                    if (next && next.nodeType === 'operator' && next.operator === ')') {
                         return false;
                     }
-                    if (next && next.chipType === 'operator' && binaryOps.includes(next.operator)) {
+                    if (next && next.nodeType === 'operator' && binaryOps.includes(next.operator)) {
                         return false;
                     }
                 } else if (current.operator === ')') {
@@ -388,18 +388,18 @@ class DiceEngine {
                     if (openParenCount < 0) return false;
                 } else if (binaryOps.includes(current.operator)) {
                     if (!next) return false;
-                    if (next.chipType === 'operator' && binaryOps.includes(next.operator)) {
+                    if (next.nodeType === 'operator' && binaryOps.includes(next.operator)) {
                         return false;
                     }
-                    if (next.chipType === 'operator' && next.operator === ')') {
+                    if (next.nodeType === 'operator' && next.operator === ')') {
                         return false;
                     }
-                    if (next.chipType === 'operator' && (next.operator === 'ADV' || next.operator === 'DIS')) {
+                    if (next.nodeType === 'operator' && (next.operator === 'ADV' || next.operator === 'DIS')) {
                         return false;
                     }
                 } else if (current.operator === 'ADV' || current.operator === 'DIS') {
                     const prev = this.queue[i - 1];
-                    if (!prev || (prev.chipType !== 'dice' && !(prev.chipType === 'operator' && prev.operator === ')'))) {
+                    if (!prev || (prev.nodeType !== 'node' && !(prev.nodeType === 'operator' && prev.operator === ')'))) {
                         return false;
                     }
                 }
@@ -407,12 +407,12 @@ class DiceEngine {
         }
 
         const last = this.queue[this.queue.length - 1];
-        if (last.chipType === 'operator' && last.operator !== ')' && last.operator !== 'ADV' && last.operator !== 'DIS') {
+        if (last.nodeType === 'operator' && last.operator !== ')' && last.operator !== 'ADV' && last.operator !== 'DIS') {
             return false;
         }
 
         const first = this.queue[0];
-        if (first.chipType === 'operator' && first.operator !== '(') {
+        if (first.nodeType === 'operator' && first.operator !== '(') {
             return false;
         }
 
@@ -510,16 +510,28 @@ class DiceEngine {
 
         // If saved queue is unified, load it directly:
         if (item.unifiedQueue && Array.isArray(item.unifiedQueue)) {
-            this.queue = JSON.parse(JSON.stringify(item.unifiedQueue));
-        } else if (item.queue && item.queue.some(c => c.chipType !== undefined)) {
-            this.queue = JSON.parse(JSON.stringify(item.queue));
+            this.queue = JSON.parse(JSON.stringify(item.unifiedQueue)).map(c => {
+                if (c.chipType) {
+                    c.nodeType = c.chipType === 'dice' ? 'node' : c.chipType;
+                    delete c.chipType;
+                }
+                return c;
+            });
+        } else if (item.queue && item.queue.some(c => c.chipType !== undefined || c.nodeType !== undefined)) {
+            this.queue = JSON.parse(JSON.stringify(item.queue)).map(c => {
+                if (c.chipType) {
+                    c.nodeType = c.chipType === 'dice' ? 'node' : c.chipType;
+                    delete c.chipType;
+                }
+                return c;
+            });
         } else {
             // Legacy queue: rebuild from item.queue and item.flat
             this.queue = [];
             if (Array.isArray(item.queue)) {
                 item.queue.forEach(q => {
                     this.queue.push({
-                        chipType: 'dice',
+                        nodeType: 'node',
                         id: 'dice_' + Math.random(),
                         sides: q.sides,
                         count: q.count
@@ -557,7 +569,7 @@ class DiceEngine {
             loadedFlat.forEach(f => {
                 this.queue.push({
                     ...f,
-                    chipType: 'modifier',
+                    nodeType: 'modifier',
                     id: f.id || ('mod_' + Math.random())
                 });
             });
@@ -693,12 +705,12 @@ class DiceEngine {
         if (Array.isArray(flat)) {
             list = flat.map(item => ({
                 ...item,
-                chipType: 'modifier',
+                nodeType: 'modifier',
                 id: item.id || ('mod_' + Math.random())
             }));
         } else if (typeof flat === 'string' && flat !== '') {
             list = [{
-                chipType: 'modifier',
+                nodeType: 'modifier',
                 id: 'mod_' + Math.random(),
                 type: 'variable',
                 value: flat,
@@ -711,7 +723,7 @@ class DiceEngine {
             }];
         } else if (typeof flat === 'number' && flat !== 0) {
             list = [{
-                chipType: 'modifier',
+                nodeType: 'modifier',
                 id: 'mod_' + Math.random(),
                 type: 'literal',
                 value: Math.abs(flat),
@@ -727,34 +739,34 @@ class DiceEngine {
     }
 
     calculateRoll(forcedQueue = null, isInstant = false, overrides = null) {
-        let evalChips = [];
+        let evalNodes = [];
         if (forcedQueue) {
-            if (forcedQueue.some(c => c.chipType !== undefined)) {
-                evalChips = forcedQueue;
+            if (forcedQueue.some(c => c.nodeType !== undefined)) {
+                evalNodes = forcedQueue;
             } else {
-                evalChips = forcedQueue.map(q => ({
-                    chipType: 'dice',
+                evalNodes = forcedQueue.map(q => ({
+                    nodeType: 'node',
                     sides: q.sides,
                     count: q.count
                 }));
                 const activeFlat = (overrides && overrides.flat !== undefined) ? overrides.flat : (isInstant ? [] : this._flatMod);
-                evalChips = evalChips.concat(this._normalizeFlatMod(activeFlat));
+                evalNodes = evalNodes.concat(this._normalizeFlatMod(activeFlat));
             }
         } else {
             if (overrides) {
                 if (overrides.queue) {
-                    if (overrides.queue.some(c => c.chipType !== undefined)) {
-                        evalChips = overrides.queue;
+                    if (overrides.queue.some(c => c.nodeType !== undefined)) {
+                        evalNodes = overrides.queue;
                     } else {
-                        const diceChips = overrides.queue.map(q => ({ chipType: 'dice', sides: q.sides, count: q.count }));
+                        const diceNodes = overrides.queue.map(q => ({ nodeType: 'node', sides: q.sides, count: q.count }));
                         const flatList = this._normalizeFlatMod(overrides.flat !== undefined ? overrides.flat : []);
-                        evalChips = diceChips.concat(flatList);
+                        evalNodes = diceNodes.concat(flatList);
                     }
                 } else {
-                    evalChips = this.queue;
+                    evalNodes = this.queue;
                 }
             } else {
-                evalChips = this.queue;
+                evalNodes = this.queue;
             }
         }
 
@@ -763,30 +775,30 @@ class DiceEngine {
         const activeRules = (overrides && overrides.rules !== undefined) ? overrides.rules : this.rollRules;
         const activeOverallTarget = (overrides && overrides.overallTarget !== undefined) ? overrides.overallTarget : this.overallTarget;
 
-        if (evalChips.length === 0) return null;
+        if (evalNodes.length === 0) return null;
 
-        // Make a copy of evalChips so we don't mutate the original queue directly
-        evalChips = evalChips.map(c => ({ ...c }));
+        // Make a copy of evalNodes so we don't mutate the original queue directly
+        evalNodes = evalNodes.map(c => ({ ...c }));
 
-        // 1. Scan for ADV / DIS chips and assign local modifier properties to targets
-        for (let i = 0; i < evalChips.length; i++) {
-            const chip = evalChips[i];
-            if (chip.chipType === 'operator' && (chip.operator === 'ADV' || chip.operator === 'DIS')) {
-                const modifier = chip.operator;
-                const modLevel = chip.modifierLevel || 1;
+        // 1. Scan for ADV / DIS nodes and assign local modifier properties to targets
+        for (let i = 0; i < evalNodes.length; i++) {
+            const node = evalNodes[i];
+            if (node.nodeType === 'operator' && (node.operator === 'ADV' || node.operator === 'DIS')) {
+                const modifier = node.operator;
+                const modLevel = node.modifierLevel || 1;
                 
                 if (i > 0) {
-                    const prev = evalChips[i - 1];
-                    if (prev.chipType === 'dice') {
+                    const prev = evalNodes[i - 1];
+                    if (prev.nodeType === 'node') {
                         prev.localModifier = modifier;
                         prev.localModLevel = modLevel;
-                    } else if (prev.chipType === 'operator' && prev.operator === ')') {
+                    } else if (prev.nodeType === 'operator' && prev.operator === ')') {
                         // Find matching '('
                         let parenCount = 1;
                         let j = i - 2;
                         while (j >= 0 && parenCount > 0) {
-                            const pChip = evalChips[j];
-                            if (pChip.chipType === 'operator') {
+                            const pChip = evalNodes[j];
+                            if (pChip.nodeType === 'operator') {
                                 if (pChip.operator === ')') parenCount++;
                                 else if (pChip.operator === '(') parenCount--;
                             }
@@ -794,9 +806,9 @@ class DiceEngine {
                         }
                         const startIndex = j + 1;
                         for (let k = startIndex; k < i; k++) {
-                            if (evalChips[k].chipType === 'dice') {
-                                evalChips[k].localModifier = modifier;
-                                evalChips[k].localModLevel = modLevel;
+                            if (evalNodes[k].nodeType === 'node') {
+                                evalNodes[k].localModifier = modifier;
+                                evalNodes[k].localModLevel = modLevel;
                             }
                         }
                     }
@@ -804,10 +816,10 @@ class DiceEngine {
             }
         }
 
-        // 2. Filter out ADV/DIS chips
-        evalChips = evalChips.filter(c => !(c.chipType === 'operator' && (c.operator === 'ADV' || c.operator === 'DIS')));
+        // 2. Filter out ADV/DIS nodes
+        evalNodes = evalNodes.filter(c => !(c.nodeType === 'operator' && (c.operator === 'ADV' || c.operator === 'DIS')));
 
-        if (evalChips.length === 0) return null;
+        if (evalNodes.length === 0) return null;
 
         const isListMode = activeRules.targetMode === 'list';
         let total = isListMode ? [] : 0;
@@ -819,19 +831,19 @@ class DiceEngine {
         let totalExplosions = 0;
 
         if (isListMode) {
-            evalChips.forEach(chip => {
-                if (chip.chipType === 'dice') {
+            evalNodes.forEach(node => {
+                if (node.nodeType === 'node') {
                     let pool = [];
                     let rawRolls = [];
                     let groupRerolls = 0;
                     let groupExplosions = 0;
-                    const currentModifier = chip.localModifier || activeModifier;
-                    const currentModLevel = chip.localModifier ? chip.localModLevel : activeModLevel;
+                    const currentModifier = node.localModifier || activeModifier;
+                    const currentModLevel = node.localModifier ? node.localModLevel : activeModLevel;
                     const rollsToTake = 1 + (currentModifier ? currentModLevel : 0);
 
-                    for (let i = 0; i < chip.count; i++) {
+                    for (let i = 0; i < node.count; i++) {
                         let dieRolls = [];
-                        for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(chip.sides));
+                        for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(node.sides));
 
                         let kept = dieRolls[0];
                         if (currentModifier === 'ADV') kept = Math.max(...dieRolls);
@@ -845,10 +857,10 @@ class DiceEngine {
 
                         // Reroll Logic
                         let rerollCount = 0;
-                        const rOp = (chip.rerollOp !== undefined) ? chip.rerollOp : activeRules.rerollOp;
-                        const rVal = (chip.rerollVal !== undefined) ? chip.rerollVal : activeRules.rerollVal;
+                        const rOp = (node.rerollOp !== undefined) ? node.rerollOp : activeRules.rerollOp;
+                        const rVal = (node.rerollVal !== undefined) ? node.rerollVal : activeRules.rerollVal;
                         while (rOp && rVal !== null && this.checkCondition(kept, rOp, rVal) && rerollCount < 10) {
-                            kept = this.rng(chip.sides);
+                            kept = this.rng(node.sides);
                             dieLog += `r->${kept}`;
                             rerollCount++;
                         }
@@ -859,10 +871,10 @@ class DiceEngine {
                         // Explode Logic
                         let explodeCount = 0;
                         let currentExplodeDie = kept;
-                        const eOp = (chip.explodeOp !== undefined) ? chip.explodeOp : activeRules.explodeOp;
-                        const eVal = (chip.explodeVal !== undefined) ? chip.explodeVal : activeRules.explodeVal;
+                        const eOp = (node.explodeOp !== undefined) ? node.explodeOp : activeRules.explodeOp;
+                        const eVal = (node.explodeVal !== undefined) ? node.explodeVal : activeRules.explodeVal;
                         while (eOp && eVal !== null && this.checkCondition(currentExplodeDie, eOp, eVal) && explodeCount < 10) {
-                            currentExplodeDie = this.rng(chip.sides);
+                            currentExplodeDie = this.rng(node.sides);
                             totalValueForThisDie += currentExplodeDie;
                             dieLog += `!->${currentExplodeDie}`;
                             explodeCount++;
@@ -883,7 +895,7 @@ class DiceEngine {
 
                         rawRolls.push(dieLog);
 
-                        if (chip.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
+                        if (node.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
                             if (totalValueForThisDie === 20) hasCritHit = true;
                             if (totalValueForThisDie === 1) hasCritFail = true;
                         }
@@ -938,7 +950,7 @@ class DiceEngine {
                     }
                     
                     // Build formula string
-                    let f = `${chip.count}d${chip.sides}`;
+                    let f = `${node.count}d${node.sides}`;
                     if (currentModifier === 'ADV') f += 'kh1' + (currentModLevel > 1 ? `+${currentModLevel - 1}` : '');
                     if (currentModifier === 'DIS') f += 'kl1' + (currentModLevel > 1 ? `+${currentModLevel - 1}` : '');
                     if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
@@ -985,19 +997,19 @@ class DiceEngine {
         } else {
             let tokens = [];
 
-            evalChips.forEach(chip => {
-                if (chip.chipType === 'dice') {
+            evalNodes.forEach(node => {
+                if (node.nodeType === 'node') {
                     let pool = [];
                     let rawRolls = [];
                     let groupRerolls = 0;
                     let groupExplosions = 0;
-                    const currentModifier = chip.localModifier || activeModifier;
-                    const currentModLevel = chip.localModifier ? chip.localModLevel : activeModLevel;
+                    const currentModifier = node.localModifier || activeModifier;
+                    const currentModLevel = node.localModifier ? node.localModLevel : activeModLevel;
                     const rollsToTake = 1 + (currentModifier ? currentModLevel : 0);
 
-                    for (let i = 0; i < chip.count; i++) {
+                    for (let i = 0; i < node.count; i++) {
                         let dieRolls = [];
-                        for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(chip.sides));
+                        for (let j = 0; j < rollsToTake; j++) dieRolls.push(this.rng(node.sides));
 
                         let kept = dieRolls[0];
                         if (currentModifier === 'ADV') kept = Math.max(...dieRolls);
@@ -1011,10 +1023,10 @@ class DiceEngine {
 
                         // Reroll Logic
                         let rerollCount = 0;
-                        const rOp = (chip.rerollOp !== undefined) ? chip.rerollOp : activeRules.rerollOp;
-                        const rVal = (chip.rerollVal !== undefined) ? chip.rerollVal : activeRules.rerollVal;
+                        const rOp = (node.rerollOp !== undefined) ? node.rerollOp : activeRules.rerollOp;
+                        const rVal = (node.rerollVal !== undefined) ? node.rerollVal : activeRules.rerollVal;
                         while (rOp && rVal !== null && this.checkCondition(kept, rOp, rVal) && rerollCount < 10) {
-                            kept = this.rng(chip.sides);
+                            kept = this.rng(node.sides);
                             dieLog += `r->${kept}`;
                             rerollCount++;
                         }
@@ -1025,10 +1037,10 @@ class DiceEngine {
                         // Explode Logic
                         let explodeCount = 0;
                         let currentExplodeDie = kept;
-                        const eOp = (chip.explodeOp !== undefined) ? chip.explodeOp : activeRules.explodeOp;
-                        const eVal = (chip.explodeVal !== undefined) ? chip.explodeVal : activeRules.explodeVal;
+                        const eOp = (node.explodeOp !== undefined) ? node.explodeOp : activeRules.explodeOp;
+                        const eVal = (node.explodeVal !== undefined) ? node.explodeVal : activeRules.explodeVal;
                         while (eOp && eVal !== null && this.checkCondition(currentExplodeDie, eOp, eVal) && explodeCount < 10) {
-                            currentExplodeDie = this.rng(chip.sides);
+                            currentExplodeDie = this.rng(node.sides);
                             totalValueForThisDie += currentExplodeDie;
                             dieLog += `!->${currentExplodeDie}`;
                             explodeCount++;
@@ -1049,7 +1061,7 @@ class DiceEngine {
 
                         rawRolls.push(dieLog);
 
-                        if (chip.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
+                        if (node.sides === 20 && !activeRules.targetOp && activeRules.targetMode === 'sum') {
                             if (totalValueForThisDie === 20) hasCritHit = true;
                             if (totalValueForThisDie === 1) hasCritFail = true;
                         }
@@ -1101,7 +1113,7 @@ class DiceEngine {
                     }
                     
                     // Build formula string
-                    let f = `${chip.count}d${chip.sides}`;
+                    let f = `${node.count}d${node.sides}`;
                     if (currentModifier === 'ADV') f += 'kh1' + (currentModLevel > 1 ? `+${currentModLevel - 1}` : '');
                     if (currentModifier === 'DIS') f += 'kl1' + (currentModLevel > 1 ? `+${currentModLevel - 1}` : '');
                     if (activeRules.rerollOp && activeRules.rerollVal !== null) f += `r${activeRules.rerollOp.replace('=', '')}${activeRules.rerollVal}`;
@@ -1142,38 +1154,38 @@ class DiceEngine {
                     });
 
                     tokens.push({ type: 'num', value: sum });
-                } else if (chip.chipType === 'modifier' || chip.chipType === 'number') {
+                } else if (node.nodeType === 'modifier' || node.nodeType === 'number') {
                     let base = 0;
                     let baseStr = "";
-                    if (chip.type === 'variable') {
-                        const resolved = this.resolveVariable(chip.value);
+                    if (node.type === 'variable') {
+                        const resolved = this.resolveVariable(node.value);
                         base = resolved !== null ? resolved : 0;
-                        baseStr = `${chip.value} (${resolved !== null ? resolved : 0})`;
+                        baseStr = `${node.value} (${resolved !== null ? resolved : 0})`;
                     } else {
-                        base = Number(chip.value) || 0;
+                        base = Number(node.value) || 0;
                         baseStr = `${base}`;
                     }
 
                     let mult = 1;
                     let multStr = "";
-                    if (chip.multiplierType === 'variable') {
-                        const resolved = this.resolveVariable(chip.multiplierValue);
+                    if (node.multiplierType === 'variable') {
+                        const resolved = this.resolveVariable(node.multiplierValue);
                         mult = resolved !== null ? resolved : 1;
-                        multStr = ` * ${chip.multiplierValue} (${mult})`;
-                    } else if (chip.multiplierType === 'literal') {
-                        mult = Number(chip.multiplierValue);
+                        multStr = ` * ${node.multiplierValue} (${mult})`;
+                    } else if (node.multiplierType === 'literal') {
+                        mult = Number(node.multiplierValue);
                         if (isNaN(mult)) mult = 1;
                         multStr = ` * ${mult}`;
                     }
 
                     let div = 1;
                     let divStr = "";
-                    if (chip.divisorType === 'variable') {
-                        const resolved = this.resolveVariable(chip.divisorValue);
+                    if (node.divisorType === 'variable') {
+                        const resolved = this.resolveVariable(node.divisorValue);
                         div = resolved !== null ? resolved : 1;
-                        divStr = ` / ${chip.divisorValue} (${div})`;
-                    } else if (chip.divisorType === 'literal') {
-                        div = Number(chip.divisorValue);
+                        divStr = ` / ${node.divisorValue} (${div})`;
+                    } else if (node.divisorType === 'literal') {
+                        div = Number(node.divisorValue);
                         if (isNaN(div) || div === 0) div = 1;
                         divStr = ` / ${div}`;
                     }
@@ -1185,28 +1197,28 @@ class DiceEngine {
                     }
 
                     let roundStr = "";
-                    if (chip.roundMode === 'up') {
+                    if (node.roundMode === 'up') {
                         termVal = Math.ceil(termVal);
                         roundStr = " (round up)";
-                    } else if (chip.roundMode === 'down') {
+                    } else if (node.roundMode === 'down') {
                         termVal = Math.floor(termVal);
                         roundStr = " (round down)";
-                    } else if (chip.roundMode === 'round') {
+                    } else if (node.roundMode === 'round') {
                         termVal = Math.round(termVal);
                         roundStr = " (round)";
                     }
 
-                    const op = chip.operator === '-' ? '-' : '+';
+                    const op = node.operator === '-' ? '-' : '+';
                     const signedVal = op === '-' ? -termVal : termVal;
 
-                    let breakdownFormulaName = `${op} ${chip.type === 'variable' ? chip.value : Math.abs(Number(chip.value))}${chip.multiplierType && chip.multiplierType !== 'none' ? ' * ' + chip.multiplierValue : ''}${chip.divisorType && chip.divisorType !== 'none' ? ' / ' + chip.divisorValue : ''}${roundStr}`;
+                    let breakdownFormulaName = `${op} ${node.type === 'variable' ? node.value : Math.abs(Number(node.value))}${node.multiplierType && node.multiplierType !== 'none' ? ' * ' + node.multiplierValue : ''}${node.divisorType && node.divisorType !== 'none' ? ' / ' + node.divisorValue : ''}${roundStr}`;
                     let breakdownSubtotal = `${op === '-' ? '-' : '+'}${termVal}`;
                     
-                    if ((!chip.multiplierType || chip.multiplierType === 'none') && (!chip.divisorType || chip.divisorType === 'none')) {
-                        if (chip.type === 'variable') {
-                            breakdownFormulaName = chip.value;
+                    if ((!node.multiplierType || node.multiplierType === 'none') && (!node.divisorType || node.divisorType === 'none')) {
+                        if (node.type === 'variable') {
+                            breakdownFormulaName = node.value;
                             breakdownSubtotal = `${signedVal >= 0 ? '+' : ''}${signedVal}`;
-                        } else if (chip.type === 'literal') {
+                        } else if (node.type === 'literal') {
                             breakdownFormulaName = 'Flat';
                             breakdownSubtotal = `${signedVal >= 0 ? '+' : ''}${signedVal}`;
                         }
@@ -1219,11 +1231,11 @@ class DiceEngine {
                     });
 
                     tokens.push({ type: 'num', value: signedVal });
-                } else if (chip.chipType === 'operator') {
+                } else if (node.nodeType === 'operator') {
                     tokens.push({
                         type: 'op',
-                        value: chip.operator,
-                        roundMode: chip.roundMode || 'none'
+                        value: node.operator,
+                        roundMode: node.roundMode || 'none'
                     });
                 }
             });

@@ -4,7 +4,7 @@
   "description": "A TTRPG dice roller that uses hardware static noise to generate cryptographically secure pseudo-random numbers. High-fidelity math meets a frictionless, tactile interface.",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest && node Tests/IntegrationRunner.js"
   },
   "repository": {
     "type": "git",

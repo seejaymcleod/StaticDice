@@ -23,7 +23,7 @@ describe('DiceEngine', () => {
         expect(engine.rollingQueue.length).toBe(0);
     });
 
-    test('backspaceQueue removes chips in reverse chronological order', () => {
+    test('backspaceQueue removes nodes in reverse chronological order', () => {
         engine.changeQueue(20, 1);
         engine.applyModifier('ADV');
         engine.adjustFlatMod(5);
@@ -36,7 +36,7 @@ describe('DiceEngine', () => {
         expect(engine.flatMod).toBe(0);
         expect(engine.queue.length).toBe(2);
 
-        engine.backspaceQueue(); // removes ADV operator chip
+        engine.backspaceQueue(); // removes ADV operator node
         expect(engine.queue.length).toBe(1);
 
         engine.backspaceQueue(); // removes last die group
@@ -63,26 +63,26 @@ describe('DiceEngine', () => {
         expect(engine.flatMod).toBe(1);
     });
 
-    test('applyModifier appends and stacks ADV/DIS chips correctly', () => {
+    test('applyModifier appends and stacks ADV/DIS nodes correctly', () => {
         engine.changeQueue(20, 1);
         
         engine.applyModifier('ADV');
         expect(engine.queue[1]).toEqual({
-            chipType: 'operator',
+            nodeType: 'operator',
             operator: 'ADV',
             modifierLevel: 1
         });
 
         engine.applyModifier('ADV'); // Stack it
         expect(engine.queue[1]).toEqual({
-            chipType: 'operator',
+            nodeType: 'operator',
             operator: 'ADV',
             modifierLevel: 2
         });
 
         engine.applyModifier('DIS'); // Swaps to DIS
         expect(engine.queue[1]).toEqual({
-            chipType: 'operator',
+            nodeType: 'operator',
             operator: 'DIS',
             modifierLevel: 1
         });
@@ -237,7 +237,7 @@ describe('DiceEngine', () => {
             });
         });
 
-        test('complex modifier chips calculation', () => {
+        test('complex modifier nodes calculation', () => {
             engine.changeQueue(20, 1);
             engine.setRng(() => 10); // roll 10
             
@@ -272,7 +272,7 @@ describe('DiceEngine', () => {
             engine.updateRules({ targetMode: "count", targetOp: ">=", targetVal: 5 });
             engine.changeQueue(10, 3);
             
-            // Add a +2 successes chip
+            // Add a +2 successes node
             engine.flatMod = 2;
 
             const result = engine.calculateRoll();
@@ -297,7 +297,7 @@ describe('DiceEngine', () => {
             // 1d20 ADV + 1d6
             engine.changeQueue(20, 1);
             engine.applyModifier('ADV');
-            engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '+', roundMode: 'none' });
             engine.changeQueue(6, 1);
 
             const result = engine.calculateRoll();
@@ -322,11 +322,11 @@ describe('DiceEngine', () => {
             });
 
             // (1d20 + 1d6) ADV
-            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '(', roundMode: 'none' });
             engine.changeQueue(20, 1);
-            engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '+', roundMode: 'none' });
             engine.changeQueue(6, 1);
-            engine.queue.push({ chipType: 'operator', operator: ')', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: ')', roundMode: 'none' });
             engine.applyModifier('ADV');
 
             const result = engine.calculateRoll();
@@ -379,7 +379,7 @@ describe('DiceEngine', () => {
         test('adds "+" when adding a new dice group next to another dice group', () => {
             engine.changeQueue(6, 1);
             engine.changeQueue(8, 1);
-            expect(engine.queue.map(c => c.chipType)).toEqual(['dice', 'operator', 'dice']);
+            expect(engine.queue.map(c => c.nodeType)).toEqual(['node', 'operator', 'node']);
             expect(engine.queue[1].operator).toBe('+');
         });
     });
@@ -396,34 +396,34 @@ describe('DiceEngine', () => {
 
         test('trailing operator is invalid', () => {
             engine.changeQueue(6, 1);
-            engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '+', roundMode: 'none' });
             expect(engine.isQueueValid()).toBe(false);
         });
 
         test('unbalanced parentheses are invalid', () => {
-            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '(', roundMode: 'none' });
             engine.changeQueue(6, 1);
             expect(engine.isQueueValid()).toBe(false);
         });
 
         test('balanced parentheses with operands are valid', () => {
-            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '(', roundMode: 'none' });
             engine.changeQueue(6, 1);
-            engine.queue.push({ chipType: 'operator', operator: ')', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: ')', roundMode: 'none' });
             expect(engine.isQueueValid()).toBe(true);
         });
 
         test('empty parenthesis group is invalid', () => {
-            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
-            engine.queue.push({ chipType: 'operator', operator: ')', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '(', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: ')', roundMode: 'none' });
             expect(engine.isQueueValid()).toBe(false);
         });
 
         test('operator after open parenthesis is invalid', () => {
-            engine.queue.push({ chipType: 'operator', operator: '(', roundMode: 'none' });
-            engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '(', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: '+', roundMode: 'none' });
             engine.changeQueue(6, 1);
-            engine.queue.push({ chipType: 'operator', operator: ')', roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: ')', roundMode: 'none' });
             expect(engine.isQueueValid()).toBe(false);
         });
     });
@@ -432,11 +432,11 @@ describe('DiceEngine', () => {
         test('evaluates standard operator precedence correctly', () => {
             // 2 + 3 * 4 = 14
             engine.queue = [
-                { chipType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                { chipType: 'operator', operator: '+', roundMode: 'none' },
-                { chipType: 'number', value: 3, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                { chipType: 'operator', operator: '*', roundMode: 'none' },
-                { chipType: 'number', value: 4, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                { nodeType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { nodeType: 'operator', operator: '+', roundMode: 'none' },
+                { nodeType: 'number', value: 3, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { nodeType: 'operator', operator: '*', roundMode: 'none' },
+                { nodeType: 'number', value: 4, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
             ];
             expect(engine.calculateRoll().total).toBe(14);
         });
@@ -444,13 +444,13 @@ describe('DiceEngine', () => {
         test('respects parentheses grouping', () => {
             // (2 + 3) * 4 = 20
             engine.queue = [
-                { chipType: 'operator', operator: '(', roundMode: 'none' },
-                { chipType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                { chipType: 'operator', operator: '+', roundMode: 'none' },
-                { chipType: 'number', value: 3, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                { chipType: 'operator', operator: ')', roundMode: 'none' },
-                { chipType: 'operator', operator: '*', roundMode: 'none' },
-                { chipType: 'number', value: 4, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                { nodeType: 'operator', operator: '(', roundMode: 'none' },
+                { nodeType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { nodeType: 'operator', operator: '+', roundMode: 'none' },
+                { nodeType: 'number', value: 3, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { nodeType: 'operator', operator: ')', roundMode: 'none' },
+                { nodeType: 'operator', operator: '*', roundMode: 'none' },
+                { nodeType: 'number', value: 4, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
             ];
             expect(engine.calculateRoll().total).toBe(20);
         });
@@ -458,17 +458,17 @@ describe('DiceEngine', () => {
         test('handles custom division rounding modes', () => {
             // 5 / 2 (round down) = 2
             engine.queue = [
-                { chipType: 'number', value: 5, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                { chipType: 'operator', operator: '/', roundMode: 'down' },
-                { chipType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                { nodeType: 'number', value: 5, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                { nodeType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
             ];
             expect(engine.calculateRoll().total).toBe(2);
 
             // 5 / 2 (round up) = 3
             engine.queue = [
-                { chipType: 'number', value: 5, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                { chipType: 'operator', operator: '/', roundMode: 'up' },
-                { chipType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                { nodeType: 'number', value: 5, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { nodeType: 'operator', operator: '/', roundMode: 'up' },
+                { nodeType: 'number', value: 2, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
             ];
             expect(engine.calculateRoll().total).toBe(3);
         });
@@ -476,9 +476,9 @@ describe('DiceEngine', () => {
         test('handles negative/subtraction operators and negative values correctly', () => {
             // 10 - (-5) = 15
             engine.queue = [
-                { chipType: 'number', value: 10, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                { chipType: 'operator', operator: '-', roundMode: 'none' },
-                { chipType: 'number', value: 5, operator: '-', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                { nodeType: 'number', value: 10, operator: '+', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                { nodeType: 'operator', operator: '-', roundMode: 'none' },
+                { nodeType: 'number', value: 5, operator: '-', type: 'literal', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
             ];
             expect(engine.calculateRoll().total).toBe(15);
         });

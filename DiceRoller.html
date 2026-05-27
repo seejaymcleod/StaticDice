@@ -1568,8 +1568,8 @@
             </div>
 
             <!-- ACTIVE MODIFIER CHIPS DISPLAY ROW -->
-            <div id="main-active-chips-row" class="flex flex-wrap gap-1.5 px-1 mt-1 hidden">
-                <!-- Small compact chips injected via JS -->
+            <div id="main-active-nodes-row" class="flex flex-wrap gap-1.5 px-1 mt-1 hidden">
+                <!-- Small compact nodes injected via JS -->
             </div>
 
             <!-- ROW 3: # | ADV | DIS | ROLL -->
@@ -2426,21 +2426,21 @@
 
             <div class="h-px bg-white/5"></div>
 
-            <!-- Condensed Chip Builder -->
+            <!-- Condensed Node Builder -->
             <div class="space-y-2">
                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Add Variable Chip to
                     Queue</label>
                 <div class="bg-[#020617]/50 rounded-xl p-2 border border-white/5 flex flex-wrap gap-2 items-center">
-                    <select id="res-chip-operator"
+                    <select id="res-node-operator"
                         class="bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 w-10 text-center h-9">
                         <option value="+">+</option>
                         <option value="-">-</option>
                     </select>
-                    <select id="res-chip-variable"
+                    <select id="res-node-variable"
                         class="flex-1 bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 px-2 h-9">
                         <!-- Populated with character variables -->
                     </select>
-                    <select id="res-chip-multiplier"
+                    <select id="res-node-multiplier"
                         class="bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 w-[4.5rem] text-center h-9"
                         title="Multiplier">
                         <option value="1">x1</option>
@@ -2448,7 +2448,7 @@
                         <option value="3">x3</option>
                         <option value="0.5">x½ (↓)</option>
                     </select>
-                    <button id="res-add-chip-btn" onclick="addResourceChip()"
+                    <button id="res-add-node-btn" onclick="addResourceNode()"
                         class="h-9 px-4 rounded-lg bg-sky-500/20 border border-sky-500/50 text-sky-400 font-bold text-[10px] hover:bg-sky-500 hover:text-[#020617] uppercase tracking-wider transition-colors shrink-0">
                         Add to Queue
                     </button>
@@ -2574,8 +2574,8 @@
         </div>
     </div>
 
-    <!-- Chip Popover Editor -->
-    <div id="chip-popover-editor"
+    <!-- Node Popover Editor -->
+    <div id="node-popover-editor"
         class="hidden fixed z-[90] bg-[#0f172a] border border-[#00d4ff]/20 rounded-xl p-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] w-72 text-white pointer-events-auto">
         <!-- Dynamically injected -->
     </div>
@@ -2956,11 +2956,11 @@
         function closeRulesPanel() { const r = document.getElementById('advanced-rows'); if (r && !r.classList.contains('hidden')) toggleAdvancedPanel(); }
 
         // ═══════════════════════════════════════════════════════════════
-        // INLINE NODE EDITOR (INE) — replaces old panel & chip popover
+        // INLINE NODE EDITOR (INE) — replaces old panel & node popover
         // ═══════════════════════════════════════════════════════════════
 
-        let ineChipIndex = null; // which queue chip is being edited (null = new number)
-        let ineDivRoundMode = 'none'; // for division operator chips
+        let ineNodeIndex = null; // which queue node is being edited (null = new number)
+        let ineDivRoundMode = 'none'; // for division operator nodes
 
         // Legacy state variables (still referenced by setNumberMode, setEvalTab, etc.)
         let currentAdvDisType = null;
@@ -2984,8 +2984,8 @@
             lbl.textContent = label || 'NODE EDITOR';
 
             if (diceContent) {
-                diceContent.classList.toggle('active', mode === 'dice');
-                diceContent.classList.toggle('hidden', mode !== 'dice');
+                diceContent.classList.toggle('active', mode === 'node');
+                diceContent.classList.toggle('hidden', mode !== 'node');
             }
             if (numberContent) {
                 numberContent.classList.toggle('active', mode === 'number');
@@ -3025,18 +3025,18 @@
                 editor.classList.remove('open');
                 editor.removeAttribute('data-mode');
             }
-            ineChipIndex = null;
+            ineNodeIndex = null;
         }
 
-        // ── INE: Dice chip ──
-        function ineOpenDice(index) {
-            ineChipIndex = index;
-            const chip = engine.queue[index];
-            if (!chip || chip.chipType !== 'dice') return;
+        // ── INE: Dice node ──
+        function ineOpenNode(index) {
+            ineNodeIndex = index;
+            const node = engine.queue[index];
+            if (!node || node.nodeType !== 'node') return;
 
-            document.getElementById('ine-dice-count').value = chip.count;
-            ineRenderDieGrid(chip.sides);
-            ineOpen('dice', 'DICE NODE');
+            document.getElementById('ine-dice-count').value = node.count;
+            ineRenderDieGrid(node.sides);
+            ineOpen('node', 'DICE NODE');
         }
 
         function ineRenderDieGrid(activeSides) {
@@ -3054,24 +3054,24 @@
         }
 
         function ineSelectDie(sides) {
-            if (ineChipIndex === null) return;
-            const chip = engine.queue[ineChipIndex];
-            if (!chip) return;
-            chip.sides = sides;
+            if (ineNodeIndex === null) return;
+            const node = engine.queue[ineNodeIndex];
+            if (!node) return;
+            node.sides = sides;
             ineRenderDieGrid(sides);
             updateUI();
             vibrate(5);
         }
 
         function ineUpdateDice() {
-            if (ineChipIndex === null) return;
-            const chip = engine.queue[ineChipIndex];
-            if (!chip) return;
-            chip.count = Math.max(1, parseInt(document.getElementById('ine-dice-count').value) || 1);
+            if (ineNodeIndex === null) return;
+            const node = engine.queue[ineNodeIndex];
+            if (!node) return;
+            node.count = Math.max(1, parseInt(document.getElementById('ine-dice-count').value) || 1);
             updateUI();
         }
 
-        // ── INE: Number/modifier chip ──
+        // ── INE: Number/modifier node ──
 
         function ineSetNumVarMode(mode) {
             numberNodeMode = mode;
@@ -3161,7 +3161,7 @@
         }
 
         function ineOpenNumber(index) {
-            ineChipIndex = index;
+            ineNodeIndex = index;
             inePopulateVarDropdown();
 
             if (index === null) {
@@ -3173,26 +3173,26 @@
                 return;
             }
 
-            const chip = engine.queue[index];
-            if (!chip) return;
+            const node = engine.queue[index];
+            if (!node) return;
 
-            if (chip.chipType === 'number' || chip.type === 'literal') {
+            if (node.nodeType === 'number' || node.type === 'literal') {
                 const valInp = document.getElementById('ine-number-val');
-                if (valInp) valInp.value = Number(chip.value) || 0;
+                if (valInp) valInp.value = Number(node.value) || 0;
                 ineSetNumVarMode('NUM');
             } else {
                 const select = document.getElementById('ine-number-var-select');
-                if (select) select.value = chip.value;
+                if (select) select.value = node.value;
                 ineSetNumVarMode('VAR');
 
                 const char = characters.find(c => c.id === activeCharacterId);
-                const varVal = (char && char.variables) ? char.variables[chip.value] : undefined;
-                if (chip.value === 'target' || varVal === undefined || varVal === null || varVal === "") {
+                const varVal = (char && char.variables) ? char.variables[node.value] : undefined;
+                if (node.value === 'target' || varVal === undefined || varVal === null || varVal === "") {
                     const varValInp = document.getElementById('ine-number-var-val');
                     if (varValInp) varValInp.value = varVal !== undefined ? (parseInt(varVal) || 0) : 0;
                 }
             }
-            const label = chip.chipType === 'modifier' ? 'MODIFIER NODE' : 'NUMBER NODE';
+            const label = node.nodeType === 'modifier' ? 'MODIFIER NODE' : 'NUMBER NODE';
             ineOpen('number', label);
         }
 
@@ -3203,21 +3203,21 @@
         }
 
         function ineUpdateNumber() {
-            if (ineChipIndex === null) return;
-            const chip = engine.queue[ineChipIndex];
-            if (!chip) return;
+            if (ineNodeIndex === null) return;
+            const node = engine.queue[ineNodeIndex];
+            if (!node) return;
 
             if (numberNodeMode === 'NUM') {
-                chip.chipType = 'number';
-                chip.type = 'literal';
+                node.nodeType = 'number';
+                node.type = 'literal';
                 const numValEl = document.getElementById('ine-number-val');
-                chip.value = numValEl ? (parseInt(numValEl.value) || 0) : 0;
+                node.value = numValEl ? (parseInt(numValEl.value) || 0) : 0;
             } else {
                 const selectEl = document.getElementById('ine-number-var-select');
                 const varSelect = selectEl ? selectEl.value : 'target';
-                chip.chipType = 'modifier';
-                chip.type = 'variable';
-                chip.value = varSelect;
+                node.nodeType = 'modifier';
+                node.type = 'variable';
+                node.value = varSelect;
 
                 const char = characters.find(c => c.id === activeCharacterId);
                 const valContainer = document.getElementById('ine-var-val-container');
@@ -3232,9 +3232,9 @@
 
         // ── INE: Division / rounding ──
         function ineOpenDiv(index) {
-            ineChipIndex = index;
-            const chip = engine.queue[index];
-            ineDivRoundMode = (chip && chip.roundMode) ? chip.roundMode : 'none';
+            ineNodeIndex = index;
+            const node = engine.queue[index];
+            ineDivRoundMode = (node && node.roundMode) ? node.roundMode : 'none';
             ineUpdateRoundBtns();
             ineOpen('div', 'DIVISION');
         }
@@ -3242,10 +3242,10 @@
         function ineSetRound(mode) {
             ineDivRoundMode = mode;
             ineUpdateRoundBtns();
-            if (ineChipIndex !== null) {
-                const chip = engine.queue[ineChipIndex];
-                if (chip) {
-                    chip.roundMode = mode;
+            if (ineNodeIndex !== null) {
+                const node = engine.queue[ineNodeIndex];
+                if (node) {
+                    node.roundMode = mode;
                     updateUI();
                 }
             }
@@ -3350,7 +3350,7 @@
         }
 
         function ineOpenReroll() {
-            ineChipIndex = null;
+            ineNodeIndex = null;
             inePopulateRerollVarDropdown();
 
             const isExplode = document.getElementById('rule-explode-op').value !== "";
@@ -3418,12 +3418,12 @@
 
             if (applyAll) {
                 // Clear any local rules on dice in the queue
-                engine.queue.forEach(chip => {
-                    if (chip.chipType === 'dice') {
-                        delete chip.rerollOp;
-                        delete chip.rerollVal;
-                        delete chip.explodeOp;
-                        delete chip.explodeVal;
+                engine.queue.forEach(node => {
+                    if (node.nodeType === 'node') {
+                        delete node.rerollOp;
+                        delete node.rerollVal;
+                        delete node.explodeOp;
+                        delete node.explodeVal;
                     }
                 });
 
@@ -3445,10 +3445,10 @@
                 document.getElementById('rule-explode-op').value = "";
                 document.getElementById('rule-explode-val').value = "";
 
-                // Find the last dice chip in the queue
-                const diceChips = engine.queue.filter(c => c.chipType === 'dice');
-                if (diceChips.length > 0) {
-                    const lastDice = diceChips[diceChips.length - 1];
+                // Find the last dice node in the queue
+                const diceNodes = engine.queue.filter(c => c.nodeType === 'node');
+                if (diceNodes.length > 0) {
+                    const lastDice = diceNodes[diceNodes.length - 1];
                     if (isExplode) {
                         lastDice.explodeOp = op;
                         lastDice.explodeVal = op ? val : null;
@@ -3467,7 +3467,7 @@
 
         // ── INE: Eval / Target Mode ──
         function ineOpenEval() {
-            ineChipIndex = null;
+            ineNodeIndex = null;
 
             // Map structured rules from engine to unified flat array
             ineEvalCriteria.length = 0;
@@ -3781,8 +3781,8 @@
 
         // ── INE: Actions ──
         function ineDelete() {
-            if (ineChipIndex !== null) {
-                removeQueueChip(ineChipIndex);
+            if (ineNodeIndex !== null) {
+                removeQueueChip(ineNodeIndex);
             } else {
                 const rerollContent = document.getElementById('ine-reroll-content');
                 const evalContent = document.getElementById('ine-eval-content');
@@ -3812,22 +3812,22 @@
         }
 
         function ineConfirm() {
-            // For number node from '#' button (new chip)
+            // For number node from '#' button (new node)
             const editor = document.getElementById('inline-node-editor');
             const mode = editor ? editor.getAttribute('data-mode') : null;
-            if (ineChipIndex === null && mode === 'number') {
+            if (ineNodeIndex === null && mode === 'number') {
                 activeLoadoutId = null;
                 if (numberNodeMode === 'NUM') {
                     const val = parseInt(document.getElementById('ine-number-val').value) || 0;
                     engine.queue.push({
-                        chipType: 'number', value: val, operator: '+', type: 'literal',
+                        nodeType: 'number', value: val, operator: '+', type: 'literal',
                         multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none'
                     });
                 } else {
                     const selectEl = document.getElementById('ine-number-var-select');
                     const varSelect = selectEl ? selectEl.value : 'target';
                     engine.queue.push({
-                        chipType: 'modifier', type: 'variable', value: varSelect, operator: '+',
+                        nodeType: 'modifier', type: 'variable', value: varSelect, operator: '+',
                         multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none'
                     });
 
@@ -3872,19 +3872,19 @@
         // ═══════════════════════════════════════════════════════════════
         function editQueueChip(index, event) {
             if (event) event.stopPropagation();
-            const chip = engine.queue[index];
-            if (!chip) return;
+            const node = engine.queue[index];
+            if (!node) return;
 
-            if (chip.chipType === 'dice') {
+            if (node.nodeType === 'node') {
                 document.getElementById('dice-section')?.scrollIntoView({ behavior: 'smooth' });
                 return;
-            } else if (chip.chipType === 'modifier' || chip.chipType === 'number') {
-                if (ineChipIndex === index && document.getElementById('inline-node-editor').classList.contains('open')) {
+            } else if (node.nodeType === 'modifier' || node.nodeType === 'number') {
+                if (ineNodeIndex === index && document.getElementById('inline-node-editor').classList.contains('open')) {
                     ineClose(); return;
                 }
                 ineOpenNumber(index);
-            } else if (chip.chipType === 'operator' && chip.operator === '/') {
-                if (ineChipIndex === index && document.getElementById('inline-node-editor').classList.contains('open')) {
+            } else if (node.nodeType === 'operator' && node.operator === '/') {
+                if (ineNodeIndex === index && document.getElementById('inline-node-editor').classList.contains('open')) {
                     ineClose(); return;
                 }
                 ineOpenDiv(index);
@@ -3959,15 +3959,15 @@
             activeLoadoutId = null;
             const lastChip = engine.queue[engine.queue.length - 1];
             if (lastChip && (
-                lastChip.chipType === 'dice' ||
-                lastChip.chipType === 'number' ||
-                lastChip.chipType === 'modifier' ||
-                (lastChip.chipType === 'operator' && lastChip.operator === ')')
+                lastChip.nodeType === 'node' ||
+                lastChip.nodeType === 'number' ||
+                lastChip.nodeType === 'modifier' ||
+                (lastChip.nodeType === 'operator' && lastChip.operator === ')')
             )) {
-                engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+                engine.queue.push({ nodeType: 'operator', operator: '+', roundMode: 'none' });
             }
             engine.queue.push({
-                chipType: 'number', value: val, operator: '+', type: 'literal',
+                nodeType: 'number', value: val, operator: '+', type: 'literal',
                 multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none'
             });
             updateUI(); vibrate(10);
@@ -3979,15 +3979,15 @@
             activeLoadoutId = null;
             const lastChip = engine.queue[engine.queue.length - 1];
             if (lastChip && (
-                lastChip.chipType === 'dice' ||
-                lastChip.chipType === 'number' ||
-                lastChip.chipType === 'modifier' ||
-                (lastChip.chipType === 'operator' && lastChip.operator === ')')
+                lastChip.nodeType === 'node' ||
+                lastChip.nodeType === 'number' ||
+                lastChip.nodeType === 'modifier' ||
+                (lastChip.nodeType === 'operator' && lastChip.operator === ')')
             )) {
-                engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+                engine.queue.push({ nodeType: 'operator', operator: '+', roundMode: 'none' });
             }
             engine.queue.push({
-                chipType: 'modifier', type: sel.value === 'target' ? 'target' : 'variable',
+                nodeType: 'modifier', type: sel.value === 'target' ? 'target' : 'variable',
                 variableId: sel.value, operator: '+', value: 0,
                 multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none'
             });
@@ -4141,32 +4141,32 @@
 
             if (binaryOps.includes(op)) {
                 if (!lastChip) return;
-                if (lastChip.chipType === 'operator' && lastChip.operator !== ')') return;
+                if (lastChip.nodeType === 'operator' && lastChip.operator !== ')') return;
             } else if (op === ')') {
                 let openCount = 0;
                 let closeCount = 0;
                 engine.queue.forEach(c => {
-                    if (c.chipType === 'operator') {
+                    if (c.nodeType === 'operator') {
                         if (c.operator === '(') openCount++;
                         if (c.operator === ')') closeCount++;
                     }
                 });
                 if (openCount <= closeCount) return;
                 if (!lastChip) return;
-                if (lastChip.chipType === 'operator' && lastChip.operator !== ')') return;
+                if (lastChip.nodeType === 'operator' && lastChip.operator !== ')') return;
             }
 
             if (op === '(') {
                 if (lastChip && (
-                    lastChip.chipType === 'dice' ||
-                    lastChip.chipType === 'number' ||
-                    lastChip.chipType === 'modifier' ||
-                    (lastChip.chipType === 'operator' && lastChip.operator === ')')
+                    lastChip.nodeType === 'node' ||
+                    lastChip.nodeType === 'number' ||
+                    lastChip.nodeType === 'modifier' ||
+                    (lastChip.nodeType === 'operator' && lastChip.operator === ')')
                 )) {
-                    engine.queue.push({ chipType: 'operator', operator: '+', roundMode: 'none' });
+                    engine.queue.push({ nodeType: 'operator', operator: '+', roundMode: 'none' });
                 }
             }
-            engine.queue.push({ chipType: 'operator', operator: op, roundMode: 'none' });
+            engine.queue.push({ nodeType: 'operator', operator: op, roundMode: 'none' });
             autoExpandRollPad();
             updateUI(); vibrate(5);
             if (op === '/') {
@@ -4594,8 +4594,8 @@
             const rollBtn = document.getElementById('roll-button');
             const saveBtn = document.getElementById('save-queue-btn');
 
-            const hasFlatMod = engine.queue.some(c => c.chipType === 'modifier');
-            const hasDice = engine.queue.some(c => c.chipType === 'dice');
+            const hasFlatMod = engine.queue.some(c => c.nodeType === 'modifier');
+            const hasDice = engine.queue.some(c => c.nodeType === 'node');
             const canRoll = engine.isQueueValid();
             rollBtn.disabled = !canRoll;
             rollBtn.style.opacity = canRoll ? '1' : '0.4';
@@ -4605,16 +4605,16 @@
             // 1. Build Unified Chips
             let basePartsHtml = "";
             if (engine.queue.length > 0) {
-                basePartsHtml = engine.queue.map((chip, idx) => {
-                    if (chip.chipType === 'dice') {
-                        let displayText = `${chip.count}d${chip.sides}`;
-                        if (chip.rerollOp && chip.rerollVal !== null) {
-                            const formattedOp = chip.rerollOp.replace('>=', '≥').replace('<=', '≤');
-                            displayText += ` rr${formattedOp}${chip.rerollVal}`;
+                basePartsHtml = engine.queue.map((node, idx) => {
+                    if (node.nodeType === 'node') {
+                        let displayText = `${node.count}d${node.sides}`;
+                        if (node.rerollOp && node.rerollVal !== null) {
+                            const formattedOp = node.rerollOp.replace('>=', '≥').replace('<=', '≤');
+                            displayText += ` rr${formattedOp}${node.rerollVal}`;
                         }
-                        if (chip.explodeOp && chip.explodeVal !== null) {
-                            const formattedOp = chip.explodeOp.replace('>=', '≥').replace('<=', '≤');
-                            displayText += ` ex${formattedOp}${chip.explodeVal}`;
+                        if (node.explodeOp && node.explodeVal !== null) {
+                            const formattedOp = node.explodeOp.replace('>=', '≥').replace('<=', '≤');
+                            displayText += ` ex${formattedOp}${node.explodeVal}`;
                         }
                         return `
                             <div class="group relative flex items-center justify-center gap-1 bg-[#020617] border border-sky-500/20 hover:border-sky-500/50 text-sky-400 px-3 h-[2rem] rounded-xl text-xs font-black transition-all cursor-pointer select-none"
@@ -4624,26 +4624,26 @@
                                         onclick="removeQueueChip(${idx}, event)" title="Remove">✕</button>
                             </div>
                         `;
-                    } else if (chip.chipType === 'modifier' || chip.chipType === 'number') {
-                        const op = chip.operator === '-' ? '-' : '+';
-                        let valStr = chip.value;
+                    } else if (node.nodeType === 'modifier' || node.nodeType === 'number') {
+                        const op = node.operator === '-' ? '-' : '+';
+                        let valStr = node.value;
                         let inlineResolved = "";
-                        if (chip.type === 'variable') {
-                            const resolvedVar = window.getActiveCharacterVariable(chip.value);
+                        if (node.type === 'variable') {
+                            const resolvedVar = window.getActiveCharacterVariable(node.value);
                             if (resolvedVar !== null) {
                                 inlineResolved = `<span class="opacity-60 text-[0.85em] ml-0.5">(${resolvedVar})</span>`;
                             }
                         }
 
                         let mathIndicator = "";
-                        if (chip.multiplierType && chip.multiplierType !== 'none') {
-                            mathIndicator += ` ×${chip.multiplierValue}`;
+                        if (node.multiplierType && node.multiplierType !== 'none') {
+                            mathIndicator += ` ×${node.multiplierValue}`;
                         }
-                        if (chip.divisorType && chip.divisorType !== 'none') {
-                            mathIndicator += ` /${chip.divisorValue}`;
+                        if (node.divisorType && node.divisorType !== 'none') {
+                            mathIndicator += ` /${node.divisorValue}`;
                         }
-                        if (chip.roundMode && chip.roundMode !== 'none') {
-                            mathIndicator += ` (${chip.roundMode === 'up' ? '↑' : chip.roundMode === 'down' ? '↓' : '≈'})`;
+                        if (node.roundMode && node.roundMode !== 'none') {
+                            mathIndicator += ` (${node.roundMode === 'up' ? '↑' : node.roundMode === 'down' ? '↓' : '≈'})`;
                         }
 
                         return `
@@ -4655,17 +4655,17 @@
                                         onclick="removeQueueChip(${idx}, event)" title="Remove">✕</button>
                             </div>
                         `;
-                    } else if (chip.chipType === 'operator') {
-                        const op = chip.operator;
+                    } else if (node.nodeType === 'operator') {
+                        const op = node.operator;
                         const isDivision = op === '/';
                         const isAdvDis = op === 'ADV' || op === 'DIS';
 
                         let roundIndicator = '';
-                        if (isDivision && chip.roundMode && chip.roundMode !== 'none') {
-                            roundIndicator = `<span class="ml-0.5 opacity-70">${chip.roundMode === 'up' ? '↑' : '↓'}</span>`;
+                        if (isDivision && node.roundMode && node.roundMode !== 'none') {
+                            roundIndicator = `<span class="ml-0.5 opacity-70">${node.roundMode === 'up' ? '↑' : '↓'}</span>`;
                         }
 
-                        const opDisplay = op === '*' ? '×' : op === '/' ? '/' : (isAdvDis ? `${op}${chip.modifierLevel > 1 ? '+' + (chip.modifierLevel - 1) : ''}` : op);
+                        const opDisplay = op === '*' ? '×' : op === '/' ? '/' : (isAdvDis ? `${op}${node.modifierLevel > 1 ? '+' + (node.modifierLevel - 1) : ''}` : op);
 
                         let chipColor = 'border-slate-600/30 hover:border-slate-500/40 text-slate-400 bg-[#020617]';
                         if (isDivision) {
@@ -4807,7 +4807,7 @@
 
             // Sync toggle buttons with queue ending ADV/DIS operator state
             const lastChip = engine.queue[engine.queue.length - 1];
-            const currentActiveMod = (lastChip && lastChip.chipType === 'operator' && (lastChip.operator === 'ADV' || lastChip.operator === 'DIS')) ? lastChip.operator : null;
+            const currentActiveMod = (lastChip && lastChip.nodeType === 'operator' && (lastChip.operator === 'ADV' || lastChip.operator === 'DIS')) ? lastChip.operator : null;
             const currentActiveModLevel = currentActiveMod ? lastChip.modifierLevel : 0;
 
             const canMod = hasDice;
@@ -4940,14 +4940,14 @@
             const queue = engine.queue || [];
             const lastChip = queue[queue.length - 1];
 
-            const openCount = queue.filter(c => c.chipType === 'operator' && c.operator === '(').length;
-            const closeCount = queue.filter(c => c.chipType === 'operator' && c.operator === ')').length;
+            const openCount = queue.filter(c => c.nodeType === 'operator' && c.operator === '(').length;
+            const closeCount = queue.filter(c => c.nodeType === 'operator' && c.operator === ')').length;
 
             const isLastDataOrClose = lastChip && (
-                lastChip.chipType === 'dice' ||
-                lastChip.chipType === 'number' ||
-                lastChip.chipType === 'modifier' ||
-                (lastChip.chipType === 'operator' && lastChip.operator === ')')
+                lastChip.nodeType === 'node' ||
+                lastChip.nodeType === 'number' ||
+                lastChip.nodeType === 'modifier' ||
+                (lastChip.nodeType === 'operator' && lastChip.operator === ')')
             );
 
             const mathValid = isLastDataOrClose;
@@ -5007,9 +5007,9 @@
         // MODIFIER CHIPS MANAGEMENT
         // =========================================================================
         function toggleNewChipBaseType() {
-            const type = document.getElementById('new-chip-base-type').value;
-            const litInput = document.getElementById('new-chip-base-literal');
-            const varSelect = document.getElementById('new-chip-base-variable');
+            const type = document.getElementById('new-node-base-type').value;
+            const litInput = document.getElementById('new-node-base-literal');
+            const varSelect = document.getElementById('new-node-base-variable');
 
             if (type === 'variable') {
                 litInput.classList.add('hidden');
@@ -5022,9 +5022,9 @@
         }
 
         function toggleNewChipMultType() {
-            const type = document.getElementById('new-chip-mult-type').value;
-            const litInput = document.getElementById('new-chip-mult-literal');
-            const varSelect = document.getElementById('new-chip-mult-variable');
+            const type = document.getElementById('new-node-mult-type').value;
+            const litInput = document.getElementById('new-node-mult-literal');
+            const varSelect = document.getElementById('new-node-mult-variable');
 
             if (type === 'literal') {
                 litInput.classList.remove('hidden');
@@ -5040,9 +5040,9 @@
         }
 
         function toggleNewChipDivType() {
-            const type = document.getElementById('new-chip-div-type').value;
-            const litInput = document.getElementById('new-chip-div-literal');
-            const varSelect = document.getElementById('new-chip-div-variable');
+            const type = document.getElementById('new-node-div-type').value;
+            const litInput = document.getElementById('new-node-div-literal');
+            const varSelect = document.getElementById('new-node-div-variable');
 
             if (type === 'literal') {
                 litInput.classList.remove('hidden');
@@ -5060,7 +5060,7 @@
         let mathOptionsVisible = false;
         function toggleMathOptions() {
             mathOptionsVisible = !mathOptionsVisible;
-            const mathPanel = document.getElementById('new-chip-math-opts');
+            const mathPanel = document.getElementById('new-node-math-opts');
             const toggleBtn = document.getElementById('math-options-btn');
 
             if (mathOptionsVisible) {
@@ -5094,18 +5094,18 @@
         function addNewModifierChip() {
             activeLoadoutId = null;
 
-            const operator = document.getElementById('new-chip-operator').value;
-            const baseType = document.getElementById('new-chip-base-type').value;
+            const operator = document.getElementById('new-node-operator').value;
+            const baseType = document.getElementById('new-node-base-type').value;
             let baseValue;
 
             if (baseType === 'variable') {
-                baseValue = document.getElementById('new-chip-base-variable').value;
+                baseValue = document.getElementById('new-node-base-variable').value;
                 if (!baseValue || baseValue === "No Variables") {
                     showModal({ title: 'Add Chip Failed', body: 'No character variable selected.', alertOnly: true });
                     return;
                 }
             } else {
-                baseValue = parseInt(document.getElementById('new-chip-base-literal').value);
+                baseValue = parseInt(document.getElementById('new-node-base-literal').value);
                 if (isNaN(baseValue)) {
                     showModal({ title: 'Add Chip Failed', body: 'Invalid literal modifier value entered.', alertOnly: true });
                     return;
@@ -5113,27 +5113,27 @@
             }
 
             // Math inputs
-            const multType = document.getElementById('new-chip-mult-type').value;
+            const multType = document.getElementById('new-node-mult-type').value;
             let multValue = 1;
             if (multType === 'literal') {
-                multValue = parseInt(document.getElementById('new-chip-mult-literal').value);
+                multValue = parseInt(document.getElementById('new-node-mult-literal').value);
                 if (isNaN(multValue)) multValue = 1;
             } else if (multType === 'variable') {
-                multValue = document.getElementById('new-chip-mult-variable').value;
+                multValue = document.getElementById('new-node-mult-variable').value;
                 if (!multValue || multValue === "No Variables") multValue = 1;
             }
 
-            const divType = document.getElementById('new-chip-div-type').value;
+            const divType = document.getElementById('new-node-div-type').value;
             let divValue = 1;
             if (divType === 'literal') {
-                divValue = parseInt(document.getElementById('new-chip-div-literal').value);
+                divValue = parseInt(document.getElementById('new-node-div-literal').value);
                 if (isNaN(divValue) || divValue === 0) divValue = 1;
             } else if (divType === 'variable') {
-                divValue = document.getElementById('new-chip-div-variable').value;
+                divValue = document.getElementById('new-node-div-variable').value;
                 if (!divValue || divValue === "No Variables") divValue = 1;
             }
 
-            const roundMode = document.getElementById('new-chip-round-mode').value;
+            const roundMode = document.getElementById('new-node-round-mode').value;
 
             const newTerm = {
                 type: baseType,
@@ -5153,7 +5153,7 @@
             engine._flatMod.push(newTerm);
 
             // Clear literal base value
-            document.getElementById('new-chip-base-literal').value = '';
+            document.getElementById('new-node-base-literal').value = '';
 
             // Vibrate and refresh UI
             vibrate(10);
@@ -5168,7 +5168,7 @@
 
             // Close the inline node editor and the old popover (hidden anyway)
             ineClose();
-            const popover = document.getElementById('chip-popover-editor');
+            const popover = document.getElementById('node-popover-editor');
             if (popover) popover.classList.add('hidden');
             activeEditChipIndex = null;
 
@@ -5248,28 +5248,28 @@
         }
 
         function renderModifierChips() {
-            const listContainer = document.getElementById('modifier-chips-list');
-            const mainActiveRow = document.getElementById('main-active-chips-row');
-            const totalBadge = document.getElementById('chips-total-badge');
+            const listContainer = document.getElementById('modifier-nodes-list');
+            const mainActiveRow = document.getElementById('main-active-nodes-row');
+            const totalBadge = document.getElementById('nodes-total-badge');
 
-            const chips = engine._flatMod || [];
+            const nodes = engine._flatMod || [];
 
             // Calculate total badge resolved value
-            const totalVal = engine.resolveModifier(chips);
+            const totalVal = engine.resolveModifier(nodes);
             if (totalBadge) {
                 totalBadge.innerText = `Total: ${totalVal >= 0 ? '+' : ''}${totalVal}`;
             }
 
             // 1. Render in Advanced Rules Panel
             if (listContainer) {
-                if (chips.length === 0) {
-                    listContainer.innerHTML = '<span class="text-[10px] text-slate-500 italic py-1 pl-1">No modifier chips active</span>';
+                if (nodes.length === 0) {
+                    listContainer.innerHTML = '<span class="text-[10px] text-slate-500 italic py-1 pl-1">No modifier nodes active</span>';
                 } else {
-                    listContainer.innerHTML = chips.map((chip, index) => {
-                        const termStr = engine.getModifierTermString(chip);
+                    listContainer.innerHTML = nodes.map((node, index) => {
+                        const termStr = engine.getModifierTermString(node);
                         let resolvedStr = "";
-                        if (chip.type === 'variable') {
-                            const resolved = window.getActiveCharacterVariable(chip.value);
+                        if (node.type === 'variable') {
+                            const resolved = window.getActiveCharacterVariable(node.value);
                             if (resolved !== null) {
                                 resolvedStr = ` <span class="text-slate-400">(${resolved >= 0 ? '+' : ''}${resolved})</span>`;
                             }
@@ -6022,8 +6022,8 @@
         }
 
         window.addEventListener('click', (e) => {
-            // Close old chip popover (kept for safety, is hidden anyway)
-            const popover = document.getElementById('chip-popover-editor');
+            // Close old node popover (kept for safety, is hidden anyway)
+            const popover = document.getElementById('node-popover-editor');
             if (popover && !popover.classList.contains('hidden')) {
                 if (!popover.contains(e.target) && !e.target.closest('#queue-display')) {
                     popover.classList.add('hidden');
@@ -6045,7 +6045,7 @@
                     !e.target.closest('#op-div-btn') &&
                     !e.target.closest('#reroll-btn')) {
                     const mode = ineEl.getAttribute('data-mode');
-                    if (ineChipIndex === null && mode === 'number') {
+                    if (ineNodeIndex === null && mode === 'number') {
                         ineClose();
                     } else {
                         ineConfirm();
@@ -6327,9 +6327,9 @@
             }
 
             // Populate New Mod Chip selects
-            const baseVar = document.getElementById('new-chip-base-variable');
-            const multVar = document.getElementById('new-chip-mult-variable');
-            const divVar = document.getElementById('new-chip-div-variable');
+            const baseVar = document.getElementById('new-node-base-variable');
+            const multVar = document.getElementById('new-node-mult-variable');
+            const divVar = document.getElementById('new-node-div-variable');
 
             populateVariablesDropdown(baseVar);
             populateVariablesDropdown(multVar);
@@ -6369,8 +6369,8 @@
 
             renderResourcesList();
 
-            // Populate quick chip builder
-            const resChipVar = document.getElementById('res-chip-variable');
+            // Populate quick node builder
+            const resChipVar = document.getElementById('res-node-variable');
             if (resChipVar) populateVariablesDropdown(resChipVar);
 
             // Show overlay
@@ -6449,10 +6449,10 @@
             });
         }
 
-        function addResourceChip() {
-            const operator = document.getElementById('res-chip-operator').value;
-            const variable = document.getElementById('res-chip-variable').value;
-            let multiplier = parseFloat(document.getElementById('res-chip-multiplier').value);
+        function addResourceNode() {
+            const operator = document.getElementById('res-node-operator').value;
+            const variable = document.getElementById('res-node-variable').value;
+            let multiplier = parseFloat(document.getElementById('res-node-multiplier').value);
 
             if (!variable || variable === "No Variables") {
                 vibrate([20, 50, 20]);
@@ -6480,7 +6480,7 @@
             updateUI();
 
             // Flash button
-            const btn = document.getElementById('res-add-chip-btn');
+            const btn = document.getElementById('res-add-node-btn');
             const oldText = btn.innerText;
             btn.innerText = 'Added!';
             btn.classList.replace('bg-sky-500/20', 'bg-emerald-500/20');
