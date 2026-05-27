@@ -7278,8 +7278,7 @@
                 const res = engine.calculateRoll(queue, false, overrides);
                 if (!res) return null;
 
-                // 2. Play haptics & sounds
-                try { playRollSound(); } catch (err) { }
+                // 2. Initial Haptics
                 vibrate(12);
 
                 // 3. Scramble progress
@@ -7297,7 +7296,8 @@
 
                 await scramblePromise;
 
-                // 4. Resolve vibrations
+                // 4. Resolve sounds & vibrations
+                try { playRollSound(); } catch (err) { }
                 if (res.heroClass === 'crit-hit') vibrate([45, 90, 45]);
                 else if (res.heroClass === 'crit-fail') vibrate(65);
                 else vibrate(25);
@@ -7470,8 +7470,7 @@
             container.classList.add('is-charging');
             container.classList.remove('is-resolved');
 
-            vibrate(10);
-            try { playRollSound(); } catch (err) { }
+            vibrate(10); // keep tactile feedback for button press
 
             try {
                 // 3. Calculate Result IMMEDIATELY
@@ -7495,6 +7494,7 @@
 
                         if (frame >= totalFrames) {
                             clearInterval(scrambleTimer);
+                            try { playRollSound(); } catch (err) { }
 
                             // 5. Finalize and Show Result
                             btn.classList.remove('is-charging-btn');
@@ -7536,7 +7536,6 @@
             if (!forcedQueue && engine.rollingQueue.length === 0 && engine.flatMod === 0) return;
 
             vibrate(15);
-            playRollSound();
 
             const res = engine.calculateRoll(forcedQueue, isInstant);
             if (!res) return;
@@ -7546,6 +7545,7 @@
             addToHistory(res.total, historyText);
 
             if (isImmediate) {
+                try { playRollSound(); } catch (err) { }
                 showResult(res);
                 return;
             }
@@ -7558,6 +7558,7 @@
                 frame++;
                 if (frame >= totalFrames) {
                     clearInterval(scrambleTimer);
+                    try { playRollSound(); } catch (err) { }
                     showResult(res);
                 }
             }, 40);
