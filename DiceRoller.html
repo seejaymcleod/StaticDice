@@ -30,7 +30,7 @@
                 radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 100% 100%, rgba(0, 212, 255, 0.08) 0%, transparent 40%);
             color: var(--text-pale);
-            min-height: 100vh;
+            min-height: 100dvh;
             touch-action: manipulation;
         }
 
@@ -490,7 +490,7 @@
         /* Collapsible Drawer Roll Pad Styles */
         #roll-pad-container {
             position: fixed;
-            bottom: 1rem;
+            bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
             left: 50%;
             transform: translateX(-50%) translateY(0);
             width: calc(100% - 2rem);
@@ -510,7 +510,7 @@
         }
 
         #roll-pad-container.collapsed {
-            transform: translateX(-50%) translateY(calc(100% + 1rem - 1.75rem));
+            transform: translateX(-50%) translateY(calc(100% + max(1rem, env(safe-area-inset-bottom, 1rem)) - 1.75rem));
         }
 
         .drawer-handle {
