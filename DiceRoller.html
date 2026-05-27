@@ -228,7 +228,8 @@
             background: rgba(15, 23, 42, 0.4);
             border: 1px solid rgba(0, 212, 255, 0.25);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            height: 3rem;
+            min-height: 3rem;
+            height: auto;
             box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.05);
         }
 
@@ -1358,17 +1359,129 @@
             flex-direction: column;
             gap: 0.5rem;
         }
+
+        /* Binder Drawer Overlay & Animation Styles */
+        #binder-overlay.open {
+            display: block !important;
+            opacity: 1 !important;
+        }
+
+        #binder-drawer.open {
+            transform: translateX(0) !important;
+        }
     </style>
 </head>
 
 <body class="flex flex-col items-center">
+    <!-- Binder Backdrop Overlay -->
+    <div id="binder-overlay" onclick="toggleBinderDrawer()" 
+        class="fixed inset-0 bg-[#020617]/80 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300"></div>
+
+    <!-- Binder Slide-Out Drawer -->
+    <div id="binder-drawer" 
+        class="fixed top-0 left-0 h-full w-[280px] bg-[#090d16] border-r border-white/10 z-[100] transform -translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+        
+        <!-- Drawer Header -->
+        <div class="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
+            <h2 class="text-sm font-black text-[#00d4ff] uppercase tracking-widest flex items-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-sky-400">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                    <path d="M6 6h10M6 10h10"/>
+                </svg>
+                <span>Dice Binder</span>
+            </h2>
+            <button onclick="toggleBinderDrawer()" class="text-slate-400 hover:text-rose-400 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-grow overflow-y-auto custom-scroll p-4 space-y-6">
+            <!-- Campaign Selection & Management -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Campaigns</label>
+                    <button onclick="createNewCampaign(event)" class="text-sky-400 hover:text-sky-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                        + New
+                    </button>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <select id="campaign-select" onchange="selectCampaign(this.value)" class="char-select w-full flex-grow">
+                        <!-- Injected via JS -->
+                    </select>
+                    <button onclick="renameActiveCampaign(event)" title="Rename Campaign" class="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:text-sky-400 hover:border-sky-500/30 rounded-xl transition-all active:scale-95 shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                        </svg>
+                    </button>
+                    <button onclick="deleteActiveCampaign(event)" title="Delete Campaign" class="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:text-rose-500 hover:border-rose-500/30 rounded-xl transition-all active:scale-95 shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Instanced Sheets List -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Campaign Folders</label>
+                </div>
+                <div id="binder-sheets-list" class="space-y-2">
+                    <!-- Instanced sheets listed here -->
+                </div>
+            </div>
+
+            <!-- Blueprints (Templates) Library -->
+            <div class="space-y-2 pt-2 border-t border-white/5">
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Templates Library</label>
+                <div class="grid grid-cols-1 gap-2">
+                    <button onclick="spawnTemplate('fighter')" class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
+                        <span>⚔️ Spawn Fighter</span>
+                        <span class="text-[9px] font-black text-sky-400 group-hover:translate-x-0.5 transition-transform">SPAWN &rarr;</span>
+                    </button>
+                    <button onclick="spawnTemplate('mage')" class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:bg-purple-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
+                        <span>🔮 Spawn Mage</span>
+                        <span class="text-[9px] font-black text-purple-400 group-hover:translate-x-0.5 transition-transform">SPAWN &rarr;</span>
+                    </button>
+                    <button onclick="spawnTemplate('goblin')" class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
+                        <span>👹 Spawn Goblin</span>
+                        <span class="text-[9px] font-black text-emerald-400 group-hover:translate-x-0.5 transition-transform">SPAWN &rarr;</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="p-4 border-t border-white/10 grid grid-cols-2 gap-2 shrink-0">
+            <button onclick="toggleBinderDrawer(); document.getElementById('import-input').click();" class="py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbd5e1] hover:text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                <span>Import</span>
+            </button>
+            <button onclick="exportSettings()" class="py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbd5e1] hover:text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 14l-5 5-5-5M12 19V3"/></svg>
+                <span>Export</span>
+            </button>
+        </div>
+    </div>
+
     <div id="main-container"
         class="w-full max-w-md px-4 pb-4 pt-0 space-y-3 flex flex-col mode-dice relative">
 
         <!-- HEADER -->
         <header
             class="w-full px-2 mt-4 mb-2 flex justify-between items-center pointer-events-auto h-11 shrink-0 z-[60]">
-            <div class="flex items-end gap-3">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleBinderDrawer()" title="Open Dice Binder"
+                    class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95 transition-all">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+                        <line x1="4" x2="20" y1="12" y2="12"/>
+                        <line x1="4" x2="20" y1="6" y2="6"/>
+                        <line x1="4" x2="20" y1="18" y2="18"/>
+                    </svg>
+                </button>
                 <h1 class="text-xl font-black text-[#e2e8f0] tracking-tighter leading-none">STATIC<span
                         class="text-[#00d4ff]">DICE</span></h1>
                 <span
@@ -1389,8 +1502,16 @@
             <main id="result-main"
                 class="p-4 rounded-2xl flex flex-col items-center justify-start pt-4 min-h-[100px] relative overflow-visible shrink-0 pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]">
 
-                <!-- HEADER TOGGLE -->
-                <div class="absolute top-2 left-2 flex items-center z-20">
+                <!-- HEADER TOGGLE & BINDER TRIGGER -->
+                <div class="absolute top-2 left-2 flex items-center gap-1 z-20">
+                    <button onclick="toggleBinderDrawer()" title="Open Dice Binder"
+                        class="text-[#94a3b8]/40 h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:text-[#00d4ff]/70 active:scale-95 bg-transparent border-none">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4.5 h-4.5">
+                            <line x1="4" x2="20" y1="12" y2="12"/>
+                            <line x1="4" x2="20" y1="6" y2="6"/>
+                            <line x1="4" x2="20" y1="18" y2="18"/>
+                        </svg>
+                    </button>
                     <button id="toggle-header-btn" onclick="toggleHeader()"
                         class="text-[#94a3b8]/40 h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:text-[#00d4ff]/70 active:scale-95 bg-transparent border-none"
                         title="Toggle Title Bar">
@@ -2054,7 +2175,14 @@
                 <div id="group-tabs" class="flex gap-1.5 flex-wrap flex-1 min-w-0">
                     <!-- Injected by JS -->
                 </div>
-                <div class="relative shrink-0">
+                <div class="relative shrink-0 flex gap-1">
+                    <button onclick="openWidgetCreationModal()" title="Add Widget"
+                        class="w-[2rem] h-[2rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                    </button>
                     <button onclick="toggleGroupMenu(event)" id="group-menu-btn"
                         class="gear-btn w-[2rem] h-[2rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -2562,6 +2690,169 @@
         </div>
     </div>
 
+    <!-- Widget Creation Modal -->
+    <div id="widget-creation-overlay" onclick="if(event.target === this) closeWidgetCreationModal()"
+        class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-[#020617]/95 backdrop-blur-md">
+        <div class="bg-[#020617] border border-slate-800 p-6 rounded-[2rem] shadow-2xl w-full max-w-[360px] space-y-5 text-left"
+            style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-black text-[#94a3b8] uppercase tracking-widest flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round" class="w-4 h-4 text-sky-400">
+                        <rect width="18" height="18" x="3" y="3" rx="2"/>
+                        <path d="M12 8v8M8 12h8"/>
+                    </svg>
+                    <span>Create Widget</span>
+                </h3>
+                <button onclick="closeWidgetCreationModal()"
+                    class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10 transition-all shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4 max-h-[350px] overflow-y-auto custom-scroll pr-1">
+                <!-- Name -->
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Widget Name</label>
+                    <input type="text" id="widget-name" placeholder="E.g., HP Tracker, Longsword"
+                        class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3.5 py-3 text-sm text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors">
+                </div>
+
+                <!-- Type Selector -->
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Widget Type</label>
+                    <select id="widget-type" onchange="onWidgetTypeChange(this.value)" class="char-select w-full">
+                        <option value="roller">Dice Roller (Card)</option>
+                        <option value="stepper">Resource Stepper</option>
+                        <option value="toggle">Toggle Switch</option>
+                        <option value="text">Text / Notes Card</option>
+                    </select>
+                </div>
+
+                <!-- Dice Roller Addons Container -->
+                <div id="widget-roller-addons" class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Addon Widgets (Optional)</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="checkbox" id="addon-advdis" class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-200 uppercase">ADV / DIS Buttons</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds secondary buttons to roll with advantage or disadvantage.</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="checkbox" id="addon-stepper-check" onchange="toggleAddonStepperInput(this.checked)" class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-200 uppercase">Resource Counter (Ammo)</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds an inline counter (e.g. ammo, slots) inside the card.</span>
+                            </div>
+                        </label>
+                        <div id="addon-stepper-config" class="hidden pl-6 space-y-2">
+                            <div>
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Counter Label</label>
+                                <input type="text" id="addon-stepper-label" value="Ammo" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Max Value</label>
+                                    <input type="number" id="addon-stepper-max" value="20" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Initial Value</label>
+                                    <input type="number" id="addon-stepper-val" value="20" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="checkbox" id="addon-toggle-check" onchange="toggleAddonToggleInput(this.checked)" class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-200 uppercase">Usability Toggle Switch</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds a mini switch (e.g. Prepared/Miscast) inside the card.</span>
+                            </div>
+                        </label>
+                        <div id="addon-toggle-config" class="hidden pl-6 grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Active Label</label>
+                                <input type="text" id="addon-toggle-on" value="Ready" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Inactive Label</label>
+                                <input type="text" id="addon-toggle-off" value="Miscast" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                            </div>
+                        </div>
+
+                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
+                            <input type="checkbox" id="addon-note-check" onchange="toggleAddonNoteInput(this.checked)" class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-200 uppercase">Text Note Addon</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds a small text description below the formula.</span>
+                            </div>
+                        </label>
+                        <div id="addon-note-config" class="hidden pl-6">
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Note Description</label>
+                            <input type="text" id="addon-note-text" placeholder="E.g., Deals double damage on crit" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resource Stepper Config -->
+                <div id="widget-stepper-config" class="hidden space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Stepper Settings</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Min</label>
+                            <input type="number" id="stepper-min" value="0" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Max</label>
+                            <input type="number" id="stepper-max" value="20" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Initial</label>
+                            <input type="number" id="stepper-val" value="20" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toggle Switch Config -->
+                <div id="widget-toggle-config" class="hidden space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Toggle Settings</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Active Label</label>
+                            <input type="text" id="toggle-label-on" value="On" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Inactive Label</label>
+                            <input type="text" id="toggle-label-off" value="Off" class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                        </div>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer pt-1">
+                        <input type="checkbox" id="toggle-initial" checked class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                        <span class="text-xs font-bold text-slate-300 uppercase">Initially Active</span>
+                    </label>
+                </div>
+
+                <!-- Text Card Config -->
+                <div id="widget-text-config" class="hidden space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Note / Journal Text</label>
+                    <textarea id="text-card-content" placeholder="Type notes here..." rows="3" class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeWidgetCreationModal()"
+                    class="flex-grow py-3 rounded-xl border border-white/10 text-[#94a3b8] font-black text-xs uppercase tracking-wider hover:bg-white/5 transition-all">Cancel</button>
+                <button onclick="submitWidgetCreation()"
+                    class="flex-grow py-3 rounded-xl bg-sky-500/20 border border-sky-500/50 text-sky-400 font-black text-xs uppercase tracking-wider hover:bg-sky-500 hover:text-[#020617] transition-all">Create</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Generic Themed Modal -->
     <div id="modal-overlay" onclick="if(event.target === this) modalResolve(false)"
         class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-[#020617]/95 backdrop-blur-md">
@@ -2673,7 +2964,10 @@
         // =========================================================================
         // CHARACTER & GROUP MANAGEMENT STATE
         // =========================================================================
-        let characters = [{ id: 'primary', name: 'Primary Character' }];
+        let campaigns = [{ id: 'default_campaign', name: 'Default Campaign' }];
+        let activeCampaignId = 'default_campaign';
+        let openTabs = ['default_campaign'];
+        let characters = [{ id: 'primary', name: 'Primary Character', dndType: 'standard', campaignId: 'default_campaign' }];
         let groups = [
             { id: 'grp_stats_1', name: 'Stats', color: '#00d4ff', characterId: 'primary' },
             { id: 'grp_attacks_1', name: 'Attacks', color: '#ff003c', characterId: 'primary' },
@@ -5297,23 +5591,7 @@
         }
 
         function saveCurrentQueue() {
-            showModal({
-                title: 'Save Loadout',
-                body: 'Name this configuration:',
-                confirmText: 'Save',
-                inputPrompt: true,
-                defaultValue: `Loadout ${engine.savedQueues.length + 1}`
-            }).then(name => {
-                if (!name) return;
-                const newSaved = engine.saveQueue(name, COLOR_PALETTE[0]);
-                if (newSaved) {
-                    // Tag with current character and group
-                    newSaved.characterId = activeCharacterId;
-                    newSaved.groupId = activeGroupId;
-                    persistSaved();
-                    renderSavedQueues();
-                }
-            });
+            openWidgetCreationModal(true);
         }
 
         function closeAllArsenalMenus() {
@@ -5770,6 +6048,9 @@
                 groups: groups,
                 activeCharacterId: activeCharacterId,
                 activeGroupId: activeGroupId,
+                campaigns: campaigns,
+                activeCampaignId: activeCampaignId,
+                openTabs: openTabs,
                 settings: {
                     soundEnabled: soundEnabled,
                     volume: volume,
@@ -5827,19 +6108,39 @@
                             // Merge characters & groups mapping to prevent ID collision
                             const charIdMap = {};
                             const grpIdMap = {};
+                            const campIdMap = {};
+
+                            if (imported.campaigns) {
+                                imported.campaigns.forEach(c => {
+                                    const exists = campaigns.find(curr => curr.id === c.id);
+                                    if (!exists) {
+                                        campaigns.push(c);
+                                        campIdMap[c.id] = c.id;
+                                    } else {
+                                        if (exists.name === c.name) {
+                                            campIdMap[c.id] = exists.id;
+                                        } else {
+                                            const newId = 'camp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                            campaigns.push({ id: newId, name: `${c.name} (Imported)` });
+                                            campIdMap[c.id] = newId;
+                                        }
+                                    }
+                                });
+                            }
 
                             if (imported.characters) {
                                 imported.characters.forEach(c => {
+                                    const mappedCampId = campIdMap[c.campaignId] || c.campaignId || 'default_campaign';
                                     const exists = characters.find(curr => curr.id === c.id);
                                     if (!exists) {
-                                        characters.push(c);
+                                        characters.push({ ...c, campaignId: mappedCampId });
                                         charIdMap[c.id] = c.id;
                                     } else {
-                                        if (exists.name === c.name) {
+                                        if (exists.name === c.name && exists.campaignId === mappedCampId) {
                                             charIdMap[c.id] = exists.id;
                                         } else {
                                             const newId = 'char_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                                            characters.push({ id: newId, name: `${c.name} (Imported)` });
+                                            characters.push({ ...c, id: newId, name: `${c.name} (Imported)`, campaignId: mappedCampId });
                                             charIdMap[c.id] = newId;
                                         }
                                     }
@@ -5893,6 +6194,21 @@
                             });
                         } else {
                             // Overwrite mode
+                            if (imported.campaigns && imported.campaigns.length > 0) {
+                                campaigns = imported.campaigns;
+                            } else {
+                                campaigns = [{ id: 'default_campaign', name: 'Default Campaign' }];
+                            }
+                            if (imported.activeCampaignId) {
+                                activeCampaignId = imported.activeCampaignId;
+                            } else {
+                                activeCampaignId = campaigns[0].id;
+                            }
+                            if (imported.openTabs) {
+                                openTabs = imported.openTabs;
+                            } else {
+                                openTabs = [activeCampaignId];
+                            }
                             if (imported.characters && imported.characters.length > 0) {
                                 characters = imported.characters;
                             }
@@ -6276,6 +6592,1051 @@
                 persistArsenal();
                 vibrate(10);
             });
+        }
+
+        // =========================================================================
+        // BINDER DRAWER & bluePRINTS SYSTEM
+        // =========================================================================
+        function toggleBinderDrawer() {
+            const drawer = document.getElementById('binder-drawer');
+            const overlay = document.getElementById('binder-overlay');
+            if (!drawer || !overlay) return;
+            const isOpen = drawer.classList.contains('open');
+            if (isOpen) {
+                drawer.classList.remove('open');
+                overlay.classList.remove('open');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300);
+            } else {
+                overlay.classList.remove('hidden');
+                overlay.offsetHeight; // force reflow
+                drawer.classList.add('open');
+                overlay.classList.add('open');
+                renderBinder();
+            }
+            vibrate(5);
+        }
+
+        function toggleCampaignFolder(campId, event) {
+            if (event) event.stopPropagation();
+            const idx = openTabs.indexOf(campId);
+            if (idx > -1) {
+                openTabs.splice(idx, 1);
+            } else {
+                openTabs.push(campId);
+            }
+            renderBinder();
+            persistArsenal();
+            vibrate(5);
+        }
+
+        function renderBinder() {
+            // Update Instanced Sheets List (Now campaign folders!)
+            const listContainer = document.getElementById('binder-sheets-list');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            campaigns.forEach(camp => {
+                const isExpanded = openTabs.includes(camp.id);
+                const isActiveCampaign = camp.id === activeCampaignId;
+                
+                const folderWrapper = document.createElement('div');
+                folderWrapper.className = 'border border-white/5 rounded-xl bg-white/[0.01] overflow-hidden space-y-1';
+
+                // Campaign Folder Header
+                const folderHeader = document.createElement('div');
+                folderHeader.className = `p-2.5 flex items-center justify-between cursor-pointer transition-all hover:bg-white/5 ${
+                    isActiveCampaign ? 'bg-[#00d4ff]/5 border-b border-[#00d4ff]/10' : 'border-b border-white/5'
+                }`;
+
+                folderHeader.ondblclick = (e) => {
+                    e.stopPropagation();
+                    startCampaignInlineRename(camp.id, folderHeader);
+                };
+
+                folderHeader.onclick = (e) => {
+                    selectCampaign(camp.id);
+                    toggleCampaignFolder(camp.id, e);
+                };
+
+                folderHeader.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0 flex-grow">
+                        <span class="text-xs transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-90' : ''}">▶</span>
+                        <span class="text-xs font-black uppercase tracking-wider truncate camp-inline-name">${camp.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1 opacity-60 group-hover:opacity-100 shrink-0">
+                        <button onclick="deleteCampaignFromBinder('${camp.id}', event)" class="p-1 hover:text-rose-500 transition-colors" title="Delete Campaign">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                `;
+                folderWrapper.appendChild(folderHeader);
+
+                // Sheets list inside campaign folder
+                if (isExpanded) {
+                    const sheetsContainer = document.createElement('div');
+                    sheetsContainer.className = 'p-1.5 space-y-1';
+                    
+                    const campChars = characters.filter(c => c.campaignId === camp.id);
+                    if (campChars.length === 0) {
+                        sheetsContainer.innerHTML = `<div class="text-[9px] text-slate-600 italic py-2 text-center">Empty campaign.</div>`;
+                    } else {
+                        campChars.forEach(char => {
+                            const charEl = document.createElement('div');
+                            const isCharActive = char.id === activeCharacterId;
+                            charEl.className = `p-2 rounded-lg flex items-center justify-between cursor-pointer transition-all ${
+                                isCharActive 
+                                    ? 'bg-[#00d4ff]/10 text-white font-bold' 
+                                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                            }`;
+
+                            charEl.ondblclick = (e) => {
+                                e.stopPropagation();
+                                startInlineRename(char.id, charEl);
+                            };
+
+                            charEl.onclick = (e) => {
+                                e.stopPropagation();
+                                activeCampaignId = camp.id;
+                                selectCharacterFromBinder(char.id);
+                            };
+
+                            let badgeHtml = '';
+                            if (char.variables && char.variables.HP !== undefined) {
+                                const hp = char.variables.HP;
+                                const maxHp = char.variables.MaxHP ?? hp;
+                                badgeHtml = `<span class="px-1 py-0.5 rounded bg-slate-950 border border-white/5 text-[8px] mono text-slate-500 font-bold ml-1.5 shrink-0">${hp}/${maxHp} HP</span>`;
+                            }
+
+                            charEl.innerHTML = `
+                                <div class="flex items-center gap-1.5 min-w-0 flex-grow pl-3">
+                                    <span class="text-xs truncate uppercase tracking-wide inline-name-label">${char.name}</span>
+                                    ${badgeHtml}
+                                </div>
+                                <button class="text-slate-600 hover:text-rose-500 transition-colors p-0.5 shrink-0"
+                                        onclick="deleteCharacterFromBinder('${char.id}', event)">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            `;
+                            sheetsContainer.appendChild(charEl);
+                        });
+                    }
+                    folderWrapper.appendChild(sheetsContainer);
+                }
+
+                listContainer.appendChild(folderWrapper);
+            });
+        }
+
+        function selectCampaign(campId) {
+            activeCampaignId = campId;
+            const campChars = characters.filter(c => c.campaignId === activeCampaignId);
+            if (campChars.length > 0) {
+                activeCharacterId = campChars[0].id;
+                const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+            } else {
+                activeCharacterId = null;
+                activeGroupId = null;
+            }
+            renderCharacterSelect();
+            renderGroupTabs();
+            renderSavedQueues();
+            renderBinder();
+            persistArsenal();
+            vibrate(5);
+        }
+
+        function createNewCampaign(e) {
+            if (e) e.stopPropagation();
+            showModal({
+                title: 'New Campaign',
+                body: 'Enter campaign name:',
+                confirmText: 'Create',
+                inputPrompt: true,
+                defaultValue: `Campaign ${campaigns.length + 1}`
+            }).then(name => {
+                if (!name || !name.trim()) return;
+                const id = 'camp_' + Date.now();
+                campaigns.push({ id, name: name.trim() });
+                activeCampaignId = id;
+                
+                const charId = 'char_' + Date.now();
+                characters.push({ id: charId, name: 'Primary Character', dndType: 'standard', campaignId: id });
+                
+                const baseTime = Date.now();
+                const charGroups = [
+                    { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: charId },
+                    { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: charId },
+                    { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: charId },
+                    { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: charId }
+                ];
+                groups.push(...charGroups);
+                activeCharacterId = charId;
+                activeGroupId = charGroups[0].id;
+
+                if (!openTabs.includes(id)) {
+                    openTabs.push(id);
+                }
+
+                renderCharacterSelect();
+                renderGroupTabs();
+                renderSavedQueues();
+                renderBinder();
+                persistArsenal();
+                vibrate(10);
+            });
+        }
+
+        function renameActiveCampaign(e) {
+            if (e) e.stopPropagation();
+            const camp = campaigns.find(c => c.id === activeCampaignId);
+            if (!camp) return;
+            showModal({
+                title: 'Rename Campaign',
+                body: 'Enter new name:',
+                confirmText: 'Rename',
+                inputPrompt: true,
+                defaultValue: camp.name
+            }).then(name => {
+                if (!name || !name.trim()) return;
+                camp.name = name.trim();
+                renderBinder();
+                persistArsenal();
+                vibrate(5);
+            });
+        }
+
+        function deleteActiveCampaign(e) {
+            if (e) e.stopPropagation();
+            deleteCampaignFromBinder(activeCampaignId, e);
+        }
+
+        function startCampaignInlineRename(campId, element) {
+            const camp = campaigns.find(c => c.id === campId);
+            if (!camp) return;
+            const labelContainer = element.querySelector('.camp-inline-name');
+            if (!labelContainer) return;
+
+            const currentName = camp.name;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.className = 'w-full bg-[#020617] border border-sky-500/50 rounded px-1.5 py-0.5 text-xs text-white font-bold outline-none focus:ring-0';
+            labelContainer.replaceWith(input);
+            input.focus();
+            input.select();
+
+            let finished = false;
+            const finishRename = () => {
+                if (finished) return;
+                finished = true;
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    camp.name = newName;
+                    persistArsenal();
+                }
+                renderBinder();
+            };
+
+            input.onblur = finishRename;
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    finishRename();
+                } else if (e.key === 'Escape') {
+                    finished = true;
+                    renderBinder();
+                }
+            };
+        }
+
+        function startInlineRename(charId, element) {
+            const char = characters.find(c => c.id === charId);
+            if (!char) return;
+            const labelContainer = element.querySelector('.inline-name-label');
+            if (!labelContainer) return;
+
+            const currentName = char.name;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.className = 'w-full bg-[#020617] border border-sky-500/50 rounded px-1.5 py-0.5 text-xs text-white font-bold outline-none focus:ring-0';
+            labelContainer.replaceWith(input);
+            input.focus();
+            input.select();
+
+            let finished = false;
+            const finishRename = () => {
+                if (finished) return;
+                finished = true;
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    char.name = newName;
+                    persistArsenal();
+                    renderCharacterSelect();
+                }
+                renderBinder();
+            };
+
+            input.onblur = finishRename;
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    finishRename();
+                } else if (e.key === 'Escape') {
+                    finished = true;
+                    renderBinder();
+                }
+            };
+        }
+
+        function selectCharacterFromBinder(charId) {
+            activeCharacterId = charId;
+            const charGroups = groups.filter(g => g.characterId === charId);
+            activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+            renderCharacterSelect();
+            renderGroupTabs();
+            renderSavedQueues();
+            renderBinder();
+            persistArsenal();
+            vibrate(5);
+        }
+
+        function deleteCharacterFromBinder(charId, event) {
+            if (event) event.stopPropagation();
+            const char = characters.find(c => c.id === charId);
+            if (!char) return;
+            const campId = char.campaignId;
+            const campChars = characters.filter(c => c.campaignId === campId);
+            if (campChars.length <= 1) {
+                showModal({
+                    title: 'Cannot Delete',
+                    body: 'You must have at least one character in the campaign.',
+                    alertOnly: true
+                });
+                return;
+            }
+            showModal({
+                title: 'Delete Sheet',
+                body: `Are you sure you want to delete <span class="text-rose-400">${char.name}</span>? This will delete all its groups and saved widgets.`,
+                confirmText: 'Delete',
+                danger: true
+            }).then(confirm => {
+                if (!confirm) return;
+                groups = groups.filter(g => g.characterId !== charId);
+                engine.savedQueues = engine.savedQueues.filter(q => q.characterId !== charId);
+                persistSaved();
+
+                characters = characters.filter(c => c.id !== charId);
+                if (activeCharacterId === charId) {
+                    const remaining = characters.filter(c => c.campaignId === campId);
+                    activeCharacterId = remaining[0].id;
+                    const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                    activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+                }
+                renderCharacterSelect();
+                renderGroupTabs();
+                renderSavedQueues();
+                renderBinder();
+                persistArsenal();
+            });
+        }
+
+        function deleteCampaignFromBinder(campId, event) {
+            if (event) event.stopPropagation();
+            if (campaigns.length <= 1) {
+                showModal({
+                    title: 'Cannot Delete',
+                    body: 'You must have at least one campaign.',
+                    alertOnly: true
+                });
+                return;
+            }
+            const camp = campaigns.find(c => c.id === campId);
+            showModal({
+                title: 'Delete Campaign',
+                body: `Are you sure you want to delete <span class="text-rose-400">${camp ? camp.name : ''}</span>? This will delete all characters, groups, and saved widgets in this campaign.`,
+                confirmText: 'Delete',
+                danger: true
+            }).then(confirm => {
+                if (!confirm) return;
+                const charIdsToDelete = characters.filter(c => c.campaignId === campId).map(c => c.id);
+                characters = characters.filter(c => c.campaignId !== campId);
+                groups = groups.filter(g => !charIdsToDelete.includes(g.characterId));
+                engine.savedQueues = engine.savedQueues.filter(q => !charIdsToDelete.includes(q.characterId));
+                persistSaved();
+
+                campaigns = campaigns.filter(c => c.id !== campId);
+                if (activeCampaignId === campId) {
+                    activeCampaignId = campaigns[0].id;
+                }
+                
+                if (charIdsToDelete.includes(activeCharacterId)) {
+                    const remaining = characters.filter(c => c.campaignId === activeCampaignId);
+                    if (remaining.length > 0) {
+                        activeCharacterId = remaining[0].id;
+                        const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                        activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+                    } else {
+                        activeCharacterId = null;
+                        activeGroupId = null;
+                    }
+                }
+
+                const tabIdx = openTabs.indexOf(campId);
+                if (tabIdx > -1) openTabs.splice(tabIdx, 1);
+
+                renderCharacterSelect();
+                renderGroupTabs();
+                renderSavedQueues();
+                renderBinder();
+                persistArsenal();
+                vibrate(10);
+            });
+        }
+
+        function spawnTemplate(type) {
+            const campId = activeCampaignId;
+            if (!campId) return;
+
+            const existingCount = characters.filter(c => c.name.toLowerCase().startsWith(type)).length + 1;
+            const charName = type.charAt(0).toUpperCase() + type.slice(1) + ' ' + existingCount;
+            const charId = 'char_' + Date.now();
+            
+            const newChar = {
+                id: charId,
+                name: charName,
+                dndType: 'standard',
+                campaignId: campId,
+                variables: { HP: 10, MaxHP: 10 }
+            };
+
+            if (type === 'fighter') {
+                newChar.variables.HP = 12;
+                newChar.variables.MaxHP = 12;
+            } else if (type === 'mage') {
+                newChar.variables.HP = 6;
+                newChar.variables.MaxHP = 6;
+            } else if (type === 'goblin') {
+                newChar.variables.HP = 7;
+                newChar.variables.MaxHP = 7;
+            }
+
+            characters.push(newChar);
+
+            const baseTime = Date.now();
+            const charGroups = [
+                { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: charId },
+                { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: charId },
+                { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: charId },
+                { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: charId }
+            ];
+            groups.push(...charGroups);
+
+            const statsGrpId = charGroups[0].id;
+            const attacksGrpId = charGroups[1].id;
+            const spellsGrpId = charGroups[2].id;
+            const itemsGrpId = charGroups[3].id;
+
+            const makeDiceNode = (sides, count) => ({
+                nodeType: 'node',
+                id: 'node_' + Math.random().toString(36).substr(2, 9),
+                sides: sides,
+                count: count,
+                localModifier: null,
+                localModLevel: 1,
+                rerollOp: null,
+                rerollVal: null,
+                explodeOp: null,
+                explodeVal: null
+            });
+
+            const makeModifierNode = (val) => ({
+                nodeType: 'modifier',
+                id: 'mod_' + Math.random().toString(36).substr(2, 9),
+                type: 'literal',
+                value: Math.abs(val),
+                operator: val >= 0 ? '+' : '-',
+                multiplierType: 'none',
+                multiplierValue: 1,
+                divisorType: 'none',
+                divisorValue: 1,
+                roundMode: 'none'
+            });
+
+            if (type === 'fighter') {
+                engine.savedQueues.push({
+                    id: Date.now() + 1,
+                    characterId: charId,
+                    groupId: statsGrpId,
+                    name: 'Hit Points',
+                    color: '#00d4ff',
+                    widgetType: 'stepper',
+                    value: 12,
+                    max: 12,
+                    min: 0,
+                    queue: []
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 2,
+                    characterId: charId,
+                    groupId: statsGrpId,
+                    name: 'Strength Check',
+                    color: '#00d4ff',
+                    widgetType: 'roller',
+                    queue: [makeDiceNode(20, 1)],
+                    flat: [makeModifierNode(3)],
+                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(3)],
+                    rules: {},
+                    includeAdvDis: true
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 3,
+                    characterId: charId,
+                    groupId: statsGrpId,
+                    name: 'Dexterity Check',
+                    color: '#00d4ff',
+                    widgetType: 'roller',
+                    queue: [makeDiceNode(20, 1)],
+                    flat: [makeModifierNode(1)],
+                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(1)],
+                    rules: {},
+                    includeAdvDis: false
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 4,
+                    characterId: charId,
+                    groupId: attacksGrpId,
+                    name: 'Greatsword Attack',
+                    color: '#ff003c',
+                    widgetType: 'roller',
+                    queue: [makeDiceNode(6, 2)],
+                    flat: [makeModifierNode(3)],
+                    unifiedQueue: [makeDiceNode(6, 2), makeModifierNode(3)],
+                    rules: {},
+                    includeAdvDis: true,
+                    addonNote: "Deals 2d6+3 slashing damage"
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 5,
+                    characterId: charId,
+                    groupId: attacksGrpId,
+                    name: 'Longbow Attack',
+                    color: '#ff003c',
+                    widgetType: 'roller',
+                    queue: [makeDiceNode(20, 1)],
+                    flat: [makeModifierNode(5)],
+                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(5)],
+                    rules: {},
+                    includeAdvDis: false,
+                    addonCounter: { value: 20, max: 20, label: "Arrows" }
+                });
+
+            } else if (type === 'mage') {
+                engine.savedQueues.push({
+                    id: Date.now() + 1,
+                    characterId: charId,
+                    groupId: statsGrpId,
+                    name: 'Hit Points',
+                    color: '#00d4ff',
+                    widgetType: 'stepper',
+                    value: 6,
+                    max: 6,
+                    min: 0,
+                    queue: []
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 2,
+                    characterId: charId,
+                    groupId: spellsGrpId,
+                    name: 'Arcane Focus',
+                    color: '#a855f7',
+                    widgetType: 'toggle',
+                    checked: true,
+                    labelOn: 'Focused',
+                    labelOff: 'Disrupted',
+                    queue: []
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 3,
+                    characterId: charId,
+                    groupId: spellsGrpId,
+                    name: 'Magic Missile',
+                    color: '#a855f7',
+                    widgetType: 'roller',
+                    queue: [makeDiceNode(4, 1)],
+                    flat: [makeModifierNode(1)],
+                    unifiedQueue: [makeDiceNode(4, 1), makeModifierNode(1)],
+                    rules: {},
+                    includeAdvDis: false,
+                    addonToggle: { checked: true, labelOn: 'Ready', labelOff: 'Miscast' },
+                    addonNote: "Autohit 1d4+1 force damage"
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 4,
+                    characterId: charId,
+                    groupId: spellsGrpId,
+                    name: 'Sleep (Cast)',
+                    color: '#a855f7',
+                    widgetType: 'roller',
+                    queue: [makeDiceNode(20, 1)],
+                    flat: [],
+                    unifiedQueue: [makeDiceNode(20, 1)],
+                    rules: {},
+                    includeAdvDis: false,
+                    addonToggle: { checked: true, labelOn: 'Ready', labelOff: 'Miscast' },
+                    addonNote: "Roll under Wisdom to cast"
+                });
+
+            } else if (type === 'goblin') {
+                engine.savedQueues.push({
+                    id: Date.now() + 1,
+                    characterId: charId,
+                    groupId: statsGrpId,
+                    name: 'HP (Goblin)',
+                    color: '#00d4ff',
+                    widgetType: 'stepper',
+                    value: 7,
+                    max: 7,
+                    min: 0,
+                    queue: []
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 2,
+                    characterId: charId,
+                    groupId: attacksGrpId,
+                    name: 'Scimitar Attack',
+                    color: '#ff003c',
+                    widgetType: 'roller',
+                    queue: [makeDiceNode(20, 1)],
+                    flat: [makeModifierNode(4)],
+                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(4)],
+                    rules: {},
+                    includeAdvDis: false,
+                    addonNote: "Deals 1d6+2 slashing damage"
+                });
+
+                engine.savedQueues.push({
+                    id: Date.now() + 3,
+                    characterId: charId,
+                    groupId: attacksGrpId,
+                    name: 'Shortbow Attack',
+                    color: '#ff003c',
+                    widgetType: 'roller',
+                    queue: [makeDiceNode(20, 1)],
+                    flat: [makeModifierNode(4)],
+                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(4)],
+                    rules: {},
+                    includeAdvDis: false,
+                    addonCounter: { value: 12, max: 12, label: "Arrows" },
+                    addonNote: "Deals 1d6+2 piercing damage"
+                });
+            }
+
+            activeCharacterId = charId;
+            activeGroupId = statsGrpId;
+
+            if (!openTabs.includes(campId)) {
+                openTabs.push(campId);
+            }
+
+            renderCharacterSelect();
+            renderGroupTabs();
+            renderSavedQueues();
+            renderBinder();
+            persistArsenal();
+            persistSaved();
+            vibrate(10);
+        }
+
+        // =========================================================================
+        // WIDGET CREATION AND STATE EDITING
+        // =========================================================================
+        let editingWidgetId = null;
+
+        function openWidgetCreationModal(isSavingQueue = false) {
+            closeAllArsenalMenus();
+            editingWidgetId = null;
+            const overlay = document.getElementById('widget-creation-overlay');
+            if (!overlay) return;
+
+            // Reset modal title and button text
+            const titleEl = overlay.querySelector('h3 span');
+            if (titleEl) titleEl.textContent = 'Create Widget';
+            const submitBtn = overlay.querySelector('button[onclick="submitWidgetCreation()"]');
+            if (submitBtn) submitBtn.textContent = 'Create';
+
+            document.getElementById('widget-name').value = isSavingQueue ? `Loadout ${engine.savedQueues.length + 1}` : '';
+            const typeSelect = document.getElementById('widget-type');
+            
+            if (isSavingQueue && engine.queue.length > 0) {
+                typeSelect.value = 'roller';
+            } else {
+                typeSelect.value = 'stepper';
+            }
+
+            document.getElementById('addon-advdis').checked = false;
+            document.getElementById('addon-stepper-check').checked = false;
+            document.getElementById('addon-stepper-label').value = 'Ammo';
+            document.getElementById('addon-stepper-max').value = '20';
+            document.getElementById('addon-stepper-val').value = '20';
+            document.getElementById('addon-toggle-check').checked = false;
+            document.getElementById('addon-toggle-on').value = 'Ready';
+            document.getElementById('addon-toggle-off').value = 'Miscast';
+            document.getElementById('addon-note-check').checked = false;
+            document.getElementById('addon-note-text').value = '';
+
+            document.getElementById('stepper-min').value = '0';
+            document.getElementById('stepper-max').value = '20';
+            document.getElementById('stepper-val').value = '20';
+
+            document.getElementById('toggle-label-on').value = 'On';
+            document.getElementById('toggle-label-off').value = 'Off';
+            document.getElementById('toggle-initial').checked = true;
+
+            document.getElementById('text-card-content').value = '';
+
+            onWidgetTypeChange(typeSelect.value);
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            setTimeout(() => {
+                document.getElementById('widget-name').focus();
+            }, 50);
+            vibrate(5);
+        }
+
+        function configureSavedWidget(widgetId, event) {
+            if (event) event.stopPropagation();
+            closeAllArsenalMenus();
+            
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (!q) return;
+
+            editingWidgetId = widgetId;
+            
+            const overlay = document.getElementById('widget-creation-overlay');
+            if (!overlay) return;
+
+            // Change title in modal
+            const titleEl = overlay.querySelector('h3 span');
+            if (titleEl) titleEl.textContent = 'Configure Widget';
+            
+            const submitBtn = overlay.querySelector('button[onclick="submitWidgetCreation()"]');
+            if (submitBtn) submitBtn.textContent = 'Save Changes';
+
+            // Populate fields
+            document.getElementById('widget-name').value = q.name || '';
+            
+            const typeSelect = document.getElementById('widget-type');
+            typeSelect.value = q.widgetType || 'roller';
+            
+            // Populate roller addons
+            document.getElementById('addon-advdis').checked = !!q.includeAdvDis;
+            
+            const hasCounter = !!q.addonCounter;
+            document.getElementById('addon-stepper-check').checked = hasCounter;
+            document.getElementById('addon-stepper-label').value = hasCounter ? q.addonCounter.label : 'Ammo';
+            document.getElementById('addon-stepper-max').value = hasCounter ? q.addonCounter.max : '20';
+            document.getElementById('addon-stepper-val').value = hasCounter ? q.addonCounter.value : '20';
+            document.getElementById('addon-stepper-config').classList.toggle('hidden', !hasCounter);
+
+            const hasToggle = !!q.addonToggle;
+            document.getElementById('addon-toggle-check').checked = hasToggle;
+            document.getElementById('addon-toggle-on').value = hasToggle ? q.addonToggle.labelOn : 'Ready';
+            document.getElementById('addon-toggle-off').value = hasToggle ? q.addonToggle.labelOff : 'Miscast';
+            document.getElementById('addon-toggle-config').classList.toggle('hidden', !hasToggle);
+
+            const hasNote = !!q.addonNote;
+            document.getElementById('addon-note-check').checked = hasNote;
+            document.getElementById('addon-note-text').value = hasNote ? q.addonNote : '';
+            document.getElementById('addon-note-config').classList.toggle('hidden', !hasNote);
+
+            // Populate standalone stepper configs
+            document.getElementById('stepper-min').value = q.min !== undefined ? q.min : '0';
+            document.getElementById('stepper-max').value = q.max !== undefined ? q.max : '20';
+            document.getElementById('stepper-val').value = q.value !== undefined ? q.value : '20';
+
+            // Populate standalone toggle configs
+            document.getElementById('toggle-label-on').value = q.labelOn || 'On';
+            document.getElementById('toggle-label-off').value = q.labelOff || 'Off';
+            document.getElementById('toggle-initial').checked = !!q.checked;
+
+            // Populate text card configs
+            document.getElementById('text-card-content').value = q.text || '';
+
+            onWidgetTypeChange(typeSelect.value);
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            setTimeout(() => {
+                document.getElementById('widget-name').focus();
+            }, 50);
+            vibrate(5);
+        }
+
+        function closeWidgetCreationModal() {
+            const overlay = document.getElementById('widget-creation-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+            editingWidgetId = null;
+            vibrate(5);
+        }
+
+        function onWidgetTypeChange(type) {
+            document.getElementById('widget-roller-addons').classList.add('hidden');
+            document.getElementById('widget-stepper-config').classList.add('hidden');
+            document.getElementById('widget-toggle-config').classList.add('hidden');
+            document.getElementById('widget-text-config').classList.add('hidden');
+
+            if (type === 'roller') {
+                document.getElementById('widget-roller-addons').classList.remove('hidden');
+            } else if (type === 'stepper') {
+                document.getElementById('widget-stepper-config').classList.remove('hidden');
+            } else if (type === 'toggle') {
+                document.getElementById('widget-toggle-config').classList.remove('hidden');
+            } else if (type === 'text') {
+                document.getElementById('widget-text-config').classList.remove('hidden');
+            }
+        }
+
+        function toggleAddonStepperInput(checked) {
+            document.getElementById('addon-stepper-config').classList.toggle('hidden', !checked);
+        }
+
+        function toggleAddonToggleInput(checked) {
+            document.getElementById('addon-toggle-config').classList.toggle('hidden', !checked);
+        }
+
+        function toggleAddonNoteInput(checked) {
+            document.getElementById('addon-note-config').classList.toggle('hidden', !checked);
+        }
+
+        function submitWidgetCreation() {
+            const nameEl = document.getElementById('widget-name');
+            const name = nameEl.value.trim() || 'Widget';
+            const type = document.getElementById('widget-type').value;
+            const color = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)] || '#00d4ff';
+
+            if (editingWidgetId !== null) {
+                const q = engine.savedQueues.find(x => x.id === editingWidgetId);
+                if (q) {
+                    q.name = name;
+                    q.widgetType = type;
+                    
+                    if (type === 'roller') {
+                        q.includeAdvDis = document.getElementById('addon-advdis').checked;
+                        
+                        if (document.getElementById('addon-stepper-check').checked) {
+                            q.addonCounter = {
+                                label: document.getElementById('addon-stepper-label').value.trim() || 'Ammo',
+                                max: parseInt(document.getElementById('addon-stepper-max').value) || 20,
+                                value: Math.min(parseInt(document.getElementById('addon-stepper-val').value) || 20, parseInt(document.getElementById('addon-stepper-max').value) || 20)
+                            };
+                        } else {
+                            q.addonCounter = null;
+                        }
+
+                        if (document.getElementById('addon-toggle-check').checked) {
+                            q.addonToggle = {
+                                checked: q.addonToggle ? q.addonToggle.checked : true,
+                                labelOn: document.getElementById('addon-toggle-on').value.trim() || 'Ready',
+                                labelOff: document.getElementById('addon-toggle-off').value.trim() || 'Miscast'
+                            };
+                        } else {
+                            q.addonToggle = null;
+                        }
+
+                        if (document.getElementById('addon-note-check').checked) {
+                            q.addonNote = document.getElementById('addon-note-text').value.trim() || null;
+                        } else {
+                            q.addonNote = null;
+                        }
+                    } else if (type === 'stepper') {
+                        q.min = parseInt(document.getElementById('stepper-min').value) || 0;
+                        q.max = parseInt(document.getElementById('stepper-max').value) || 20;
+                        q.value = Math.max(q.min, Math.min(q.max, parseInt(document.getElementById('stepper-val').value) || 20));
+                        
+                        if (name.toLowerCase() === 'hit points' || name.toLowerCase() === 'hp') {
+                            const char = characters.find(c => c.id === activeCharacterId);
+                            if (char) {
+                                if (!char.variables) char.variables = {};
+                                char.variables.HP = q.value;
+                                char.variables.MaxHP = q.max;
+                                persistArsenal();
+                                renderBinder();
+                            }
+                        }
+                    } else if (type === 'toggle') {
+                        q.checked = document.getElementById('toggle-initial').checked;
+                        q.labelOn = document.getElementById('toggle-label-on').value.trim() || 'On';
+                        q.labelOff = document.getElementById('toggle-label-off').value.trim() || 'Off';
+                    } else if (type === 'text') {
+                        q.text = document.getElementById('text-card-content').value;
+                    }
+
+                    persistSaved();
+                    renderSavedQueues();
+                    closeWidgetCreationModal();
+                    vibrate(10);
+                }
+                return;
+            }
+
+            let newWidget = {
+                id: Date.now(),
+                characterId: activeCharacterId,
+                groupId: activeGroupId,
+                name: name,
+                color: color,
+                widgetType: type,
+                queue: []
+            };
+
+            if (type === 'roller') {
+                if (engine.queue.length > 0) {
+                    const saved = engine.saveQueue(name, color);
+                    if (saved) {
+                        newWidget.queue = saved.queue;
+                        newWidget.modifier = saved.modifier;
+                        newWidget.modLevel = saved.modLevel;
+                        newWidget.flat = saved.flat;
+                        newWidget.unifiedQueue = saved.unifiedQueue;
+                        newWidget.rules = saved.rules;
+                        engine.savedQueues = engine.savedQueues.filter(q => q.id !== saved.id);
+                    }
+                }
+                
+                newWidget.includeAdvDis = document.getElementById('addon-advdis').checked;
+                
+                if (document.getElementById('addon-stepper-check').checked) {
+                    newWidget.addonCounter = {
+                        label: document.getElementById('addon-stepper-label').value.trim() || 'Ammo',
+                        max: parseInt(document.getElementById('addon-stepper-max').value) || 20,
+                        value: parseInt(document.getElementById('addon-stepper-val').value) || 20
+                    };
+                } else {
+                    newWidget.addonCounter = null;
+                }
+
+                if (document.getElementById('addon-toggle-check').checked) {
+                    newWidget.addonToggle = {
+                        checked: true,
+                        labelOn: document.getElementById('addon-toggle-on').value.trim() || 'Ready',
+                        labelOff: document.getElementById('addon-toggle-off').value.trim() || 'Miscast'
+                    };
+                } else {
+                    newWidget.addonToggle = null;
+                }
+
+                if (document.getElementById('addon-note-check').checked) {
+                    newWidget.addonNote = document.getElementById('addon-note-text').value.trim() || null;
+                } else {
+                    newWidget.addonNote = null;
+                }
+
+            } else if (type === 'stepper') {
+                newWidget.min = parseInt(document.getElementById('stepper-min').value) || 0;
+                newWidget.max = parseInt(document.getElementById('stepper-max').value) || 20;
+                newWidget.value = parseInt(document.getElementById('stepper-val').value) || 20;
+                
+                if (name.toLowerCase() === 'hit points' || name.toLowerCase() === 'hp') {
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    if (char) {
+                        if (!char.variables) char.variables = {};
+                        char.variables.HP = newWidget.value;
+                        char.variables.MaxHP = newWidget.max;
+                        persistArsenal();
+                        renderBinder();
+                    }
+                }
+            } else if (type === 'toggle') {
+                newWidget.checked = document.getElementById('toggle-initial').checked;
+                newWidget.labelOn = document.getElementById('toggle-label-on').value.trim() || 'On';
+                newWidget.labelOff = document.getElementById('toggle-label-off').value.trim() || 'Off';
+            } else if (type === 'text') {
+                newWidget.text = document.getElementById('text-card-content').value;
+                newWidget.collapsed = false;
+            }
+
+            engine.savedQueues.push(newWidget);
+            persistSaved();
+            renderSavedQueues();
+            closeWidgetCreationModal();
+            vibrate(10);
+        }
+
+        function changeStepperValue(widgetId, delta) {
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (q && q.widgetType === 'stepper') {
+                q.value = Math.max(q.min ?? 0, Math.min(q.max ?? 100, q.value + delta));
+                if (q.name.toLowerCase() === 'hit points' || q.name.toLowerCase() === 'hp') {
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    if (char) {
+                        if (!char.variables) char.variables = {};
+                        char.variables.HP = q.value;
+                        char.variables.MaxHP = q.max;
+                        persistArsenal();
+                        renderBinder();
+                    }
+                }
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+
+        function changeToggleValue(widgetId, checked) {
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (q && q.widgetType === 'toggle') {
+                q.checked = checked;
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+
+        function toggleTextCardCollapsed(widgetId) {
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (q && q.widgetType === 'text') {
+                q.collapsed = !(q.collapsed ?? false);
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+
+        function changeCardCounterVal(widgetId, delta) {
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (q && q.addonCounter) {
+                const c = q.addonCounter;
+                c.value = Math.max(0, Math.min(c.max, c.value + delta));
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+
+        function toggleCardAddonState(widgetId, checked) {
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (q && q.addonToggle) {
+                q.addonToggle.checked = checked;
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
         }
 
         // =========================================================================
@@ -6881,7 +8242,6 @@
             overlay.classList.add('flex');
         }
 
-        // Move arsenal item to a different group
         function moveQueueToGroup(id, e) {
             if (e) e.stopPropagation();
             closeAllArsenalMenus();
@@ -6890,7 +8250,6 @@
             const charGroups = groups.filter(g => g.characterId === activeCharacterId);
             const options = charGroups.filter(g => g.id !== item.groupId);
             if (options.length === 0) { showModal({ title: 'No Other Groups', body: 'Create another group first to move this loadout.', alertOnly: true }); return; }
-            // Build options HTML inside modal body
             const optHtml = '<div class="flex flex-col gap-2 mt-3">' + options.map(g =>
                 `<button onclick="document.getElementById('modal-overlay').classList.add('hidden');document.getElementById('modal-overlay').classList.remove('flex');assignQueueGroup(${id},'${g.id}')" class="py-2 px-3 rounded-xl border border-white/10 text-xs font-bold text-[#e2e8f0] hover:bg-white/5 flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background:${g.color}"></span>${g.name}</button>`
             ).join('') + '</div>';
@@ -6907,28 +8266,21 @@
             }
         }
 
-        // Ensure new queues saved with character/group context
         function persistArsenal() {
             localStorage.setItem('crypto_roller_arsenal', JSON.stringify({ characters, groups, activeCharacterId, activeGroupId }));
         }
 
-        // =========================================================================
-        // DRAG & DROP STATE
-        // =========================================================================
         let dragSrcId = null;
 
         function renderSavedQueues() {
-            // Update single list in the arsenal section
             const container = document.getElementById('arsenal-list-container');
             if (!container) return;
             const list = container.querySelector('.saved-queues-list');
             if (!list) return;
 
-            // Filter by active character+group (items without groupId fall into first group)
             const filtered = engine.savedQueues.filter(q => {
                 const charMatch = !q.characterId || q.characterId === activeCharacterId;
                 const grpMatch = !q.groupId || q.groupId === activeGroupId;
-                // Legacy items (no characterId) show in Primary/Main
                 if (!q.characterId && !q.groupId) {
                     return activeCharacterId === 'primary' && activeGroupId === (groups.find(g => g.characterId === 'primary')?.id);
                 }
@@ -6937,32 +8289,12 @@
 
             list.innerHTML = '';
 
-            if (filtered.length === 0) {
-                list.innerHTML = '<div class="text-sm text-slate-600 italic px-1 py-8 text-center border-2 border-dashed border-white/5 rounded-[1.5rem] bg-white/[0.02] col-span-full">No loadouts in this group.<br><span class="text-slate-700 text-xs">Save the current queue above to add one.</span></div>';
-                // Drag into empty group
-                container.ondragover = e => { e.preventDefault(); container.classList.add('drop-active'); };
-                container.ondragleave = () => container.classList.remove('drop-active');
-                container.ondrop = e => {
-                    e.preventDefault();
-                    container.classList.remove('drop-active');
-                    if (dragSrcId !== null) { assignQueueGroup(dragSrcId, activeGroupId); dragSrcId = null; }
-                };
-                return;
-            }
-            container.ondragover = null;
-            container.ondragleave = null;
-            container.ondrop = null;
-
-            const activeGrp = groups.find(g => g.id === activeGroupId);
-            const charGroups = groups.filter(g => g.characterId === activeCharacterId);
-
             filtered.forEach(q => {
                 const wrapper = document.createElement('div');
-                wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative';
+                wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative w-full';
                 wrapper.draggable = true;
                 wrapper.dataset.id = q.id;
 
-                // Drag source
                 wrapper.addEventListener('dragstart', (e) => {
                     dragSrcId = q.id;
                     wrapper.classList.add('dragging');
@@ -6971,7 +8303,6 @@
                 wrapper.addEventListener('dragend', () => {
                     wrapper.classList.remove('dragging');
                     document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-                    document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
                 });
                 wrapper.addEventListener('dragover', (e) => {
                     e.preventDefault();
@@ -6983,7 +8314,6 @@
                     e.preventDefault();
                     wrapper.classList.remove('drag-over');
                     if (dragSrcId === null || dragSrcId === q.id) return;
-                    // Reorder within group
                     const srcIdx = engine.savedQueues.findIndex(x => x.id === dragSrcId);
                     const tgtIdx = engine.savedQueues.findIndex(x => x.id === q.id);
                     if (srcIdx > -1 && tgtIdx > -1) {
@@ -7002,66 +8332,151 @@
                 item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                 item.style.setProperty('--item-color', q.color);
                 item.dataset.id = q.id;
-                item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
-
-                let formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
-                if (Array.isArray(q.flat) && q.flat.length > 0) {
-                    q.flat.forEach(term => {
-                        let termStr = term.value;
-                        let suffix = "";
-                        if (term.multiplierType && term.multiplierType !== 'none') suffix += `*${term.multiplierValue}`;
-                        if (term.divisorType && term.divisorType !== 'none') suffix += `/${term.divisorValue}`;
-                        if (term.roundMode === 'up') suffix += '↑';
-                        if (term.roundMode === 'down') suffix += '↓';
-                        if (term.roundMode === 'round') suffix += '≈';
-
-                        let resolvedStr = "";
-                        if (term.type === 'variable') {
-                            const resolved = window.getActiveCharacterVariable(term.value);
-                            if (resolved !== null) {
-                                resolvedStr = ` (${resolved >= 0 ? '+' : ''}${resolved})`;
-                            }
-                        }
-                        formula += ` [${term.operator === '-' ? '-' : '+'}${termStr}${suffix}${resolvedStr}]`;
-                    });
-                } else if (typeof q.flat === 'string' && q.flat !== '') {
-                    const resolvedVal = window.getActiveCharacterVariable(q.flat);
-                    const valStr = resolvedVal !== null ? ` (${resolvedVal >= 0 ? '+' : ''}${resolvedVal})` : '';
-                    formula += ` [${q.flat}${valStr}]`;
-                } else if (typeof q.flat === 'number' && q.flat !== 0) {
-                    formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
+                
+                const type = q.widgetType || 'roller';
+                if (type === 'roller') {
+                    item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
+                } else if (type === 'text') {
+                    item.onclick = () => toggleTextCardCollapsed(q.id);
                 }
-                if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
-                if (q.rules) {
-                    if (q.rules.rerollOp && q.rules.rerollVal !== null) formula += ` RR${q.rules.rerollOp}${q.rules.rerollVal}`;
-                    if (q.rules.explodeOp && q.rules.explodeVal !== null) formula += ` EX${q.rules.explodeOp}${q.rules.explodeVal}`;
-                    if (q.rules.targetOp && q.rules.targetVal !== null && q.rules.targetVal !== '') {
-                        const opDisplay = q.rules.targetOp.replace(/>=/g, '≥').replace(/<=/g, '≤');
-                        let valDisplay = q.rules.targetVal;
-                        const resolvedVal = window.getActiveCharacterVariable(q.rules.targetVal);
-                        if (resolvedVal !== null) {
-                            valDisplay = `${q.rules.targetVal} (${resolvedVal})`;
+
+                let formula = '';
+                if (type === 'roller') {
+                    formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
+                    if (Array.isArray(q.flat) && q.flat.length > 0) {
+                        q.flat.forEach(term => {
+                            let termStr = term.value;
+                            let suffix = "";
+                            if (term.multiplierType && term.multiplierType !== 'none') suffix += `*${term.multiplierValue}`;
+                            if (term.divisorType && term.divisorType !== 'none') suffix += `/${term.divisorValue}`;
+                            if (term.roundMode === 'up') suffix += '↑';
+                            if (term.roundMode === 'down') suffix += '↓';
+                            if (term.roundMode === 'round') suffix += '≈';
+                            let resolvedStr = "";
+                            if (term.type === 'variable') {
+                                const resolved = window.getActiveCharacterVariable(term.value);
+                                if (resolved !== null) resolvedStr = ` (${resolved >= 0 ? '+' : ''}${resolved})`;
+                            }
+                            formula += ` [${term.operator === '-' ? '-' : '+'}${termStr}${suffix}${resolvedStr}]`;
+                        });
+                    } else if (typeof q.flat === 'string' && q.flat !== '') {
+                        const resolvedVal = window.getActiveCharacterVariable(q.flat);
+                        const valStr = resolvedVal !== null ? ` (${resolvedVal >= 0 ? '+' : ''}${resolvedVal})` : '';
+                        formula += ` [${q.flat}${valStr}]`;
+                    } else if (typeof q.flat === 'number' && q.flat !== 0) {
+                        formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
+                    }
+                    if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
+                    if (q.rules) {
+                        if (q.rules.rerollOp && q.rules.rerollVal !== null) formula += ` RR${q.rules.rerollOp}${q.rules.rerollVal}`;
+                        if (q.rules.explodeOp && q.rules.explodeVal !== null) formula += ` EX${q.rules.explodeOp}${q.rules.explodeVal}`;
+                        if (q.rules.targetOp && q.rules.targetVal !== null && q.rules.targetVal !== '') {
+                            const opDisplay = q.rules.targetOp.replace(/>=/g, '≥').replace(/<=/g, '≤');
+                            let valDisplay = q.rules.targetVal;
+                            const resolvedVal = window.getActiveCharacterVariable(q.rules.targetVal);
+                            if (resolvedVal !== null) valDisplay = `${q.rules.targetVal} (${resolvedVal})`;
+                            formula += ` TARGET ${opDisplay} ${valDisplay}`;
                         }
-                        formula += ` TARGET ${opDisplay} ${valDisplay}`;
                     }
                 }
 
-                // Drag handle icon
-                item.innerHTML = `
+                if (type === 'roller' && q.addonToggle && !q.addonToggle.checked) {
+                    item.classList.add('opacity-40');
+                }
+
+                let innerHtml = `
                     <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>
                     <div class="flex items-center justify-center w-5 h-full ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                     </div>
-                    <div class="flex-grow min-w-0 pl-2">
-                        <div class="flex items-center gap-1.5">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                        </div>
-                        <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
-                    </div>
                 `;
+
+                if (type === 'roller') {
+                    innerHtml += `
+                        <div class="flex-grow min-w-0 pl-2 pr-2">
+                            <div class="flex items-center gap-1.5">
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            </div>
+                            <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
+                        </div>
+                    `;
+
+                    if (q.addonCounter) {
+                        const c = q.addonCounter;
+                        innerHtml += `
+                            <div class="flex items-center gap-1 mr-2 bg-[#020617]/30 border border-white/5 rounded-lg p-1 shrink-0" onclick="event.stopPropagation()">
+                                <button onclick="event.stopPropagation(); changeCardCounterVal(${q.id}, -1)" 
+                                        class="w-5 h-5 flex items-center justify-center rounded bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all text-xs font-bold">-</button>
+                                <span class="text-[9px] font-black mono text-slate-300 min-w-[45px] text-center leading-none">
+                                    ${c.value}/${c.max}<br><span class="text-[6px] text-slate-500 uppercase tracking-widest">${c.label}</span>
+                                </span>
+                                <button onclick="event.stopPropagation(); changeCardCounterVal(${q.id}, 1)" 
+                                        class="w-5 h-5 flex items-center justify-center rounded bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all text-xs font-bold">+</button>
+                            </div>
+                        `;
+                    }
+
+                    if (q.addonToggle) {
+                        const t = q.addonToggle;
+                        innerHtml += `
+                            <div class="flex items-center gap-1.5 mr-2" onclick="event.stopPropagation()">
+                                <span class="text-[9px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-emerald-400' : 'text-rose-500'}">
+                                    ${t.checked ? t.labelOn : t.labelOff}
+                                </span>
+                                <label class="toggle-switch scale-[0.65] origin-right">
+                                    <input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleCardAddonState(${q.id}, this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        `;
+                    }
+                } else if (type === 'stepper') {
+                    innerHtml += `
+                        <div class="flex-grow min-w-0 pl-2">
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            <div class="text-xs mono text-[#94a3b8] mt-0.5 opacity-80">${q.value} / ${q.max}</div>
+                        </div>
+                        <div class="flex items-center gap-1 mr-2 shrink-0" onclick="event.stopPropagation()">
+                            <button onclick="event.stopPropagation(); changeStepperValue(${q.id}, -1)" 
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white transition-all text-sm font-bold">-</button>
+                            <button onclick="event.stopPropagation(); changeStepperValue(${q.id}, 1)" 
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white transition-all text-sm font-bold">+</button>
+                        </div>
+                    `;
+                } else if (type === 'toggle') {
+                    innerHtml += `
+                        <div class="flex-grow min-w-0 pl-2">
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            <div class="text-xs mono text-[#94a3b8] mt-0.5 opacity-80">${q.checked ? q.labelOn : q.labelOff}</div>
+                        </div>
+                        <div class="flex items-center gap-2 mr-2 shrink-0" onclick="event.stopPropagation()">
+                            <span class="text-[9px] font-black uppercase tracking-wider min-w-[35px] text-center ${q.checked ? 'text-emerald-400' : 'text-rose-500'}">
+                                ${q.checked ? q.labelOn : q.labelOff}
+                            </span>
+                            <label class="toggle-switch scale-[0.65] origin-right">
+                                <input type="checkbox" ${q.checked ? 'checked' : ''} onchange="changeToggleValue(${q.id}, this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    `;
+                } else if (type === 'text') {
+                    const isCollapsed = q.collapsed ?? false;
+                    innerHtml += `
+                        <div class="flex-grow min-w-0 pl-2">
+                            <div class="flex items-center gap-1.5 justify-between">
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed ? 'hidden' : ''}">${q.text || 'Empty'}</div>
+                        </div>
+                    `;
+                }
+
+                item.innerHTML = innerHtml;
                 wrapper.appendChild(item);
 
-                if (q.includeAdvDis) {
+                if (type === 'roller' && q.includeAdvDis) {
                     const advBtn = document.createElement('button');
                     advBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-[#00d4ff]/10 hover:border-[#00d4ff]/30 active:scale-95 group/adv';
                     advBtn.title = "Roll with Advantage";
@@ -7083,13 +8498,14 @@
                     disBtn.innerHTML = `
                         <span class="text-[10px] font-black text-slate-400 group-hover/dis:text-[#6366f1] transition-colors uppercase tracking-widest">DIS</span>
                     `;
-
+                    
                     wrapper.appendChild(advBtn);
                     wrapper.appendChild(disBtn);
                 }
 
-                // Build move-to-group submenu options
-                const otherGroups = charGroups.filter(g => g.id !== activeGroupId);
+                const gearContainer = document.createElement('div');
+                gearContainer.className = 'shrink-0 relative';
+                const otherGroups = filtered.length > 0 ? groups.filter(g => g.characterId === activeCharacterId && g.id !== activeGroupId) : [];
                 const moveGroupHtml = otherGroups.length > 0 ? `
                     <div class="h-px bg-white/5 my-1"></div>
                     <button onclick="moveQueueToGroup(${q.id}, event)" class="menu-item">
@@ -7098,30 +8514,26 @@
                     </button>
                 ` : '';
 
-                const gearContainer = document.createElement('div');
-                gearContainer.className = 'shrink-0 relative';
+                const editLoadoutButtonHtml = (type === 'roller') ? `
+                    <button onclick="loadQueue(${q.id}, event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span>Edit Loadout</span>
+                    </button>
+                    <button onclick="updateSavedQueue(${q.id}, event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        <span>Overwrite</span>
+                    </button>
+                ` : '';
+
                 gearContainer.innerHTML = `
                     <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-[3rem] h-[3rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     </button>
-                    <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden">
-                        <label class="menu-item flex items-center gap-2.5 cursor-pointer">
-                            <input type="checkbox" onchange="toggleArsenalAdvDis(${q.id}, this.checked)" ${q.includeAdvDis ? 'checked' : ''} class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-0 w-3.5 h-3.5" onclick="event.stopPropagation()">
-                            <span>Include ADV/DIS</span>
-                        </label>
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="loadQueue(${q.id}, event)" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            <span>Edit Loadout</span>
-                        </button>
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="updateSavedQueue(${q.id}, event)" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                            <span>Overwrite</span>
-                        </button>
-                        <button onclick="renameSavedQueue(${q.id}, event)" class="menu-item">
+                    <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden" style="z-index: 100;">
+                        ${editLoadoutButtonHtml}
+                        <button onclick="configureSavedWidget(${q.id}, event)" class="menu-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            <span>Rename</span>
+                            <span>Configure</span>
                         </button>
                         <button onclick="openColorPicker(${q.id}, event)" class="menu-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
@@ -7135,6 +8547,7 @@
                         </button>
                     </div>
                 `;
+
                 wrapper.appendChild(gearContainer);
                 list.appendChild(wrapper);
             });
@@ -7403,6 +8816,10 @@
             if (options.arsenalId) {
                 const item = engine.savedQueues.find(q => q.id === options.arsenalId);
                 if (item) {
+                    if (item.addonToggle && !item.addonToggle.checked) {
+                        vibrate([45, 50, 45]);
+                        return;
+                    }
                     activeLoadoutId = options.arsenalId;
                     if (isArsenalQueue === 'Roll & Queue' || isArsenalQueue === 'Queue Only') {
                         loadQueue(options.arsenalId);
@@ -8400,11 +9817,26 @@
                     if (a.groups && a.groups.length > 0) groups = a.groups;
                     if (a.activeCharacterId) activeCharacterId = a.activeCharacterId;
                     if (a.activeGroupId) activeGroupId = a.activeGroupId;
+                    if (a.campaigns && a.campaigns.length > 0) campaigns = a.campaigns;
+                    if (a.activeCampaignId) activeCampaignId = a.activeCampaignId;
+                    if (a.openTabs) openTabs = a.openTabs;
                 } catch (e) { /* keep defaults */ }
             }
 
-            // Ensure backwards compatibility for loaded characters: missing dndType should default to 'standard'
+            // Ensure backwards compatibility
+            if (!campaigns || campaigns.length === 0) {
+                campaigns = [{ id: 'default_campaign', name: 'Default Campaign' }];
+            }
+            if (!activeCampaignId) {
+                activeCampaignId = campaigns[0].id;
+            }
+            if (!openTabs || openTabs.length === 0) {
+                openTabs = [activeCampaignId];
+            }
             characters.forEach(char => {
+                if (!char.campaignId) {
+                    char.campaignId = 'default_campaign';
+                }
                 if (!char.dndType) {
                     char.dndType = 'standard';
                 }
@@ -8428,6 +9860,7 @@
                     console.error("Failed to parse saved queues:", e);
                 }
                 renderSavedQueues();
+                renderBinder();
             }
 
 

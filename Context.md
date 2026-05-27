@@ -69,30 +69,42 @@
 - **Target Modes**: `sum` (math total), `count` (success count), `list` (raw results).
 - **Sets Mode**: Filters and groups matching dice sizes using `setsOp` & `setsVal` (e.g. pairs, triples).
 
-## 🗃️ Dice Arsenal & Cascade Chains
+## 🗃️ Dice Arsenal, Binder Drawer & Polymorphic Widgets
 
-### 1. Storage & Organization
-- Saved loadouts are stored in `engine.savedQueues`.
-- Loadouts are filtered dynamically in `renderSavedQueues()` using `activeCharacterId` and `activeGroupId`.
-- **Legacy Fallback**: Loadouts missing `characterId` or `groupId` default to `activeCharacterId = 'primary'` and `activeGroupId = 'grp_stats_1'`.
+### 1. Dice Binder Drawer
+- **Navigation**: Access via the drawer icon `☰` sticky button in the page header and the top-left of the main sticky result container (`#result-main`).
+- **Functionality**:
+  - Displays list of campaigns, characters, templates, and RPG blueprints.
+  - Allows quick character selection, deletion, or template spawning (e.g. Fighter, Mage).
+  - Integrates JSON Import/Export triggers at the bottom.
 
-### 2. Drag-and-Drop Interaction
+### 2. Polymorphic Saved Widgets
+Saved items in `engine.savedQueues` can act as different types of interactive cards based on their `widgetType` property:
+- **Roller Widget (`widgetType: 'roller'`)**: Performs dice queue rolls. Supports nested inline addons on the right side:
+  - **ADV/DIS Buttons**: Extra triggers to roll with advantage or disadvantage.
+  - **Counter Addon (`addonCounter: { label, max, value }`)**: In-card tracker for ammo/usages (e.g., standard mini-steppers).
+  - **Toggle Addon (`addonToggle: { checked, labelOn, labelOff }`)**: Interactive switch (e.g. Ready vs. Miscast for Shadowdark spells). When unchecked, the card dims (`opacity-40`) and rolls are blocked with haptic error feedback (`[45, 50, 45]`).
+  - **Note Addon (`addonNote`)**: Small description label displayed below the card name.
+- **Stepper Widget (`widgetType: 'stepper'`)**: Standalone interactive counter. Displays a label and counter state with inline `+` and `-` buttons.
+- **Toggle Widget (`widgetType: 'toggle'`)**: Standalone switch widget displaying status label and sliding checkbox.
+- **Text Widget (`widgetType: 'text'`)**: Standalone collapsible text block for custom campaign rules, spells, or character notes.
+
+### 3. Drag-and-Drop Interaction
 - **Reordering**: Dragging items triggers index swaps inside `engine.savedQueues`, persisted via `persistSaved()` and re-rendered.
 - **Empty Group Drop**: Dragging onto an empty group triggers `assignQueueGroup(dragSrcId, activeGroupId)` to move the item to that group.
 
-### 3. Actions Menu (Gear Icon)
-- **ADV/DIS Toggle (`includeAdvDis`)**: Displays secondary `ADV` and `DIS` buttons to roll the loadout with advantage/disadvantage directly.
-- **Edit Loadout (`loadQueue`)**: Restores the saved unified queue. Translates legacy `chipType` structures to current `nodeType` structures automatically.
-- **Overwrite (`updateSavedQueue`)**: Replaces the saved loadout's properties with the active engine queue.
-- **Rename (`renameSavedQueue`)**: Updates the display name via text modal.
-- **Appearance (`openColorPicker`)**: Sets the highlight color using a 20-color preset palette (`COLOR_PALETTE`).
+### 4. Actions Menu (Gear Icon)
+- **Configure (`configureSavedWidget`)**: Replaces the legacy "Rename" option. Opens the widget modal populated in edit mode to modify the widget's name, type, and enable/disable/configure nested addons. Saves edits in-place using `editingWidgetId`.
+- **Edit Loadout (`loadQueue`)**: Restores the saved unified queue to the active roll panel. Translates legacy structures automatically.
+- **Overwrite (`updateSavedQueue`)**: Overwrites the card's active roll formula with the current queue.
+- **Appearance (`openColorPicker`)**: Selects the accent highlight color using the preset palette (`COLOR_PALETTE`).
 - **Move to Group (`moveQueueToGroup`)**: Changes `groupId` to target another category.
-- **Delete (`deleteQueue`)**: Splices the item from storage.
+- **Delete (`deleteQueue`)**: Splices the widget card from `engine.savedQueues` completely.
 
-### 4. Cascade Roll Chains
+### 5. Cascade Roll Chains
 - Loadouts can define post-roll chain configurations (`chainSuccessSelect`, `chainCritSelect`, `chainFailSelect`).
 - Executing a chain (`executeRollChain`) shifts the UI display to `#chain-cascade-container`.
-- It processes sequentially: displays step totals, updates rolling status animations, outputs the `flatDescription`, and halts if target checks fail or when the chain ends normally.
+- Processes sequentially: displays step totals, updates rolling status animations, outputs the `flatDescription`, and halts if target checks fail or when the chain ends normally.
 
 ## 🎨 UI Hooks & Integration
 - **Character Variables**: DiceEngine calls `window.getActiveCharacterVariable(name)` to resolve stats (e.g., `STR`) dynamically:
@@ -114,5 +126,8 @@ engine.setRng((sides) => sides); // Returns max value
 
 ## 💡 AI Prompting Tips
 - **Contiguous Edits**: In prompts, ask for targeted function replacements or git diffs rather than rewriting full files.
-- **Math First**: Implement new mechanics in `DiceEngine.js` and verify via `DiceEngine.test.js` before making UI changes in `DiceRoller.html`.
+- **Math First**: Implement new math mechanics in `DiceEngine.js` and verify via `DiceEngine.test.js` before making UI changes in `DiceRoller.html`.
 - **Schema Strictness**: Generate queue elements adhering strictly to the Node JSON schemas above.
+
+# RULES
+For Git, NEVER EVER COMMIT, REVERT OR CHANGE BRANCHES
