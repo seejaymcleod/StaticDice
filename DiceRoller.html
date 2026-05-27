@@ -500,13 +500,13 @@
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(0, 212, 255, 0.1);
             border-radius: 1.5rem;
-            padding: 0.25rem 0.75rem 1.5rem 0.75rem;
+            padding: 0.25rem 0.5rem 1rem 0.5rem;
             box-shadow: 0 -10px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
             z-index: 100;
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: flex;
             flex-direction: column;
-            gap: 0.625rem;
+            gap: 0.5rem;
         }
 
         #roll-pad-container.collapsed {
@@ -564,6 +564,8 @@
             background: rgba(2, 6, 23, 0.85);
             backdrop-filter: blur(24px) saturate(180%);
             border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
@@ -1361,7 +1363,7 @@
 
 <body class="flex flex-col items-center">
     <div id="main-container"
-        class="w-full max-w-md px-4 pb-4 pt-0 space-y-3 flex flex-col min-h-screen mode-dice relative">
+        class="w-full max-w-md px-4 pb-4 pt-0 space-y-3 flex flex-col mode-dice relative">
 
         <!-- HEADER -->
         <header
@@ -1483,7 +1485,7 @@
 
             <!-- QUEUE DISPLAY (FULL WIDTH, TOP) -->
             <div
-                class="glass-panel px-4 py-2 rounded-xl flex items-center justify-center min-h-[3rem] max-h-[8rem] overflow-y-auto custom-scroll border-white/5 w-full pointer-events-auto">
+                class="glass-panel px-3 py-1.5 rounded-xl flex items-center justify-center min-h-[3rem] max-h-[8rem] overflow-y-auto custom-scroll border-white/5 w-full pointer-events-auto">
                 <div id="queue-display"
                     class="w-full flex flex-wrap items-center justify-center gap-2 font-bold mono uppercase">
                     <span class="text-base text-sky-400/40">EMPTY QUEUE</span>
@@ -1493,7 +1495,7 @@
 
 
             <!-- ROW 1: UTILITY STRIP (CLEAR | SAVE | ADVANCED | BACK) -->
-            <div class="grid grid-cols-4 gap-2.5">
+            <div class="grid grid-cols-4 gap-2">
                 <button id="clear-btn" onclick="clearQueue()"
                     class="h-[2rem] bg-[#00d4ff]/05 text-[#94a3b8] flex items-center justify-center rounded-xl border border-[#00d4ff]/10 transition-all hover:text-[#00d4ff] active:bg-[#00d4ff]/20"
                     title="Clear Queue">
@@ -1533,7 +1535,7 @@
             </div>
 
             <!-- ROW 2: MOD & TARGET STEPPERS SIDE-BY-SIDE -->
-            <div class="hidden gap-2.5">
+            <div class="hidden gap-2">
                 <!-- MOD STEPPER -->
                 <div
                     class="flex-1 segmented-row h-[3rem] bg-[#020617] flex items-center justify-between !p-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
@@ -1571,7 +1573,7 @@
             </div>
 
             <!-- ROW 3: # | ADV | DIS | ROLL -->
-            <div class="grid grid-cols-12 gap-2.5">
+            <div class="grid grid-cols-12 gap-2">
                 <!-- # Number Node Button -->
                 <button id="hash-btn" onclick="openNodeEditor('number')"
                     class="col-span-2 toggle-btn segmented-row justify-center items-center flex-col transition-all hover:bg-white/5 group relative overflow-hidden !h-[3rem]">
@@ -1607,9 +1609,9 @@
                 </button>
             </div>
 
-            <div id="advanced-rows" class="hidden space-y-2.5">
+            <div id="advanced-rows" class="hidden space-y-2">
                 <!-- ROW 4: FLOW (disabled) | EVAL | REROLL -->
-                <div class="grid grid-cols-4 gap-2.5">
+                <div class="grid grid-cols-4 gap-2">
                     <!-- FLOW — disabled for now -->
                     <button disabled
                         class="h-[3rem] bg-transparent text-slate-600 flex flex-col items-center justify-center gap-0.5 rounded-xl border border-white/5 transition-all opacity-30 cursor-not-allowed"
@@ -8367,8 +8369,27 @@
             }
         }
 
+        function updateScrollSpacer() {
+            const container = document.getElementById('roll-pad-container');
+            if (container) {
+                if (container.classList.contains('collapsed')) {
+                    document.body.style.paddingBottom = '3rem';
+                } else {
+                    const h = container.offsetHeight;
+                    document.body.style.paddingBottom = (h + 32) + 'px';
+                }
+            }
+        }
+
         window.onload = () => {
             initRollPad();
+            
+            updateScrollSpacer();
+            const padContainer = document.getElementById('roll-pad-container');
+            if (padContainer) {
+                new ResizeObserver(updateScrollSpacer).observe(padContainer);
+                padContainer.addEventListener('transitionend', updateScrollSpacer);
+            }
             // Load arsenal (characters + groups) first so rendering has correct context
             const storedArsenal = localStorage.getItem('crypto_roller_arsenal');
             if (storedArsenal) {
