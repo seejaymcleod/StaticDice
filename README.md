@@ -23,7 +23,7 @@ Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a hi
 - **Count Mode**: Success-based rolling (e.g., World of Darkness, Shadowrun). Counts dice meeting a target threshold.
 - **List Mode**: Raw output for when you need to see every individual result clearly.
 
-### 🎒 The Arsenal
+### The Arsenal
 Save your most frequent rolls as custom "Loadouts."
 - **Persistence**: Saved to LocalStorage so they're ready whenever you return.
 - **Customization**: Name your rolls, assign unique colors, and update them on the fly.
