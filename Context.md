@@ -80,22 +80,23 @@
 
 ### 2. Polymorphic Saved Widgets
 Saved items in `engine.savedQueues` can act as different types of interactive cards based on their `widgetType` property:
-- **Roller Widget (`widgetType: 'roller'`)**: Performs dice queue rolls. Supports nested inline addons on the right side:
-  - **ADV/DIS Buttons**: Extra triggers to roll with advantage or disadvantage.
-  - **Counter Addon (`addonCounter: { label, max, value }`)**: In-card tracker for ammo/usages (e.g., standard mini-steppers).
-  - **Toggle Addon (`addonToggle: { checked, labelOn, labelOff }`)**: Interactive switch (e.g. Ready vs. Miscast for Shadowdark spells). When unchecked, the card dims (`opacity-40`) and rolls are blocked with haptic error feedback (`[45, 50, 45]`).
-  - **Note Addon (`addonNote`)**: Small description label displayed below the card name.
-- **Stepper Widget (`widgetType: 'stepper'`)**: Standalone interactive counter. Displays a label and counter state with inline `+` and `-` buttons.
-- **Toggle Widget (`widgetType: 'toggle'`)**: Standalone switch widget displaying status label and sliding checkbox.
-- **Text Widget (`widgetType: 'text'`)**: Standalone collapsible text block for custom campaign rules, spells, or character notes.
+- **Roller Widget (`widgetType: 'roller'`)**: Performs dice queue rolls. Supports nested addons rendered visually beside or inside the card:
+  - **ADV/DIS Buttons**: Sibling buttons (`w-[3rem]`, auto-stretching to match card height) to roll with advantage or disadvantage.
+  - **Resource Counter Addon (`addonCounter: { label, max, value }`)**: Tracker for usages/ammunition rendered as external `-`, `value/max`, and `+` buttons next to the card. Auto-stretches vertically to match card height.
+  - **Toggle Addon (`addonToggle: { checked, labelOn, labelOff }`)**: Replaces switches with a clean vertical "bulb" stripe (`w-6`) on the right end of the card. Fully illuminated with a themed color glow when active, and dim when inactive. Toggled via a text status label next to it. When unchecked, card opacity dims to 40% and rolls are blocked.
+  - **Note Addon (`addonNote`)**: Small description label displayed below the card name inside the card.
+- **Stepper Widget (`widgetType: 'stepper'`)**: Standalone counter card. Displays a label and value, with external stretching `+` and `-` buttons.
+- **Toggle Widget (`widgetType: 'toggle'`)**: Standalone switch card. Displays status labels next to a vertical right-hand "bulb" stripe (glowing colored when active, dim when inactive). The entire card acts as a click toggle.
+- **Text Widget (`widgetType: 'text'`)**: Standalone collapsible text block for campaign rules, spells, or character notes.
 
 ### 3. Drag-and-Drop Interaction
 - **Reordering**: Dragging items triggers index swaps inside `engine.savedQueues`, persisted via `persistSaved()` and re-rendered.
 - **Empty Group Drop**: Dragging onto an empty group triggers `assignQueueGroup(dragSrcId, activeGroupId)` to move the item to that group.
 
-### 4. Actions Menu (Gear Icon)
-- **Configure (`configureSavedWidget`)**: Replaces the legacy "Rename" option. Opens the widget modal populated in edit mode to modify the widget's name, type, and enable/disable/configure nested addons. Saves edits in-place using `editingWidgetId`.
-- **Edit Loadout (`loadQueue`)**: Restores the saved unified queue to the active roll panel. Translates legacy structures automatically.
+### 4. Actions Menu (Hold / Right-Click)
+- **Menu Trigger**: Replaces the physical gear button to eliminate clutter. Accessed via a **hold (long-press) for 500ms** on mobile/desktop, or a **right-click (contextmenu)** on desktop. The dropdown context menu is dynamically positioned relative to the click/touch coordinates.
+- **Configure (`configureSavedWidget`)**: Opens the widget modal in edit mode to modify name, type, and addons. Saves edits using `editingWidgetId`.
+- **Edit Loadout (`loadQueue`)**: Restores the saved unified queue to the active roll panel.
 - **Overwrite (`updateSavedQueue`)**: Overwrites the card's active roll formula with the current queue.
 - **Appearance (`openColorPicker`)**: Selects the accent highlight color using the preset palette (`COLOR_PALETTE`).
 - **Move to Group (`moveQueueToGroup`)**: Changes `groupId` to target another category.

@@ -23,11 +23,14 @@ Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a hi
 - **Count Mode**: Success-based rolling (e.g., World of Darkness, Shadowrun). Counts dice meeting a target threshold.
 - **List Mode**: Raw output for when you need to see every individual result clearly.
 
-### The Arsenal
-Save your most frequent rolls as custom "Loadouts."
-- **Persistence**: Saved to LocalStorage so they're ready whenever you return.
-- **Customization**: Name your rolls, assign unique colors, and update them on the fly.
-- **Import/Export**: Move your entire arsenal between devices via JSON.
+### 🎛️ The Arsenal & Polymorphic Widgets
+Save your frequent rolls, character variables, or trackers as custom interactive widgets:
+- **Polymorphic Cards**: Save widgets as Rollers, Standalone Steppers, Standalone Toggle Switches, or Collapsible Spell/Rule text notes.
+- **Roll Addons**: Extend Rollers with Advantage/Disadvantage buttons, inline description notes, or adjacent resource counters.
+- **Smart Sizing**: Adjacent helper buttons (like counter steppers and ADV/DIS triggers) auto-stretch to perfectly match the height of their target card.
+- **Clean Indicators**: Toggle card states cleanly using full-card tap triggers and sleek, vertical right-side "bulb" stripes that illuminate or dim based on active state.
+- **Gesture Control**: Hold a card for 500ms (or right-click on desktop) to open its actions menu dynamically at your touch or cursor coordinates.
+- **Persistence & Portability**: Saved in LocalStorage, or easily imported/exported between devices using JSON.
 
 ### ⚙️ Advanced Rules
 Static Dice handles complex mechanics so you don't have to:
