@@ -651,6 +651,24 @@
             transform: translateX(16px);
         }
 
+        /* Saved Queue Card Specific Toggle Switch (Vertical pill knob and theme-colored active track) */
+        .saved-item .toggle-slider:before {
+            height: 14px;
+            width: 6px;
+            left: 4px;
+            bottom: 2px;
+            border-radius: 2px;
+        }
+
+        .saved-item input:checked + .toggle-slider {
+            background-color: var(--item-color) !important;
+            box-shadow: 0 0 12px var(--item-color);
+        }
+
+        .saved-item input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
         /* Addon Widget Radio Buttons */
         .addon-radio-input {
             -webkit-appearance: none;
@@ -2819,8 +2837,7 @@
                         <label
                             class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
                             <input type="radio" name="addon-widget" id="addon-none" value="none"
-                                onchange="selectAddonWidget('none')" checked
-                                class="addon-radio-input">
+                                onchange="selectAddonWidget('none')" checked class="addon-radio-input">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-slate-200 uppercase">None</span>
                                 <span class="text-[9px] text-slate-400 font-medium">No addon widget on this card.</span>
@@ -2829,8 +2846,7 @@
                         <label
                             class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
                             <input type="radio" name="addon-widget" id="addon-advdis" value="advdis"
-                                onchange="selectAddonWidget('advdis')"
-                                class="addon-radio-input">
+                                onchange="selectAddonWidget('advdis')" class="addon-radio-input">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-slate-200 uppercase">ADV / DIS Buttons</span>
                                 <span class="text-[9px] text-slate-400 font-medium">Adds secondary buttons to roll with
@@ -2840,31 +2856,31 @@
                         <label
                             class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
                             <input type="radio" name="addon-widget" id="addon-stepper-check" value="stepper"
-                                onchange="selectAddonWidget('stepper')"
-                                class="addon-radio-input">
+                                onchange="selectAddonWidget('stepper')" class="addon-radio-input">
                             <div class="flex flex-col">
-                                <span class="text-xs font-bold text-slate-200 uppercase">Resource Counter (Ammo)</span>
-                                <span class="text-[9px] text-slate-400 font-medium">Adds an inline counter (e.g. ammo,
-                                    slots) inside the card.</span>
+                                <span class="text-xs font-bold text-slate-200 uppercase">Resource Counter</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds a resource counter beside the card.</span>
                             </div>
                         </label>
-                        <div id="addon-stepper-config" class="hidden ml-[9px] pl-4 border-l-2 border-sky-500/20 space-y-2.5 pb-1">
+                        <div id="addon-stepper-config" class="hidden pl-6 space-y-2">
                             <div>
-                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Counter
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Counter
                                     Label</label>
-                                <input type="text" id="addon-stepper-label" value="Ammo"
-                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors">
+                                <input type="text" id="addon-stepper-label" value="Resource"
+                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                             </div>
-                            <div class="grid grid-cols-2 gap-2.5">
+                            <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Max</label>
+                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Max
+                                        Value</label>
                                     <input type="number" id="addon-stepper-max" value="20"
-                                        class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-[#e2e8f0] font-bold text-center outline-none focus:border-sky-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                        class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                                 </div>
                                 <div>
-                                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Initial</label>
+                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Initial
+                                        Value</label>
                                     <input type="number" id="addon-stepper-val" value="20"
-                                        class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-[#e2e8f0] font-bold text-center outline-none focus:border-sky-500 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                        class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                                 </div>
                             </div>
                         </div>
@@ -2872,47 +2888,43 @@
                         <label
                             class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
                             <input type="radio" name="addon-widget" id="addon-toggle-check" value="toggle"
-                                onchange="selectAddonWidget('toggle')"
-                                class="addon-radio-input">
+                                onchange="selectAddonWidget('toggle')" class="addon-radio-input">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-slate-200 uppercase">Usability Toggle Switch</span>
                                 <span class="text-[9px] text-slate-400 font-medium">Adds a mini switch (e.g.
                                     Prepared/Miscast) inside the card.</span>
                             </div>
                         </label>
-                        <div id="addon-toggle-config" class="hidden ml-[9px] pl-4 border-l-2 border-sky-500/20 pb-1">
-                            <div class="grid grid-cols-2 gap-2.5">
-                                <div>
-                                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Active
-                                        Label</label>
-                                    <input type="text" id="addon-toggle-on" value="Ready"
-                                        class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors">
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Inactive
-                                        Label</label>
-                                    <input type="text" id="addon-toggle-off" value="Miscast"
-                                        class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors">
-                                </div>
+                        <div id="addon-toggle-config" class="hidden pl-6 grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Active
+                                    Label</label>
+                                <input type="text" id="addon-toggle-on" value="Ready"
+                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Inactive
+                                    Label</label>
+                                <input type="text" id="addon-toggle-off" value="Miscast"
+                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                             </div>
                         </div>
 
                         <label
                             class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
                             <input type="radio" name="addon-widget" id="addon-note-check" value="note"
-                                onchange="selectAddonWidget('note')"
-                                class="addon-radio-input">
+                                onchange="selectAddonWidget('note')" class="addon-radio-input">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-slate-200 uppercase">Text Note Addon</span>
                                 <span class="text-[9px] text-slate-400 font-medium">Adds a small text description below
                                     the formula.</span>
                             </div>
                         </label>
-                        <div id="addon-note-config" class="hidden ml-[9px] pl-4 border-l-2 border-sky-500/20 pb-1">
-                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Note
+                        <div id="addon-note-config" class="hidden pl-6">
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Note
                                 Description</label>
                             <input type="text" id="addon-note-text" placeholder="E.g., Deals double damage on crit"
-                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors placeholder:text-slate-600 placeholder:font-medium">
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
                         </div>
                     </div>
                 </div>
@@ -6441,6 +6453,38 @@
                 targetMenu.classList.remove('hidden');
                 parentItem.classList.add('z-50');
                 activeMenuId = id;
+
+                if (e && parentItem) {
+                    const rect = parentItem.getBoundingClientRect();
+                    let clientX = 0;
+                    let clientY = 0;
+
+                    if (e.touches && e.touches.length > 0) {
+                        clientX = e.touches[0].clientX;
+                        clientY = e.touches[0].clientY;
+                    } else if (e.changedTouches && e.changedTouches.length > 0) {
+                        clientX = e.changedTouches[0].clientX;
+                        clientY = e.changedTouches[0].clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+
+                    // Calculate local offset
+                    let localX = clientX - rect.left;
+                    let localY = clientY - rect.top;
+
+                    // Bound checks to ensure menu doesn't draw offscreen or overlap layout weirdly
+                    const menuWidth = 170;
+                    if (localX + menuWidth > rect.width) {
+                        localX = rect.width - menuWidth - 8;
+                    }
+                    if (localX < 8) localX = 8;
+
+                    targetMenu.style.left = `${localX}px`;
+                    targetMenu.style.top = `${localY + 8}px`;
+                    targetMenu.style.right = 'auto';
+                }
             } else {
                 activeMenuId = null;
             }
@@ -7413,7 +7457,7 @@
             }
 
             document.getElementById('addon-none').checked = true;
-            document.getElementById('addon-stepper-label').value = 'Ammo';
+            document.getElementById('addon-stepper-label').value = 'Resource';
             document.getElementById('addon-stepper-max').value = '20';
             document.getElementById('addon-stepper-val').value = '20';
             document.getElementById('addon-toggle-on').value = 'Ready';
@@ -7478,7 +7522,7 @@
             else if (hasToggle) activeAddon = 'toggle';
             else if (hasNote) activeAddon = 'note';
 
-            document.getElementById('addon-stepper-label').value = hasCounter ? q.addonCounter.label : 'Ammo';
+            document.getElementById('addon-stepper-label').value = hasCounter ? q.addonCounter.label : 'Resource';
             document.getElementById('addon-stepper-max').value = hasCounter ? q.addonCounter.max : '20';
             document.getElementById('addon-stepper-val').value = hasCounter ? q.addonCounter.value : '20';
             document.getElementById('addon-toggle-on').value = hasToggle ? q.addonToggle.labelOn : 'Ready';
@@ -7592,7 +7636,7 @@
 
                         if (selectedAddon === 'stepper') {
                             q.addonCounter = {
-                                label: document.getElementById('addon-stepper-label').value.trim() || 'Ammo',
+                                label: document.getElementById('addon-stepper-label').value.trim() || 'Resource',
                                 max: parseInt(document.getElementById('addon-stepper-max').value) || 20,
                                 value: Math.min(parseInt(document.getElementById('addon-stepper-val').value) || 20, parseInt(document.getElementById('addon-stepper-max').value) || 20)
                             };
@@ -7675,7 +7719,7 @@
 
                 if (selectedAddon === 'stepper') {
                     newWidget.addonCounter = {
-                        label: document.getElementById('addon-stepper-label').value.trim() || 'Ammo',
+                        label: document.getElementById('addon-stepper-label').value.trim() || 'Resource',
                         max: parseInt(document.getElementById('addon-stepper-max').value) || 20,
                         value: parseInt(document.getElementById('addon-stepper-val').value) || 20
                     };
@@ -8512,11 +8556,91 @@
                 item.style.setProperty('--item-color', q.color);
                 item.dataset.id = q.id;
 
+                let holdTimer = null;
+                let isHold = false;
+                let startX = 0, startY = 0;
+
+                const startHold = (e) => {
+                    isHold = false;
+                    const touch = e.touches ? e.touches[0] : e;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    holdTimer = setTimeout(() => {
+                        isHold = true;
+                        toggleArsenalMenu(q.id, e);
+                    }, 500);
+                };
+
+                const cancelHold = () => {
+                    if (holdTimer) {
+                        clearTimeout(holdTimer);
+                        holdTimer = null;
+                    }
+                };
+
+                const moveHold = (e) => {
+                    const touch = e.touches ? e.touches[0] : e;
+                    if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+                        cancelHold();
+                    }
+                };
+
+                item.addEventListener('touchstart', startHold, { passive: true });
+                item.addEventListener('touchend', (e) => {
+                    cancelHold();
+                    if (isHold) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+                item.addEventListener('touchmove', moveHold, { passive: true });
+                item.addEventListener('touchcancel', cancelHold, { passive: true });
+
+                item.addEventListener('mousedown', (e) => {
+                    if (e.button === 0) startHold(e);
+                });
+                item.addEventListener('mouseup', (e) => {
+                    cancelHold();
+                    if (isHold) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+                item.addEventListener('mousemove', moveHold);
+                item.addEventListener('mouseleave', cancelHold);
+
+                item.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    isHold = true;
+                    toggleArsenalMenu(q.id, e);
+                });
+
                 const type = q.widgetType || 'roller';
                 if (type === 'roller') {
-                    item.onclick = (e) => triggerRoll(e, { arsenalId: q.id });
+                    item.onclick = (e) => {
+                        if (isHold) {
+                            isHold = false;
+                            return;
+                        }
+                        triggerRoll(e, { arsenalId: q.id });
+                    };
                 } else if (type === 'text') {
-                    item.onclick = () => toggleTextCardCollapsed(q.id);
+                    item.onclick = (e) => {
+                        if (isHold) {
+                            isHold = false;
+                            return;
+                        }
+                        toggleTextCardCollapsed(q.id);
+                    };
+                } else if (type === 'toggle') {
+                    item.onclick = (e) => {
+                        if (isHold) {
+                            isHold = false;
+                            return;
+                        }
+                        changeToggleValue(q.id, !q.checked);
+                    };
                 }
 
                 let formula = '';
@@ -8572,41 +8696,26 @@
 
                 if (type === 'roller') {
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 pr-2">
+                        <div class="flex-grow min-w-0 pl-2 pr-8">
                             <div class="flex items-center gap-1.5">
                                 <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                             </div>
                             <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
-                            ${q.addonNote ? `<div class="text-[11px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
                         </div>
                     `;
-
-                    if (q.addonCounter) {
-                        const c = q.addonCounter;
-                        innerHtml += `
-                            <div class="flex items-center gap-1.5 mr-2 bg-[#020617]/30 border border-white/5 rounded-xl p-1.5 shrink-0" onclick="event.stopPropagation()">
-                                <button onclick="event.stopPropagation(); changeCardCounterVal(${q.id}, -1)" 
-                                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white active:scale-95 transition-all text-sm font-black">−</button>
-                                <span class="text-xs font-black mono text-slate-300 min-w-[40px] text-center leading-tight">
-                                    ${c.value}/${c.max}<br><span class="text-[8px] text-slate-500 uppercase tracking-widest">${c.label}</span>
-                                </span>
-                                <button onclick="event.stopPropagation(); changeCardCounterVal(${q.id}, 1)" 
-                                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white active:scale-95 transition-all text-sm font-black">+</button>
-                            </div>
-                        `;
-                    }
 
                     if (q.addonToggle) {
                         const t = q.addonToggle;
                         innerHtml += `
-                            <div class="flex items-center gap-2 mr-2" onclick="event.stopPropagation()">
-                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[40px] text-center ${t.checked ? 'text-emerald-400' : 'text-rose-500'}">
+                            <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
+                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
                                     ${t.checked ? t.labelOn : t.labelOff}
                                 </span>
-                                <label class="toggle-switch scale-[0.85] origin-right">
-                                    <input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleCardAddonState(${q.id}, this.checked)">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                            </div>
+                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                                 onclick="event.stopPropagation(); toggleCardAddonState(${q.id}, !${t.checked})"
+                                 style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
                             </div>
                         `;
                     }
@@ -8623,18 +8732,16 @@
                     `;
                 } else if (type === 'toggle') {
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2">
+                        <div class="flex-grow min-w-0 pl-2 pr-8">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            <div class="text-xs mono text-[#94a3b8] mt-0.5 opacity-80">${q.checked ? q.labelOn : q.labelOff}</div>
                         </div>
-                        <div class="flex items-center gap-2 mr-2 shrink-0" onclick="event.stopPropagation()">
-                            <span class="text-[9px] font-black uppercase tracking-wider min-w-[35px] text-center ${q.checked ? 'text-emerald-400' : 'text-rose-500'}">
+                        <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
+                            <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${q.checked ? 'text-white' : 'text-slate-500'}">
                                 ${q.checked ? q.labelOn : q.labelOff}
                             </span>
-                            <label class="toggle-switch scale-[0.65] origin-right">
-                                <input type="checkbox" ${q.checked ? 'checked' : ''} onchange="changeToggleValue(${q.id}, this.checked)">
-                                <span class="toggle-slider"></span>
-                            </label>
+                        </div>
+                        <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300" 
+                             style="background-color: ${q.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${q.checked ? q.color : 'transparent'}">
                         </div>
                     `;
                 } else if (type === 'text') {
@@ -8655,7 +8762,7 @@
 
                 if (type === 'roller' && q.includeAdvDis) {
                     const advBtn = document.createElement('button');
-                    advBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-[#00d4ff]/10 hover:border-[#00d4ff]/30 active:scale-95 group/adv';
+                    advBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-[#00d4ff]/10 hover:border-[#00d4ff]/30 active:scale-95 group/adv';
                     advBtn.title = "Roll with Advantage";
                     advBtn.onclick = (e) => {
                         e.stopPropagation();
@@ -8666,7 +8773,7 @@
                     `;
 
                     const disBtn = document.createElement('button');
-                    disBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-[#6366f1]/10 hover:border-[#6366f1]/30 active:scale-95 group/dis';
+                    disBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-[#6366f1]/10 hover:border-[#6366f1]/30 active:scale-95 group/dis';
                     disBtn.title = "Roll with Disadvantage";
                     disBtn.onclick = (e) => {
                         e.stopPropagation();
@@ -8678,9 +8785,37 @@
 
                     wrapper.appendChild(advBtn);
                     wrapper.appendChild(disBtn);
+                } else if (type === 'roller' && q.addonCounter) {
+                    const c = q.addonCounter;
+                    const decBtn = document.createElement('button');
+                    decBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
+                    decBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        changeCardCounterVal(q.id, -1);
+                    };
+                    decBtn.innerHTML = `−`;
+
+                    const valDisp = document.createElement('div');
+                    valDisp.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl border border-white/5 bg-[#020617]/40 text-center leading-none px-1 select-none';
+                    valDisp.innerHTML = `
+                        <span class="text-[10px] font-black mono text-slate-200">${c.value}/${c.max}</span>
+                        <span class="text-[6px] font-black text-slate-500 uppercase tracking-widest mt-0.5 truncate max-w-full">${c.label}</span>
+                    `;
+
+                    const incBtn = document.createElement('button');
+                    incBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
+                    incBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        changeCardCounterVal(q.id, 1);
+                    };
+                    incBtn.innerHTML = `+`;
+
+                    wrapper.appendChild(decBtn);
+                    wrapper.appendChild(valDisp);
+                    wrapper.appendChild(incBtn);
                 } else if (type === 'stepper') {
                     const decBtn = document.createElement('button');
-                    decBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
+                    decBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
                     decBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, -1);
@@ -8688,7 +8823,7 @@
                     decBtn.innerHTML = `−`;
 
                     const incBtn = document.createElement('button');
-                    incBtn.className = 'shrink-0 w-[3rem] h-[3rem] flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
+                    incBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
                     incBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, 1);
@@ -8699,8 +8834,6 @@
                     wrapper.appendChild(incBtn);
                 }
 
-                const gearContainer = document.createElement('div');
-                gearContainer.className = 'shrink-0 relative';
                 const otherGroups = filtered.length > 0 ? groups.filter(g => g.characterId === activeCharacterId && g.id !== activeGroupId) : [];
                 const moveGroupHtml = otherGroups.length > 0 ? `
                     <div class="h-px bg-white/5 my-1"></div>
@@ -8721,30 +8854,29 @@
                     </button>
                 ` : '';
 
-                gearContainer.innerHTML = `
-                    <button onclick="toggleArsenalMenu(${q.id}, event)" class="gear-btn w-[3rem] h-[3rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                const menuContainer = document.createElement('div');
+                menuContainer.id = `menu-${q.id}`;
+                menuContainer.className = 'arsenal-menu absolute right-2 top-12 hidden';
+                menuContainer.style.zIndex = '100';
+                menuContainer.innerHTML = `
+                    ${editLoadoutButtonHtml}
+                    <button onclick="configureSavedWidget(${q.id}, event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span>Configure</span>
                     </button>
-                    <div id="menu-${q.id}" class="arsenal-menu absolute right-0 top-12 hidden" style="z-index: 100;">
-                        ${editLoadoutButtonHtml}
-                        <button onclick="configureSavedWidget(${q.id}, event)" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            <span>Configure</span>
-                        </button>
-                        <button onclick="openColorPicker(${q.id}, event)" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
-                            <span>Appearance</span>
-                        </button>
-                        ${moveGroupHtml}
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="deleteQueue(${q.id}, event)" class="menu-item danger">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                            <span>Delete</span>
-                        </button>
-                    </div>
+                    <button onclick="openColorPicker(${q.id}, event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
+                        <span>Appearance</span>
+                    </button>
+                    ${moveGroupHtml}
+                    <div class="h-px bg-white/5 my-1"></div>
+                    <button onclick="deleteQueue(${q.id}, event)" class="menu-item danger">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        <span>Delete</span>
+                    </button>
                 `;
 
-                wrapper.appendChild(gearContainer);
+                wrapper.appendChild(menuContainer);
                 list.appendChild(wrapper);
             });
         }
