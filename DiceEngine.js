@@ -325,25 +325,49 @@ class DiceEngine {
     }
 
     applyModifier(type) {
-        if (this.queue.length === 0) return;
+        if (this.queue.length === 0) {
+            if (this.activeModifier === type) {
+                this.modifierLevel++;
+            } else if (this.activeModifier) {
+                // Opposing modifier: cancel out to neutral
+                this.activeModifier = null;
+                this.modifierLevel = 0;
+            } else {
+                this.activeModifier = type;
+                this.modifierLevel = 1;
+            }
+            return;
+        }
+
         const lastNode = this.queue[this.queue.length - 1];
         if (lastNode && lastNode.nodeType === 'operator' && (lastNode.operator === 'ADV' || lastNode.operator === 'DIS')) {
             if (lastNode.operator === type) {
                 lastNode.modifierLevel = (lastNode.modifierLevel || 1) + 1;
             } else {
-                lastNode.operator = type;
-                lastNode.modifierLevel = 1;
+                // Opposing modifier: cancel out to neutral by removing it
+                this.queue.pop();
             }
         } else {
             // Check if we can append ADV/DIS: must have a dice or closing parenthesis to the left
-            const last = this.queue[this.queue.length - 1];
-            const isValidLeft = last && (last.nodeType === 'node' || (last.nodeType === 'operator' && last.operator === ')'));
+            const isValidLeft = lastNode && (lastNode.nodeType === 'node' || (lastNode.nodeType === 'operator' && lastNode.operator === ')'));
             if (isValidLeft) {
                 this.queue.push({
                     nodeType: 'operator',
                     operator: type,
                     modifierLevel: 1
                 });
+            } else {
+                // Fall back to setting the global activeModifier if we can't attach it locally
+                if (this.activeModifier === type) {
+                    this.modifierLevel++;
+                } else if (this.activeModifier) {
+                    // Opposing modifier: cancel out to neutral
+                    this.activeModifier = null;
+                    this.modifierLevel = 0;
+                } else {
+                    this.activeModifier = type;
+                    this.modifierLevel = 1;
+                }
             }
         }
     }
