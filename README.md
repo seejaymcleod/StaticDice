@@ -18,7 +18,7 @@ Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a hi
 
 ## Features
 
-### 🎲 Multi-Mode Rolling
+### Multi-Mode Rolling
 - **Sum Mode**: Classic TTRPG rolling—totals your dice and adds modifiers.
 - **Count Mode**: Success-based rolling (e.g., World of Darkness, Shadowrun). Counts dice meeting a target threshold.
 - **List Mode**: Raw output for when you need to see every individual result clearly.
