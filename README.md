@@ -16,7 +16,7 @@ Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a hi
 
 ---
 
-## 🛠 Features
+## Features
 
 ### 🎲 Multi-Mode Rolling
 - **Sum Mode**: Classic TTRPG rolling—totals your dice and adds modifiers.
