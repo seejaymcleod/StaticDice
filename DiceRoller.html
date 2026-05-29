@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Static Dice</title>
+    <link rel="icon" type="image/png" href="assets/perspective-dice-six-faces-six.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -560,9 +561,9 @@
             z-index: 40;
             position: sticky;
             top: 0;
-            margin-left: -1rem;
-            margin-right: -1rem;
-            padding: 1rem 1rem 0.75rem 1rem;
+            margin-left: 0;
+            margin-right: 0;
+            padding: 1rem 0 0.75rem 0;
             background: rgba(2, 6, 23, 0.85);
             backdrop-filter: blur(24px) saturate(180%);
             border-bottom: 1px solid rgba(0, 212, 255, 0.15);
@@ -1442,7 +1443,7 @@
 
     <!-- Binder Slide-Out Drawer -->
     <div id="binder-drawer"
-        class="fixed top-0 left-0 h-full w-[280px] bg-[#090d16] border-r border-white/10 z-[100] transform -translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+        class="fixed top-0 left-0 h-full w-[90%] max-w-[360px] bg-[#090d16] border-r border-white/10 z-[100] transform -translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
 
         <!-- Drawer Header -->
         <div class="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
@@ -1538,7 +1539,7 @@
         </div>
 
         <!-- Drawer Footer -->
-        <div class="p-4 border-t border-white/10 grid grid-cols-2 gap-2 shrink-0">
+        <div class="p-4 pb-8 border-t border-white/10 grid grid-cols-2 gap-2 shrink-0">
             <button onclick="toggleBinderDrawer(); document.getElementById('import-input').click();"
                 class="py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbd5e1] hover:text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
@@ -6789,6 +6790,13 @@
                 drawer.classList.add('open');
                 overlay.classList.add('open');
                 renderBinder();
+                
+                // Auto-close roll pad if open
+                const rollPadContainer = document.getElementById('roll-pad-container');
+                if (rollPadContainer && !rollPadContainer.classList.contains('collapsed')) {
+                    rollPadContainer.classList.add('collapsed');
+                    localStorage.setItem('roll_pad_collapsed', 'true');
+                }
             }
             vibrate(5);
         }
@@ -10097,6 +10105,19 @@
             if (!container) return;
             const isCollapsed = container.classList.toggle('collapsed');
             localStorage.setItem('roll_pad_collapsed', isCollapsed ? 'true' : 'false');
+            
+            // Auto-close binder if roll pad is opened
+            if (!isCollapsed) {
+                const binderDrawer = document.getElementById('binder-drawer');
+                const overlay = document.getElementById('binder-overlay');
+                if (binderDrawer && binderDrawer.classList.contains('open')) {
+                    binderDrawer.classList.remove('open');
+                    overlay.classList.remove('open');
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                    }, 300);
+                }
+            }
         }
 
         function autoExpandRollPad() {
