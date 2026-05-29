@@ -7,16 +7,17 @@ console.log('🧪 Starting JSDOM Integration Deep Dive Test...');
 
 // 1. Read files
 const engineCode = fs.readFileSync(path.resolve(__dirname, '../DiceEngine.js'), 'utf8');
+const archCode = fs.readFileSync(path.resolve(__dirname, '../DataArchitecture.js'), 'utf8');
 let html = fs.readFileSync(path.resolve(__dirname, '../DiceRoller.html'), 'utf8');
 
-// Inline DiceEngine.js inside html script tags
+// Inline scripts inside html script tags
+html = html.replace('<script src="DataArchitecture.js"></script>', `<script>${archCode}</script>`);
 html = html.replace('<script src="DiceEngine.js"></script>', `<script>${engineCode}</script>`);
 
 // 2. Initialize JSDOM
 const dom = new JSDOM(html, {
     url: "http://localhost/",
-    runScripts: "dangerously",
-    resources: "usable"
+    runScripts: "dangerously"
 });
 const { window } = dom;
 const { document } = window;
@@ -30,6 +31,11 @@ window.Audio = class {
     pause() {}
 };
 window.navigator.vibrate = () => true;
+window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+};
 
 // Helper to run steps inside onload context
 window.addEventListener('load', () => {
@@ -142,8 +148,123 @@ window.addEventListener('load', () => {
         assert.strictEqual(engine.queue[2].value, 3, 'modifier value remains 3');
         console.log('-> Passed.');
 
-        console.log('\n🎉 ALL INTEGRATION DEEP DIVE TESTS PASSED SUCCESSFULLY! ✅');
-        process.exit(0);
+        // Test 7: Zero-state and deletion verification
+        console.log('Testing character and campaign deletion into zero-state...');
+        window.eval(`
+            (async () => {
+                showModal = () => Promise.resolve(true);
+                
+                // Set characters to have one character
+                characters = [{ id: 'char_temp', name: 'Temp', dndType: 'standard', campaignId: 'default_campaign' }];
+                activeCharacterId = 'char_temp';
+                
+                // Delete
+                removeCharacter();
+                // Since showModal returns a promise, wait a frame
+                await new Promise(r => setTimeout(r, 10));
+                
+                if (characters.length !== 0) throw new Error("characters array should be empty");
+                if (activeCharacterId !== null) throw new Error("activeCharacterId should be null");
+                
+                // Let's test campaign deletion
+                campaigns = [{ id: 'camp_temp', name: 'Temp Campaign' }];
+                activeCampaignId = 'camp_temp';
+                
+                deleteCampaignFromBinder('camp_temp');
+                await new Promise(r => setTimeout(r, 10));
+                
+                if (campaigns.length !== 0) throw new Error("campaigns array should be empty");
+                if (activeCampaignId !== null) throw new Error("activeCampaignId should be null");
+
+                // Test 8: Template spawning, cloning, and template creation
+                console.log('Testing template spawning, cloning, and template creation...');
+                
+                campaigns = [{ id: 'camp_test', name: 'Test Campaign' }];
+                activeCampaignId = 'camp_test';
+                characters = [];
+                activeCharacterId = null;
+                groups = [];
+                engine.savedQueues = [];
+                
+                loadTemplates();
+                if (templates.length < 2) throw new Error("Templates should load default templates");
+                
+                showModal = (opts) => {
+                    if (opts.title === 'Spawn Instance') {
+                        return Promise.resolve('Spawned Character');
+                    }
+                    if (opts.title === 'Clone Sheet') {
+                        return Promise.resolve('Cloned Character');
+                    }
+                    if (opts.title === 'Save as Template') {
+                        return Promise.resolve('Custom Saved Template');
+                    }
+                    if (opts.title === 'Reset Stats?') {
+                        return Promise.resolve(true);
+                    }
+                    return Promise.resolve(true);
+                };
+                
+                await spawnTemplateInstance('template_sd_character');
+                if (characters.length !== 1) throw new Error("Should have 1 character after spawn");
+                if (characters[0].name !== 'Spawned Character') throw new Error("Character name should match input");
+                if (characters[0].variables.STR !== '10') throw new Error("Variables should be initialized");
+                
+                const spawnedGroups = groups.filter(g => g.characterId === activeCharacterId);
+                if (spawnedGroups.length !== 2) throw new Error("Should have 2 groups created");
+                
+                const spawnedWidgets = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
+                if (spawnedWidgets.length !== 8) throw new Error("Should have 8 widgets spawned");
+                
+                const originalCharId = activeCharacterId;
+                await cloneCharacter(originalCharId);
+                if (characters.length !== 2) throw new Error("Should have 2 characters after cloning");
+                if (activeCharacterId === originalCharId) throw new Error("Active character should switch to clone");
+                if (characters.find(c => c.id === activeCharacterId).name !== 'Cloned Character') throw new Error("Cloned character name incorrect");
+                
+                const clonedGroups = groups.filter(g => g.characterId === activeCharacterId);
+                if (clonedGroups.length !== 2) throw new Error("Cloned groups count incorrect");
+                if (clonedGroups[0].id === spawnedGroups[0].id) throw new Error("Cloned groups should have new IDs");
+                
+                const clonedWidgets = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
+                if (clonedWidgets.length !== 8) throw new Error("Cloned widgets count incorrect");
+                
+                // Verify direct renaming via renameActiveCharacter
+                renameActiveCharacter('Direct Input Renamed Name');
+                if (characters.find(c => c.id === activeCharacterId).name !== 'Direct Input Renamed Name') {
+                    throw new Error("Character rename via direct input failed");
+                }
+
+                // Verify that removing the last group triggers automatic creation of a Default group
+                const activeCharGroups = groups.filter(g => g.characterId === activeCharacterId);
+                
+                // Let's delete all active character groups
+                groups = groups.filter(g => g.characterId !== activeCharacterId);
+                
+                // Trigger renderGroupTabs to process recovery
+                renderGroupTabs();
+                
+                const recoveredGroups = groups.filter(g => g.characterId === activeCharacterId);
+                if (recoveredGroups.length !== 1) {
+                    throw new Error("Deleting the last group should automatically recreate 1 Default group");
+                }
+                if (recoveredGroups[0].name !== 'Default') {
+                    throw new Error("Recreated group name should be 'Default'");
+                }
+                if (activeGroupId !== recoveredGroups[0].id) {
+                    throw new Error("activeGroupId should switch to the recreated group");
+                }
+            })()
+        `).then(() => {
+            console.log('-> Passed.');
+            console.log('\n🎉 ALL INTEGRATION DEEP DIVE TESTS PASSED SUCCESSFULLY! ✅');
+            process.exit(0);
+        }).catch(err => {
+            console.error('\n❌ INTEGRATION DEEP DIVE TEST FAILED inside Test 7:');
+            console.error(err.message);
+            console.error(err.stack);
+            process.exit(1);
+        });
 
     } catch (err) {
         console.error('\n❌ INTEGRATION DEEP DIVE TEST FAILED:');

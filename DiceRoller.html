@@ -1435,6 +1435,57 @@
 </head>
 
 <body class="flex flex-col items-center">
+    <!-- Global Group Context Menu -->
+    <div id="group-menu" class="arsenal-menu fixed hidden z-[90]" style="min-width: 160px;">
+        <button onclick="addGroup(event)" class="menu-item">
+            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
+            <span>Add Group</span>
+        </button>
+        <button onclick="renameGroup(event)" class="menu-item">
+            <svg class="w-3.5 h-3.5 text-[#94a3b8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            <span>Rename Group</span>
+        </button>
+        <button onclick="groupAppearance(event)" class="menu-item">
+            <svg class="w-3.5 h-3.5 text-[#94a3b8]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <circle cx="13.5" cy="6.5" r=".5" />
+                <circle cx="17.5" cy="10.5" r=".5" />
+                <circle cx="8.5" cy="7.5" r=".5" />
+                <circle cx="6.5" cy="12.5" r=".5" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z" />
+            </svg>
+            <span>Appearance</span>
+        </button>
+        <div class="h-px bg-white/5 my-1"></div>
+        <button onclick="removeGroup(event)" class="menu-item danger">
+            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+            <span>Remove Group</span>
+        </button>
+    </div>
+
+    <!-- Global Character Context Menu -->
+    <div id="char-menu" class="arsenal-menu fixed hidden z-[90]" style="min-width: 150px;">
+        <button onclick="triggerCloneActive()" class="menu-item">
+            <svg class="w-3.5 h-3.5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 0 0 2 2h6M8 7V5a2 2 0 0 1 2-2h4.586a1 1 0 0 1 .707.293l4.414 4.414a1 1 0 0 1 .293.707V15a2 2 0 0 1-2 2h-2" /></svg>
+            <span>Clone</span>
+        </button>
+        <button onclick="triggerSaveAsTemplateActive()" class="menu-item">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 0 1 .707.293l2.414 2.414a1 1 0 0 0 .707.293h3.172a1 1 0 0 0 .707-.293l2.414-2.414a1 1 0 0 1 .707-.293H20" /></svg>
+            <span>Save as Template</span>
+        </button>
+        <div class="h-px bg-white/5 my-1"></div>
+        <button onclick="triggerDeleteActive()" class="menu-item danger">
+            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2" /></svg>
+            <span>Delete</span>
+        </button>
+    </div>
+
     <!-- Binder Backdrop Overlay -->
     <div id="binder-overlay" onclick="toggleBinderDrawer()"
         class="fixed inset-0 bg-[#020617]/80 backdrop-blur-sm z-[90] hidden opacity-0 transition-opacity duration-300">
@@ -1499,8 +1550,11 @@
             <!-- Instanced Sheets List -->
             <div class="space-y-2">
                 <div class="flex items-center justify-between">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Campaign
-                        Folders</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Campaign Folders</label>
+                    <button onclick="addCharacter(event)"
+                        class="text-[#00d4ff] hover:text-[#00d4ff]/80 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors">
+                        + New
+                    </button>
                 </div>
                 <div id="binder-sheets-list" class="space-y-2">
                     <!-- Instanced sheets listed here -->
@@ -1508,31 +1562,15 @@
             </div>
 
             <!-- Blueprints (Templates) Library -->
-            <div class="space-y-2 pt-2 border-t border-white/5">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Templates
-                    Library</label>
-                <div class="grid grid-cols-1 gap-2">
-                    <button onclick="spawnTemplate('fighter')"
-                        class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
-                        <span>⚔️ Spawn Fighter</span>
-                        <span
-                            class="text-[9px] font-black text-sky-400 group-hover:translate-x-0.5 transition-transform">SPAWN
-                            &rarr;</span>
+            <div class="space-y-2 pt-2 border-t border-white/5 animate-fade-in">
+                <div class="flex items-center justify-between">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Templates Library</label>
+                    <button onclick="createCustomTemplate(event)" class="p-1 hover:text-[#00d4ff] text-slate-500 transition-colors" title="Create Custom Template">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>
                     </button>
-                    <button onclick="spawnTemplate('mage')"
-                        class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:bg-purple-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
-                        <span>🔮 Spawn Mage</span>
-                        <span
-                            class="text-[9px] font-black text-purple-400 group-hover:translate-x-0.5 transition-transform">SPAWN
-                            &rarr;</span>
-                    </button>
-                    <button onclick="spawnTemplate('goblin')"
-                        class="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 text-left text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center justify-between group transition-all">
-                        <span>👹 Spawn Goblin</span>
-                        <span
-                            class="text-[9px] font-black text-emerald-400 group-hover:translate-x-0.5 transition-transform">SPAWN
-                            &rarr;</span>
-                    </button>
+                </div>
+                <div id="binder-templates-list" class="grid grid-cols-1 gap-2">
+                    <!-- Templates dynamically rendered here -->
                 </div>
             </div>
         </div>
@@ -2204,131 +2242,45 @@
             <!-- Arsenal Header -->
             <div class="flex justify-between items-center px-1">
                 <h3 class="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Dice Arsenal</h3>
-                <button id="arsenal-queue-btn" onclick="toggleArsenalQueue()"
-                    class="toggle-btn px-2.5 py-1.5 rounded-lg transition-all hover:bg-white/5 border border-white/10 bg-[#020617]/30 min-w-[70px]">
-                    <span id="arsenal-queue-label"
-                        class="text-[10px] font-black text-slate-500 uppercase tracking-wider leading-none">Roll
-                        Only</span>
-                </button>
-            </div>
-
-            <!-- Character Row -->
-            <div class="flex items-center gap-2">
-                <select id="char-select" class="char-select" onchange="selectCharacter(this.value)"></select>
-                <div class="relative shrink-0">
-                    <button onclick="toggleCharMenu(event)" id="char-menu-btn"
-                        class="gear-btn w-[2rem] h-[2rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
+                <div class="flex gap-1.5 items-center">
+                    <button onclick="openResourcesModal(event)" title="Character Resources" id="arsenal-resources-btn"
+                        class="p-1.5 hover:bg-[#00d4ff]/10 rounded-lg text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95 flex items-center justify-center">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                         </svg>
                     </button>
-                    <div id="char-menu" class="arsenal-menu absolute right-0 top-9 hidden"
-                        style="min-width:160px;z-index:200">
-                        <button onclick="addCharacter(event)" class="menu-item">
-                            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-                            </svg>
-                            <span>Add Character</span>
-                        </button>
-                        <button onclick="renameCharacter(event)" class="menu-item">
-                            <svg class="w-3.5 h-3.5 text-[#94a3b8]" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                            <span>Rename</span>
-                        </button>
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="openResourcesModal(event)" class="menu-item">
-                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                            </svg>
-                            <span>Resources</span>
-                        </button>
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="removeCharacter(event)" class="menu-item danger">
-                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2v2" />
-                            </svg>
-                            <span>Remove Character</span>
-                        </button>
-                    </div>
+                    <button id="arsenal-queue-btn" onclick="toggleArsenalQueue()"
+                        class="toggle-btn px-2.5 py-1.5 rounded-lg transition-all hover:bg-white/5 border border-white/10 bg-[#020617]/30 min-w-[70px]">
+                        <span id="arsenal-queue-label"
+                            class="text-[10px] font-black text-slate-500 uppercase tracking-wider leading-none">Roll
+                            Only</span>
+                    </button>
                 </div>
+            </div>
+
+            <!-- Active Character Name Inline Input -->
+            <div class="mb-2.5">
+                <input type="text" id="active-char-name-input" 
+                    placeholder="NO ACTIVE CHARACTER" 
+                    class="w-full bg-[#020617]/30 border border-white/5 rounded-xl px-4 py-2 text-sm text-[#e2e8f0] font-black uppercase tracking-wider text-center outline-none focus:border-[#00d4ff]/30 transition-all shadow-inner placeholder:text-slate-600"
+                    oninput="renameActiveCharacter(this.value)"
+                    autocomplete="off">
             </div>
 
             <!-- Group Tabs Row -->
-            <div class="flex items-center gap-1.5">
-                <div id="group-tabs" class="flex gap-1.5 flex-wrap flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2 mt-1">
+                <div id="group-tabs" class="flex gap-1.5 flex-wrap min-w-0 flex-grow">
                     <!-- Injected by JS -->
                 </div>
-                <div class="relative shrink-0 flex gap-1">
+                <div class="relative shrink-0 flex gap-1 items-center">
                     <button onclick="openWidgetCreationModal()" title="Add Widget"
-                        class="w-[2rem] h-[2rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                            stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                        class="w-[1.75rem] h-[1.75rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-lg text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
                             <line x1="12" y1="5" x2="12" y2="19" />
                             <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
                     </button>
-                    <button onclick="toggleGroupMenu(event)" id="group-menu-btn"
-                        class="gear-btn w-[2rem] h-[2rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-xl text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                            <path
-                                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg>
-                    </button>
-                    <div id="group-menu" class="arsenal-menu absolute right-0 top-9 hidden"
-                        style="min-width:160px;z-index:200">
-                        <button onclick="addGroup(event)" class="menu-item">
-                            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-                            </svg>
-                            <span>Add Group</span>
-                        </button>
-                        <button onclick="renameGroup(event)" class="menu-item">
-                            <svg class="w-3.5 h-3.5 text-[#94a3b8]" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                            <span>Rename Group</span>
-                        </button>
-                        <button onclick="groupAppearance(event)" class="menu-item">
-                            <svg class="w-3.5 h-3.5 text-[#94a3b8]" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" stroke-width="2.5">
-                                <circle cx="13.5" cy="6.5" r=".5" />
-                                <circle cx="17.5" cy="10.5" r=".5" />
-                                <circle cx="8.5" cy="7.5" r=".5" />
-                                <circle cx="6.5" cy="12.5" r=".5" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z" />
-                            </svg>
-                            <span>Appearance</span>
-                        </button>
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="removeGroup(event)" class="menu-item danger">
-                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
-                            <span>Remove Group</span>
-                        </button>
-                    </div>
+
                 </div>
             </div>
 
@@ -3015,6 +2967,7 @@
         <!-- Dynamically injected -->
     </div>
 
+    <script src="DataArchitecture.js"></script>
     <script src="DiceEngine.js"></script>
     <script>
         // =========================================================================
@@ -3120,6 +3073,7 @@
         ];
         let activeCharacterId = 'primary';
         let activeGroupId = 'grp_stats_1';
+        let templates = [];
 
         let modalResolve = () => { };
         let isCurrentModalDanger = false;
@@ -6088,6 +6042,8 @@
                 localStorage.removeItem('crypto_roller_saved');
                 localStorage.removeItem('crypto_roller_arsenal');
                 localStorage.removeItem('instaQueueState');
+                localStorage.removeItem('crypto_roller_templates');
+                templates = getInitialTemplates();
 
                 // Reset state variables to factory defaults
                 soundEnabled = true;
@@ -6100,9 +6056,12 @@
                 currentTargetMode = 'sum';
                 engine.setSavedQueues([]);
 
-                // Re-initialize default character and groups
+                // Re-initialize default campaign, character, and groups
                 const baseTime = Date.now();
-                characters = [{ id: 'primary', name: 'Primary Character' }];
+                campaigns = [{ id: 'default_campaign', name: 'Default Campaign' }];
+                activeCampaignId = 'default_campaign';
+                openTabs = ['default_campaign'];
+                characters = [{ id: 'primary', name: 'Primary Character', dndType: 'standard', campaignId: 'default_campaign' }];
                 groups = [
                     { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: 'primary' },
                     { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: 'primary' },
@@ -6180,6 +6139,8 @@
                 renderCharacterSelect();
                 renderGroupTabs();
                 renderSavedQueues();
+                renderBinder();
+                persistArsenal();
 
                 vibrate(20);
             });
@@ -6579,32 +6540,114 @@
         // CHARACTER & GROUP UI RENDERING
         // =========================================================================
 
-        function renderCharacterSelect() {
-            const sel = document.getElementById('char-select');
+        function renderCampaignSelect() {
+            const sel = document.getElementById('campaign-select');
             if (!sel) return;
-            sel.innerHTML = characters.map(c =>
-                `<option value="${c.id}" ${c.id === activeCharacterId ? 'selected' : ''}>${c.name}</option>`
-            ).join('');
+            if (campaigns.length === 0) {
+                sel.innerHTML = `<option value="" selected>No Campaigns</option>`;
+                sel.classList.add('opacity-60');
+            } else {
+                sel.classList.remove('opacity-60');
+                sel.innerHTML = campaigns.map(c =>
+                    `<option value="${c.id}" ${c.id === activeCampaignId ? 'selected' : ''}>${c.name}</option>`
+                ).join('');
+            }
+        }
+
+        function renderCharacterSelect() {
+            const input = document.getElementById('active-char-name-input');
+            if (!input) return;
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char) {
+                input.value = char.name;
+                input.disabled = false;
+                input.classList.remove('opacity-40');
+            } else {
+                input.value = '';
+                input.placeholder = 'NO ACTIVE CHARACTER';
+                input.disabled = true;
+                input.classList.add('opacity-40');
+            }
             populateRulesVariableDropdowns();
         }
 
         function renderGroupTabs() {
             const container = document.getElementById('group-tabs');
             if (!container) return;
+            container.innerHTML = '';
+
+            if (!activeCharacterId) {
+                container.innerHTML = `<span class="text-[10px] text-slate-600 italic py-1 pl-1 select-none">No active sheet. Spawn or create one in the Binder!</span>`;
+                return;
+            }
+
             const charGroups = groups.filter(g => g.characterId === activeCharacterId);
-            container.innerHTML = charGroups.map(g => `
-                <button class="group-tab ${g.id === activeGroupId ? 'active' : ''}"
-                    onclick="selectGroup('${g.id}')">
-                    <span class="group-dot" style="background:${g.color}"></span>
-                    ${g.name}
-                </button>
-            `).join('');
+            if (charGroups.length === 0) {
+                const baseTime = Date.now();
+                const defaultGrp = { id: `grp_default_${baseTime}`, name: 'Default', color: '#00d4ff', characterId: activeCharacterId };
+                groups.push(defaultGrp);
+                activeGroupId = defaultGrp.id;
+                persistArsenal();
+                renderGroupTabs();
+                renderSavedQueues();
+                return;
+            }
+
+            charGroups.forEach(g => {
+                const btn = document.createElement('button');
+                btn.className = `group-tab ${g.id === activeGroupId ? 'active' : ''}`;
+                btn.innerHTML = `<span class="group-dot" style="background:${g.color}"></span>${g.name}`;
+
+                let isHold = false;
+                let holdTimer = null;
+
+                const startHold = (e) => {
+                    isHold = false;
+                    holdTimer = setTimeout(() => {
+                        isHold = true;
+                        openGroupContextMenu(g.id, e);
+                    }, 500);
+                };
+
+                const cancelHold = () => {
+                    clearTimeout(holdTimer);
+                };
+
+                btn.addEventListener('mousedown', startHold);
+                btn.addEventListener('touchstart', startHold, { passive: true });
+                
+                const endClick = (e) => {
+                    clearTimeout(holdTimer);
+                    if (!isHold) {
+                        selectGroup(g.id);
+                    }
+                };
+                btn.addEventListener('mouseup', endClick);
+                btn.addEventListener('touchend', endClick);
+                btn.addEventListener('touchmove', cancelHold, { passive: true });
+                btn.addEventListener('touchcancel', cancelHold, { passive: true });
+                btn.addEventListener('mouseleave', cancelHold);
+
+                btn.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    isHold = true;
+                    openGroupContextMenu(g.id, e);
+                });
+
+                container.appendChild(btn);
+            });
         }
 
         function selectCharacter(id) {
-            activeCharacterId = id;
-            const charGroups = groups.filter(g => g.characterId === id);
-            activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+            if (!id) {
+                activeCharacterId = null;
+                activeGroupId = null;
+            } else {
+                activeCharacterId = id;
+                const charGroups = groups.filter(g => g.characterId === id);
+                activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+            }
             renderGroupTabs();
             renderSavedQueues();
             persistArsenal();
@@ -6620,19 +6663,19 @@
         }
 
         // Character CRUD
-        function toggleCharMenu(e) {
-            if (e) e.stopPropagation();
-            const menu = document.getElementById('char-menu');
-            const isHidden = menu.classList.contains('hidden');
-            closeAllArsenalMenus();
-            document.getElementById('group-menu')?.classList.add('hidden');
-            if (isHidden) menu.classList.remove('hidden');
-            vibrate(5);
-        }
 
         function addCharacter(e) {
             if (e) e.stopPropagation();
-            document.getElementById('char-menu').classList.add('hidden');
+            closeAllArsenalMenus();
+
+            if (campaigns.length === 0) {
+                showModal({
+                    title: 'No Campaigns',
+                    body: 'Please create a campaign in the Binder drawer before adding a character.',
+                    alertOnly: true
+                });
+                return;
+            }
 
             // Set default name and selection in Character Creation Modal
             document.getElementById('new-char-name').value = `Character ${characters.length + 1}`;
@@ -6674,7 +6717,7 @@
             });
 
             const id = 'char_' + Date.now();
-            characters.push({ id, name, dndType });
+            characters.push({ id, name, dndType, campaignId: activeCampaignId });
 
             const baseTime = Date.now();
             const charGroups = [
@@ -6691,6 +6734,7 @@
             renderCharacterSelect();
             renderGroupTabs();
             renderSavedQueues();
+            renderBinder();
             persistArsenal();
             vibrate(10);
 
@@ -6700,6 +6744,14 @@
                     openResourcesModal();
                 }, 200);
             }
+        }
+
+        function renameActiveCharacter(name) {
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
+            char.name = name;
+            renderBinder();
+            persistArsenal();
         }
 
         function renameCharacter(e) {
@@ -6719,55 +6771,660 @@
         function removeCharacter(e) {
             if (e) e.stopPropagation();
             document.getElementById('char-menu').classList.add('hidden');
-            if (characters.length <= 1) {
-                const char = characters[0];
-                showModal({
-                    title: 'Reset Character',
-                    body: `The final character <span class="text-rose-400">${char.name}</span> cannot be completely deleted. Doing so will remove all its groups and loadouts, then create a new default <strong>Primary Character</strong> with default groups (Stats, Attacks, Spells, Items).`,
-                    confirmText: 'Reset',
-                    danger: true
-                }).then(ok => {
-                    if (!ok) return;
-                    // Delete all saved queues/loadouts
-                    engine.savedQueues = [];
-
-                    // Create new "Primary Character" with standard groups
-                    const baseTime = Date.now();
-                    characters = [{ id: 'primary', name: 'Primary Character', dndType: 'standard' }];
-                    groups = [
-                        { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: 'primary' },
-                        { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: 'primary' },
-                        { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: 'primary' },
-                        { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: 'primary' }
-                    ];
-                    activeCharacterId = 'primary';
-                    activeGroupId = groups[0].id;
-
-                    renderCharacterSelect();
-                    renderGroupTabs();
-                    renderSavedQueues();
-                    persistSaved();
-                    persistArsenal();
-                    vibrate(15);
-                });
-                return;
-            }
             const char = characters.find(c => c.id === activeCharacterId);
+            if (!char) return;
             showModal({ title: `Remove <span class="text-rose-400">${char.name}</span>?`, body: 'All groups and loadouts for this character will be deleted.', confirmText: 'Remove', danger: true }).then(ok => {
                 if (!ok) return;
                 engine.savedQueues = engine.savedQueues.filter(q => q.characterId !== activeCharacterId);
                 groups = groups.filter(g => g.characterId !== activeCharacterId);
                 characters = characters.filter(c => c.id !== activeCharacterId);
-                activeCharacterId = characters[0].id;
-                const remaining = groups.filter(g => g.characterId === activeCharacterId);
-                activeGroupId = remaining.length ? remaining[0].id : null;
+
+                const campChars = characters.filter(c => c.campaignId === activeCampaignId);
+                if (campChars.length > 0) {
+                    activeCharacterId = campChars[0].id;
+                    const remaining = groups.filter(g => g.characterId === activeCharacterId);
+                    activeGroupId = remaining.length ? remaining[0].id : null;
+                } else if (characters.length > 0) {
+                    activeCharacterId = characters[0].id;
+                    activeCampaignId = characters[0].campaignId || activeCampaignId;
+                    const remaining = groups.filter(g => g.characterId === activeCharacterId);
+                    activeGroupId = remaining.length ? remaining[0].id : null;
+                } else {
+                    activeCharacterId = null;
+                    activeGroupId = null;
+                }
+
                 renderCharacterSelect();
                 renderGroupTabs();
                 renderSavedQueues();
+                renderBinder();
                 persistSaved();
                 persistArsenal();
                 vibrate(10);
             });
+        }
+
+        // =========================================================================
+        // TEMPLATE & CLONING UTILITIES
+        // =========================================================================
+        let contextCharId = null;
+
+        function openCharContextMenu(charId, e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            vibrate(5);
+            
+            const menu = document.getElementById('char-menu');
+            if (!menu) return;
+
+            contextCharId = charId;
+            closeAllArsenalMenus();
+            
+            menu.classList.remove('hidden');
+
+            let clientX = 0;
+            let clientY = 0;
+
+            if (e) {
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else if (e.changedTouches && e.changedTouches.length > 0) {
+                    clientX = e.changedTouches[0].clientX;
+                    clientY = e.changedTouches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+            }
+
+            const menuWidth = 150;
+            let left = clientX;
+            let top = clientY;
+
+            if (left + menuWidth > window.innerWidth) {
+                left = window.innerWidth - menuWidth - 12;
+            }
+            if (left < 12) left = 12;
+
+            const menuHeight = 150;
+            if (top + menuHeight > window.innerHeight) {
+                top = window.innerHeight - menuHeight - 12;
+            }
+            if (top < 12) top = 12;
+
+            menu.style.position = 'fixed';
+            menu.style.left = `${left}px`;
+            menu.style.top = `${top}px`;
+            menu.style.right = 'auto';
+            menu.style.bottom = 'auto';
+        }
+
+        function triggerCloneActive() {
+            document.getElementById('char-menu').classList.add('hidden');
+            if (contextCharId) {
+                cloneCharacter(contextCharId);
+            }
+        }
+
+        function triggerSaveAsTemplateActive() {
+            document.getElementById('char-menu').classList.add('hidden');
+            if (contextCharId) {
+                saveCharacterAsTemplate(contextCharId);
+            }
+        }
+
+        function triggerDeleteActive() {
+            document.getElementById('char-menu').classList.add('hidden');
+            if (contextCharId) {
+                const oldActive = activeCharacterId;
+                activeCharacterId = contextCharId;
+                removeCharacter();
+            }
+        }
+
+        function getInitialTemplates() {
+            return [
+                {
+                    id: 'template_sd_character',
+                    name: 'Shadowdark Character (Blank)',
+                    system: 'Shadowdark',
+                    dndType: 'standard',
+                    isDefault: true,
+                    variables: {
+                        "LVL": "1",
+                        "HP": "10",
+                        "MaxHP": "10",
+                        "AC": "10",
+                        "STR": "10", "DEX": "10", "CON": "10", "INT": "10", "WIS": "10", "CHA": "10",
+                        "STR_mod": "0", "DEX_mod": "0", "CON_mod": "0", "INT_mod": "0", "WIS_mod": "0", "CHA_mod": "0"
+                    },
+                    groups: [
+                        { id: 'stats', name: 'Stats', color: '#00d4ff' },
+                        { id: 'combat', name: 'Combat', color: '#ff003c' }
+                    ],
+                    widgets: [
+                        {
+                            id: 'w_str',
+                            groupId: 'stats',
+                            name: 'Strength Check',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        },
+                        {
+                            id: 'w_dex',
+                            groupId: 'stats',
+                            name: 'Dexterity Check',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        },
+                        {
+                            id: 'w_con',
+                            groupId: 'stats',
+                            name: 'Constitution Check',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'CON_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        },
+                        {
+                            id: 'w_int',
+                            groupId: 'stats',
+                            name: 'Intelligence Check',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'INT_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        },
+                        {
+                            id: 'w_wis',
+                            groupId: 'stats',
+                            name: 'Wisdom Check',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'WIS_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        },
+                        {
+                            id: 'w_cha',
+                            groupId: 'stats',
+                            name: 'Charisma Check',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'CHA_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        },
+                        {
+                            id: 'w_atk',
+                            groupId: 'combat',
+                            name: 'Melee Attack Roll',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        },
+                        {
+                            id: 'w_dmg',
+                            groupId: 'combat',
+                            name: 'Sword Damage Roll',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 8, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'template_sd_monster',
+                    name: 'Shadowdark Monster (Blank)',
+                    system: 'Shadowdark',
+                    dndType: 'monster',
+                    isDefault: true,
+                    variables: {
+                        "HP": "5",
+                        "MaxHP": "5",
+                        "AC": "10",
+                        "LVL": "1",
+                        "ATK_mod": "0"
+                    },
+                    groups: [
+                        { id: 'actions', name: 'Actions', color: '#ff003c' }
+                    ],
+                    widgets: [
+                        {
+                            id: 'w_m_atk',
+                            groupId: 'actions',
+                            name: 'Claw Attack Roll',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: 'ATK_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                            ]
+                        },
+                        {
+                            id: 'w_m_dmg',
+                            groupId: 'actions',
+                            name: 'Claw Damage Roll',
+                            widgetType: 'roller',
+                            unifiedQueue: [
+                                { nodeType: 'node', sides: 6, count: 1 }
+                            ]
+                        }
+                    ]
+                }
+            ];
+        }
+
+        function loadTemplates() {
+            let custom = [];
+            try {
+                const stored = localStorage.getItem('crypto_roller_templates');
+                if (stored) {
+                    custom = JSON.parse(stored);
+                }
+            } catch (e) {}
+            templates = [...getInitialTemplates(), ...custom];
+        }
+
+        function persistTemplates() {
+            const custom = templates.filter(t => !t.isDefault);
+            localStorage.setItem('crypto_roller_templates', JSON.stringify(custom));
+        }
+
+        function renderTemplates() {
+            const listContainer = document.getElementById('binder-templates-list');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            templates.forEach(t => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'p-2 rounded-lg bg-white/[0.02] border border-white/5 flex items-center justify-between gap-2 hover:bg-white/[0.04] transition-all text-xs';
+                
+                let typeBadge = t.dndType === 'monster' ? 'Monster' : 'Character';
+                let badgeColor = t.dndType === 'monster' ? 'text-rose-400 border-rose-500/20 bg-rose-500/5' : 'text-sky-400 border-sky-500/20 bg-sky-500/5';
+                
+                let deleteBtn = '';
+                if (!t.isDefault) {
+                    deleteBtn = `
+                        <button onclick="deleteTemplate('${t.id}', event)" class="p-1 hover:text-rose-500 text-slate-500 transition-colors" title="Delete Template">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    `;
+                }
+
+                itemEl.innerHTML = `
+                    <div class="flex flex-col min-w-0 flex-grow">
+                        <span class="font-bold text-slate-300 truncate">${t.name}</span>
+                        <span class="text-[9px] font-black uppercase tracking-wider text-slate-500 mt-0.5 flex items-center gap-1">
+                            <span class="px-1 py-0.2 rounded border ${badgeColor}">${typeBadge}</span>
+                            <span>${t.system || 'Generic'}</span>
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="spawnTemplateInstance('${t.id}', event)" class="px-2 py-1 rounded bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all border border-[#00d4ff]/20 active:scale-95" title="Spawn Sheet">
+                            Spawn
+                        </button>
+                        ${deleteBtn}
+                    </div>
+                `;
+                listContainer.appendChild(itemEl);
+            });
+        }
+
+        async function spawnTemplateInstance(tplId, event) {
+            if (event) event.stopPropagation();
+            const tpl = templates.find(t => t.id === tplId);
+            if (!tpl) return;
+
+            if (!activeCampaignId) {
+                if (campaigns.length === 0) {
+                    campaigns = [{ id: 'default_campaign', name: 'Default Campaign' }];
+                    activeCampaignId = 'default_campaign';
+                    openTabs = [activeCampaignId];
+                } else {
+                    activeCampaignId = campaigns[0].id;
+                }
+            }
+
+            const name = await showModal({
+                title: 'Spawn Instance',
+                body: `Enter name for this ${tpl.dndType === 'monster' ? 'Monster' : 'Character'}:`,
+                confirmText: 'Spawn',
+                inputPrompt: true,
+                defaultValue: tpl.name.replace(' (Blank)', '')
+            });
+            if (!name || !name.trim()) return;
+
+            const newCharId = 'char_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+            const newChar = {
+                id: newCharId,
+                name: name.trim(),
+                dndType: tpl.dndType || 'standard',
+                campaignId: activeCampaignId,
+                variables: JSON.parse(JSON.stringify(tpl.variables || {}))
+            };
+
+            const groupIdMap = {};
+            const newGroups = (tpl.groups || []).map((g, idx) => {
+                const newGrpId = 'grp_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
+                groupIdMap[g.id] = newGrpId;
+                return {
+                    id: newGrpId,
+                    name: g.name,
+                    color: g.color || '#00d4ff',
+                    characterId: newCharId
+                };
+            });
+
+            const newWidgets = (tpl.widgets || []).map((w, idx) => {
+                const newWId = 'w_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
+                return {
+                    ...JSON.parse(JSON.stringify(w)),
+                    id: newWId,
+                    characterId: newCharId,
+                    groupId: groupIdMap[w.groupId] || null
+                };
+            });
+
+            characters.push(newChar);
+            groups.push(...newGroups);
+            engine.savedQueues.push(...newWidgets);
+
+            activeCharacterId = newCharId;
+            activeGroupId = newGroups.length > 0 ? newGroups[0].id : null;
+
+            persistArsenal();
+            persistSaved();
+
+            renderCampaignSelect();
+            renderCharacterSelect();
+            renderGroupTabs();
+            renderSavedQueues();
+            renderBinder();
+
+            vibrate(15);
+        }
+
+        async function deleteTemplate(tplId, event) {
+            if (event) event.stopPropagation();
+            const tpl = templates.find(t => t.id === tplId);
+            if (!tpl) return;
+            if (tpl.isDefault) return;
+
+            const confirm = await showModal({
+                title: 'Delete Template',
+                body: `Are you sure you want to permanently delete the template "${tpl.name}"?`,
+                confirmText: 'Delete',
+                danger: true
+            });
+            if (!confirm) return;
+
+            templates = templates.filter(t => t.id !== tplId);
+            persistTemplates();
+            renderTemplates();
+            vibrate(15);
+        }
+
+        async function createCustomTemplate(event) {
+            if (event) event.stopPropagation();
+            const name = await showModal({
+                title: 'Create Custom Template',
+                body: 'Enter template name:',
+                confirmText: 'Next',
+                inputPrompt: true,
+                defaultValue: 'My Custom Template'
+            });
+            if (!name || !name.trim()) return;
+
+            const confirm = await showModal({
+                title: 'Create Custom Template',
+                body: `
+                    <div class="space-y-4 text-left">
+                        <div class="text-xs text-slate-400 font-medium">Choose sheet type:</div>
+                        <div class="flex gap-4">
+                            <label class="flex-1 p-3 rounded-xl border border-white/5 bg-[#020617]/30 hover:border-sky-500/30 flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="tpl-type" value="standard" checked class="accent-sky-500">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-300">Character</span>
+                                    <span class="text-[9px] text-slate-500">Standard PC stats & groups</span>
+                                </div>
+                            </label>
+                            <label class="flex-1 p-3 rounded-xl border border-white/5 bg-[#020617]/30 hover:border-rose-500/30 flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="tpl-type" value="monster" class="accent-rose-500">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-rose-300">Monster</span>
+                                    <span class="text-[9px] text-slate-500">Minified NPC / Hazard layout</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                `,
+                confirmText: 'Create'
+            });
+            if (!confirm) return;
+
+            const radio = document.querySelector('input[name="tpl-type"]:checked');
+            const type = radio ? radio.value : 'standard';
+
+            const tplId = 'template_custom_' + Date.now();
+            const newTpl = {
+                id: tplId,
+                name: name.trim(),
+                system: 'Custom',
+                dndType: type,
+                isDefault: false,
+                variables: type === 'monster' ? {
+                    "HP": "10", "MaxHP": "10", "AC": "10", "LVL": "1"
+                } : {
+                    "LVL": "1", "HP": "10", "MaxHP": "10", "AC": "10",
+                    "STR": "10", "DEX": "10", "CON": "10", "INT": "10", "WIS": "10", "CHA": "10",
+                    "STR_mod": "0", "DEX_mod": "0", "CON_mod": "0", "INT_mod": "0", "WIS_mod": "0", "CHA_mod": "0"
+                },
+                groups: type === 'monster' ? [
+                    { id: 'actions', name: 'Actions', color: '#ff003c' }
+                ] : [
+                    { id: 'stats', name: 'Stats', color: '#00d4ff' },
+                    { id: 'attacks', name: 'Attacks', color: '#ff003c' }
+                ],
+                widgets: []
+            };
+
+            templates.push(newTpl);
+            persistTemplates();
+            renderTemplates();
+            vibrate(15);
+        }
+
+        async function cloneCharacter(charId) {
+            const menu = document.getElementById('char-menu');
+            if (menu) menu.classList.add('hidden');
+
+            const char = characters.find(c => c.id === charId);
+            if (!char) return;
+
+            const newName = await showModal({
+                title: 'Clone Sheet',
+                body: `Enter name for the cloned sheet of "${char.name}":`,
+                confirmText: 'Clone',
+                inputPrompt: true,
+                defaultValue: char.name + ' (Copy)'
+            });
+            if (!newName || !newName.trim()) return;
+
+            const newCharId = 'char_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+            const newChar = {
+                id: newCharId,
+                name: newName.trim(),
+                dndType: char.dndType || 'standard',
+                campaignId: char.campaignId || activeCampaignId,
+                variables: JSON.parse(JSON.stringify(char.variables || {}))
+            };
+
+            const charGroups = groups.filter(g => g.characterId === charId);
+            const groupIdMap = {};
+            const newGroups = charGroups.map((g, idx) => {
+                const newGrpId = 'grp_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
+                groupIdMap[g.id] = newGrpId;
+                return {
+                    id: newGrpId,
+                    name: g.name,
+                    color: g.color || '#00d4ff',
+                    characterId: newCharId
+                };
+            });
+
+            const charWidgets = engine.savedQueues.filter(w => w.characterId === charId);
+            const newWidgets = charWidgets.map((w, idx) => {
+                const newWId = 'w_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
+                return {
+                    ...JSON.parse(JSON.stringify(w)),
+                    id: newWId,
+                    characterId: newCharId,
+                    groupId: groupIdMap[w.groupId] || null
+                };
+            });
+
+            characters.push(newChar);
+            groups.push(...newGroups);
+            engine.savedQueues.push(...newWidgets);
+
+            activeCharacterId = newCharId;
+            activeGroupId = newGroups.length > 0 ? newGroups[0].id : null;
+
+            persistArsenal();
+            persistSaved();
+
+            renderCharacterSelect();
+            renderGroupTabs();
+            renderSavedQueues();
+            renderBinder();
+
+            vibrate(15);
+        }
+
+        async function saveCharacterAsTemplate(charId) {
+            const menu = document.getElementById('char-menu');
+            if (menu) menu.classList.add('hidden');
+
+            const char = characters.find(c => c.id === charId);
+            if (!char) return;
+
+            const tplName = await showModal({
+                title: 'Save as Template',
+                body: 'Enter template name:',
+                confirmText: 'Next',
+                inputPrompt: true,
+                defaultValue: char.name + ' Template'
+            });
+            if (!tplName || !tplName.trim()) return;
+
+            const reset = await showModal({
+                title: 'Reset Stats?',
+                body: `
+                    <div class="space-y-4 text-left">
+                        <div class="text-xs text-slate-400 font-medium">Do you want to reset stats/trackers to their default values (e.g., zero or 10) in the template?</div>
+                        <div class="flex gap-4">
+                            <label class="flex-1 p-3 rounded-xl border border-white/5 bg-[#020617]/30 hover:border-sky-500/30 flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="reset-choice" value="yes" checked class="accent-sky-500">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-300">Yes, Reset</span>
+                                    <span class="text-[9px] text-slate-500">HP, XP, and stats reset to defaults</span>
+                                </div>
+                            </label>
+                            <label class="flex-1 p-3 rounded-xl border border-white/5 bg-[#020617]/30 hover:border-rose-500/30 flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="reset-choice" value="no" class="accent-rose-500">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-rose-300">No, Keep Active</span>
+                                    <span class="text-[9px] text-slate-500">Template retains all active values</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                `,
+                confirmText: 'Save Template'
+            });
+            if (!reset) return;
+
+            const resetChoice = document.querySelector('input[name="reset-choice"]:checked')?.value === 'yes';
+
+            let finalVariables = JSON.parse(JSON.stringify(char.variables || {}));
+            if (resetChoice) {
+                for (const k in finalVariables) {
+                    if (k === 'HP' || k === 'MaxHP') {
+                        finalVariables[k] = char.dndType === 'monster' ? "5" : "10";
+                    } else if (k === 'LVL') {
+                        finalVariables[k] = "1";
+                    } else if (k === 'XP') {
+                        finalVariables[k] = "0";
+                    } else if (['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].includes(k)) {
+                        finalVariables[k] = "10";
+                    } else if (['STR_mod', 'DEX_mod', 'CON_mod', 'INT_mod', 'WIS_mod', 'CHA_mod'].includes(k)) {
+                        finalVariables[k] = "0";
+                    } else if (k === 'AC') {
+                        finalVariables[k] = "10";
+                    } else if (!isNaN(finalVariables[k])) {
+                        finalVariables[k] = "0";
+                    }
+                }
+            }
+
+            const charGroups = groups.filter(g => g.characterId === charId);
+            const charWidgets = engine.savedQueues.filter(w => w.characterId === charId);
+
+            const newTpl = {
+                id: 'template_custom_' + Date.now(),
+                name: tplName.trim(),
+                system: char.dndType === 'monster' ? 'Monster' : 'Character',
+                dndType: char.dndType || 'standard',
+                isDefault: false,
+                variables: finalVariables,
+                groups: charGroups.map(g => ({ id: g.id, name: g.name, color: g.color })),
+                widgets: charWidgets.map(w => ({
+                    name: w.name,
+                    widgetType: w.widgetType,
+                    groupId: w.groupId,
+                    unifiedQueue: JSON.parse(JSON.stringify(w.unifiedQueue || w.queue || [])),
+                    addonCounter: w.addonCounter ? JSON.parse(JSON.stringify(w.addonCounter)) : undefined,
+                    addonToggle: w.addonToggle ? JSON.parse(JSON.stringify(w.addonToggle)) : undefined,
+                    addonNote: w.addonNote || undefined,
+                    color: w.color || undefined
+                }))
+            };
+
+            templates.push(newTpl);
+            persistTemplates();
+            renderTemplates();
+
+            showModal({
+                title: 'Template Created',
+                body: `"${tplName}" is now available in your Templates Library in the sidebar drawer!`,
+                alertOnly: true
+            });
+
+            vibrate(15);
         }
 
         // =========================================================================
@@ -6877,11 +7534,42 @@
                                 startInlineRename(char.id, charEl);
                             };
 
-                            charEl.onclick = (e) => {
-                                e.stopPropagation();
-                                activeCampaignId = camp.id;
-                                selectCharacterFromBinder(char.id);
+                            let holdTimer = null;
+                            let isHold = false;
+
+                            const startHold = (e) => {
+                                isHold = false;
+                                holdTimer = setTimeout(() => {
+                                    isHold = true;
+                                    openCharContextMenu(char.id, e);
+                                }, 500);
                             };
+                            const cancelHold = () => {
+                                clearTimeout(holdTimer);
+                            };
+
+                            charEl.addEventListener('mousedown', startHold);
+                            charEl.addEventListener('touchstart', startHold, { passive: true });
+                            
+                            const endClick = (e) => {
+                                clearTimeout(holdTimer);
+                                if (!isHold) {
+                                    activeCampaignId = camp.id;
+                                    selectCharacterFromBinder(char.id);
+                                }
+                            };
+                            charEl.addEventListener('mouseup', endClick);
+                            charEl.addEventListener('touchend', endClick);
+                            charEl.addEventListener('touchmove', cancelHold, { passive: true });
+                            charEl.addEventListener('touchcancel', cancelHold, { passive: true });
+                            charEl.addEventListener('mouseleave', cancelHold);
+
+                            charEl.addEventListener('contextmenu', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                isHold = true;
+                                openCharContextMenu(char.id, e);
+                            });
 
                             let badgeHtml = '';
                             if (char.variables && char.variables.HP !== undefined) {
@@ -6908,19 +7596,27 @@
 
                 listContainer.appendChild(folderWrapper);
             });
+            renderTemplates();
         }
 
         function selectCampaign(campId) {
-            activeCampaignId = campId;
-            const campChars = characters.filter(c => c.campaignId === activeCampaignId);
-            if (campChars.length > 0) {
-                activeCharacterId = campChars[0].id;
-                const charGroups = groups.filter(g => g.characterId === activeCharacterId);
-                activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
-            } else {
+            if (!campId) {
+                activeCampaignId = null;
                 activeCharacterId = null;
                 activeGroupId = null;
+            } else {
+                activeCampaignId = campId;
+                const campChars = characters.filter(c => c.campaignId === activeCampaignId);
+                if (campChars.length > 0) {
+                    activeCharacterId = campChars[0].id;
+                    const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                    activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+                } else {
+                    activeCharacterId = null;
+                    activeGroupId = null;
+                }
             }
+            renderCampaignSelect();
             renderCharacterSelect();
             renderGroupTabs();
             renderSavedQueues();
@@ -6943,24 +7639,14 @@
                 campaigns.push({ id, name: name.trim() });
                 activeCampaignId = id;
 
-                const charId = 'char_' + Date.now();
-                characters.push({ id: charId, name: 'Primary Character', dndType: 'standard', campaignId: id });
-
-                const baseTime = Date.now();
-                const charGroups = [
-                    { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: charId },
-                    { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: charId },
-                    { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: charId },
-                    { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: charId }
-                ];
-                groups.push(...charGroups);
-                activeCharacterId = charId;
-                activeGroupId = charGroups[0].id;
+                activeCharacterId = null;
+                activeGroupId = null;
 
                 if (!openTabs.includes(id)) {
                     openTabs.push(id);
                 }
 
+                renderCampaignSelect();
                 renderCharacterSelect();
                 renderGroupTabs();
                 renderSavedQueues();
@@ -7088,15 +7774,6 @@
             const char = characters.find(c => c.id === charId);
             if (!char) return;
             const campId = char.campaignId;
-            const campChars = characters.filter(c => c.campaignId === campId);
-            if (campChars.length <= 1) {
-                showModal({
-                    title: 'Cannot Delete',
-                    body: 'You must have at least one character in the campaign.',
-                    alertOnly: true
-                });
-                return;
-            }
             showModal({
                 title: 'Delete Sheet',
                 body: `Are you sure you want to delete <span class="text-rose-400">${char.name}</span>? This will delete all its groups and saved widgets.`,
@@ -7111,9 +7788,14 @@
                 characters = characters.filter(c => c.id !== charId);
                 if (activeCharacterId === charId) {
                     const remaining = characters.filter(c => c.campaignId === campId);
-                    activeCharacterId = remaining[0].id;
-                    const charGroups = groups.filter(g => g.characterId === activeCharacterId);
-                    activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+                    if (remaining.length > 0) {
+                        activeCharacterId = remaining[0].id;
+                        const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                        activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
+                    } else {
+                        activeCharacterId = null;
+                        activeGroupId = null;
+                    }
                 }
                 renderCharacterSelect();
                 renderGroupTabs();
@@ -7125,14 +7807,6 @@
 
         function deleteCampaignFromBinder(campId, event) {
             if (event) event.stopPropagation();
-            if (campaigns.length <= 1) {
-                showModal({
-                    title: 'Cannot Delete',
-                    body: 'You must have at least one campaign.',
-                    alertOnly: true
-                });
-                return;
-            }
             const camp = campaigns.find(c => c.id === campId);
             showModal({
                 title: 'Delete Campaign',
@@ -7149,11 +7823,11 @@
 
                 campaigns = campaigns.filter(c => c.id !== campId);
                 if (activeCampaignId === campId) {
-                    activeCampaignId = campaigns[0].id;
+                    activeCampaignId = campaigns.length > 0 ? campaigns[0].id : null;
                 }
 
                 if (charIdsToDelete.includes(activeCharacterId)) {
-                    const remaining = characters.filter(c => c.campaignId === activeCampaignId);
+                    const remaining = activeCampaignId ? characters.filter(c => c.campaignId === activeCampaignId) : [];
                     if (remaining.length > 0) {
                         activeCharacterId = remaining[0].id;
                         const charGroups = groups.filter(g => g.characterId === activeCharacterId);
@@ -7167,6 +7841,7 @@
                 const tabIdx = openTabs.indexOf(campId);
                 if (tabIdx > -1) openTabs.splice(tabIdx, 1);
 
+                renderCampaignSelect();
                 renderCharacterSelect();
                 renderGroupTabs();
                 renderSavedQueues();
@@ -7192,16 +7867,6 @@
                 variables: { HP: 10, MaxHP: 10 }
             };
 
-            if (type === 'fighter') {
-                newChar.variables.HP = 12;
-                newChar.variables.MaxHP = 12;
-            } else if (type === 'mage') {
-                newChar.variables.HP = 6;
-                newChar.variables.MaxHP = 6;
-            } else if (type === 'goblin') {
-                newChar.variables.HP = 7;
-                newChar.variables.MaxHP = 7;
-            }
 
             characters.push(newChar);
 
@@ -7245,182 +7910,7 @@
                 roundMode: 'none'
             });
 
-            if (type === 'fighter') {
-                engine.savedQueues.push({
-                    id: Date.now() + 1,
-                    characterId: charId,
-                    groupId: statsGrpId,
-                    name: 'Hit Points',
-                    color: '#00d4ff',
-                    widgetType: 'stepper',
-                    value: 12,
-                    max: 12,
-                    min: 0,
-                    queue: []
-                });
 
-                engine.savedQueues.push({
-                    id: Date.now() + 2,
-                    characterId: charId,
-                    groupId: statsGrpId,
-                    name: 'Strength Check',
-                    color: '#00d4ff',
-                    widgetType: 'roller',
-                    queue: [makeDiceNode(20, 1)],
-                    flat: [makeModifierNode(3)],
-                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(3)],
-                    rules: {},
-                    includeAdvDis: true
-                });
-
-                engine.savedQueues.push({
-                    id: Date.now() + 3,
-                    characterId: charId,
-                    groupId: statsGrpId,
-                    name: 'Dexterity Check',
-                    color: '#00d4ff',
-                    widgetType: 'roller',
-                    queue: [makeDiceNode(20, 1)],
-                    flat: [makeModifierNode(1)],
-                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(1)],
-                    rules: {},
-                    includeAdvDis: false
-                });
-
-                engine.savedQueues.push({
-                    id: Date.now() + 4,
-                    characterId: charId,
-                    groupId: attacksGrpId,
-                    name: 'Greatsword Attack',
-                    color: '#ff003c',
-                    widgetType: 'roller',
-                    queue: [makeDiceNode(6, 2)],
-                    flat: [makeModifierNode(3)],
-                    unifiedQueue: [makeDiceNode(6, 2), makeModifierNode(3)],
-                    rules: {},
-                    includeAdvDis: true,
-                    addonNote: "Deals 2d6+3 slashing damage"
-                });
-
-                engine.savedQueues.push({
-                    id: Date.now() + 5,
-                    characterId: charId,
-                    groupId: attacksGrpId,
-                    name: 'Longbow Attack',
-                    color: '#ff003c',
-                    widgetType: 'roller',
-                    queue: [makeDiceNode(20, 1)],
-                    flat: [makeModifierNode(5)],
-                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(5)],
-                    rules: {},
-                    includeAdvDis: false,
-                    addonCounter: { value: 20, max: 20, label: "Arrows" }
-                });
-
-            } else if (type === 'mage') {
-                engine.savedQueues.push({
-                    id: Date.now() + 1,
-                    characterId: charId,
-                    groupId: statsGrpId,
-                    name: 'Hit Points',
-                    color: '#00d4ff',
-                    widgetType: 'stepper',
-                    value: 6,
-                    max: 6,
-                    min: 0,
-                    queue: []
-                });
-
-                engine.savedQueues.push({
-                    id: Date.now() + 2,
-                    characterId: charId,
-                    groupId: spellsGrpId,
-                    name: 'Arcane Focus',
-                    color: '#a855f7',
-                    widgetType: 'toggle',
-                    checked: true,
-                    labelOn: 'Focused',
-                    labelOff: 'Disrupted',
-                    queue: []
-                });
-
-                engine.savedQueues.push({
-                    id: Date.now() + 3,
-                    characterId: charId,
-                    groupId: spellsGrpId,
-                    name: 'Magic Missile',
-                    color: '#a855f7',
-                    widgetType: 'roller',
-                    queue: [makeDiceNode(4, 1)],
-                    flat: [makeModifierNode(1)],
-                    unifiedQueue: [makeDiceNode(4, 1), makeModifierNode(1)],
-                    rules: {},
-                    includeAdvDis: false,
-                    addonToggle: { checked: true, labelOn: 'Ready', labelOff: 'Miscast' },
-                    addonNote: "Autohit 1d4+1 force damage"
-                });
-
-                engine.savedQueues.push({
-                    id: Date.now() + 4,
-                    characterId: charId,
-                    groupId: spellsGrpId,
-                    name: 'Sleep (Cast)',
-                    color: '#a855f7',
-                    widgetType: 'roller',
-                    queue: [makeDiceNode(20, 1)],
-                    flat: [],
-                    unifiedQueue: [makeDiceNode(20, 1)],
-                    rules: {},
-                    includeAdvDis: false,
-                    addonToggle: { checked: true, labelOn: 'Ready', labelOff: 'Miscast' },
-                    addonNote: "Roll under Wisdom to cast"
-                });
-
-            } else if (type === 'goblin') {
-                engine.savedQueues.push({
-                    id: Date.now() + 1,
-                    characterId: charId,
-                    groupId: statsGrpId,
-                    name: 'HP (Goblin)',
-                    color: '#00d4ff',
-                    widgetType: 'stepper',
-                    value: 7,
-                    max: 7,
-                    min: 0,
-                    queue: []
-                });
-
-                engine.savedQueues.push({
-                    id: Date.now() + 2,
-                    characterId: charId,
-                    groupId: attacksGrpId,
-                    name: 'Scimitar Attack',
-                    color: '#ff003c',
-                    widgetType: 'roller',
-                    queue: [makeDiceNode(20, 1)],
-                    flat: [makeModifierNode(4)],
-                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(4)],
-                    rules: {},
-                    includeAdvDis: false,
-                    addonNote: "Deals 1d6+2 slashing damage"
-                });
-
-                engine.savedQueues.push({
-                    id: Date.now() + 3,
-                    characterId: charId,
-                    groupId: attacksGrpId,
-                    name: 'Shortbow Attack',
-                    color: '#ff003c',
-                    widgetType: 'roller',
-                    queue: [makeDiceNode(20, 1)],
-                    flat: [makeModifierNode(4)],
-                    unifiedQueue: [makeDiceNode(20, 1), makeModifierNode(4)],
-                    rules: {},
-                    includeAdvDis: false,
-                    addonCounter: { value: 12, max: 12, label: "Arrows" },
-                    addonNote: "Deals 1d6+2 piercing damage"
-                });
-            }
 
             activeCharacterId = charId;
             activeGroupId = statsGrpId;
@@ -7445,6 +7935,14 @@
 
         function openWidgetCreationModal(isSavingQueue = false) {
             closeAllArsenalMenus();
+            if (!activeCharacterId) {
+                showModal({
+                    title: 'No Active Character',
+                    body: 'Please create or select a character first to add widgets to their groups.',
+                    alertOnly: true
+                });
+                return;
+            }
             editingWidgetId = null;
             const overlay = document.getElementById('widget-creation-overlay');
             if (!overlay) return;
@@ -8387,14 +8885,63 @@
         }
 
         // Group CRUD
-        function toggleGroupMenu(e) {
-            if (e) e.stopPropagation();
-            const menu = document.getElementById('group-menu');
-            const isHidden = menu.classList.contains('hidden');
-            closeAllArsenalMenus();
-            document.getElementById('char-menu')?.classList.add('hidden');
-            if (isHidden) menu.classList.remove('hidden');
+        let activeGroupMenuId = null;
+
+        function openGroupContextMenu(groupId, e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             vibrate(5);
+            
+            const menu = document.getElementById('group-menu');
+            if (!menu) return;
+
+            // Mark this group as active so that actions operate on it
+            activeGroupId = groupId;
+            renderGroupTabs(); // Highlight the tab
+
+            closeAllArsenalMenus();
+            
+            menu.classList.remove('hidden');
+            activeGroupMenuId = groupId;
+
+            let clientX = 0;
+            let clientY = 0;
+
+            if (e) {
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else if (e.changedTouches && e.changedTouches.length > 0) {
+                    clientX = e.changedTouches[0].clientX;
+                    clientY = e.changedTouches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+            }
+
+            const menuWidth = 160;
+            let left = clientX;
+            let top = clientY;
+
+            if (left + menuWidth > window.innerWidth) {
+                left = window.innerWidth - menuWidth - 12;
+            }
+            if (left < 12) left = 12;
+
+            const menuHeight = 180;
+            if (top + menuHeight > window.innerHeight) {
+                top = window.innerHeight - menuHeight - 12;
+            }
+            if (top < 12) top = 12;
+
+            menu.style.position = 'fixed';
+            menu.style.left = `${left}px`;
+            menu.style.top = `${top}px`;
+            menu.style.right = 'auto';
+            menu.style.bottom = 'auto';
         }
 
         function addGroup(e) {
@@ -8430,9 +8977,8 @@
         function removeGroup(e) {
             if (e) e.stopPropagation();
             document.getElementById('group-menu').classList.add('hidden');
-            const charGroups = groups.filter(g => g.characterId === activeCharacterId);
-            if (charGroups.length <= 1) { showModal({ title: 'Cannot Remove', body: 'The last group cannot be deleted. Each character must have at least one group.', alertOnly: true }); return; }
             const grp = groups.find(g => g.id === activeGroupId);
+            if (!grp) return;
             showModal({ title: `Remove <span class="text-rose-400">${grp.name}</span>?`, body: 'All loadouts in this group will be deleted.', confirmText: 'Remove', danger: true }).then(ok => {
                 if (!ok) return;
                 engine.savedQueues = engine.savedQueues.filter(q => q.groupId !== activeGroupId);
@@ -8498,7 +9044,15 @@
         }
 
         function persistArsenal() {
-            localStorage.setItem('crypto_roller_arsenal', JSON.stringify({ characters, groups, activeCharacterId, activeGroupId }));
+            localStorage.setItem('crypto_roller_arsenal', JSON.stringify({
+                characters,
+                groups,
+                activeCharacterId,
+                activeGroupId,
+                campaigns,
+                activeCampaignId,
+                openTabs
+            }));
         }
 
         let dragSrcId = null;
@@ -8510,10 +9064,12 @@
             if (!list) return;
 
             const filtered = engine.savedQueues.filter(q => {
-                const charMatch = !q.characterId || q.characterId === activeCharacterId;
-                const grpMatch = !q.groupId || q.groupId === activeGroupId;
+                const charMatch = q.characterId === activeCharacterId;
+                const grpMatch = q.groupId === activeGroupId;
                 if (!q.characterId && !q.groupId) {
-                    return activeCharacterId === 'primary' && activeGroupId === (groups.find(g => g.characterId === 'primary')?.id);
+                    const firstChar = characters[0];
+                    const firstCharFirstGroup = firstChar ? groups.find(g => g.characterId === firstChar.id)?.id : null;
+                    return activeCharacterId === (firstChar ? firstChar.id : null) && activeGroupId === firstCharFirstGroup;
                 }
                 return charMatch && grpMatch;
             });
@@ -8653,7 +9209,7 @@
 
                 let formula = '';
                 if (type === 'roller') {
-                    formula = q.queue.map(dq => `${dq.count}d${dq.sides}`).join("+");
+                    formula = (q.queue || []).map(dq => `${dq.count}d${dq.sides}`).join("+");
                     if (Array.isArray(q.flat) && q.flat.length > 0) {
                         q.flat.forEach(term => {
                             let termStr = term.value;
@@ -10150,6 +10706,7 @@
 
         window.onload = () => {
             initRollPad();
+            loadTemplates();
 
             updateScrollSpacer();
             const padContainer = document.getElementById('roll-pad-container');
@@ -10162,29 +10719,32 @@
             if (storedArsenal) {
                 try {
                     const a = JSON.parse(storedArsenal);
-                    if (a.characters && a.characters.length > 0) characters = a.characters;
-                    if (a.groups && a.groups.length > 0) groups = a.groups;
-                    if (a.activeCharacterId) activeCharacterId = a.activeCharacterId;
-                    if (a.activeGroupId) activeGroupId = a.activeGroupId;
-                    if (a.campaigns && a.campaigns.length > 0) campaigns = a.campaigns;
-                    if (a.activeCampaignId) activeCampaignId = a.activeCampaignId;
-                    if (a.openTabs) openTabs = a.openTabs;
+                    characters = a.characters || [];
+                    groups = a.groups || [];
+                    activeCharacterId = a.activeCharacterId || null;
+                    activeGroupId = a.activeGroupId || null;
+                    campaigns = a.campaigns || [];
+                    activeCampaignId = a.activeCampaignId || null;
+                    openTabs = a.openTabs || [];
                 } catch (e) { /* keep defaults */ }
             }
 
-            // Ensure backwards compatibility
-            if (!campaigns || campaigns.length === 0) {
-                campaigns = [{ id: 'default_campaign', name: 'Default Campaign' }];
+            // Ensure defaults only if no stored state exists
+            if (!storedArsenal) {
+                if (!campaigns || campaigns.length === 0) {
+                    campaigns = [{ id: 'default_campaign', name: 'Default Campaign' }];
+                }
+                if (!activeCampaignId) {
+                    activeCampaignId = campaigns[0].id;
+                }
+                if (!openTabs || openTabs.length === 0) {
+                    openTabs = [activeCampaignId];
+                }
             }
-            if (!activeCampaignId) {
-                activeCampaignId = campaigns[0].id;
-            }
-            if (!openTabs || openTabs.length === 0) {
-                openTabs = [activeCampaignId];
-            }
+
             characters.forEach(char => {
                 if (!char.campaignId) {
-                    char.campaignId = 'default_campaign';
+                    char.campaignId = campaigns.length > 0 ? campaigns[0].id : 'default_campaign';
                 }
                 if (!char.dndType) {
                     char.dndType = 'standard';
