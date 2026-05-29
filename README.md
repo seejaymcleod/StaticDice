@@ -25,7 +25,7 @@ Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a hi
 - **Count Mode**: Success-based rolling (e.g., World of Darkness, Shadowrun). Counts dice meeting a target threshold.
 - **List Mode**: Raw output for when you need to see every individual result clearly.
 
-### 🎛️ The Arsenal & Polymorphic Widgets
+### The Arsenal & Polymorphic Widgets
 Save your frequent rolls, character variables, or trackers as custom interactive widgets:
 - **Polymorphic Cards**: Save widgets as Rollers, Standalone Steppers, Standalone Toggle Switches, or Collapsible Spell/Rule text notes.
 - **Roll Addons**: Extend Rollers with Advantage/Disadvantage buttons, inline description notes, or adjacent resource counters.
