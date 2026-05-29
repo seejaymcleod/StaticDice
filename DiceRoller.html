@@ -5247,10 +5247,10 @@
             const currentActiveMod = (lastChip && lastChip.nodeType === 'operator' && (lastChip.operator === 'ADV' || lastChip.operator === 'DIS')) ? lastChip.operator : null;
             const currentActiveModLevel = currentActiveMod ? lastChip.modifierLevel : 0;
 
-            const canMod = hasDice;
+            const canMod = true; // Buttons are no longer disabled when empty
 
-            advBtn.disabled = !canMod;
-            disBtn.disabled = !canMod;
+            advBtn.disabled = false;
+            disBtn.disabled = false;
 
             const advPip = document.getElementById('adv-pip');
             const advLabel = document.getElementById('adv-label');
