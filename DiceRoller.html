@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Static Dice</title>
-    <link rel="icon" type="image/png" href="assets/perspective-dice-six-faces-six.png">
+    <link rel="icon" type="image/png" href="Assets/perspective-dice-six-faces-six.png?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -661,12 +661,11 @@
             border-radius: 2px;
         }
 
-        .saved-item input:checked + .toggle-slider {
             background-color: var(--item-color) !important;
             box-shadow: 0 0 12px var(--item-color);
         }
 
-        .saved-item input:checked + .toggle-slider:before {
+        .saved-item input:checked+.toggle-slider:before {
             transform: translateX(20px);
         }
 
@@ -2860,7 +2859,8 @@
                                 onchange="selectAddonWidget('stepper')" class="addon-radio-input">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-slate-200 uppercase">Resource Counter</span>
-                                <span class="text-[9px] text-slate-400 font-medium">Adds a resource counter beside the card.</span>
+                                <span class="text-[9px] text-slate-400 font-medium">Adds a resource counter beside the
+                                    card.</span>
                             </div>
                         </label>
                         <div id="addon-stepper-config" class="hidden pl-6 space-y-2">
@@ -6790,7 +6790,7 @@
                 drawer.classList.add('open');
                 overlay.classList.add('open');
                 renderBinder();
-                
+
                 // Auto-close roll pad if open
                 const rollPadContainer = document.getElementById('roll-pad-container');
                 if (rollPadContainer && !rollPadContainer.classList.contains('collapsed')) {
@@ -10105,7 +10105,7 @@
             if (!container) return;
             const isCollapsed = container.classList.toggle('collapsed');
             localStorage.setItem('roll_pad_collapsed', isCollapsed ? 'true' : 'false');
-            
+
             // Auto-close binder if roll pad is opened
             if (!isCollapsed) {
                 const binderDrawer = document.getElementById('binder-drawer');
