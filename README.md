@@ -1,6 +1,6 @@
 # ⚡ STATIC DICE
 [[AI-generated, obviously. Once the code is stable, I'll look into make proper readme.]]
-** This is me testing a Test and Prod workflow. 
+** This is me testing a Test and Prod workflow.-- NO EMPTY COMIT THIS TIME 
 
 ### High-Fidelity TTRPG Intelligence • Raw Electrical Entropy
 
