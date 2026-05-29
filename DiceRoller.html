@@ -2243,12 +2243,6 @@
             <div class="flex justify-between items-center px-1">
                 <h3 class="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Dice Arsenal</h3>
                 <div class="flex gap-1.5 items-center">
-                    <button onclick="openResourcesModal(event)" title="Character Resources" id="arsenal-resources-btn"
-                        class="p-1.5 hover:bg-[#00d4ff]/10 rounded-lg text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95 flex items-center justify-center">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                        </svg>
-                    </button>
                     <button id="arsenal-queue-btn" onclick="toggleArsenalQueue()"
                         class="toggle-btn px-2.5 py-1.5 rounded-lg transition-all hover:bg-white/5 border border-white/10 bg-[#020617]/30 min-w-[70px]">
                         <span id="arsenal-queue-label"
@@ -2273,6 +2267,13 @@
                     <!-- Injected by JS -->
                 </div>
                 <div class="relative shrink-0 flex gap-1 items-center">
+                    <button onclick="toggleShowHiddenWidgets()" id="toggle-show-hidden-btn" title="Toggle Hidden Widgets"
+                        class="w-[1.75rem] h-[1.75rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-lg text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
                     <button onclick="openWidgetCreationModal()" title="Add Widget"
                         class="w-[1.75rem] h-[1.75rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-lg text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
@@ -2280,7 +2281,6 @@
                             <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
                     </button>
-
                 </div>
             </div>
 
@@ -2530,125 +2530,7 @@
         </div>
     </div>
 
-    <!-- Resources Modal -->
-    <div id="resources-overlay" onclick="if(event.target === this) closeResourcesModal()"
-        class="fixed inset-0 hidden items-center justify-center p-4 z-[100] bg-[#020617]/95 backdrop-blur-md">
-        <div class="bg-[#020617] border border-slate-800 p-6 rounded-[2rem] shadow-2xl w-full max-w-[360px] space-y-5 text-left"
-            style="animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)">
 
-            <!-- Header -->
-            <div class="flex justify-between items-center">
-                <div class="flex flex-col gap-1">
-                    <h3 class="text-sm font-black text-[#94a3b8] uppercase tracking-widest flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                            stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-emerald-400">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                        </svg>
-                        <span id="resources-title-char">Character Resources</span>
-                    </h3>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider">System:</span>
-                        <select id="char-system-select" onchange="changeCharacterSystem(this.value)"
-                            class="system-select theme-sky">
-                            <option value="standard" class="bg-[#020617] text-sky-400">d20 Roll Over</option>
-                            <option value="roll-under" class="bg-[#020617] text-purple-400">d20 Roll Under</option>
-                            <option value="none" class="bg-[#020617] text-slate-400">Custom / None</option>
-                        </select>
-                    </div>
-                </div>
-                <button onclick="closeResourcesModal()"
-                    class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10 transition-all shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Operator Selector -->
-            <div id="resources-operator-container"
-                class="bg-[#090d16] border border-white/5 p-3.5 rounded-2xl space-y-2">
-                <div class="flex justify-between items-center h-11">
-                    <span class="text-xs font-black text-slate-400 uppercase tracking-wider">Formula Operator
-                        (Custom)</span>
-                    <select id="resources-operator" onchange="saveResourcesOperator()"
-                        class="bg-[#020617] text-sky-400 text-sm font-black rounded-xl px-3 py-2 outline-none border border-white/10 text-center h-10 min-w-[70px]">
-                        <option value=">=" selected>&ge;</option>
-                        <option value=">">&gt;</option>
-                        <option value="=">=</option>
-                        <option value="<">&lt;</option>
-                        <option value="<=">&le;</option>
-                    </select>
-                </div>
-                <p class="text-[10px] text-slate-500 leading-normal">Determines the threshold comparison when rolling
-                    custom resource arsenals (e.g., 1d20 &ge; MANA).</p>
-            </div>
-
-            <!-- Pre-load & Reset Wizard Button Row -->
-            <div class="flex gap-3">
-                <button onclick="preloadDdStats()"
-                    class="flex-1 py-2.5 rounded-xl bg-sky-500/20 border border-sky-500/50 text-sky-400 font-bold text-xs hover:bg-sky-500 hover:text-[#e2e8f0] transition-colors text-center uppercase tracking-wider">
-                    Pre-load Stats
-                </button>
-                <button onclick="resetDdStats()"
-                    class="flex-1 py-2.5 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-400 font-bold text-xs hover:bg-rose-500 hover:text-[#e2e8f0] transition-colors text-center uppercase tracking-wider">
-                    Reset Stats
-                </button>
-            </div>
-
-            <!-- Variables List -->
-            <div id="resources-list-container" class="space-y-1.5 max-h-[380px] overflow-y-auto pr-1 custom-scroll">
-                <!-- Variables and Steppers injected here -->
-            </div>
-
-            <div class="h-px bg-white/5"></div>
-
-            <!-- Condensed Node Builder -->
-            <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Add Variable Chip to
-                    Queue</label>
-                <div class="bg-[#020617]/50 rounded-xl p-2 border border-white/5 flex flex-wrap gap-2 items-center">
-                    <select id="res-node-operator"
-                        class="bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 w-10 text-center h-9">
-                        <option value="+">+</option>
-                        <option value="-">-</option>
-                    </select>
-                    <select id="res-node-variable"
-                        class="flex-1 bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 px-2 h-9">
-                        <!-- Populated with character variables -->
-                    </select>
-                    <select id="res-node-multiplier"
-                        class="bg-[#090d16] text-sky-400 text-xs font-black rounded-lg outline-none border border-white/10 w-[4.5rem] text-center h-9"
-                        title="Multiplier">
-                        <option value="1">x1</option>
-                        <option value="2">x2</option>
-                        <option value="3">x3</option>
-                        <option value="0.5">x½ (↓)</option>
-                    </select>
-                    <button id="res-add-node-btn" onclick="addResourceNode()"
-                        class="h-9 px-4 rounded-lg bg-sky-500/20 border border-sky-500/50 text-sky-400 font-bold text-[10px] hover:bg-sky-500 hover:text-[#020617] uppercase tracking-wider transition-colors shrink-0">
-                        Add to Queue
-                    </button>
-                </div>
-            </div>
-
-            <div class="h-px bg-white/5"></div>
-
-            <!-- Add Custom Variable -->
-            <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Add Custom
-                    Resource</label>
-                <div class="flex gap-3">
-                    <input type="text" id="new-resource-name" placeholder="E.g., MANA, AC, FATE"
-                        class="flex-1 bg-[#090d16] border border-white/10 rounded-xl px-3.5 h-11 text-sm text-[#e2e8f0] font-bold outline-none focus:border-sky-500 transition-colors uppercase"
-                        onkeydown="if(event.key === 'Enter') createCustomVariable()">
-                    <button onclick="createCustomVariable()"
-                        class="h-11 px-5 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-black text-xs hover:bg-emerald-500 hover:text-[#020617] uppercase tracking-wider transition-colors shrink-0">
-                        Add
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Character Creation Modal -->
     <div id="char-creation-overlay" onclick="if(event.target === this) closeCharCreationModal()"
@@ -2777,7 +2659,8 @@
                         <option value="roller">Dice Roller (Card)</option>
                         <option value="stepper">Resource Stepper</option>
                         <option value="toggle">Toggle Switch</option>
-                        <option value="text">Text / Notes Card</option>
+                        <option value="number">Number Card</option>
+                        <option value="text">Text</option>
                     </select>
                 </div>
 
@@ -2937,6 +2820,46 @@
                     <textarea id="text-card-content" placeholder="Type notes here..." rows="3"
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
                 </div>
+
+                <!-- Number Card Config -->
+                <div id="widget-number-config" class="hidden space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Number Settings</label>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Value</label>
+                        <input type="number" id="number-val" value="10"
+                            class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                    </div>
+                </div>
+
+                <!-- Detail Text -->
+                <div id="widget-detail-config" class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Detail Text (Optional)</label>
+                    <textarea id="widget-detail-text" placeholder="E.g., Makes you smarter somehow." rows="2"
+                        class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
+                </div>
+
+                <!-- Variable Binding Config -->
+                <div id="widget-var-binding-config" class="space-y-3 pt-2 border-t border-white/5">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="widget-bind-var-check" onchange="toggleWidgetVarBinding(this.checked)"
+                            class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Bind to Character Variable</span>
+                    </label>
+                    <div id="widget-var-binding-fields" class="hidden space-y-3 pl-6">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Variable Name (e.g., INT, AC, HP)</label>
+                            <input type="text" id="widget-binds-variable" placeholder="E.g., INT"
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2.5 py-2 text-xs text-[#e2e8f0] font-bold uppercase">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Relationship Type</label>
+                            <select id="widget-variable-rel-type" class="char-select w-full !text-xs !py-2">
+                                <option value="define">Define (Overrides or sets the base value)</option>
+                                <option value="modify">Modify (Adds to/subtracts from the variable)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Footer Buttons -->
@@ -3074,6 +2997,38 @@
         let activeCharacterId = 'primary';
         let activeGroupId = 'grp_stats_1';
         let templates = [];
+        let showHiddenWidgets = localStorage.getItem('show_hidden_widgets') === 'true';
+
+        function toggleShowHiddenWidgets() {
+            showHiddenWidgets = !showHiddenWidgets;
+            localStorage.setItem('show_hidden_widgets', showHiddenWidgets);
+            updateShowHiddenWidgetsButton();
+            renderSavedQueues();
+            vibrate(5);
+        }
+
+        function updateShowHiddenWidgetsButton() {
+            const btn = document.getElementById('toggle-show-hidden-btn');
+            if (!btn) return;
+            if (showHiddenWidgets) {
+                btn.classList.add('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10');
+                btn.classList.remove('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40');
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                `;
+            } else {
+                btn.classList.remove('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10');
+                btn.classList.add('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40');
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                `;
+            }
+        }
 
         let modalResolve = () => { };
         let isCurrentModalDanger = false;
@@ -6907,6 +6862,33 @@
                     ],
                     widgets: [
                         {
+                            id: 'w_hp',
+                            groupId: 'stats',
+                            name: 'HP',
+                            widgetType: 'stepper',
+                            min: 0,
+                            max: 10,
+                            value: 10
+                        },
+                        {
+                            id: 'w_ac',
+                            groupId: 'stats',
+                            name: 'AC',
+                            widgetType: 'number',
+                            value: 10,
+                            bindsVariable: 'AC',
+                            variableRelType: 'define'
+                        },
+                        {
+                            id: 'w_lvl',
+                            groupId: 'stats',
+                            name: 'Level',
+                            widgetType: 'number',
+                            value: 1,
+                            bindsVariable: 'LVL',
+                            variableRelType: 'define'
+                        },
+                        {
                             id: 'w_str',
                             groupId: 'stats',
                             name: 'Strength Check',
@@ -6973,6 +6955,66 @@
                             ]
                         },
                         {
+                            id: 'w_score_str',
+                            groupId: 'stats',
+                            name: 'STR Score',
+                            widgetType: 'number',
+                            value: 10,
+                            bindsVariable: 'STR',
+                            variableRelType: 'define',
+                            hidden: true
+                        },
+                        {
+                            id: 'w_score_dex',
+                            groupId: 'stats',
+                            name: 'DEX Score',
+                            widgetType: 'number',
+                            value: 10,
+                            bindsVariable: 'DEX',
+                            variableRelType: 'define',
+                            hidden: true
+                        },
+                        {
+                            id: 'w_score_con',
+                            groupId: 'stats',
+                            name: 'CON Score',
+                            widgetType: 'number',
+                            value: 10,
+                            bindsVariable: 'CON',
+                            variableRelType: 'define',
+                            hidden: true
+                        },
+                        {
+                            id: 'w_score_int',
+                            groupId: 'stats',
+                            name: 'INT Score',
+                            widgetType: 'number',
+                            value: 10,
+                            bindsVariable: 'INT',
+                            variableRelType: 'define',
+                            hidden: true
+                        },
+                        {
+                            id: 'w_score_wis',
+                            groupId: 'stats',
+                            name: 'WIS Score',
+                            widgetType: 'number',
+                            value: 10,
+                            bindsVariable: 'WIS',
+                            variableRelType: 'define',
+                            hidden: true
+                        },
+                        {
+                            id: 'w_score_cha',
+                            groupId: 'stats',
+                            name: 'CHA Score',
+                            widgetType: 'number',
+                            value: 10,
+                            bindsVariable: 'CHA',
+                            variableRelType: 'define',
+                            hidden: true
+                        },
+                        {
                             id: 'w_atk',
                             groupId: 'combat',
                             name: 'Melee Attack Roll',
@@ -7010,9 +7052,46 @@
                         "ATK_mod": "0"
                     },
                     groups: [
-                        { id: 'actions', name: 'Actions', color: '#ff003c' }
+                        { id: 'actions', name: 'Actions', color: '#ff003c' },
+                        { id: 'stats', name: 'Stats', color: '#00d4ff' }
                     ],
                     widgets: [
+                        {
+                            id: 'w_m_hp',
+                            groupId: 'stats',
+                            name: 'HP',
+                            widgetType: 'stepper',
+                            min: 0,
+                            max: 5,
+                            value: 5
+                        },
+                        {
+                            id: 'w_m_ac',
+                            groupId: 'stats',
+                            name: 'AC',
+                            widgetType: 'number',
+                            value: 10,
+                            bindsVariable: 'AC',
+                            variableRelType: 'define'
+                        },
+                        {
+                            id: 'w_m_lvl',
+                            groupId: 'stats',
+                            name: 'Level',
+                            widgetType: 'number',
+                            value: 1,
+                            bindsVariable: 'LVL',
+                            variableRelType: 'define'
+                        },
+                        {
+                            id: 'w_m_atk_mod',
+                            groupId: 'stats',
+                            name: 'Attack Modifier',
+                            widgetType: 'number',
+                            value: 0,
+                            bindsVariable: 'ATK_mod',
+                            variableRelType: 'define'
+                        },
                         {
                             id: 'w_m_atk',
                             groupId: 'actions',
@@ -7981,6 +8060,13 @@
 
             document.getElementById('text-card-content').value = '';
 
+            document.getElementById('number-val').value = '10';
+            document.getElementById('widget-detail-text').value = '';
+            document.getElementById('widget-bind-var-check').checked = false;
+            document.getElementById('widget-binds-variable').value = '';
+            document.getElementById('widget-variable-rel-type').value = 'define';
+            toggleWidgetVarBinding(false);
+
             onWidgetTypeChange(typeSelect.value);
 
             overlay.classList.remove('hidden');
@@ -8053,6 +8139,19 @@
             // Populate text card configs
             document.getElementById('text-card-content').value = q.text || '';
 
+            // Populate number config
+            document.getElementById('number-val').value = q.value !== undefined ? q.value : '10';
+
+            // Populate detail text
+            document.getElementById('widget-detail-text').value = q.detailText || '';
+
+            // Populate variable binding
+            const hasVarBind = !!q.bindsVariable;
+            document.getElementById('widget-bind-var-check').checked = hasVarBind;
+            document.getElementById('widget-binds-variable').value = q.bindsVariable || '';
+            document.getElementById('widget-variable-rel-type').value = q.variableRelType || 'define';
+            toggleWidgetVarBinding(hasVarBind);
+
             onWidgetTypeChange(typeSelect.value);
 
             overlay.classList.remove('hidden');
@@ -8074,11 +8173,12 @@
             vibrate(5);
         }
 
-        function onWidgetTypeChange(type) {
+         function onWidgetTypeChange(type) {
             document.getElementById('widget-roller-addons').classList.add('hidden');
             document.getElementById('widget-stepper-config').classList.add('hidden');
             document.getElementById('widget-toggle-config').classList.add('hidden');
             document.getElementById('widget-text-config').classList.add('hidden');
+            document.getElementById('widget-number-config').classList.add('hidden');
 
             if (type === 'roller') {
                 document.getElementById('widget-roller-addons').classList.remove('hidden');
@@ -8088,6 +8188,16 @@
                 document.getElementById('widget-toggle-config').classList.remove('hidden');
             } else if (type === 'text') {
                 document.getElementById('widget-text-config').classList.remove('hidden');
+            } else if (type === 'number') {
+                document.getElementById('widget-number-config').classList.remove('hidden');
+            }
+        }
+
+        function toggleWidgetVarBinding(checked) {
+            const fields = document.getElementById('widget-var-binding-fields');
+            if (fields) {
+                if (checked) fields.classList.remove('hidden');
+                else fields.classList.add('hidden');
             }
         }
 
@@ -8130,11 +8240,28 @@
             const type = document.getElementById('widget-type').value;
             const color = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)] || '#00d4ff';
 
+            let bindsVariable = null;
+            let variableRelType = null;
+            if (document.getElementById('widget-bind-var-check').checked) {
+                let rawVar = document.getElementById('widget-binds-variable').value.trim().toUpperCase();
+                if (rawVar) {
+                    rawVar = rawVar.replace(/[^A-Z0-9_]/g, '');
+                    if (/^[A-Z]/.test(rawVar)) {
+                        bindsVariable = rawVar;
+                        variableRelType = document.getElementById('widget-variable-rel-type').value;
+                    }
+                }
+            }
+            let detailText = document.getElementById('widget-detail-text').value.trim() || null;
+
             if (editingWidgetId !== null) {
                 const q = engine.savedQueues.find(x => x.id === editingWidgetId);
                 if (q) {
                     q.name = name;
                     q.widgetType = type;
+                    q.detailText = detailText;
+                    q.bindsVariable = bindsVariable;
+                    q.variableRelType = variableRelType;
 
                     if (type === 'roller') {
                         const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
@@ -8184,6 +8311,8 @@
                         q.checked = document.getElementById('toggle-initial').checked;
                         q.labelOn = document.getElementById('toggle-label-on').value.trim() || 'On';
                         q.labelOff = document.getElementById('toggle-label-off').value.trim() || 'Off';
+                    } else if (type === 'number') {
+                        q.value = parseInt(document.getElementById('number-val').value) || 0;
                     } else if (type === 'text') {
                         q.text = document.getElementById('text-card-content').value;
                     }
@@ -8203,7 +8332,10 @@
                 name: name,
                 color: color,
                 widgetType: type,
-                queue: []
+                queue: [],
+                detailText: detailText,
+                bindsVariable: bindsVariable,
+                variableRelType: variableRelType
             };
 
             if (type === 'roller') {
@@ -8268,6 +8400,8 @@
                 newWidget.checked = document.getElementById('toggle-initial').checked;
                 newWidget.labelOn = document.getElementById('toggle-label-on').value.trim() || 'On';
                 newWidget.labelOff = document.getElementById('toggle-label-off').value.trim() || 'Off';
+            } else if (type === 'number') {
+                newWidget.value = parseInt(document.getElementById('number-val').value) || 0;
             } else if (type === 'text') {
                 newWidget.text = document.getElementById('text-card-content').value;
                 newWidget.collapsed = false;
@@ -8278,6 +8412,32 @@
             renderSavedQueues();
             closeWidgetCreationModal();
             vibrate(10);
+        }
+
+        function changeNumberValueDirect(widgetId, newValue) {
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (q && q.widgetType === 'number') {
+                q.value = parseInt(newValue, 10) || 0;
+                persistSaved();
+                renderSavedQueues();
+                if (q.bindsVariable) {
+                    populateRulesVariableDropdowns();
+                    updateUI();
+                }
+                vibrate(5);
+            }
+        }
+
+        function toggleWidgetHiddenState(widgetId, event) {
+            if (event) event.stopPropagation();
+            closeAllArsenalMenus();
+            const q = engine.savedQueues.find(x => x.id === widgetId);
+            if (q) {
+                q.hidden = !q.hidden;
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
         }
 
         function changeStepperValueDirect(widgetId, newValue, isCurrent) {
@@ -8372,11 +8532,82 @@
         // CHARACTER RESOURCES & VARIABLES MANAGEMENT
         // =========================================================================
 
+        function getCalculatedVariables(char) {
+            if (!char) return {};
+            const vars = {};
+            if (char.variables) {
+                for (const [k, v] of Object.entries(char.variables)) {
+                    vars[k] = parseInt(v) || 0;
+                }
+            }
+            if (typeof engine === 'undefined' || !engine.savedQueues) return vars;
+            const charWidgets = engine.savedQueues.filter(w => w.characterId === char.id);
+            const isWidgetActive = (w) => {
+                if (w.hidden) {
+                    // Hidden widgets are STILL active if they are not toggled off. 
+                    // Wait, let's treat hidden widgets as active, but check if they are toggled off.
+                }
+                if (w.widgetType === 'toggle') return !!w.checked;
+                if (w.addonToggle) return !!w.addonToggle.checked;
+                return true;
+            };
+            const getWidgetValue = (w) => {
+                if (w.widgetType === 'toggle') return w.checked ? 1 : 0;
+                return parseInt(w.value) || 0;
+            };
+
+            const baseStats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+
+            // Process define/modify for base stats first
+            charWidgets.forEach(w => {
+                if (w.bindsVariable && baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
+                    if (w.variableRelType === 'define') {
+                        vars[w.bindsVariable] = getWidgetValue(w);
+                    }
+                }
+            });
+            charWidgets.forEach(w => {
+                if (w.bindsVariable && baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
+                    if (w.variableRelType === 'modify') {
+                        vars[w.bindsVariable] = (vars[w.bindsVariable] || 0) + getWidgetValue(w);
+                    }
+                }
+            });
+
+            // Calculate default modifiers for ability scores
+            baseStats.forEach(stat => {
+                const modName = `${stat}_mod`;
+                if (vars[stat] !== undefined) {
+                    vars[modName] = Math.floor((vars[stat] - 10) / 2);
+                }
+            });
+
+            // Process define/modify for non-base-stat variables (like HP, AC, Level, etc.)
+            charWidgets.forEach(w => {
+                if (w.bindsVariable && !baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
+                    if (w.variableRelType === 'define') {
+                        vars[w.bindsVariable] = getWidgetValue(w);
+                    }
+                }
+            });
+            charWidgets.forEach(w => {
+                if (w.bindsVariable && !baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
+                    if (w.variableRelType === 'modify') {
+                        vars[w.bindsVariable] = (vars[w.bindsVariable] || 0) + getWidgetValue(w);
+                    }
+                }
+            });
+
+            return vars;
+        }
+
         window.getActiveCharacterVariable = function (name) {
             if (typeof characters === 'undefined') return null;
             const char = characters.find(c => c.id === activeCharacterId);
-            if (char && char.variables && char.variables[name] !== undefined) {
-                return parseInt(char.variables[name]) || 0;
+            if (!char) return null;
+            const vars = getCalculatedVariables(char);
+            if (vars[name] !== undefined) {
+                return vars[name];
             }
             return null;
         };
@@ -8395,8 +8626,9 @@
             `;
 
             const char = characters.find(c => c.id === activeCharacterId);
-            if (char && char.variables) {
-                Object.keys(char.variables).forEach(name => {
+            if (char) {
+                const vars = getCalculatedVariables(char);
+                Object.keys(vars).forEach(name => {
                     optionsHtml += `<option value="${name}">${name}</option>`;
                 });
             }
@@ -8426,463 +8658,7 @@
             populateVariablesDropdown(divVar);
         }
 
-        function openResourcesModal(e) {
-            if (e) e.stopPropagation();
-            document.getElementById('char-menu').classList.add('hidden');
 
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char) return;
-
-            const titleEl = document.getElementById('resources-title-char');
-            if (titleEl) {
-                titleEl.innerText = `${char.name} Resources`;
-            }
-
-            if (!char.variables) {
-                char.variables = {};
-            }
-
-            // Show/hide operator container based on whether it is a Custom/None system character
-            const opContainer = document.getElementById('resources-operator-container');
-            if (opContainer) {
-                if (char.dndType === 'none') {
-                    opContainer.classList.remove('hidden');
-                } else {
-                    opContainer.classList.add('hidden');
-                }
-            }
-
-            // Load operator from localStorage or default to '>='
-            let savedOp = localStorage.getItem(`resources_op_${activeCharacterId}`) || '>=';
-            const opSelect = document.getElementById('resources-operator');
-            if (opSelect) opSelect.value = savedOp;
-
-            renderResourcesList();
-
-            // Populate quick node builder
-            const resChipVar = document.getElementById('res-node-variable');
-            if (resChipVar) populateVariablesDropdown(resChipVar);
-
-            // Show overlay
-            document.getElementById('resources-overlay').classList.remove('hidden');
-            document.getElementById('resources-overlay').classList.add('flex');
-            vibrate(5);
-        }
-
-        function preloadDdStats() {
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char) return;
-
-            if (!char.variables) {
-                char.variables = {};
-            }
-
-            const stats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
-            stats.forEach(stat => {
-                if (char.variables[stat] === undefined || char.variables[stat] === 0) {
-                    char.variables[stat] = 0;
-                }
-            });
-
-            if (char.variables["Level"] === undefined) {
-                char.variables["Level"] = 1;
-            }
-
-            // Automatically push/recreate associated arsenal rolls silently
-            stats.forEach(stat => {
-                createOrUpdateArsenal(stat, true);
-            });
-
-            persistArsenal();
-            renderResourcesList();
-            renderSavedQueues();
-            populateRulesVariableDropdowns();
-            vibrate(10);
-
-            const systemLabel = char.dndType === 'roll-under' ? 'd20 Roll Under (1d20 &le; Stat)' : 'd20 Roll Over (1d20 + Stat)';
-            showModal({
-                title: 'Stats Pre-loaded',
-                body: `Stats and Arsenal rolls successfully pre-loaded for <strong>${char.name}</strong>.<br><br>System configuration: <strong>${systemLabel}</strong>`,
-                alertOnly: true
-            });
-        }
-
-        function resetDdStats() {
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char) return;
-
-            showModal({
-                title: 'Reset Stats & Arsenal?',
-                body: `This will clear STR, DEX, CON, INT, WIS, CHA, Level and their associated Arsenal rolls for <strong>${char.name}</strong>, then recreate them using the <strong>${char.dndType === 'roll-under' ? 'd20 Roll Under' : 'd20 Roll Over'}</strong> rules. Custom resources will be untouched.`,
-                confirmText: 'Reset',
-                danger: true
-            }).then(confirmed => {
-                if (!confirmed) return;
-
-                const stats = ["STR", "DEX", "CON", "INT", "WIS", "CHA", "Level"];
-
-                // Remove variable keys
-                if (char.variables) {
-                    stats.forEach(stat => {
-                        delete char.variables[stat];
-                    });
-                }
-
-                // Filter out saved arsenal queues matching D&D stats for this character
-                engine.savedQueues = engine.savedQueues.filter(q => {
-                    const isDdStat = stats.includes(q.name);
-                    const isForActiveChar = q.characterId === activeCharacterId;
-                    return !(isDdStat && isForActiveChar);
-                });
-
-                preloadDdStats();
-            });
-        }
-
-        function addResourceNode() {
-            const operator = document.getElementById('res-node-operator').value;
-            const variable = document.getElementById('res-node-variable').value;
-            let multiplier = parseFloat(document.getElementById('res-node-multiplier').value);
-
-            if (!variable || variable === "No Variables") {
-                vibrate([20, 50, 20]);
-                return;
-            }
-
-            const newTerm = {
-                type: 'variable',
-                value: variable,
-                operator: operator,
-                multiplierType: multiplier === 1 ? 'none' : 'literal',
-                multiplierValue: multiplier === 1 ? 1 : multiplier,
-                divisorType: 'none',
-                divisorValue: 1,
-                roundMode: multiplier === 0.5 ? 'down' : 'none'
-            };
-
-            if (!Array.isArray(engine._flatMod)) {
-                engine._flatMod = [];
-            }
-
-            engine._flatMod.push(newTerm);
-
-            vibrate(10);
-            updateUI();
-
-            // Flash button
-            const btn = document.getElementById('res-add-node-btn');
-            const oldText = btn.innerText;
-            btn.innerText = 'Added!';
-            btn.classList.replace('bg-sky-500/20', 'bg-emerald-500/20');
-            btn.classList.replace('text-sky-400', 'text-emerald-400');
-            btn.classList.replace('border-sky-500/50', 'border-emerald-500/50');
-            setTimeout(() => {
-                btn.innerText = oldText;
-                btn.classList.replace('bg-emerald-500/20', 'bg-sky-500/20');
-                btn.classList.replace('text-emerald-400', 'text-sky-400');
-                btn.classList.replace('border-emerald-500/50', 'border-sky-500/50');
-            }, 800);
-        }
-
-        function closeResourcesModal() {
-            document.getElementById('resources-overlay').classList.add('hidden');
-            document.getElementById('resources-overlay').classList.remove('flex');
-            vibrate(5);
-        }
-
-        function saveResourcesOperator() {
-            const op = document.getElementById('resources-operator').value;
-            localStorage.setItem(`resources_op_${activeCharacterId}`, op);
-
-            // Re-render resources to update the UI buttons or display
-            renderResourcesList();
-            vibrate(5);
-        }
-
-        function changeCharacterSystem(val) {
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char) return;
-
-            char.dndType = val;
-            persistArsenal();
-
-            // Re-render resources list and refresh color configurations
-            renderResourcesList();
-            vibrate(10);
-        }
-
-        function renderResourcesList() {
-            const container = document.getElementById('resources-list-container');
-            if (!container) return;
-
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char || !char.variables) {
-                container.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-4">No variables found.</p>';
-                return;
-            }
-
-            // Display system select value
-            const selectEl = document.getElementById('char-system-select');
-            if (selectEl) {
-                selectEl.value = char.dndType || 'standard';
-                if (char.dndType === 'roll-under') {
-                    selectEl.className = "system-select theme-purple";
-                } else if (char.dndType === 'standard') {
-                    selectEl.className = "system-select theme-sky";
-                } else {
-                    selectEl.className = "system-select theme-slate";
-                }
-            }
-
-            const standardStats = ["STR", "DEX", "CON", "INT", "WIS", "CHA", "Level"];
-            const entries = Object.entries(char.variables);
-
-            let html = '';
-
-            entries.forEach(([name, value]) => {
-                const isCustom = !standardStats.includes(name);
-                const qEntry = engine.savedQueues.find(q => q.characterId === activeCharacterId && q.name === name);
-                const hasArsenal = !!qEntry;
-
-                html += `
-                <div class="flex items-center justify-between gap-3 bg-[#020617]/40 border border-white/5 px-3 py-1.5 rounded-xl h-11 shrink-0">
-                    <!-- Variable Name & Delete Custom -->
-                    <div class="flex items-center gap-1.5 min-w-[70px] max-w-[100px] truncate">
-                        <span class="text-xs font-bold text-[#e2e8f0] uppercase tracking-wider" title="${name}">${name}</span>
-                        ${isCustom ? `
-                        <button onclick="deleteCustomVariable('${name}')" class="text-rose-500/70 hover:text-rose-500 transition-colors p-0.5" title="Delete Resource">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
-                        ` : ''}
-                    </div>
- 
-                    <!-- Stepper (matching segmented-row, h-8 = 2rem) -->
-                    <div class="segmented-row h-8 bg-[#020617] flex items-center justify-between !p-0 w-24 shrink-0 focus-within:border-sky-500 focus-within:shadow-[0_0_15px_var(--accent-glow)]">
-                        <button onclick="adjustVariableValue('${name}', -1)" class="w-7.5 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-base font-bold select-none">－</button>
-                        <input type="text" inputmode="numeric" value="${value}" oninput="setVariableValue('${name}', this.value)"
-                            class="flex-1 bg-transparent text-sky-400 font-bold text-xs text-center outline-none hide-spinners w-8 leading-none" />
-                        <button onclick="adjustVariableValue('${name}', 1)" class="w-7.5 h-full flex items-center justify-center text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors rounded-none text-base font-bold select-none">＋</button>
-                    </div>
- 
-                    <!-- Include ADV/DIS Checkbox -->
-                    <div class="w-[85px] shrink-0 flex items-center justify-end">
-                        ${(name !== 'Level') ? `
-                        <label class="flex items-center gap-1.5 cursor-pointer select-none text-[10px] font-bold text-slate-400 hover:text-[#00d4ff] transition-colors">
-                            <input type="checkbox" onchange="toggleResourceAdvDis('${name}', this.checked)" ${hasArsenal && qEntry.includeAdvDis ? 'checked' : ''} 
-                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-0 w-3.5 h-3.5 cursor-pointer">
-                            <span>ADV/DIS</span>
-                        </label>
-                        ` : ''}
-                    </div>
-                </div>
-                `;
-            });
-
-            if (html === '') {
-                container.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-8">No stats or custom variables. Use the Pre-load button or Add Custom Resource below.</p>';
-            } else {
-                container.innerHTML = html;
-            }
-        }
-
-        function toggleResourceAdvDis(name, checked) {
-            let q = engine.savedQueues.find(sq => sq.characterId === activeCharacterId && sq.name === name);
-            if (!q && checked) {
-                // Silently create the arsenal entry first
-                createOrUpdateArsenal(name, true);
-                q = engine.savedQueues.find(sq => sq.characterId === activeCharacterId && sq.name === name);
-            }
-            if (q) {
-                q.includeAdvDis = checked;
-                persistSaved();
-                renderSavedQueues();
-            }
-            vibrate(5);
-        }
-
-        function adjustVariableValue(name, delta) {
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char || !char.variables) return;
-
-            let val = parseInt(char.variables[name]) || 0;
-            val += delta;
-            char.variables[name] = val;
-
-            persistArsenal();
-            renderResourcesList();
-            renderSavedQueues();
-            vibrate(5);
-        }
-
-        function setVariableValue(name, valStr) {
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char || !char.variables) return;
-
-            if (valStr === '-') {
-                char.variables[name] = '-';
-                persistArsenal();
-                renderSavedQueues();
-                return;
-            }
-
-            let val = parseInt(valStr);
-            if (isNaN(val)) val = 0;
-            char.variables[name] = val;
-
-            persistArsenal();
-            renderSavedQueues();
-        }
-
-        function createCustomVariable() {
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char) return;
-
-            if (!char.variables) {
-                char.variables = {};
-            }
-
-            const input = document.getElementById('new-resource-name');
-            const name = input.value.trim().toUpperCase();
-
-            if (!name) return;
-
-            if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
-                showModal({ title: 'Invalid Name', body: 'Resource name must start with a letter and contain only letters, numbers, or underscores.', alertOnly: true });
-                return;
-            }
-
-            if (char.variables[name] !== undefined) {
-                showModal({ title: 'Resource Exists', body: `A resource named "<strong>${name}</strong>" already exists.`, alertOnly: true });
-                return;
-            }
-
-            char.variables[name] = 0;
-            input.value = '';
-
-            persistArsenal();
-            renderResourcesList();
-            populateRulesVariableDropdowns();
-            vibrate(10);
-        }
-
-        function deleteCustomVariable(name) {
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char || !char.variables) return;
-
-            showModal({ title: `Delete Resource "${name}"?`, body: `Are you sure you want to delete the resource "<strong>${name}</strong>"? This will not delete any associated arsenal roll configurations.`, confirmText: 'Delete', danger: true }).then(ok => {
-                if (!ok) return;
-                delete char.variables[name];
-
-                persistArsenal();
-                renderResourcesList();
-                populateRulesVariableDropdowns();
-                vibrate(10);
-            });
-        }
-
-        function createOrUpdateArsenal(name, silent = false) {
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (!char) return;
-
-            const variables = char.variables || {};
-            const val = variables[name] || 0;
-            const op = document.getElementById('resources-operator')?.value || '<=';
-
-            let existing = engine.savedQueues.find(q => q.characterId === activeCharacterId && q.name === name);
-
-            const isDdStat = ["STR", "DEX", "CON", "INT", "WIS", "CHA"].includes(name);
-
-            let rules;
-            let flatVal = 0;
-            let shouldCheck = false;
-
-            if (isDdStat) {
-                if (char.dndType === 'roll-under') {
-                    flatVal = 0;
-                    rules = {
-                        rerollOp: "", rerollVal: null,
-                        explodeOp: "", explodeVal: null,
-                        targetMode: "sum",
-                        targetOp: "<=",
-                        targetVal: name,
-                        countThreshOp: "", countThreshVal: null,
-                        setsOp: "", setsVal: null
-                    };
-                    shouldCheck = true;
-                } else {
-                    flatVal = name;
-                    rules = {
-                        rerollOp: "", rerollVal: null,
-                        explodeOp: "", explodeVal: null,
-                        targetMode: "sum",
-                        targetOp: "",
-                        targetVal: null,
-                        countThreshOp: "", countThreshVal: null,
-                        setsOp: "", setsVal: null
-                    };
-                    shouldCheck = true;
-                }
-            } else {
-                const isRollUnder = op === '<=' || op === '<';
-                shouldCheck = isRollUnder;
-                flatVal = 0;
-                rules = {
-                    rerollOp: "", rerollVal: null,
-                    explodeOp: "", explodeVal: null,
-                    targetMode: "sum",
-                    targetOp: op,
-                    targetVal: name,
-                    countThreshOp: "", countThreshVal: null,
-                    setsOp: "", setsVal: null
-                };
-            }
-
-            if (existing) {
-                existing.queue = [{ sides: 20, count: 1 }];
-                existing.modifier = null;
-                existing.modLevel = 0;
-                existing.flat = flatVal;
-                existing.rules = rules;
-                existing.includeAdvDis = shouldCheck;
-                if (!existing.groupId) existing.groupId = activeGroupId;
-
-                persistSaved();
-                renderSavedQueues();
-                renderResourcesList();
-                vibrate(15);
-
-                if (!silent) {
-                    showModal({ title: 'Arsenal Updated', body: `Successfully updated arsenal for <strong>${name}</strong>.`, alertOnly: true });
-                }
-            } else {
-                const color = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)] || '#00d4ff';
-                const newSaved = {
-                    id: Date.now() + Math.floor(Math.random() * 1000),
-                    name: name,
-                    color: color,
-                    queue: [{ sides: 20, count: 1 }],
-                    modifier: null,
-                    modLevel: 0,
-                    flat: flatVal,
-                    rules: rules,
-                    characterId: activeCharacterId,
-                    groupId: activeGroupId,
-                    includeAdvDis: shouldCheck
-                };
-                engine.savedQueues.push(newSaved);
-                persistSaved();
-                renderSavedQueues();
-                renderResourcesList();
-                vibrate(15);
-
-                if (!silent) {
-                    const desc = isDdStat
-                        ? (char.dndType === 'roll-under' ? '1d20 &le; ' + name : '1d20 + ' + name)
-                        : `${op} ${val}`;
-                    showModal({ title: 'Arsenal Created', body: `Successfully created arsenal for <strong>${name}</strong> configured as <strong>${desc}</strong>.`, alertOnly: true });
-                }
-            }
-        }
 
         // Group CRUD
         let activeGroupMenuId = null;
@@ -9066,12 +8842,19 @@
             const filtered = engine.savedQueues.filter(q => {
                 const charMatch = q.characterId === activeCharacterId;
                 const grpMatch = q.groupId === activeGroupId;
+                
+                let match = false;
                 if (!q.characterId && !q.groupId) {
                     const firstChar = characters[0];
                     const firstCharFirstGroup = firstChar ? groups.find(g => g.characterId === firstChar.id)?.id : null;
-                    return activeCharacterId === (firstChar ? firstChar.id : null) && activeGroupId === firstCharFirstGroup;
+                    match = activeCharacterId === (firstChar ? firstChar.id : null) && activeGroupId === firstCharFirstGroup;
+                } else {
+                    match = charMatch && grpMatch;
                 }
-                return charMatch && grpMatch;
+
+                if (!match) return false;
+                if (q.hidden && !showHiddenWidgets) return false;
+                return true;
             });
 
             list.innerHTML = '';
@@ -9079,6 +8862,9 @@
             filtered.forEach(q => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative w-full';
+                if (q.hidden) {
+                    wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
+                }
                 wrapper.draggable = true;
                 wrapper.dataset.id = q.id;
 
@@ -9209,29 +8995,71 @@
 
                 let formula = '';
                 if (type === 'roller') {
-                    formula = (q.queue || []).map(dq => `${dq.count}d${dq.sides}`).join("+");
-                    if (Array.isArray(q.flat) && q.flat.length > 0) {
-                        q.flat.forEach(term => {
-                            let termStr = term.value;
-                            let suffix = "";
-                            if (term.multiplierType && term.multiplierType !== 'none') suffix += `*${term.multiplierValue}`;
-                            if (term.divisorType && term.divisorType !== 'none') suffix += `/${term.divisorValue}`;
-                            if (term.roundMode === 'up') suffix += '↑';
-                            if (term.roundMode === 'down') suffix += '↓';
-                            if (term.roundMode === 'round') suffix += '≈';
-                            let resolvedStr = "";
-                            if (term.type === 'variable') {
-                                const resolved = window.getActiveCharacterVariable(term.value);
-                                if (resolved !== null) resolvedStr = ` (${resolved >= 0 ? '+' : ''}${resolved})`;
+                    if (q.unifiedQueue && Array.isArray(q.unifiedQueue) && q.unifiedQueue.length > 0) {
+                        formula = q.unifiedQueue.map(node => {
+                            if (node.nodeType === 'node') {
+                                let txt = `${node.count}d${node.sides}`;
+                                if (node.rerollOp && node.rerollVal !== null) {
+                                    txt += ` rr${node.rerollOp.replace('>=', '≥').replace('<=', '≤')}${node.rerollVal}`;
+                                }
+                                if (node.explodeOp && node.explodeVal !== null) {
+                                    txt += ` ex${node.explodeOp.replace('>=', '≥').replace('<=', '≤')}${node.explodeVal}`;
+                                }
+                                return txt;
+                            } else if (node.nodeType === 'modifier' || node.nodeType === 'number') {
+                                const op = node.operator === '-' ? '-' : '+';
+                                let valStr = node.value;
+                                let inlineResolved = "";
+                                if (node.type === 'variable') {
+                                    const resolvedVar = window.getActiveCharacterVariable(node.value);
+                                    if (resolvedVar !== null) {
+                                        inlineResolved = ` (${resolvedVar >= 0 ? '+' : ''}${resolvedVar})`;
+                                    }
+                                }
+                                let mathIndicator = "";
+                                if (node.multiplierType && node.multiplierType !== 'none') {
+                                    mathIndicator += `*${node.multiplierValue}`;
+                                }
+                                if (node.divisorType && node.divisorType !== 'none') {
+                                    mathIndicator += `/${node.divisorValue}`;
+                                }
+                                if (node.roundMode && node.roundMode !== 'none') {
+                                    mathIndicator += ` (${node.roundMode === 'up' ? '↑' : node.roundMode === 'down' ? '↓' : '≈'})`;
+                                }
+                                return ` [${op}${valStr}${inlineResolved}${mathIndicator}]`;
+                            } else if (node.nodeType === 'operator') {
+                                const op = node.operator;
+                                const isAdvDis = op === 'ADV' || op === 'DIS';
+                                const opDisplay = op === '*' ? '×' : op === '/' ? '/' : (isAdvDis ? `${op}${node.modifierLevel > 1 ? '+' + (node.modifierLevel - 1) : ''}` : op);
+                                return ` ${opDisplay} `;
                             }
-                            formula += ` [${term.operator === '-' ? '-' : '+'}${termStr}${suffix}${resolvedStr}]`;
-                        });
-                    } else if (typeof q.flat === 'string' && q.flat !== '') {
-                        const resolvedVal = window.getActiveCharacterVariable(q.flat);
-                        const valStr = resolvedVal !== null ? ` (${resolvedVal >= 0 ? '+' : ''}${resolvedVal})` : '';
-                        formula += ` [${q.flat}${valStr}]`;
-                    } else if (typeof q.flat === 'number' && q.flat !== 0) {
-                        formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
+                            return '';
+                        }).join('').trim();
+                    } else {
+                        formula = (q.queue || []).map(dq => `${dq.count}d${dq.sides}`).join("+");
+                        if (Array.isArray(q.flat) && q.flat.length > 0) {
+                            q.flat.forEach(term => {
+                                let termStr = term.value;
+                                let suffix = "";
+                                if (term.multiplierType && term.multiplierType !== 'none') suffix += `*${term.multiplierValue}`;
+                                if (term.divisorType && term.divisorType !== 'none') suffix += `/${term.divisorValue}`;
+                                if (term.roundMode === 'up') suffix += '↑';
+                                if (term.roundMode === 'down') suffix += '↓';
+                                if (term.roundMode === 'round') suffix += '≈';
+                                let resolvedStr = "";
+                                if (term.type === 'variable') {
+                                    const resolved = window.getActiveCharacterVariable(term.value);
+                                    if (resolved !== null) resolvedStr = ` (${resolved >= 0 ? '+' : ''}${resolved})`;
+                                }
+                                formula += ` [${term.operator === '-' ? '-' : '+'}${termStr}${suffix}${resolvedStr}]`;
+                            });
+                        } else if (typeof q.flat === 'string' && q.flat !== '') {
+                            const resolvedVal = window.getActiveCharacterVariable(q.flat);
+                            const valStr = resolvedVal !== null ? ` (${resolvedVal >= 0 ? '+' : ''}${resolvedVal})` : '';
+                            formula += ` [${q.flat}${valStr}]`;
+                        } else if (typeof q.flat === 'number' && q.flat !== 0) {
+                            formula += ` [${q.flat > 0 ? '+' : ''}${q.flat}]`;
+                        }
                     }
                     if (q.modifier) formula += ` [${q.modifier}${q.modLevel > 1 ? '+' + (q.modLevel - 1) : ''}]`;
                     if (q.rules) {
@@ -9266,6 +9094,7 @@
                             </div>
                             <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
                             ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
                         </div>
                     `;
 
@@ -9278,7 +9107,7 @@
                                 </span>
                             </div>
                             <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
-                                 onclick="event.stopPropagation(); toggleCardAddonState(${q.id}, !${t.checked})"
+                                 onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
                                  style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
                             </div>
                         `;
@@ -9287,10 +9116,11 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
                             <div class="flex items-center gap-2 mt-1" onclick="event.stopPropagation()">
-                                <input type="number" value="${q.value}" onchange="changeStepperValueDirect(${q.id}, this.value, true)" class="w-14 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-14 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                                 <span class="text-slate-500 font-black text-lg">/</span>
-                                <input type="number" value="${q.max}" onchange="changeStepperValueDirect(${q.id}, this.value, false)" class="w-14 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-slate-400 font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <input type="number" value="${q.max}" onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-14 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-slate-400 font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                             </div>
                         </div>
                     `;
@@ -9298,14 +9128,25 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2 pr-8">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
                             <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${q.checked ? 'text-white' : 'text-slate-500'}">
-                                ${q.checked ? q.labelOn : q.labelOff}
+                                    ${q.checked ? q.labelOn : q.labelOff}
                             </span>
                         </div>
                         <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300" 
                              style="background-color: ${q.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${q.checked ? q.color : 'transparent'}">
+                        </div>
+                    `;
+                } else if (type === 'number') {
+                    innerHtml += `
+                        <div class="flex-grow min-w-0 pl-2 pr-2">
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2 mr-8 shrink-0 select-none" onclick="event.stopPropagation()">
+                            <input type="number" value="${q.value}" onchange="changeNumberValueDirect('${q.id}', this.value)" class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                         </div>
                     `;
                 } else if (type === 'text') {
@@ -9401,18 +9242,18 @@
                 const otherGroups = filtered.length > 0 ? groups.filter(g => g.characterId === activeCharacterId && g.id !== activeGroupId) : [];
                 const moveGroupHtml = otherGroups.length > 0 ? `
                     <div class="h-px bg-white/5 my-1"></div>
-                    <button onclick="moveQueueToGroup(${q.id}, event)" class="menu-item">
+                    <button onclick="moveQueueToGroup('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
                         <span>Move to Group</span>
                     </button>
                 ` : '';
 
                 const editLoadoutButtonHtml = (type === 'roller') ? `
-                    <button onclick="loadQueue(${q.id}, event)" class="menu-item">
+                    <button onclick="loadQueue('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         <span>Edit Loadout</span>
                     </button>
-                    <button onclick="updateSavedQueue(${q.id}, event)" class="menu-item">
+                    <button onclick="updateSavedQueue('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                         <span>Overwrite</span>
                     </button>
@@ -9424,17 +9265,23 @@
                 menuContainer.style.zIndex = '100';
                 menuContainer.innerHTML = `
                     ${editLoadoutButtonHtml}
-                    <button onclick="configureSavedWidget(${q.id}, event)" class="menu-item">
+                    <button onclick="configureSavedWidget('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         <span>Configure</span>
                     </button>
-                    <button onclick="openColorPicker(${q.id}, event)" class="menu-item">
+                    <button onclick="openColorPicker('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
                         <span>Appearance</span>
                     </button>
+                    <button onclick="toggleWidgetHiddenState('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                        <span>${q.hidden ? 'Show Widget' : 'Hide Widget'}</span>
+                    </button>
                     ${moveGroupHtml}
                     <div class="h-px bg-white/5 my-1"></div>
-                    <button onclick="deleteQueue(${q.id}, event)" class="menu-item danger">
+                    <button onclick="deleteQueue('${q.id}', event)" class="menu-item danger">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                         <span>Delete</span>
                     </button>
@@ -9571,7 +9418,7 @@
                 const item = engine.savedQueues.find(q => q.id === itemId);
                 if (!item) return null;
 
-                const queue = item.queue;
+                const queue = item.unifiedQueue || item.queue;
                 const overrides = {
                     modifier: stepForcedModifier || item.modifier,
                     modLevel: stepForcedModifier ? Math.max(1, item.modLevel || 1) : item.modLevel,
@@ -9741,7 +9588,7 @@
                     }
 
                     // "Fire-and-forget": Roll using item settings 
-                    forcedQueue = item.queue;
+                    forcedQueue = item.unifiedQueue || item.queue;
                     isInstant = false;
                     rollOverrides = {
                         modifier: options.forcedModifier || item.modifier,
@@ -10357,7 +10204,7 @@
             if (item.chain && item.chain.preRoll && item.chain.preRoll.arsenalId) {
                 const preItem = engine.savedQueues.find(q => q.id === item.chain.preRoll.arsenalId);
                 if (preItem) {
-                    const preRes = engine.calculateRoll(preItem.queue, false, {
+                    const preRes = engine.calculateRoll(preItem.unifiedQueue || preItem.queue, false, {
                         modifier: preItem.modifier,
                         modLevel: preItem.modLevel,
                         flat: preItem.flat,
@@ -10371,7 +10218,7 @@
             }
 
             // Step 2: Primary roll
-            const primaryRes = engine.calculateRoll(item.queue, false, {
+            const primaryRes = engine.calculateRoll(item.unifiedQueue || item.queue, false, {
                 modifier: item.modifier,
                 modLevel: item.modLevel,
                 flat: item.flat,
@@ -10394,7 +10241,7 @@
             if (postRollId) {
                 const postItem = engine.savedQueues.find(q => q.id === postRollId);
                 if (postItem) {
-                    const postRes = engine.calculateRoll(postItem.queue, false, {
+                    const postRes = engine.calculateRoll(postItem.unifiedQueue || postItem.queue, false, {
                         modifier: postItem.modifier,
                         modLevel: postItem.modLevel,
                         flat: postItem.flat,
@@ -10825,6 +10672,7 @@
             updateRulesUI();
             renderCharacterSelect();
             renderGroupTabs();
+            updateShowHiddenWidgetsButton();
         };
 
         // =========================================================================
@@ -10869,7 +10717,6 @@
         const modalOverlaysList = [
             document.getElementById('chain-config-overlay'),
             document.getElementById('color-picker-overlay'),
-            document.getElementById('resources-overlay'),
             document.getElementById('char-creation-overlay'),
             document.getElementById('modal-overlay')
         ];
@@ -10886,7 +10733,6 @@
                     { id: 'modal-overlay', type: 'generic' },
                     { id: 'chain-config-overlay', type: 'chain' },
                     { id: 'char-creation-overlay', type: 'char' },
-                    { id: 'resources-overlay', type: 'resources' },
                     { id: 'color-picker-overlay', type: 'color' }
                 ];
 

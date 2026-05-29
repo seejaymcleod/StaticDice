@@ -214,7 +214,7 @@ window.addEventListener('load', () => {
                 if (spawnedGroups.length !== 2) throw new Error("Should have 2 groups created");
                 
                 const spawnedWidgets = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
-                if (spawnedWidgets.length !== 8) throw new Error("Should have 8 widgets spawned");
+                if (spawnedWidgets.length !== 17) throw new Error("Should have 17 widgets spawned");
                 
                 const originalCharId = activeCharacterId;
                 await cloneCharacter(originalCharId);
@@ -227,7 +227,7 @@ window.addEventListener('load', () => {
                 if (clonedGroups[0].id === spawnedGroups[0].id) throw new Error("Cloned groups should have new IDs");
                 
                 const clonedWidgets = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
-                if (clonedWidgets.length !== 8) throw new Error("Cloned widgets count incorrect");
+                if (clonedWidgets.length !== 17) throw new Error("Cloned widgets count incorrect");
                 
                 // Verify direct renaming via renameActiveCharacter
                 renameActiveCharacter('Direct Input Renamed Name');
