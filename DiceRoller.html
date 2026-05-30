@@ -1565,10 +1565,19 @@
             <div class="space-y-2 pt-2 border-t border-white/5 animate-fade-in">
                 <div class="flex items-center justify-between">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Templates Library</label>
-                    <button onclick="createCustomTemplate(event)" class="p-1 hover:text-[#00d4ff] text-slate-500 transition-colors" title="Create Custom Template">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>
-                    </button>
+                    <div class="flex items-center gap-1">
+                        <button onclick="document.getElementById('import-templates-input').click()" class="p-1 hover:text-[#00d4ff] text-slate-500 transition-colors" title="Import Templates">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        </button>
+                        <button onclick="exportTemplates()" class="p-1 hover:text-[#00d4ff] text-slate-500 transition-colors" title="Export Templates">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        </button>
+                        <button onclick="createCustomTemplate(event)" class="p-1 hover:text-[#00d4ff] text-slate-500 transition-colors" title="Create Custom Template">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>
+                        </button>
+                    </div>
                 </div>
+                <input type="file" id="import-templates-input" class="hidden" accept=".json" onchange="importTemplates(event)">
                 <div id="binder-templates-list" class="grid grid-cols-1 gap-2">
                     <!-- Templates dynamically rendered here -->
                 </div>
@@ -2892,6 +2901,7 @@
 
     <script src="DataArchitecture.js"></script>
     <script src="DiceEngine.js"></script>
+    <script src="Assets/TemplatesData.js"></script>
     <script>
         // =========================================================================
         // Haptic & Visual Interaction Layer
@@ -6855,280 +6865,7 @@
         }
 
         function getInitialTemplates() {
-            return [
-                {
-                    id: 'template_sd_character',
-                    name: 'Shadowdark Character (Blank)',
-                    system: 'Shadowdark',
-                    dndType: 'standard',
-                    isDefault: true,
-                    variables: {
-                        "LVL": "1",
-                        "HP": "10",
-                        "MaxHP": "10",
-                        "AC": "10",
-                        "STR": "10", "DEX": "10", "CON": "10", "INT": "10", "WIS": "10", "CHA": "10",
-                        "STR_mod": "0", "DEX_mod": "0", "CON_mod": "0", "INT_mod": "0", "WIS_mod": "0", "CHA_mod": "0"
-                    },
-                    groups: [
-                        { id: 'stats', name: 'Stats', color: '#00d4ff' },
-                        { id: 'combat', name: 'Combat', color: '#ff003c' }
-                    ],
-                    widgets: [
-                        {
-                            id: 'w_hp',
-                            groupId: 'stats',
-                            name: 'HP',
-                            widgetType: 'stepper',
-                            min: 0,
-                            max: 10,
-                            value: 10
-                        },
-                        {
-                            id: 'w_ac',
-                            groupId: 'stats',
-                            name: 'AC',
-                            widgetType: 'number',
-                            value: 10,
-                            bindsVariable: 'AC',
-                            variableRelType: 'define'
-                        },
-                        {
-                            id: 'w_lvl',
-                            groupId: 'stats',
-                            name: 'Level',
-                            widgetType: 'number',
-                            value: 1,
-                            bindsVariable: 'LVL',
-                            variableRelType: 'define'
-                        },
-                        {
-                            id: 'w_str',
-                            groupId: 'stats',
-                            name: 'Strength Check',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 20, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        },
-                        {
-                            id: 'w_dex',
-                            groupId: 'stats',
-                            name: 'Dexterity Check',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 20, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        },
-                        {
-                            id: 'w_con',
-                            groupId: 'stats',
-                            name: 'Constitution Check',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 20, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'CON_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        },
-                        {
-                            id: 'w_int',
-                            groupId: 'stats',
-                            name: 'Intelligence Check',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 20, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'INT_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        },
-                        {
-                            id: 'w_wis',
-                            groupId: 'stats',
-                            name: 'Wisdom Check',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 20, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'WIS_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        },
-                        {
-                            id: 'w_cha',
-                            groupId: 'stats',
-                            name: 'Charisma Check',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 20, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'CHA_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        },
-                        {
-                            id: 'w_score_str',
-                            groupId: 'stats',
-                            name: 'STR Score',
-                            widgetType: 'number',
-                            value: 10,
-                            bindsVariable: 'STR',
-                            variableRelType: 'define',
-                            hidden: true
-                        },
-                        {
-                            id: 'w_score_dex',
-                            groupId: 'stats',
-                            name: 'DEX Score',
-                            widgetType: 'number',
-                            value: 10,
-                            bindsVariable: 'DEX',
-                            variableRelType: 'define',
-                            hidden: true
-                        },
-                        {
-                            id: 'w_score_con',
-                            groupId: 'stats',
-                            name: 'CON Score',
-                            widgetType: 'number',
-                            value: 10,
-                            bindsVariable: 'CON',
-                            variableRelType: 'define',
-                            hidden: true
-                        },
-                        {
-                            id: 'w_score_int',
-                            groupId: 'stats',
-                            name: 'INT Score',
-                            widgetType: 'number',
-                            value: 10,
-                            bindsVariable: 'INT',
-                            variableRelType: 'define',
-                            hidden: true
-                        },
-                        {
-                            id: 'w_score_wis',
-                            groupId: 'stats',
-                            name: 'WIS Score',
-                            widgetType: 'number',
-                            value: 10,
-                            bindsVariable: 'WIS',
-                            variableRelType: 'define',
-                            hidden: true
-                        },
-                        {
-                            id: 'w_score_cha',
-                            groupId: 'stats',
-                            name: 'CHA Score',
-                            widgetType: 'number',
-                            value: 10,
-                            bindsVariable: 'CHA',
-                            variableRelType: 'define',
-                            hidden: true
-                        },
-                        {
-                            id: 'w_atk',
-                            groupId: 'combat',
-                            name: 'Melee Attack Roll',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 20, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        },
-                        {
-                            id: 'w_dmg',
-                            groupId: 'combat',
-                            name: 'Sword Damage Roll',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 8, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    id: 'template_sd_monster',
-                    name: 'Shadowdark Monster (Blank)',
-                    system: 'Shadowdark',
-                    dndType: 'monster',
-                    isDefault: true,
-                    variables: {
-                        "HP": "5",
-                        "MaxHP": "5",
-                        "AC": "10",
-                        "LVL": "1",
-                        "ATK_mod": "0"
-                    },
-                    groups: [
-                        { id: 'actions', name: 'Actions', color: '#ff003c' },
-                        { id: 'stats', name: 'Stats', color: '#00d4ff' }
-                    ],
-                    widgets: [
-                        {
-                            id: 'w_m_hp',
-                            groupId: 'stats',
-                            name: 'HP',
-                            widgetType: 'stepper',
-                            min: 0,
-                            max: 5,
-                            value: 5
-                        },
-                        {
-                            id: 'w_m_ac',
-                            groupId: 'stats',
-                            name: 'AC',
-                            widgetType: 'number',
-                            value: 10,
-                            bindsVariable: 'AC',
-                            variableRelType: 'define'
-                        },
-                        {
-                            id: 'w_m_lvl',
-                            groupId: 'stats',
-                            name: 'Level',
-                            widgetType: 'number',
-                            value: 1,
-                            bindsVariable: 'LVL',
-                            variableRelType: 'define'
-                        },
-                        {
-                            id: 'w_m_atk_mod',
-                            groupId: 'stats',
-                            name: 'Attack Modifier',
-                            widgetType: 'number',
-                            value: 0,
-                            bindsVariable: 'ATK_mod',
-                            variableRelType: 'define'
-                        },
-                        {
-                            id: 'w_m_atk',
-                            groupId: 'actions',
-                            name: 'Claw Attack Roll',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 20, count: 1 },
-                                { nodeType: 'operator', operator: '+' },
-                                { nodeType: 'modifier', type: 'variable', value: 'ATK_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                            ]
-                        },
-                        {
-                            id: 'w_m_dmg',
-                            groupId: 'actions',
-                            name: 'Claw Damage Roll',
-                            widgetType: 'roller',
-                            unifiedQueue: [
-                                { nodeType: 'node', sides: 6, count: 1 }
-                            ]
-                        }
-                    ]
-                }
-            ];
+            return window.StaticDiceTemplates || [];
         }
 
         function loadTemplates() {
@@ -7140,6 +6877,60 @@
                 }
             } catch (e) {}
             templates = [...getInitialTemplates(), ...custom];
+        }
+
+        function exportTemplates() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(templates, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "templates.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importTemplates(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        // Merge logic: ensure we don't import default templates as custom, and merge custom ones.
+                        const newCustomTemplates = imported.filter(t => !t.isDefault);
+                        
+                        let addedCount = 0;
+                        newCustomTemplates.forEach(t => {
+                            if (!templates.find(ext => ext.id === t.id)) {
+                                templates.push(t);
+                                addedCount++;
+                            }
+                        });
+                        
+                        persistTemplates();
+                        renderTemplates();
+                        
+                        await showModal({
+                            title: 'Templates Imported',
+                            body: `Successfully imported ${addedCount} new templates.`,
+                            alertOnly: true
+                        });
+                    } else {
+                        throw new Error("Invalid format");
+                    }
+                } catch (err) {
+                    console.error('Error importing templates:', err);
+                    await showModal({
+                        title: 'Import Failed',
+                        body: 'The selected file is not a valid templates JSON file.',
+                        alertOnly: true
+                    });
+                }
+                event.target.value = ''; // Reset input
+            };
+            reader.readAsText(file);
         }
 
         function persistTemplates() {
