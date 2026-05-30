@@ -54,6 +54,7 @@ window.StaticDiceTemplates = [
                 groupId: 'stats',
                 name: 'Strength Check',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -65,6 +66,7 @@ window.StaticDiceTemplates = [
                 groupId: 'stats',
                 name: 'Dexterity Check',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -76,6 +78,7 @@ window.StaticDiceTemplates = [
                 groupId: 'stats',
                 name: 'Constitution Check',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -87,6 +90,7 @@ window.StaticDiceTemplates = [
                 groupId: 'stats',
                 name: 'Intelligence Check',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -98,6 +102,7 @@ window.StaticDiceTemplates = [
                 groupId: 'stats',
                 name: 'Wisdom Check',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -109,6 +114,7 @@ window.StaticDiceTemplates = [
                 groupId: 'stats',
                 name: 'Charisma Check',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
