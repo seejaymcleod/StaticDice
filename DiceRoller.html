@@ -5755,7 +5755,7 @@
 
         function renameQueue(id, event) {
             event.stopPropagation();
-            const item = engine.savedQueues.find(q => q.id === id);
+            const item = engine.findSavedQueue(id);
             if (!item) return;
             showModal({
                 title: 'Rename Loadout',
@@ -5781,7 +5781,7 @@
             activeMenuId = null;
 
             chainTargetId = id;
-            const item = engine.savedQueues.find(q => q.id === id);
+            const item = engine.findSavedQueue(id);
             if (!item) return;
 
             const overlay = document.getElementById('chain-config-overlay');
@@ -5978,7 +5978,7 @@
             document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
             activeMenuId = null;
 
-            const item = engine.savedQueues.find(q => q.id === id);
+            const item = engine.findSavedQueue(id);
             if (!item) return;
 
             showModal({
@@ -6436,7 +6436,7 @@
         }
 
         function toggleArsenalAdvDis(id, checked) {
-            const item = engine.savedQueues.find(q => q.id === id);
+            const item = engine.findSavedQueue(id);
             if (item) {
                 item.includeAdvDis = checked;
                 persistSaved();
@@ -6501,7 +6501,7 @@
             if (e) e.stopPropagation();
             closeAllArsenalMenus();
 
-            const item = engine.savedQueues.find(q => q.id === id);
+            const item = engine.findSavedQueue(id);
             if (!item) return;
             showModal({
                 title: 'Rename Loadout',
@@ -7901,7 +7901,7 @@
             if (event) event.stopPropagation();
             closeAllArsenalMenus();
 
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (!q) return;
 
             editingWidgetId = widgetId;
@@ -8083,7 +8083,7 @@
             let detailText = document.getElementById('widget-detail-text').value.trim() || null;
 
             if (editingWidgetId !== null) {
-                const q = engine.savedQueues.find(x => x.id === editingWidgetId);
+                const q = engine.findSavedQueue(editingWidgetId);
                 if (q) {
                     q.name = name;
                     q.widgetType = type;
@@ -8245,7 +8245,7 @@
         }
 
         function changeNumberValueDirect(widgetId, newValue) {
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'number') {
                 q.value = parseInt(newValue, 10) || 0;
                 persistSaved();
@@ -8261,7 +8261,7 @@
         function toggleWidgetHiddenState(widgetId, event) {
             if (event) event.stopPropagation();
             closeAllArsenalMenus();
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (q) {
                 q.hidden = !q.hidden;
                 persistSaved();
@@ -8271,7 +8271,7 @@
         }
 
         function changeStepperValueDirect(widgetId, newValue, isCurrent) {
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'stepper') {
                 const parsed = parseInt(newValue, 10) || 0;
                 if (isCurrent) {
@@ -8298,7 +8298,7 @@
         }
 
         function changeStepperValue(widgetId, delta) {
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'stepper') {
                 q.value = Math.max(q.min ?? 0, Math.min(q.max ?? 100, q.value + delta));
                 if (q.name.toLowerCase() === 'hit points' || q.name.toLowerCase() === 'hp') {
@@ -8318,7 +8318,7 @@
         }
 
         function changeToggleValue(widgetId, checked) {
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'toggle') {
                 q.checked = checked;
                 persistSaved();
@@ -8328,7 +8328,7 @@
         }
 
         function toggleTextCardCollapsed(widgetId) {
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'text') {
                 q.collapsed = !(q.collapsed ?? false);
                 persistSaved();
@@ -8338,7 +8338,7 @@
         }
 
         function changeCardCounterVal(widgetId, delta) {
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (q && q.addonCounter) {
                 const c = q.addonCounter;
                 c.value = Math.max(0, Math.min(c.max, c.value + delta));
@@ -8349,7 +8349,7 @@
         }
 
         function toggleCardAddonState(widgetId, checked) {
-            const q = engine.savedQueues.find(x => x.id === widgetId);
+            const q = engine.findSavedQueue(widgetId);
             if (q && q.addonToggle) {
                 q.addonToggle.checked = checked;
                 persistSaved();
@@ -8628,19 +8628,19 @@
         function moveQueueToGroup(id, e) {
             if (e) e.stopPropagation();
             closeAllArsenalMenus();
-            const item = engine.savedQueues.find(q => q.id === id);
+            const item = engine.findSavedQueue(id);
             if (!item) return;
             const charGroups = groups.filter(g => g.characterId === activeCharacterId);
             const options = charGroups.filter(g => g.id !== item.groupId);
             if (options.length === 0) { showModal({ title: 'No Other Groups', body: 'Create another group first to move this loadout.', alertOnly: true }); return; }
             const optHtml = '<div class="flex flex-col gap-2 mt-3">' + options.map(g =>
-                `<button onclick="document.getElementById('modal-overlay').classList.add('hidden');document.getElementById('modal-overlay').classList.remove('flex');assignQueueGroup(${id},'${g.id}')" class="py-2 px-3 rounded-xl border border-white/10 text-xs font-bold text-[#e2e8f0] hover:bg-white/5 flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background:${g.color}"></span>${g.name}</button>`
+                `<button onclick="document.getElementById('modal-overlay').classList.add('hidden');document.getElementById('modal-overlay').classList.remove('flex');assignQueueGroup('${id}','${g.id}')" class="py-2 px-3 rounded-xl border border-white/10 text-xs font-bold text-[#e2e8f0] hover:bg-white/5 flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background:${g.color}"></span>${g.name}</button>`
             ).join('') + '</div>';
             showModal({ title: 'Move to Group', body: optHtml, alertOnly: true, confirmText: 'Cancel' });
         }
 
         function assignQueueGroup(id, groupId) {
-            const item = engine.savedQueues.find(q => q.id === id);
+            const item = engine.findSavedQueue(id);
             if (item) {
                 item.groupId = groupId;
                 persistSaved();
@@ -8995,9 +8995,10 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2">
                             <div class="flex items-center gap-1.5 justify-between">
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || ''}</div>
                                 <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
                             </div>
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
                             <div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed ? 'hidden' : ''}">${q.text || 'Empty'}</div>
                         </div>
                     `;
@@ -9270,7 +9271,7 @@
 
             // A modular recursive runner so that we can support multi-hop chains!
             async function rollStep(itemId, name, color, stepForcedModifier = null) {
-                const item = engine.savedQueues.find(q => q.id === itemId);
+                const item = engine.findSavedQueue(itemId);
                 if (!item) return null;
 
                 const queue = item.unifiedQueue || item.queue;
@@ -9319,7 +9320,7 @@
 
             try {
                 // Get primary item
-                const startItem = engine.savedQueues.find(q => q.id === startId);
+                const startItem = engine.findSavedQueue(startId);
                 if (!startItem) throw new Error("Start loadout not found");
 
                 const chain = startItem.chain || {};
@@ -9327,7 +9328,7 @@
                 // A. Check if pre-roll exists
                 let prePassed = true;
                 if (chain.preRoll && chain.preRoll.arsenalId) {
-                    const preItem = engine.savedQueues.find(q => q.id === chain.preRoll.arsenalId);
+                    const preItem = engine.findSavedQueue(chain.preRoll.arsenalId);
                     if (preItem) {
                         const preRes = await rollStep(chain.preRoll.arsenalId, preItem.name, preItem.color || '#00d4ff');
                         if (preRes) {
@@ -9367,7 +9368,7 @@
                         }
 
                         if (postRollTargetId) {
-                            const postItem = engine.savedQueues.find(q => q.id === postRollTargetId);
+                            const postItem = engine.findSavedQueue(postRollTargetId);
                             if (postItem) {
                                 const postRes = await rollStep(postRollTargetId, postItem.name, postItem.color || '#00d4ff');
                                 if (postRes) {
@@ -9408,7 +9409,7 @@
             let rollOverrides = null;
 
             if (options.arsenalId) {
-                const item = engine.savedQueues.find(q => q.id === options.arsenalId);
+                const item = engine.findSavedQueue(options.arsenalId);
                 if (item) {
                     if (item.addonToggle && !item.addonToggle.checked) {
                         vibrate([45, 50, 45]);
@@ -10052,12 +10053,12 @@
         let auditorIsRunning = false;
 
         function simulateRollChainIteration(itemId) {
-            const item = engine.savedQueues.find(q => q.id === itemId);
+            const item = engine.findSavedQueue(itemId);
             if (!item) return 0;
 
             // Step 1: Pre-roll
             if (item.chain && item.chain.preRoll && item.chain.preRoll.arsenalId) {
-                const preItem = engine.savedQueues.find(q => q.id === item.chain.preRoll.arsenalId);
+                const preItem = engine.findSavedQueue(item.chain.preRoll.arsenalId);
                 if (preItem) {
                     const preRes = engine.calculateRoll(preItem.unifiedQueue || preItem.queue, false, {
                         modifier: preItem.modifier,
@@ -10094,7 +10095,7 @@
             }
 
             if (postRollId) {
-                const postItem = engine.savedQueues.find(q => q.id === postRollId);
+                const postItem = engine.findSavedQueue(postRollId);
                 if (postItem) {
                     const postRes = engine.calculateRoll(postItem.unifiedQueue || postItem.queue, false, {
                         modifier: postItem.modifier,
@@ -10129,7 +10130,7 @@
             const modLvl = engine.modifierLevel;
             const activeRules = engine.rollRules;
 
-            const activeLoadout = activeLoadoutId ? engine.savedQueues.find(q => q.id === activeLoadoutId) : null;
+            const activeLoadout = activeLoadoutId ? engine.findSavedQueue(activeLoadoutId) : null;
             const hasActiveChain = activeLoadout && activeLoadout.chain && (
                 (activeLoadout.chain.preRoll && activeLoadout.chain.preRoll.arsenalId) ||
                 (activeLoadout.chain.postRoll && (
