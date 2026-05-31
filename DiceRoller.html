@@ -433,10 +433,45 @@
         }
 
         /* Drag & Drop Arsenal */
-        .arsenal-item-wrapper.drag-over>.saved-item {
-            border-color: rgba(0, 212, 255, 0.6) !important;
-            box-shadow: 0 0 18px rgba(0, 212, 255, 0.2);
-            transform: translateY(-2px);
+        .arsenal-item-wrapper {
+            transition: padding 0.15s ease-out;
+            position: relative;
+        }
+
+        .arsenal-item-wrapper.drag-over-before {
+            padding-top: 3.5rem;
+        }
+
+        .arsenal-item-wrapper.drag-over-after {
+            padding-bottom: 3.5rem;
+        }
+
+        .arsenal-item-wrapper.drag-over-before::before,
+        .arsenal-item-wrapper.drag-over-after::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 3rem;
+            border: 2px dashed rgba(0, 212, 255, 0.4);
+            border-radius: 0.75rem;
+            background: rgba(0, 212, 255, 0.05);
+            pointer-events: none;
+            box-sizing: border-box;
+            animation: placeholder-pulse 1.2s ease-in-out infinite;
+        }
+
+        .arsenal-item-wrapper.drag-over-before::before {
+            top: 0;
+        }
+
+        .arsenal-item-wrapper.drag-over-after::before {
+            bottom: 0;
+        }
+
+        .arsenal-item-wrapper.drag-over-before>.saved-item,
+        .arsenal-item-wrapper.drag-over-after>.saved-item {
+            border-color: rgba(0, 212, 255, 0.4) !important;
         }
 
         .arsenal-item-wrapper.dragging {
@@ -8745,57 +8780,15 @@
 
             filtered.forEach(q => {
                 const type = q.widgetType || 'roller';
-                const wrapper = document.createElement('div');
-                wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative w-full';
-                if (q.hidden) {
-                    wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
-                }
-                wrapper.draggable = true;
-                wrapper.dataset.id = q.id;
-
-                wrapper.addEventListener('dragstart', (e) => {
-                    dragSrcId = q.id;
-                    wrapper.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                });
-                wrapper.addEventListener('dragend', () => {
-                    wrapper.classList.remove('dragging');
-                    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-                });
-                wrapper.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    if (dragSrcId === q.id) return;
-                    wrapper.classList.add('drag-over');
-                });
-                wrapper.addEventListener('dragleave', () => wrapper.classList.remove('drag-over'));
-                wrapper.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    wrapper.classList.remove('drag-over');
-                    if (dragSrcId === null || dragSrcId === q.id) return;
-                    const srcIdx = engine.savedQueues.findIndex(x => x.id === dragSrcId);
-                    const tgtIdx = engine.savedQueues.findIndex(x => x.id === q.id);
-                    if (srcIdx > -1 && tgtIdx > -1) {
-                        const [moved] = engine.savedQueues.splice(srcIdx, 1);
-                        moved.groupId = activeGroupId;
-                        moved.characterId = activeCharacterId;
-                        const newTgt = engine.savedQueues.findIndex(x => x.id === q.id);
-                        engine.savedQueues.splice(newTgt, 0, moved);
-                        persistSaved();
-                        renderSavedQueues();
-                    }
-                    dragSrcId = null;
-                });
-
-                const item = document.createElement('div');
-                item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
-                item.dataset.id = q.id;
-
+                
                 let holdTimer = null;
                 let isHold = false;
+                let hasMoved = false;
                 let startX = 0, startY = 0;
 
                 const startHold = (e) => {
                     isHold = false;
+                    hasMoved = false;
                     const touch = e.touches ? e.touches[0] : e;
                     startX = touch.clientX;
                     startY = touch.clientY;
@@ -8816,8 +8809,75 @@
                     const touch = e.touches ? e.touches[0] : e;
                     if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
                         cancelHold();
+                        hasMoved = true;
                     }
                 };
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative w-full';
+                if (q.hidden) {
+                    wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
+                }
+                wrapper.draggable = true;
+                wrapper.dataset.id = q.id;
+
+                wrapper.addEventListener('dragstart', (e) => {
+                    dragSrcId = q.id;
+                    wrapper.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    cancelHold();
+                    hasMoved = true;
+                });
+                wrapper.addEventListener('dragend', () => {
+                    wrapper.classList.remove('dragging');
+                    document.querySelectorAll('.drag-over-before, .drag-over-after').forEach(el => el.classList.remove('drag-over-before', 'drag-over-after'));
+                    hasMoved = false;
+                });
+                wrapper.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (dragSrcId === q.id) return;
+                    
+                    const rect = wrapper.getBoundingClientRect();
+                    const middleY = rect.top + rect.height / 2;
+                    const isAfter = e.clientY > middleY;
+                    
+                    if (isAfter) {
+                        wrapper.classList.remove('drag-over-before');
+                        wrapper.classList.add('drag-over-after');
+                    } else {
+                        wrapper.classList.remove('drag-over-after');
+                        wrapper.classList.add('drag-over-before');
+                    }
+                });
+                wrapper.addEventListener('dragleave', () => wrapper.classList.remove('drag-over-before', 'drag-over-after'));
+                wrapper.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const isAfter = wrapper.classList.contains('drag-over-after');
+                    wrapper.classList.remove('drag-over-before', 'drag-over-after');
+                    
+                    if (dragSrcId === null || dragSrcId === q.id) return;
+                    const srcIdx = engine.savedQueues.findIndex(x => x.id === dragSrcId);
+                    const tgtIdx = engine.savedQueues.findIndex(x => x.id === q.id);
+                    if (srcIdx > -1 && tgtIdx > -1) {
+                        const [moved] = engine.savedQueues.splice(srcIdx, 1);
+                        moved.groupId = activeGroupId;
+                        moved.characterId = activeCharacterId;
+                        let newTgt = engine.savedQueues.findIndex(x => x.id === q.id);
+                        if (isAfter) {
+                            newTgt = newTgt + 1;
+                        }
+                        engine.savedQueues.splice(newTgt, 0, moved);
+                        persistSaved();
+                        renderSavedQueues();
+                    }
+                    dragSrcId = null;
+                    hasMoved = false;
+                });
+
+
+                const item = document.createElement('div');
+                item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
+                item.dataset.id = q.id;
 
                 item.addEventListener('touchstart', startHold, { passive: true });
                 item.addEventListener('touchend', (e) => {
@@ -8826,9 +8886,15 @@
                         e.preventDefault();
                         e.stopPropagation();
                     }
+                    setTimeout(() => {
+                        hasMoved = false;
+                    }, 50);
                 });
                 item.addEventListener('touchmove', moveHold, { passive: true });
-                item.addEventListener('touchcancel', cancelHold, { passive: true });
+                item.addEventListener('touchcancel', (e) => {
+                    cancelHold();
+                    hasMoved = false;
+                });
 
                 item.addEventListener('mousedown', (e) => {
                     if (e.button === 0) startHold(e);
@@ -8839,11 +8905,22 @@
                         e.preventDefault();
                         e.stopPropagation();
                     }
+                    setTimeout(() => {
+                        hasMoved = false;
+                    }, 50);
                 });
                 item.addEventListener('mousemove', moveHold);
-                item.addEventListener('mouseleave', cancelHold);
+                item.addEventListener('mouseleave', (e) => {
+                    cancelHold();
+                    hasMoved = false;
+                });
 
                 item.addEventListener('contextmenu', (e) => {
+                    if (hasMoved) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                    }
                     e.preventDefault();
                     e.stopPropagation();
                     isHold = true;

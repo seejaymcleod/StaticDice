@@ -472,19 +472,6 @@ window.StaticDiceTemplates = [
                 ]
             },
             {
-                id: 'w_backstab_dice_display',
-                groupId: 'combat',
-                name: 'Backstab Dice',
-                widgetType: 'roller',
-                bindsVariable: 'Backstab_Dice',
-                variableRelType: 'define',
-                unifiedQueue: [
-                    { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
-                ]
-            },
-            {
                 id: 'w_armor',
                 groupId: 'combat',
                 name: 'Unarmored',
@@ -531,13 +518,26 @@ window.StaticDiceTemplates = [
                 variableRelType: 'define'
             },
             {
+                id: 'w_backstab_dice_display',
+                groupId: 'combat',
+                name: 'Backstab Dice',
+                widgetType: 'roller',
+                bindsVariable: 'Backstab_Dice',
+                variableRelType: 'define',
+                unifiedQueue: [
+                    { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
+                ]
+            },
+            {
                 id: 'w_gold',
                 groupId: 'gear',
                 name: 'Gold',
                 color: '#ff9900',
                 widgetType: 'stepper',
                 min: 0,
-                max: 9999,
+                max: 999,
                 value: 0,
                 bindsVariable: 'Gold',
                 variableRelType: 'define'
