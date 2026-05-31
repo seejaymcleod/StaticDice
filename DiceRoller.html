@@ -1526,11 +1526,591 @@
         #binder-drawer.open {
             transform: translateX(0) !important;
         }
+
+        /* ============================================================
+           COUNTDOWN TRACKER WIDGET
+           ============================================================ */
+        .ct-widget {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(2,6,23,0.55);
+        }
+
+        /* Title bar — matches the .saved-item row height/feel */
+        .ct-title-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.35rem 0.6rem 0.35rem 0.75rem;
+            min-height: 2.55rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+        }
+
+        .ct-color-pip {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0.3rem;
+            border-radius: 0;
+            z-index: 10;
+        }
+
+        .ct-drag-handle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25rem;
+            height: 100%;
+            opacity: 0.2;
+            cursor: grab;
+            flex-shrink: 0;
+        }
+
+        .ct-widget-name {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ct-round-badge {
+            font-size: 0.55rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.4rem;
+            padding: 0.2rem 0.4rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .ct-end-turn-btn {
+            font-size: 0.55rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #00d4ff;
+            background: rgba(0,212,255,0.08);
+            border: 1px solid rgba(0,212,255,0.25);
+            border-radius: 0.4rem;
+            padding: 0.2rem 0.5rem;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .ct-end-turn-btn:hover {
+            background: rgba(0,212,255,0.18);
+            border-color: rgba(0,212,255,0.5);
+        }
+        .ct-end-turn-btn:active { transform: scale(0.95); }
+        .ct-end-turn-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .ct-undo-btn {
+            width: 1.6rem;
+            height: 1.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.4rem;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .ct-undo-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+        .ct-undo-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        /* ---- Values row (bi-directional) ---- */
+        .ct-values-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 0.375rem;
+            padding: 0.4rem 0.5rem 0.4rem 0.85rem;
+            align-items: stretch;
+        }
+
+        .ct-side-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.4rem 0.5rem;
+            background: rgba(15,23,42,0.5);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            min-height: 2.8rem;
+            gap: 0.1rem;
+        }
+        .ct-side-panel:hover {
+            border-color: rgba(255,255,255,0.15);
+            background: rgba(15,23,42,0.8);
+        }
+
+        .ct-side-label {
+            font-size: 0.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .ct-side-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            line-height: 1;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .ct-side-mods {
+            font-size: 0.5rem;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .ct-net-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.15rem;
+            padding: 0 0.3rem;
+        }
+
+        .ct-net-label {
+            font-size: 0.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #475569;
+        }
+
+        .ct-net-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            line-height: 1;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ---- Track row ---- */
+        .ct-track-row {
+            padding: 0.4rem 0.55rem 0.5rem 0.85rem;
+        }
+
+        /* Uni-directional gets combined values+track */
+        .ct-track-row-compact {
+            padding: 0.4rem 0.55rem 0.5rem 0.85rem;
+        }
+
+        .ct-track-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 0.25rem;
+        }
+
+        .ct-track-endpoint {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+        }
+
+        .ct-track-endpoint-label {
+            font-size: 0.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #334155;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+        .ct-track-endpoint-label:hover { color: #94a3b8; }
+
+        .ct-track-endpoint-val {
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: #475569;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .ct-track-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+        }
+
+        .ct-track-current-label {
+            font-size: 0.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #94a3b8;
+        }
+
+        .ct-track-current-val {
+            font-size: 0.85rem;
+            font-weight: 900;
+            color: #e2e8f0;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+        }
+
+        /* Uni-directional compact panel */
+        .ct-uni-panel {
+            display: flex;
+            align-items: center;
+            padding: 0.3rem 0.5rem 0.3rem 0.85rem;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .ct-uni-panel:hover { background: rgba(255,255,255,0.02); }
+
+        .ct-uni-side-label {
+            font-size: 0.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            flex: 1;
+        }
+
+        .ct-uni-side-value {
+            font-size: 1.1rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .ct-uni-side-mods {
+            font-size: 0.5rem;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        /* The gradient bar */
+        .ct-bar-container {
+            position: relative;
+            height: 0.35rem;
+            border-radius: 9999px;
+            overflow: visible;
+        }
+
+        .ct-bar-track {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+        }
+
+        .ct-bar-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.4s cubic-bezier(0.2,0.8,0.2,1);
+        }
+
+        .ct-bar-thumb {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 0.2rem;
+            height: 0.9rem;
+            border-radius: 9999px;
+            background: #e2e8f0;
+            box-shadow: 0 0 6px rgba(255,255,255,0.6);
+            transition: left 0.4s cubic-bezier(0.2,0.8,0.2,1);
+        }
+
+        /* Resolved banner */
+        .ct-resolved-banner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.7rem 1rem;
+            gap: 0.3rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .ct-resolved-winner {
+            font-size: 0.7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .ct-resolved-sub {
+            font-size: 0.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+        }
+
+        .ct-reset-btn {
+            font-size: 0.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.35rem;
+            padding: 0.2rem 0.6rem;
+            cursor: pointer;
+            margin-top: 0.15rem;
+            transition: all 0.15s ease;
+        }
+        .ct-reset-btn:hover { color: #e2e8f0; border-color: rgba(255,255,255,0.25); }
+
+        /* ---- Breakdown Dialog ---- */
+        #ct-breakdown-dialog {
+            background: #090d16;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem;
+            padding: 0;
+            width: min(94vw, 340px);
+            max-height: 80vh;
+            overflow: hidden;
+            color: #e2e8f0;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+        }
+        #ct-breakdown-dialog::backdrop {
+            background: rgba(2,6,23,0.75);
+            backdrop-filter: blur(4px);
+        }
+
+        .ct-bd-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1rem 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .ct-bd-title-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #e2e8f0;
+            flex: 1;
+            min-width: 0;
+        }
+        .ct-bd-title-input:focus {
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .ct-bd-close {
+            width: 1.75rem;
+            height: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.4rem;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .ct-bd-close:hover { color: #f43f5e; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); }
+
+        .ct-bd-body {
+            padding: 0.75rem 1rem;
+            max-height: calc(80vh - 7rem);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .ct-bd-base-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.5rem;
+            background: rgba(15,23,42,0.5);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 0.5rem;
+        }
+
+        .ct-bd-base-label {
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            flex: 1;
+        }
+
+        .ct-bd-num-input {
+            width: 3.5rem;
+            background: rgba(2,6,23,0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.4rem;
+            padding: 0.25rem 0.4rem;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: #e2e8f0;
+            outline: none;
+            -moz-appearance: textfield;
+            transition: border-color 0.15s;
+        }
+        .ct-bd-num-input::-webkit-outer-spin-button,
+        .ct-bd-num-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .ct-bd-num-input:focus { border-color: rgba(0,212,255,0.4); }
+
+        .ct-bd-mod-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.5rem;
+            background: rgba(15,23,42,0.35);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 0.5rem;
+        }
+
+        .ct-bd-mod-label-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #94a3b8;
+            min-width: 0;
+        }
+        .ct-bd-mod-label-input::placeholder { color: #334155; }
+        .ct-bd-mod-label-input:focus { color: #e2e8f0; }
+
+        .ct-bd-del-btn {
+            width: 1.4rem;
+            height: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.35rem;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #334155;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .ct-bd-del-btn:hover { color: #f43f5e; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); }
+
+        .ct-bd-add-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            width: 100%;
+            padding: 0.4rem;
+            border-radius: 0.5rem;
+            border: 1px dashed rgba(255,255,255,0.1);
+            background: transparent;
+            color: #475569;
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ct-bd-add-btn:hover { color: #e2e8f0; border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.03); }
+
+        .ct-bd-total-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.35rem 0.5rem 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            margin-top: 0.1rem;
+        }
+
+        .ct-bd-total-label {
+            font-size: 0.55rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #475569;
+        }
+
+        .ct-bd-total-val {
+            font-size: 1rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Color swatch for countdown config */
+        .ct-color-swatch {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ct-color-swatch:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.4); }
+
+        @keyframes ct-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .ct-pulse { animation: ct-pulse 2s ease-in-out infinite; }
     </style>
 </head>
 
 <body class="flex flex-col items-center">
+    <!-- Countdown Tracker — Breakdown Dialog -->
+    <dialog id="ct-breakdown-dialog">
+        <div class="ct-bd-header">
+            <input type="text" class="ct-bd-title-input" id="ct-bd-title" placeholder="Side Name"
+                   oninput="ctBdUpdateLabel(this.value)">
+            <button class="ct-bd-close" onclick="closeCountdownBreakdown()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="ct-bd-body" id="ct-bd-body">
+            <!-- Populated by JS -->
+        </div>
+    </dialog>
+
     <!-- Global Group Context Menu -->
+
     <div id="group-menu" class="arsenal-menu fixed hidden z-[90]" style="min-width: 160px;">
         <button onclick="addGroup(event)" class="menu-item">
             <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -2765,6 +3345,7 @@
                         <option value="toggle">Toggle Switch</option>
                         <option value="number">Number Card</option>
                         <option value="text">Text</option>
+                        <option value="countdown">Countdown Tracker</option>
                     </select>
                 </div>
 
@@ -2894,6 +3475,128 @@
                         <input type="checkbox" id="stepper-tracker" class="w-3.5 h-3.5 rounded border-white/10 bg-black/40 text-sky-500">
                         <label for="stepper-tracker" class="text-[10px] font-black text-slate-400 uppercase tracking-wider cursor-pointer">Show Visual Resource Tracker Bar</label>
                     </div>
+                </div>
+
+                <!-- Countdown Tracker Config -->
+                <div id="widget-countdown-config" class="hidden space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Countdown Settings</label>
+
+                    <!-- Direction -->
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 uppercase block mb-1.5">Direction</label>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <label class="ct-dir-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-2 px-1 transition-all hover:bg-white/5 has-[input:checked]:border-sky-500/50 has-[input:checked]:bg-sky-500/10">
+                                <input type="radio" name="ct-direction" value="bi" class="sr-only" checked onchange="ctConfigDirectionChange(this.value)">
+                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Bi-Directional</span>
+                                <span class="text-[8px] text-slate-500 font-medium">Left &amp; Right sides</span>
+                            </label>
+                            <label class="ct-dir-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-2 px-1 transition-all hover:bg-white/5 has-[input:checked]:border-sky-500/50 has-[input:checked]:bg-sky-500/10">
+                                <input type="radio" name="ct-direction" value="uni" class="sr-only" onchange="ctConfigDirectionChange(this.value)">
+                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Uni-Directional</span>
+                                <span class="text-[8px] text-slate-500 font-medium">Right side only</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Side Labels & Colors -->
+                    <div id="ct-config-bi-fields" class="space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Left Side Label</label>
+                                <div class="flex items-center gap-1.5">
+                                    <button id="ct-left-color-swatch" class="ct-color-swatch" style="background:#f43f5e"
+                                            onclick="ctPickColor('left', event)" title="Pick left color"></button>
+                                    <input type="text" id="ct-left-label" value="Left Side"
+                                           class="flex-1 min-w-0 bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Right Side Label</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="text" id="ct-right-label" value="Right Side"
+                                           class="flex-1 min-w-0 bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                                    <button id="ct-right-color-swatch" class="ct-color-swatch" style="background:#f59e0b"
+                                            onclick="ctPickColor('right', event)" title="Pick right color"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Uni-directional side label -->
+                    <div id="ct-config-uni-fields" class="hidden space-y-2">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Side Label</label>
+                            <div class="flex items-center gap-1.5">
+                                <input type="text" id="ct-uni-label" value="Effect"
+                                       class="flex-1 min-w-0 bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                                <button id="ct-uni-color-swatch" class="ct-color-swatch" style="background:#f59e0b"
+                                        onclick="ctPickColor('right', event)" title="Pick color"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Track range -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Start Label / Value</label>
+                            <div class="flex gap-1">
+                                <input type="text" id="ct-start-label" value="Start" placeholder="Start"
+                                       class="flex-1 min-w-0 bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                                <input type="number" id="ct-track-min" value="0"
+                                       class="w-14 bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold text-center">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Complete Label / Value</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="ct-track-max" value="20"
+                                       class="w-14 bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold text-center">
+                                <input type="text" id="ct-end-label" value="Complete" placeholder="Complete"
+                                       class="flex-1 min-w-0 bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Starting Track Position</label>
+                        <input type="number" id="ct-track-start" value="0"
+                               class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                    </div>
+
+                    <!-- Escalation -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="ct-escalation-enabled" class="w-3.5 h-3.5 rounded border-white/10 bg-black/40 text-sky-500"
+                                   onchange="document.getElementById('ct-escalation-config').classList.toggle('hidden', !this.checked)">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Escalation</span>
+                        </label>
+                        <div id="ct-escalation-config" class="hidden pl-4 space-y-2">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Step per Round</label>
+                                    <input type="number" id="ct-escalation-value" value="1" min="0"
+                                           class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Shrinks</label>
+                                    <div class="flex gap-1">
+                                        <label class="flex-1 text-center cursor-pointer rounded-lg border border-white/10 bg-[#090d16]/60 py-1.5 text-[9px] font-black text-slate-400 uppercase has-[input:checked]:border-rose-500/50 has-[input:checked]:text-rose-400 transition-all">
+                                            <input type="radio" name="ct-escalation-dir" value="left" class="sr-only" checked>L
+                                        </label>
+                                        <label class="flex-1 text-center cursor-pointer rounded-lg border border-white/10 bg-[#090d16]/60 py-1.5 text-[9px] font-black text-slate-400 uppercase has-[input:checked]:border-amber-500/50 has-[input:checked]:text-amber-400 transition-all">
+                                            <input type="radio" name="ct-escalation-dir" value="right" class="sr-only">R
+                                        </label>
+                                        <label class="flex-1 text-center cursor-pointer rounded-lg border border-white/10 bg-[#090d16]/60 py-1.5 text-[9px] font-black text-slate-400 uppercase has-[input:checked]:border-sky-500/50 has-[input:checked]:text-sky-400 transition-all">
+                                            <input type="radio" name="ct-escalation-dir" value="both" class="sr-only">B
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden color storage -->
+                    <input type="hidden" id="ct-left-color" value="#f43f5e">
+                    <input type="hidden" id="ct-right-color" value="#f59e0b">
                 </div>
 
                 <!-- Toggle Switch Config -->
@@ -8224,8 +8927,14 @@
             // Populate number config
             document.getElementById('number-val').value = q.value !== undefined ? q.value : '10';
 
+            // Populate countdown config
+            if (q.widgetType === 'countdown') {
+                ctWriteConfigFromWidget(q);
+            }
+
             // Populate detail text
             document.getElementById('widget-detail-text').value = q.detailText || '';
+
 
             // Populate variable binding
             const hasVarBind = !!q.bindsVariable;
@@ -8266,6 +8975,7 @@
             document.getElementById('widget-toggle-config').classList.add('hidden');
             document.getElementById('widget-text-config').classList.add('hidden');
             document.getElementById('widget-number-config').classList.add('hidden');
+            document.getElementById('widget-countdown-config').classList.add('hidden');
 
             if (type === 'roller') {
                 document.getElementById('widget-roller-addons').classList.remove('hidden');
@@ -8277,9 +8987,12 @@
                 document.getElementById('widget-text-config').classList.remove('hidden');
             } else if (type === 'number') {
                 document.getElementById('widget-number-config').classList.remove('hidden');
+            } else if (type === 'countdown') {
+                document.getElementById('widget-countdown-config').classList.remove('hidden');
             }
 
         }
+
 
         function toggleWidgetVarBinding(checked) {
             const fields = document.getElementById('widget-var-binding-fields');
@@ -8414,6 +9127,8 @@
                         q.value = parseInt(document.getElementById('number-val').value) || 0;
                     } else if (type === 'text') {
                         q.text = document.getElementById('text-card-content').value;
+                    } else if (type === 'countdown') {
+                        ctReadConfigIntoWidget(q);
                     }
 
                     persistSaved();
@@ -8506,6 +9221,8 @@
             } else if (type === 'text') {
                 newWidget.text = document.getElementById('text-card-content').value;
                 newWidget.collapsed = false;
+            } else if (type === 'countdown') {
+                ctReadConfigIntoWidget(newWidget);
             }
 
             engine.savedQueues.push(newWidget);
@@ -8606,6 +9323,456 @@
                 renderSavedQueues();
                 vibrate(5);
             }
+        }
+
+        // =========================================================================
+        // COUNTDOWN TRACKER WIDGET FUNCTIONS
+        // =========================================================================
+
+        /** Helper: read config form fields into a widget object (used on save) */
+        function ctReadConfigIntoWidget(w) {
+            const isBi = document.querySelector('input[name="ct-direction"]:checked')?.value !== 'uni';
+            w.biDirectional = isBi;
+            w.leftColor  = document.getElementById('ct-left-color').value  || '#f43f5e';
+            w.rightColor = document.getElementById('ct-right-color').value || '#f59e0b';
+            w.leftLabel  = isBi ? (document.getElementById('ct-left-label').value.trim()  || 'Left Side') : '';
+            w.rightLabel = isBi
+                ? (document.getElementById('ct-right-label').value.trim() || 'Right Side')
+                : (document.getElementById('ct-uni-label').value.trim()   || 'Effect');
+            w.startLabel = document.getElementById('ct-start-label').value.trim() || 'Start';
+            w.endLabel   = document.getElementById('ct-end-label').value.trim()   || 'Complete';
+            const rawMin = parseInt(document.getElementById('ct-track-min').value);
+            const rawMax = parseInt(document.getElementById('ct-track-max').value);
+            w.trackMin = isNaN(rawMin) ? 0  : rawMin;
+            w.trackMax = isNaN(rawMax) ? 20 : rawMax;
+            const rawStart = parseInt(document.getElementById('ct-track-start').value);
+            const clampedStart = isNaN(rawStart) ? w.trackMin : Math.max(w.trackMin, Math.min(w.trackMax, rawStart));
+            // Only reset trackValue on create (no undoStack yet); on edit keep the current position
+            if (!w.undoStack) {
+                w.trackValue  = clampedStart;
+                w.round       = 1;
+                w.undoStack   = [];
+                w.leftBase    = 0;
+                w.leftMods    = [];
+                w.rightBase   = 0;
+                w.rightMods   = [];
+                w.resolved    = false;
+                w.resolvedSide = null;
+                w.hasEverLeft  = false;
+            }
+            w.escalationEnabled = document.getElementById('ct-escalation-enabled').checked;
+            w.escalationValue   = parseInt(document.getElementById('ct-escalation-value').value) || 1;
+            w.escalationDir     = document.querySelector('input[name="ct-escalation-dir"]:checked')?.value || 'left';
+        }
+
+        /** Helper: write widget data back into config form (used on re-configure) */
+        function ctWriteConfigFromWidget(w) {
+            const dirEl = document.querySelector(`input[name="ct-direction"][value="${w.biDirectional !== false ? 'bi' : 'uni'}"]`);
+            if (dirEl) { dirEl.checked = true; ctConfigDirectionChange(dirEl.value); }
+            document.getElementById('ct-left-color').value  = w.leftColor  || '#f43f5e';
+            document.getElementById('ct-right-color').value = w.rightColor || '#f59e0b';
+            document.getElementById('ct-left-color-swatch').style.background  = w.leftColor  || '#f43f5e';
+            document.getElementById('ct-right-color-swatch').style.background = w.rightColor || '#f59e0b';
+            document.getElementById('ct-uni-color-swatch').style.background   = w.rightColor || '#f59e0b';
+            document.getElementById('ct-left-label').value  = w.leftLabel  || 'Left Side';
+            document.getElementById('ct-right-label').value = w.rightLabel || 'Right Side';
+            document.getElementById('ct-uni-label').value   = w.rightLabel || 'Effect';
+            document.getElementById('ct-start-label').value = w.startLabel || 'Start';
+            document.getElementById('ct-end-label').value   = w.endLabel   || 'Complete';
+            document.getElementById('ct-track-min').value   = w.trackMin   ?? 0;
+            document.getElementById('ct-track-max').value   = w.trackMax   ?? 20;
+            document.getElementById('ct-track-start').value = w.trackValue ?? w.trackMin ?? 0;
+            document.getElementById('ct-escalation-enabled').checked = !!w.escalationEnabled;
+            document.getElementById('ct-escalation-config').classList.toggle('hidden', !w.escalationEnabled);
+            document.getElementById('ct-escalation-value').value = w.escalationValue ?? 1;
+            const edirEl = document.querySelector(`input[name="ct-escalation-dir"][value="${w.escalationDir || 'left'}"]`);
+            if (edirEl) edirEl.checked = true;
+        }
+
+        /** Toggle bi/uni direction field visibility in the config form */
+        function ctConfigDirectionChange(val) {
+            document.getElementById('ct-config-bi-fields').classList.toggle('hidden', val === 'uni');
+            document.getElementById('ct-config-uni-fields').classList.toggle('hidden', val !== 'uni');
+        }
+
+        /** Open the system color picker via the existing Arsenal color-picker overlay */
+        function ctPickColor(side, event) {
+            if (event) event.stopPropagation();
+            // Reuse the existing color-picker overlay
+            const overlay = document.getElementById('color-picker-overlay');
+            const grid    = document.getElementById('color-grid');
+            if (!overlay || !grid) return;
+            grid.innerHTML = '';
+            COLOR_PALETTE.forEach(color => {
+                const btn = document.createElement('button');
+                btn.className = 'color-option w-10 h-10 rounded-full border-2 border-white/5';
+                btn.style.backgroundColor = color;
+                btn.onclick = () => {
+                    document.getElementById(side === 'left' ? 'ct-left-color' : 'ct-right-color').value = color;
+                    const swatchId = side === 'left' ? 'ct-left-color-swatch' : 'ct-right-color-swatch';
+                    const sw = document.getElementById(swatchId);
+                    if (sw) sw.style.background = color;
+                    // also update uni swatch if picking right
+                    if (side === 'right') {
+                        const uniSw = document.getElementById('ct-uni-color-swatch');
+                        if (uniSw) uniSw.style.background = color;
+                    }
+                    closeColorPicker();
+                    vibrate(5);
+                };
+                grid.appendChild(btn);
+            });
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
+
+        /** Calculate total for a side */
+        function ctSideTotal(base, mods) {
+            return (parseInt(base) || 0) + (mods || []).reduce((s, m) => s + (parseInt(m.value) || 0), 0);
+        }
+
+        /** Get effective track bounds accounting for escalation per-round */
+        function ctEffectiveBounds(w) {
+            if (!w.escalationEnabled || !w.escalationValue) return { min: w.trackMin, max: w.trackMax };
+            const rounds = Math.max(0, (w.round || 1) - 1); // rounds elapsed (not counting round 1 as escalated)
+            const step   = (w.escalationValue || 0) * rounds;
+            let   eMin   = w.trackMin;
+            let   eMax   = w.trackMax;
+            const dir    = w.escalationDir || 'left';
+            if (dir === 'left' || dir === 'both')  eMin = Math.min(w.trackMax, w.trackMin + step);
+            if (dir === 'right' || dir === 'both') eMax = Math.max(w.trackMin, w.trackMax - step);
+            return { min: eMin, max: eMax };
+        }
+
+        /** Check & set resolution state (called after every End Turn) */
+        function ctCheckResolution(w) {
+            if (w.resolved) return;
+            const { min, max } = ctEffectiveBounds(w);
+            const tv = w.trackValue;
+            // Only trigger if the value has previously left its starting boundary
+            if (!w.hasEverLeft) {
+                // Mark hasEverLeft if value is NOT at both boundaries simultaneously (i.e. it's moved)
+                const startedAtMin = (w.trackValue === min);
+                const startedAtMax = (w.trackValue === max);
+                if (!startedAtMin && !startedAtMax) w.hasEverLeft = true;
+                // Edge: if it jumped straight to opposite end we still resolve
+                else if (startedAtMin && tv >= max) { w.hasEverLeft = true; }
+                else if (startedAtMax && tv <= min) { w.hasEverLeft = true; }
+                else return;
+            }
+            if (tv >= max) {
+                w.resolved = true;
+                w.resolvedSide = 'right';
+            } else if (tv <= min) {
+                w.resolved = true;
+                w.resolvedSide = 'left';
+            }
+        }
+
+        /** End Turn: push undo, advance track, increment round, apply escalation, check resolution */
+        function countdownEndTurn(widgetId, event) {
+            if (event) event.stopPropagation();
+            const w = engine.findSavedQueue(widgetId);
+            if (!w || w.resolved) return;
+
+            // Snapshot undo (keep max 10)
+            w.undoStack = w.undoStack || [];
+            w.undoStack.push({ trackValue: w.trackValue, round: w.round, hasEverLeft: w.hasEverLeft });
+            if (w.undoStack.length > 10) w.undoStack.shift();
+
+            const rightTotal = ctSideTotal(w.rightBase, w.rightMods);
+            const leftTotal  = w.biDirectional !== false ? ctSideTotal(w.leftBase, w.leftMods) : 0;
+            const net = rightTotal - leftTotal;
+
+            const { min, max } = ctEffectiveBounds(w);
+            w.trackValue = Math.max(min, Math.min(max, (w.trackValue || 0) + net));
+            w.round = (w.round || 1) + 1;
+
+            // Mark hasEverLeft if moved away from start
+            if (!w.hasEverLeft && w.trackValue !== (w.trackMin ?? 0)) w.hasEverLeft = true;
+
+            ctCheckResolution(w);
+            persistSaved();
+            renderSavedQueues();
+            vibrate(10);
+        }
+
+        /** Undo last End Turn */
+        function countdownUndo(widgetId, event) {
+            if (event) event.stopPropagation();
+            const w = engine.findSavedQueue(widgetId);
+            if (!w || !w.undoStack || !w.undoStack.length) return;
+            const snap = w.undoStack.pop();
+            w.trackValue  = snap.trackValue;
+            w.round       = snap.round;
+            w.hasEverLeft = snap.hasEverLeft;
+            w.resolved    = false;
+            w.resolvedSide = null;
+            persistSaved();
+            renderSavedQueues();
+            vibrate(5);
+        }
+
+        /** Reset countdown to initial state */
+        function countdownReset(widgetId, event) {
+            if (event) event.stopPropagation();
+            const w = engine.findSavedQueue(widgetId);
+            if (!w) return;
+            w.trackValue   = w.trackMin ?? 0;
+            w.round        = 1;
+            w.undoStack    = [];
+            w.resolved     = false;
+            w.resolvedSide = null;
+            w.hasEverLeft  = false;
+            persistSaved();
+            renderSavedQueues();
+            vibrate(5);
+        }
+
+        // ---- Breakdown dialog state ----
+        let _ctBdWidgetId = null;
+        let _ctBdSide     = null; // 'left' | 'right'
+
+        function openCountdownBreakdown(widgetId, side, event) {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            const w = engine.findSavedQueue(widgetId);
+            if (!w) return;
+            _ctBdWidgetId = widgetId;
+            _ctBdSide     = side;
+
+            const dlg = document.getElementById('ct-breakdown-dialog');
+            const titleInput = document.getElementById('ct-bd-title');
+            titleInput.value = side === 'left' ? (w.leftLabel || 'Left Side') : (w.rightLabel || 'Right Side');
+
+            const sideColor = side === 'left' ? (w.leftColor || '#f43f5e') : (w.rightColor || '#f59e0b');
+            titleInput.style.color = sideColor;
+
+            ctRenderBreakdownBody(w, side);
+            dlg.showModal();
+            vibrate(5);
+        }
+
+        function closeCountdownBreakdown() {
+            const dlg = document.getElementById('ct-breakdown-dialog');
+            if (dlg) dlg.close();
+            _ctBdWidgetId = null;
+            _ctBdSide     = null;
+        }
+
+        function ctBdUpdateLabel(val) {
+            if (!_ctBdWidgetId || !_ctBdSide) return;
+            const w = engine.findSavedQueue(_ctBdWidgetId);
+            if (!w) return;
+            if (_ctBdSide === 'left')  w.leftLabel  = val;
+            else                       w.rightLabel = val;
+            persistSaved();
+            renderSavedQueues();
+        }
+
+        function ctRenderBreakdownBody(w, side) {
+            const body = document.getElementById('ct-bd-body');
+            if (!body) return;
+            const base = side === 'left' ? (w.leftBase || 0) : (w.rightBase || 0);
+            const mods = side === 'left' ? (w.leftMods  || []) : (w.rightMods  || []);
+            const sideColor = side === 'left' ? (w.leftColor || '#f43f5e') : (w.rightColor || '#f59e0b');
+            const wid = w.id;
+            const sign = side === 'left' ? '−' : '+';
+
+            let html = `
+                <div class="ct-bd-base-row">
+                    <span class="ct-bd-base-label">Base Effect</span>
+                    <span style="color:${sideColor};font-size:0.65rem;font-weight:900;margin-right:0.25rem;">${sign}</span>
+                    <input type="number" class="ct-bd-num-input" value="${Math.abs(base)}"
+                           style="color:${sideColor}"
+                           onchange="ctBdUpdateBase('${wid}','${side}',this.value)"
+                           oninput="ctBdUpdateBase('${wid}','${side}',this.value)">
+                </div>
+            `;
+
+            mods.forEach((m, idx) => {
+                html += `
+                    <div class="ct-bd-mod-row">
+                        <span style="color:${sideColor};font-size:0.65rem;font-weight:900;flex-shrink:0;">${sign}</span>
+                        <input type="text" class="ct-bd-mod-label-input" placeholder="Modifier name"
+                               value="${(m.label || '').replace(/"/g, '&quot;')}"
+                               onchange="ctBdUpdateMod('${wid}','${side}',${idx},'label',this.value)"
+                               oninput="ctBdUpdateMod('${wid}','${side}',${idx},'label',this.value)">
+                        <input type="number" class="ct-bd-num-input" value="${Math.abs(m.value || 0)}"
+                               style="color:${sideColor}"
+                               onchange="ctBdUpdateMod('${wid}','${side}',${idx},'value',this.value)"
+                               oninput="ctBdUpdateMod('${wid}','${side}',${idx},'value',this.value)">
+                        <button class="ct-bd-del-btn" onclick="ctBdRemoveMod('${wid}','${side}',${idx})">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                `;
+            });
+
+            const total = ctSideTotal(base, mods);
+            const totalDisplay = side === 'left' ? -Math.abs(total) : Math.abs(total);
+            html += `
+                <button class="ct-bd-add-btn" onclick="ctBdAddMod('${wid}','${side}')">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    Add Modifier
+                </button>
+                <div class="ct-bd-total-row">
+                    <span class="ct-bd-total-label">Total</span>
+                    <span class="ct-bd-total-val" style="color:${sideColor}">${totalDisplay > 0 ? '+' : ''}${totalDisplay}</span>
+                </div>
+            `;
+
+            body.innerHTML = html;
+        }
+
+        function ctBdUpdateBase(wid, side, val) {
+            const w = engine.findSavedQueue(wid);
+            if (!w) return;
+            const parsed = parseInt(val) || 0;
+            if (side === 'left') w.leftBase  = parsed;
+            else                 w.rightBase = parsed;
+            persistSaved();
+            renderSavedQueues();
+            ctRenderBreakdownBody(w, side); // refresh total
+        }
+
+        function ctBdUpdateMod(wid, side, idx, field, val) {
+            const w = engine.findSavedQueue(wid);
+            if (!w) return;
+            const mods = side === 'left' ? w.leftMods : w.rightMods;
+            if (!mods || !mods[idx]) return;
+            if (field === 'label') mods[idx].label = val;
+            else                   mods[idx].value = parseInt(val) || 0;
+            persistSaved();
+            renderSavedQueues();
+            ctRenderBreakdownBody(w, side);
+        }
+
+        function ctBdAddMod(wid, side) {
+            const w = engine.findSavedQueue(wid);
+            if (!w) return;
+            if (side === 'left')  { w.leftMods  = w.leftMods  || []; w.leftMods.push({ label: '', value: 0 }); }
+            else                  { w.rightMods = w.rightMods || []; w.rightMods.push({ label: '', value: 0 }); }
+            persistSaved();
+            renderSavedQueues();
+            ctRenderBreakdownBody(w, side);
+        }
+
+        function ctBdRemoveMod(wid, side, idx) {
+            const w = engine.findSavedQueue(wid);
+            if (!w) return;
+            const mods = side === 'left' ? w.leftMods : w.rightMods;
+            if (mods) mods.splice(idx, 1);
+            persistSaved();
+            renderSavedQueues();
+            ctRenderBreakdownBody(w, side);
+        }
+
+        /** Build the full countdown DOM element for renderSavedQueues */
+        function buildCountdownWidget(q) {
+            const leftColor  = q.leftColor  || '#1e293b';
+            const rightColor = q.rightColor || '#ffffff';
+            const isBi       = q.biDirectional !== false;
+
+            const { min: effMin, max: effMax } = ctEffectiveBounds(q);
+            const trackVal   = q.trackValue ?? q.trackMin ?? 0;
+            const range      = effMax - effMin;
+            const pct        = range > 0 ? Math.max(0, Math.min(100, ((trackVal - effMin) / range) * 100)) : 0;
+
+            const rightTotal = ctSideTotal(q.rightBase, q.rightMods);
+            const leftTotal  = isBi ? ctSideTotal(q.leftBase, q.leftMods) : 0;
+            const net        = rightTotal - leftTotal;
+            const netDisplay = net >= 0 ? `+${net}` : `${net}`;
+
+            // Compute net color: positive = rightColor, negative = leftColor, zero = slate
+            let netColor = '#64748b';
+            if (net > 0) netColor = rightColor;
+            else if (net < 0) netColor = leftColor;
+
+            const hasUndo    = (q.undoStack || []).length > 0;
+            const isResolved = !!q.resolved;
+            const undoDisabled = !hasUndo ? 'disabled' : '';
+
+            const el = document.createElement('div');
+            el.className = 'ct-widget';
+
+            let pipStyle = '';
+            if (isBi) {
+                pipStyle = `background: linear-gradient(to bottom, ${leftColor}, ${rightColor}); box-shadow: 2px 0 15px rgba(255,255,255,0.15);`;
+            } else {
+                pipStyle = `background: ${rightColor}; box-shadow: 2px 0 15px ${rightColor};`;
+            }
+            const roundLabel = `Round ${q.round || 1}`;
+
+            el.innerHTML = `
+                <div class="ct-color-pip" style="${pipStyle}"></div>
+                <div class="ct-title-bar">
+                    <div class="ct-drag-handle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:0.75rem;height:0.75rem"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                    </div>
+                    <span class="ct-widget-name">${q.name || 'Countdown'}</span>
+                    <span class="ct-round-badge">${roundLabel}</span>
+                    <button class="ct-end-turn-btn" onclick="countdownEndTurn('${q.id}',event)" ${isResolved ? 'disabled' : ''}>End Turn</button>
+                    <button class="ct-undo-btn" onclick="countdownUndo('${q.id}',event)" ${undoDisabled} title="Undo last turn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:0.7rem;height:0.7rem"><path d="M3 9h13a5 5 0 0 1 0 10H7"/><polyline points="3 9 7 5 3 5"/></svg>
+                    </button>
+                </div>
+                ${isBi ? `
+                <div class="ct-values-row">
+                    <div class="ct-side-panel" onclick="openCountdownBreakdown('${q.id}','left',event)" style="border-color:${leftColor}22;">
+                        <span class="ct-side-label" style="color:${leftColor}">${q.leftLabel || 'Left Side'}</span>
+                        <span class="ct-side-value" style="color:${leftColor}">−${Math.abs(leftTotal)}</span>
+                        ${q.leftMods?.length ? `<span class="ct-side-mods">${q.leftMods.length} modifier${q.leftMods.length !== 1 ? 's' : ''}</span>` : ''}
+                    </div>
+                    <div class="ct-net-col">
+                        <span class="ct-net-label">Net</span>
+                        <span class="ct-net-value" style="color:${netColor}">${netDisplay}</span>
+                    </div>
+                    <div class="ct-side-panel" onclick="openCountdownBreakdown('${q.id}','right',event)" style="border-color:${rightColor}22;">
+                        <span class="ct-side-label" style="color:${rightColor}">${q.rightLabel || 'Right Side'}</span>
+                        <span class="ct-side-value" style="color:${rightColor}">+${rightTotal}</span>
+                        ${q.rightMods?.length ? `<span class="ct-side-mods">${q.rightMods.length} modifier${q.rightMods.length !== 1 ? 's' : ''}</span>` : ''}
+                    </div>
+                </div>
+                ` : `
+                <div class="ct-uni-panel" onclick="openCountdownBreakdown('${q.id}','right',event)">
+                    <span class="ct-uni-side-label" style="color:${rightColor}">${q.rightLabel || 'Effect'}</span>
+                    ${q.rightMods?.length ? `<span class="ct-uni-side-mods">${q.rightMods.length} mod${q.rightMods.length !== 1 ? 's' : ''}</span>` : ''}
+                    <span class="ct-uni-side-value" style="color:${rightColor}">+${rightTotal}</span>
+                </div>
+                `}
+                <div class="${isBi ? 'ct-track-row' : 'ct-track-row-compact'}">
+                    <div class="ct-track-meta">
+                        <div class="ct-track-endpoint">
+                            <span class="ct-track-endpoint-label">${q.startLabel || 'Start'}</span>
+                            <span class="ct-track-endpoint-val">${effMin}</span>
+                        </div>
+                        <div class="ct-track-center">
+                            <span class="ct-track-current-label">Track</span>
+                            <span class="ct-track-current-val">${trackVal}</span>
+                        </div>
+                        <div class="ct-track-endpoint">
+                            <span class="ct-track-endpoint-label">${q.endLabel || 'Complete'}</span>
+                            <span class="ct-track-endpoint-val">${effMax}</span>
+                        </div>
+                    </div>
+                    <div class="ct-bar-container">
+                        <div class="ct-bar-track" style="background:rgba(15,23,42,0.6);"></div>
+                        <div class="ct-bar-fill" style="width:${pct}%; background:linear-gradient(to right,${leftColor},${rightColor});"></div>
+                        <div class="ct-bar-thumb" style="left:${pct}%;"></div>
+                    </div>
+                </div>
+                ${isResolved ? `
+                <div class="ct-resolved-banner ct-pulse">
+                    <span class="ct-resolved-winner" style="color:${q.resolvedSide === 'right' ? rightColor : leftColor}">
+                        ${q.resolvedSide === 'right' ? (q.rightLabel || 'Right') : (q.leftLabel || 'Left')} Wins
+                    </span>
+                    <span class="ct-resolved-sub">Countdown Complete — Round ${(q.round || 1) - 1}</span>
+                    <button class="ct-reset-btn" onclick="countdownReset('${q.id}',event)">Reset</button>
+                </div>
+                ` : ''}
+            `;
+
+            return el;
         }
 
         function changeCardCounterVal(widgetId, delta) {
@@ -9424,7 +10591,9 @@
                 }
 
                 item.innerHTML = innerHtml;
-                wrapper.appendChild(item);
+                if (type !== 'countdown') {
+                    wrapper.appendChild(item);
+                }
 
                 if (type === 'roller' && q.includeAdvDis) {
                     const advBtn = document.createElement('button');
@@ -9512,7 +10681,17 @@
                     stepperControls.appendChild(valDisp);
                     stepperControls.appendChild(incBtn);
                     wrapper.appendChild(stepperControls);
+                } else if (type === 'countdown') {
+                    // Countdown widgets build their own self-contained element
+                    const ctEl = buildCountdownWidget(q);
+                    ctEl.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleArsenalMenu(q.id, e);
+                    });
+                    wrapper.appendChild(ctEl);
                 }
+
 
                 const otherGroups = filtered.length > 0 ? groups.filter(g => g.characterId === activeCharacterId && g.id !== activeGroupId) : [];
                 const moveGroupHtml = otherGroups.length > 0 ? `
