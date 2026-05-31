@@ -9052,7 +9052,7 @@
                                 <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
                             </div>
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
-                            <div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed ? 'hidden' : ''}">${q.text || 'Empty'}</div>
+                            ${q.text ? `<div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed ? 'hidden' : ''}">${q.text}</div>` : ''}
                         </div>
                     `;
                 }

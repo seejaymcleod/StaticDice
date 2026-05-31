@@ -21,6 +21,9 @@ window.StaticDiceTemplates = [
         groups: [
             { id: 'stats', name: 'Stats', color: '#00d4ff' },
             { id: 'combat', name: 'Combat', color: '#ff003c' },
+            { id: 'spells', name: 'Spells', color: '#b565ff' },
+            { id: 'gear', name: 'Gear', color: '#ff9900' },
+            { id: 'notes', name: 'Notes', color: '#ff55aa' },
             { id: 'details', name: 'Details', color: '#00ff88' }
         ],
         widgets: [
@@ -392,7 +395,7 @@ window.StaticDiceTemplates = [
             },
             {
                 id: 'w_spellcheck_int',
-                groupId: 'combat',
+                groupId: 'spells',
                 name: 'Spellcheck - INT',
                 widgetType: 'roller',
                 unifiedQueue: [
@@ -405,7 +408,7 @@ window.StaticDiceTemplates = [
             },
             {
                 id: 'w_spellcheck_wis',
-                groupId: 'combat',
+                groupId: 'spells',
                 name: 'Spellcheck - WIS',
                 widgetType: 'roller',
                 unifiedQueue: [
@@ -418,7 +421,7 @@ window.StaticDiceTemplates = [
             },
             {
                 id: 'w_spellcheck_cha',
-                groupId: 'combat',
+                groupId: 'spells',
                 name: 'Spellcheck - CHA',
                 widgetType: 'roller',
                 unifiedQueue: [
@@ -441,6 +444,240 @@ window.StaticDiceTemplates = [
                     { nodeType: 'operator', operator: '+' },
                     { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
                 ]
+            },
+            {
+                id: 'w_gear_1',
+                groupId: 'gear',
+                name: '',
+                detailText: '1.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_2',
+                groupId: 'gear',
+                name: '',
+                detailText: '2.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_3',
+                groupId: 'gear',
+                name: '',
+                detailText: '3.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_4',
+                groupId: 'gear',
+                name: '',
+                detailText: '4.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_5',
+                groupId: 'gear',
+                name: '',
+                detailText: '5.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_6',
+                groupId: 'gear',
+                name: '',
+                detailText: '6.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_7',
+                groupId: 'gear',
+                name: '',
+                detailText: '7.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_8',
+                groupId: 'gear',
+                name: '',
+                detailText: '8.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_9',
+                groupId: 'gear',
+                name: '',
+                detailText: '9.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_10',
+                groupId: 'gear',
+                name: '',
+                detailText: '10.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_11',
+                groupId: 'gear',
+                name: '',
+                detailText: '11.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_12',
+                groupId: 'gear',
+                name: '',
+                detailText: '12.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_13',
+                groupId: 'gear',
+                name: '',
+                detailText: '13.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_14',
+                groupId: 'gear',
+                name: '',
+                detailText: '14.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_15',
+                groupId: 'gear',
+                name: '',
+                detailText: '15.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_16',
+                groupId: 'gear',
+                name: '',
+                detailText: '16.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_17',
+                groupId: 'gear',
+                name: '',
+                detailText: '17.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_18',
+                groupId: 'gear',
+                name: '',
+                detailText: '18.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_19',
+                groupId: 'gear',
+                name: '',
+                detailText: '19.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_gear_20',
+                groupId: 'gear',
+                name: '',
+                detailText: '20.',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_note_1',
+                groupId: 'notes',
+                name: '',
+                detailText: '',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_note_2',
+                groupId: 'notes',
+                name: '',
+                detailText: '',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_note_3',
+                groupId: 'notes',
+                name: '',
+                detailText: '',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_note_4',
+                groupId: 'notes',
+                name: '',
+                detailText: '',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_note_5',
+                groupId: 'notes',
+                name: '',
+                detailText: '',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
+                id: 'w_note_6',
+                groupId: 'notes',
+                name: '',
+                detailText: '',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
             }
         ]
     },
