@@ -498,6 +498,45 @@
             }
         }
 
+        /* Group Tab Drag & Drop Feedback */
+        .group-tab.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+
+        .group-tab.drag-over-left::before {
+            content: '';
+            position: absolute;
+            left: -4px;
+            top: 2px;
+            bottom: 2px;
+            width: 3px;
+            background-color: #00d4ff;
+            border-radius: 1.5px;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
+            pointer-events: none;
+        }
+
+        .group-tab.drag-over-right::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: 2px;
+            bottom: 2px;
+            width: 3px;
+            background-color: #00d4ff;
+            border-radius: 1.5px;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
+            pointer-events: none;
+        }
+
+        .group-tab.widget-drag-hover {
+            background: rgba(0, 212, 255, 0.15) !important;
+            border-color: rgba(0, 212, 255, 0.5) !important;
+            color: #00d4ff !important;
+            transform: scale(1.05);
+        }
+
         .group-drop-zone {
             min-height: 3rem;
             border-radius: 0.75rem;
@@ -6653,6 +6692,86 @@
                     openGroupContextMenu(g.id, e);
                 });
 
+                btn.draggable = true;
+                btn.addEventListener('dragstart', (e) => {
+                    cancelHold();
+                    dragSrcGroupId = g.id;
+                    btn.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                btn.addEventListener('dragend', () => {
+                    btn.classList.remove('dragging');
+                    document.querySelectorAll('.group-tab').forEach(el => {
+                        el.classList.remove('drag-over-left', 'drag-over-right', 'widget-drag-hover');
+                    });
+                    dragSrcGroupId = null;
+                });
+
+                btn.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (dragSrcId) {
+                        btn.classList.add('widget-drag-hover');
+                    } else if (dragSrcGroupId && dragSrcGroupId !== g.id) {
+                        const rect = btn.getBoundingClientRect();
+                        const middleX = rect.left + rect.width / 2;
+                        const isRight = e.clientX > middleX;
+                        if (isRight) {
+                            btn.classList.remove('drag-over-left');
+                            btn.classList.add('drag-over-right');
+                        } else {
+                            btn.classList.remove('drag-over-right');
+                            btn.classList.add('drag-over-left');
+                        }
+                    }
+                });
+
+                btn.addEventListener('dragleave', () => {
+                    btn.classList.remove('drag-over-left', 'drag-over-right', 'widget-drag-hover');
+                });
+
+                btn.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const isRight = btn.classList.contains('drag-over-right');
+                    btn.classList.remove('drag-over-left', 'drag-over-right', 'widget-drag-hover');
+
+                    if (dragSrcId) {
+                        const srcIdx = engine.savedQueues.findIndex(x => x.id === dragSrcId);
+                        if (srcIdx > -1) {
+                            const [moved] = engine.savedQueues.splice(srcIdx, 1);
+                            moved.groupId = g.id;
+                            const targetGroupWidgets = engine.savedQueues.filter(x => x.groupId === g.id);
+                            if (targetGroupWidgets.length > 0) {
+                                const lastWidget = targetGroupWidgets[targetGroupWidgets.length - 1];
+                                const lastIdx = engine.savedQueues.findIndex(x => x.id === lastWidget.id);
+                                engine.savedQueues.splice(lastIdx + 1, 0, moved);
+                            } else {
+                                engine.savedQueues.push(moved);
+                            }
+                            persistSaved();
+                            renderSavedQueues();
+                            vibrate(10);
+                        }
+                        dragSrcId = null;
+                    } else if (dragSrcGroupId && dragSrcGroupId !== g.id) {
+                        const srcIdx = groups.findIndex(x => x.id === dragSrcGroupId);
+                        const tgtIdx = groups.findIndex(x => x.id === g.id);
+                        if (srcIdx > -1 && tgtIdx > -1) {
+                            const [moved] = groups.splice(srcIdx, 1);
+                            let newTgt = groups.findIndex(x => x.id === g.id);
+                            if (isRight) {
+                                newTgt = newTgt + 1;
+                            }
+                            groups.splice(newTgt, 0, moved);
+                            persistArsenal();
+                            renderGroupTabs();
+                            renderSavedQueues();
+                            vibrate(10);
+                        }
+                        dragSrcGroupId = null;
+                    }
+                });
+
                 container.appendChild(btn);
             });
         }
@@ -8751,6 +8870,7 @@
         }
 
         let dragSrcId = null;
+        let dragSrcGroupId = null;
 
         function renderSavedQueues() {
             const container = document.getElementById('arsenal-list-container');
@@ -8806,6 +8926,7 @@
                 };
 
                 const moveHold = (e) => {
+                    if (e.type === 'mousemove' && e.buttons !== 1) return;
                     const touch = e.touches ? e.touches[0] : e;
                     if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
                         cancelHold();
@@ -9295,11 +9416,11 @@
                 menuContainer.className = 'arsenal-menu absolute right-2 top-12 hidden';
                 menuContainer.style.zIndex = '100';
                 menuContainer.innerHTML = `
-                    ${editLoadoutButtonHtml}
                     <button onclick="configureSavedWidget('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         <span>Configure</span>
                     </button>
+                    ${editLoadoutButtonHtml}
                     <button onclick="openColorPicker('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
                         <span>Appearance</span>
