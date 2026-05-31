@@ -8365,78 +8365,118 @@
         function getCalculatedVariables(char) {
             if (!char) return {};
             const originalGetVar = window.getActiveCharacterVariable;
-            const vars = {};
+            const vars = {}; // Holds fully resolved variables
+            const rawVars = {}; // Holds raw values from character sheet
+            const computing = new Set();
+
+            if (char.variables) {
+                for (const [k, v] of Object.entries(char.variables)) {
+                    rawVars[k] = parseInt(v) || 0;
+                }
+            }
+
+            if (typeof engine === 'undefined' || !engine.savedQueues) return rawVars;
+            const charWidgets = engine.savedQueues.filter(w => w.characterId === char.id);
+
+            const isWidgetActive = (w) => {
+                if (w.widgetType === 'toggle') return !!w.checked;
+                if (w.addonToggle) return !!w.addonToggle.checked;
+                return true;
+            };
+
+            const getWidgetValue = (w) => {
+                if (w.widgetType === 'toggle') return w.checked ? 1 : 0;
+                if (w.widgetType === 'roller') {
+                    const res = engine.calculateRoll(w.unifiedQueue || w.queue, true);
+                    return res ? (parseInt(res.total) || 0) : 0;
+                }
+                return parseInt(w.value) || 0;
+            };
+
+            const baseStats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+
+            // Resolve a variable on-demand
+            function resolveVariable(name) {
+                // If already computed, return it
+                if (vars[name] !== undefined) {
+                    return vars[name];
+                }
+                // Detect circular dependency
+                if (computing.has(name)) {
+                    // Return fallback value from rawVars or 0 to break loop
+                    return rawVars[name] !== undefined ? rawVars[name] : 0;
+                }
+
+                computing.add(name);
+
+                try {
+                    // If it's a base stat modifier (e.g., DEX_mod)
+                    if (name.endsWith('_mod')) {
+                        const baseName = name.slice(0, -4);
+                        if (baseStats.includes(baseName)) {
+                            const baseVal = resolveVariable(baseName);
+                            vars[name] = Math.floor((baseVal - 10) / 2);
+                            return vars[name];
+                        }
+                    }
+
+                    // Check if there is any widget that defines this variable
+                    const hasDefineWidget = charWidgets.some(w => w.bindsVariable === name && w.variableRelType === 'define');
+
+                    // Find active widgets that bind to this variable
+                    const activeBinders = charWidgets.filter(w => w.bindsVariable === name && isWidgetActive(w));
+
+                    if (activeBinders.length > 0 || hasDefineWidget) {
+                        // 1. Process define
+                        const defWidget = activeBinders.find(w => w.variableRelType === 'define');
+                        let val = 0;
+                        if (defWidget) {
+                            val = getWidgetValue(defWidget);
+                        } else if (!hasDefineWidget) {
+                            // If there is no define widget at all, fallback to rawVars
+                            val = rawVars[name] !== undefined ? rawVars[name] : 0;
+                        }
+                        
+                        // 2. Process modifies
+                        activeBinders.forEach(w => {
+                            if (w.variableRelType === 'modify') {
+                                val += getWidgetValue(w);
+                            }
+                        });
+                        vars[name] = val;
+                    } else {
+                        // No widgets bind to this variable, fallback to rawVars or 0
+                        vars[name] = rawVars[name] !== undefined ? rawVars[name] : 0;
+                    }
+                    return vars[name];
+                } finally {
+                    computing.delete(name);
+                }
+            }
+
+            // Set up the global variable retriever to use our resolveVariable function
             window.getActiveCharacterVariable = function(name) {
-                return vars[name] !== undefined ? vars[name] : null;
+                return resolveVariable(name);
             };
 
             try {
-                if (char.variables) {
-                    for (const [k, v] of Object.entries(char.variables)) {
-                        vars[k] = parseInt(v) || 0;
-                    }
-                }
-                if (typeof engine === 'undefined' || !engine.savedQueues) return vars;
-                const charWidgets = engine.savedQueues.filter(w => w.characterId === char.id);
-                const isWidgetActive = (w) => {
-                    if (w.widgetType === 'toggle') return !!w.checked;
-                    if (w.addonToggle) return !!w.addonToggle.checked;
-                    return true;
-                };
-                const getWidgetValue = (w) => {
-                    if (w.widgetType === 'toggle') return w.checked ? 1 : 0;
-                    if (w.widgetType === 'roller') {
-                        const res = engine.calculateRoll(w.unifiedQueue || w.queue, true);
-                        return res ? (parseInt(res.total) || 0) : 0;
-                    }
-                    return parseInt(w.value) || 0;
-                };
-
-                const baseStats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
-
-                // Process define/modify for base stats first
+                // Force resolution of all variables bound by active widgets to populate the `vars` object completely
                 charWidgets.forEach(w => {
-                    if (w.bindsVariable && baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
-                        if (w.variableRelType === 'define') {
-                            vars[w.bindsVariable] = getWidgetValue(w);
-                        }
-                    }
-                });
-                charWidgets.forEach(w => {
-                    if (w.bindsVariable && baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
-                        if (w.variableRelType === 'modify') {
-                            vars[w.bindsVariable] = (vars[w.bindsVariable] || 0) + getWidgetValue(w);
-                        }
+                    if (w.bindsVariable) {
+                        resolveVariable(w.bindsVariable);
                     }
                 });
 
-                // Calculate default modifiers for ability scores
+                // Also make sure all base stats and their modifiers are resolved
                 baseStats.forEach(stat => {
-                    const modName = `${stat}_mod`;
-                    if (vars[stat] !== undefined) {
-                        vars[modName] = Math.floor((vars[stat] - 10) / 2);
-                    }
-                });
-
-                // Process define/modify for non-base-stat variables (like HP, AC, Level, etc.)
-                charWidgets.forEach(w => {
-                    if (w.bindsVariable && !baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
-                        if (w.variableRelType === 'define') {
-                            vars[w.bindsVariable] = getWidgetValue(w);
-                        }
-                    }
-                });
-                charWidgets.forEach(w => {
-                    if (w.bindsVariable && !baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
-                        if (w.variableRelType === 'modify') {
-                            vars[w.bindsVariable] = (vars[w.bindsVariable] || 0) + getWidgetValue(w);
-                        }
-                    }
+                    resolveVariable(stat);
+                    resolveVariable(`${stat}_mod`);
                 });
 
                 // Calculate Backstab_Dice dynamically at the end if not already defined (1 + LVL / 2 rounded down)
                 if (vars["Backstab_Dice"] === undefined) {
-                    vars["Backstab_Dice"] = 1 + Math.floor((vars["LVL"] || 1) / 2);
+                    const lvl = resolveVariable("LVL");
+                    vars["Backstab_Dice"] = 1 + Math.floor((lvl || 1) / 2);
                 }
             } finally {
                 window.getActiveCharacterVariable = originalGetVar;
@@ -8818,7 +8858,12 @@
                             isHold = false;
                             return;
                         }
-                        if (isDiceless) return; // Diceless formulas are evaluated statically, click is disabled
+                        if (isDiceless) {
+                            if (q.addonToggle) {
+                                toggleCardAddonState(q.id, !q.addonToggle.checked);
+                            }
+                            return;
+                        }
                         triggerRoll(e, { arsenalId: q.id });
                     };
                 } else if (type === 'text') {
@@ -8944,7 +8989,7 @@
                         const res = engine.calculateRoll(q.unifiedQueue || q.queue, true);
                         if (res) resolvedVal = parseInt(res.total) || 0;
                         innerHtml += `
-                            <div class="flex-grow min-w-0 pl-2 pr-2">
+                            <div class="flex-grow min-w-0 pl-2 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
                                 <div class="flex items-center gap-1.5">
                                     <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                                 </div>
@@ -8969,21 +9014,21 @@
                                 ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
                             </div>
                         `;
+                    }
 
-                        if (q.addonToggle) {
-                            const t = q.addonToggle;
-                            innerHtml += `
-                                <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
-                                    <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
-                                        ${t.checked ? t.labelOn : t.labelOff}
-                                    </span>
-                                </div>
-                                <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
-                                     onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
-                                     style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
-                                </div>
-                            `;
-                        }
+                    if (q.addonToggle) {
+                        const t = q.addonToggle;
+                        innerHtml += `
+                            <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
+                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
+                                    ${t.checked ? t.labelOn : t.labelOff}
+                                </span>
+                            </div>
+                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                                 onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
+                                 style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                            </div>
+                        `;
                     }
                 } else if (type === 'stepper') {
                     let trackerHtml = '';

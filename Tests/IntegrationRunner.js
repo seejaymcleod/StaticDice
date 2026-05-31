@@ -8,9 +8,11 @@ console.log('🧪 Starting JSDOM Integration Deep Dive Test...');
 // 1. Read files
 const engineCode = fs.readFileSync(path.resolve(__dirname, '../DiceEngine.js'), 'utf8');
 const archCode = fs.readFileSync(path.resolve(__dirname, '../DataArchitecture.js'), 'utf8');
+const templatesCode = fs.readFileSync(path.resolve(__dirname, '../Assets/TemplatesData.js'), 'utf8');
 let html = fs.readFileSync(path.resolve(__dirname, '../DiceRoller.html'), 'utf8');
 
 // Inline scripts inside html script tags
+html = html.replace('<script src="Assets/TemplatesData.js"></script>', `<script>${templatesCode}</script>`);
 html = html.replace('<script src="DataArchitecture.js"></script>', `<script>${archCode}</script>`);
 html = html.replace('<script src="DiceEngine.js"></script>', `<script>${engineCode}</script>`);
 
@@ -210,11 +212,15 @@ window.addEventListener('load', () => {
                 if (characters[0].name !== 'Spawned Character') throw new Error("Character name should match input");
                 if (characters[0].variables.STR !== '10') throw new Error("Variables should be initialized");
                 
+                const sdTemplate = templates.find(t => t.id === 'template_sd_character');
+                const expectedGroupsCount = sdTemplate.groups.length;
+                const expectedWidgetsCount = sdTemplate.widgets.length;
+
                 const spawnedGroups = groups.filter(g => g.characterId === activeCharacterId);
-                if (spawnedGroups.length !== 2) throw new Error("Should have 2 groups created");
+                if (spawnedGroups.length !== expectedGroupsCount) throw new Error("Should have " + expectedGroupsCount + " groups created, got " + spawnedGroups.length);
                 
                 const spawnedWidgets = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
-                if (spawnedWidgets.length !== 17) throw new Error("Should have 17 widgets spawned");
+                if (spawnedWidgets.length !== expectedWidgetsCount) throw new Error("Should have " + expectedWidgetsCount + " widgets spawned, got " + spawnedWidgets.length);
                 
                 const originalCharId = activeCharacterId;
                 await cloneCharacter(originalCharId);
@@ -223,11 +229,11 @@ window.addEventListener('load', () => {
                 if (characters.find(c => c.id === activeCharacterId).name !== 'Cloned Character') throw new Error("Cloned character name incorrect");
                 
                 const clonedGroups = groups.filter(g => g.characterId === activeCharacterId);
-                if (clonedGroups.length !== 2) throw new Error("Cloned groups count incorrect");
+                if (clonedGroups.length !== expectedGroupsCount) throw new Error("Cloned groups count incorrect");
                 if (clonedGroups[0].id === spawnedGroups[0].id) throw new Error("Cloned groups should have new IDs");
                 
                 const clonedWidgets = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
-                if (clonedWidgets.length !== 17) throw new Error("Cloned widgets count incorrect");
+                if (clonedWidgets.length !== expectedWidgetsCount) throw new Error("Cloned widgets count incorrect");
                 
                 // Verify direct renaming via renameActiveCharacter
                 renameActiveCharacter('Direct Input Renamed Name');

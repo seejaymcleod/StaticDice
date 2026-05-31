@@ -13,6 +13,7 @@ window.StaticDiceTemplates = [
             "HP": "10",
             "MaxHP": "10",
             "AC": "10",
+            "AC_Armor": "10", "AC_Shield": "0", "AC_Mod": "0",
             "LVL": "1", "XP": "0", "Gold": "0", "Luck": "0",
             "STR": "10", "DEX": "10", "CON": "10", "INT": "10", "WIS": "10", "CHA": "10",
             "STR_mod": "0", "DEX_mod": "0", "CON_mod": "0", "INT_mod": "0", "WIS_mod": "0", "CHA_mod": "0",
@@ -85,6 +86,7 @@ window.StaticDiceTemplates = [
                 id: 'w_hp',
                 groupId: 'combat',
                 name: 'HP',
+                color: '#ff003c',
                 widgetType: 'stepper',
                 min: 0,
                 max: 10,
@@ -92,13 +94,20 @@ window.StaticDiceTemplates = [
                 showTracker: true
             },
             {
-                id: 'w_ac',
+                id: 'w_ac_total',
                 groupId: 'combat',
-                name: 'AC',
-                widgetType: 'number',
-                value: 10,
+                name: 'Armor Class',
+                color: '#00d4ff',
+                widgetType: 'roller',
                 bindsVariable: 'AC',
-                variableRelType: 'define'
+                variableRelType: 'define',
+                unifiedQueue: [
+                    { nodeType: 'modifier', type: 'variable', value: 'AC_Armor', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'AC_Shield', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'AC_Mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                ]
             },
             {
                 id: 'w_str',
@@ -176,6 +185,7 @@ window.StaticDiceTemplates = [
                 id: 'w_luck',
                 groupId: 'stats',
                 name: 'Luck',
+                color: '#ff9900',
                 widgetType: 'stepper',
                 min: 0,
                 max: 1,
@@ -367,6 +377,7 @@ window.StaticDiceTemplates = [
                 id: 'w_atk_melee_str',
                 groupId: 'combat',
                 name: 'Attack Melee - STR',
+                color: '#ff9900',
                 widgetType: 'roller',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -380,6 +391,7 @@ window.StaticDiceTemplates = [
                 id: 'w_atk_melee_dex',
                 groupId: 'combat',
                 name: 'Attack Melee - DEX',
+                color: '#ff9900',
                 widgetType: 'roller',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -393,6 +405,7 @@ window.StaticDiceTemplates = [
                 id: 'w_atk_ranged_str',
                 groupId: 'combat',
                 name: 'Attack Ranged - STR',
+                color: '#ffdd00',
                 widgetType: 'roller',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -406,6 +419,7 @@ window.StaticDiceTemplates = [
                 id: 'w_atk_ranged_dex',
                 groupId: 'combat',
                 name: 'Attack Ranged - DEX',
+                color: '#ffdd00',
                 widgetType: 'roller',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -419,6 +433,7 @@ window.StaticDiceTemplates = [
                 id: 'w_spellcheck_int',
                 groupId: 'spells',
                 name: 'Spellcheck - INT',
+                color: '#b565ff',
                 widgetType: 'roller',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -432,6 +447,7 @@ window.StaticDiceTemplates = [
                 id: 'w_spellcheck_wis',
                 groupId: 'spells',
                 name: 'Spellcheck - WIS',
+                color: '#b565ff',
                 widgetType: 'roller',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -445,6 +461,7 @@ window.StaticDiceTemplates = [
                 id: 'w_spellcheck_cha',
                 groupId: 'spells',
                 name: 'Spellcheck - CHA',
+                color: '#b565ff',
                 widgetType: 'roller',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -468,9 +485,56 @@ window.StaticDiceTemplates = [
                 ]
             },
             {
+                id: 'w_armor',
+                groupId: 'combat',
+                name: 'Unarmored',
+                color: '#00d4ff',
+                widgetType: 'roller',
+                bindsVariable: 'AC_Armor',
+                variableRelType: 'define',
+                addonToggle: {
+                    labelOn: 'Equipped',
+                    labelOff: 'Unequipped',
+                    checked: true
+                },
+                unifiedQueue: [
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                ]
+            },
+            {
+                id: 'w_shield',
+                groupId: 'combat',
+                name: 'Shield',
+                color: '#00d4ff',
+                widgetType: 'roller',
+                bindsVariable: 'AC_Shield',
+                variableRelType: 'define',
+                addonToggle: {
+                    labelOn: 'Equipped',
+                    labelOff: 'Unequipped',
+                    checked: false
+                },
+                unifiedQueue: [
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_ac_mod',
+                groupId: 'combat',
+                name: 'Misc AC Mod',
+                color: '#00d4ff',
+                widgetType: 'number',
+                value: 0,
+                bindsVariable: 'AC_Mod',
+                variableRelType: 'define'
+            },
+            {
                 id: 'w_gold',
                 groupId: 'gear',
                 name: 'Gold',
+                color: '#ff9900',
                 widgetType: 'stepper',
                 min: 0,
                 max: 9999,
