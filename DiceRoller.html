@@ -1718,12 +1718,12 @@
 
         /* ---- Track row ---- */
         .ct-track-row {
-            padding: 0.4rem 0.55rem 0.5rem 0.85rem;
+            padding: 0.4rem 0.95rem 0.5rem 1.15rem;
         }
 
         /* Uni-directional gets combined values+track */
         .ct-track-row-compact {
-            padding: 0.4rem 0.55rem 0.5rem 0.85rem;
+            padding: 0.4rem 0.95rem 0.5rem 1.15rem;
         }
 
         .ct-track-meta {
@@ -1752,7 +1752,7 @@
         .ct-track-endpoint-label:hover { color: #94a3b8; }
 
         .ct-track-endpoint-val {
-            font-size: 0.65rem;
+            font-size: 0.8rem;
             font-weight: 900;
             color: #475569;
             font-family: 'JetBrains Mono', monospace;
@@ -1888,6 +1888,15 @@
             transition: all 0.15s ease;
         }
         .ct-reset-btn:hover { color: #e2e8f0; border-color: rgba(255,255,255,0.25); }
+
+        .ct-detail-row {
+            padding: 0 0.95rem 0.5rem 1.15rem;
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: #64748b;
+            line-height: 1.35;
+            white-space: pre-wrap;
+        }
 
         /* ---- Breakdown Dialog ---- */
         #ct-breakdown-dialog {
@@ -9752,15 +9761,12 @@
                 <div class="${isBi ? 'ct-track-row' : 'ct-track-row-compact'}">
                     <div class="ct-track-meta">
                         <div class="ct-track-endpoint">
-                            <span class="ct-track-endpoint-label">${q.startLabel || 'Start'}</span>
                             <span class="ct-track-endpoint-val">${effMin}</span>
                         </div>
                         <div class="ct-track-center">
-                            <span class="ct-track-current-label">Track</span>
                             <span class="ct-track-current-val">${trackVal}</span>
                         </div>
                         <div class="ct-track-endpoint">
-                            <span class="ct-track-endpoint-label">${q.endLabel || 'Complete'}</span>
                             <span class="ct-track-endpoint-val">${effMax}</span>
                         </div>
                     </div>
@@ -9770,6 +9776,9 @@
                         <div class="ct-bar-thumb" style="left:${pct}%;"></div>
                     </div>
                 </div>
+                ${q.detailText ? `
+                <div class="ct-detail-row">${q.detailText}</div>
+                ` : ''}
                 `}
             `;
 
