@@ -9716,6 +9716,15 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:0.7rem;height:0.7rem"><path d="M3 9h13a5 5 0 0 1 0 10H7"/><polyline points="3 9 7 5 3 5"/></svg>
                     </button>
                 </div>
+                ${isResolved ? `
+                <div class="ct-resolved-banner ct-pulse">
+                    <span class="ct-resolved-winner" style="color:${q.resolvedSide === 'right' ? rightColor : leftColor}">
+                        ${q.resolvedSide === 'right' ? (q.rightLabel || 'Right') : (q.leftLabel || 'Left')} Wins
+                    </span>
+                    <span class="ct-resolved-sub">Countdown Complete — Round ${(q.round || 1) - 1}</span>
+                    <button class="ct-reset-btn" onclick="countdownReset('${q.id}',event)">Reset</button>
+                </div>
+                ` : `
                 ${isBi ? `
                 <div class="ct-values-row">
                     <div class="ct-side-panel" onclick="openCountdownBreakdown('${q.id}','left',event)" style="border-color:${leftColor}22;">
@@ -9761,15 +9770,7 @@
                         <div class="ct-bar-thumb" style="left:${pct}%;"></div>
                     </div>
                 </div>
-                ${isResolved ? `
-                <div class="ct-resolved-banner ct-pulse">
-                    <span class="ct-resolved-winner" style="color:${q.resolvedSide === 'right' ? rightColor : leftColor}">
-                        ${q.resolvedSide === 'right' ? (q.rightLabel || 'Right') : (q.leftLabel || 'Left')} Wins
-                    </span>
-                    <span class="ct-resolved-sub">Countdown Complete — Round ${(q.round || 1) - 1}</span>
-                    <button class="ct-reset-btn" onclick="countdownReset('${q.id}',event)">Reset</button>
-                </div>
-                ` : ''}
+                `}
             `;
 
             return el;
