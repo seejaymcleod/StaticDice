@@ -374,6 +374,20 @@ window.StaticDiceTemplates = [
                 hidden: true
             },
             {
+                id: 'w_torch_timer',
+                groupId: 'stats',
+                name: 'Torch Timer',
+                color: '#ff9900',
+                widgetType: 'timer',
+                maxTime: 3600,
+                currentTime: 3600,
+                isPaused: true,
+                diceFormula: '1d6',
+                rundownText: 'Torch Extinguished!',
+                animationType: 'torches',
+                detailText: 'Active Torch'
+            },
+            {
                 id: 'w_atk_melee_str',
                 groupId: 'combat',
                 name: 'Attack Melee - STR',
