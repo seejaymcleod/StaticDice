@@ -10123,13 +10123,16 @@
                         // Update layout styling for rundown status
                         const innerContainer = el.querySelector('.timer-inner-container');
                         const rundownTextEl = el.querySelector('.timer-rundown-text');
+                        const animEl = el.querySelector('.timer-anim-overlay');
                         if (innerContainer && rundownTextEl) {
                             if (q.currentTime === 0) {
                                 innerContainer.classList.add('timer-rundown');
                                 rundownTextEl.classList.remove('hidden');
+                                if (animEl) animEl.classList.add('hidden');
                             } else {
                                 innerContainer.classList.remove('timer-rundown');
                                 rundownTextEl.classList.add('hidden');
+                                if (animEl) animEl.classList.remove('hidden');
                             }
                         }
                     }
@@ -10292,7 +10295,7 @@
             // Shimmer animation overlay
             let animHtml = '';
             if (q.animationType && q.animationType !== 'none') {
-                animHtml = `<div class="timer-anim-${q.animationType}"></div>`;
+                animHtml = `<div class="timer-anim-overlay timer-anim-${q.animationType} ${isFinished ? 'hidden' : ''}"></div>`;
             }
 
             const iconPlay = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M8 5v14l11-7z"/></svg>`;
