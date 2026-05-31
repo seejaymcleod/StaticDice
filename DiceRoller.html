@@ -8364,69 +8364,83 @@
 
         function getCalculatedVariables(char) {
             if (!char) return {};
+            const originalGetVar = window.getActiveCharacterVariable;
             const vars = {};
-            if (char.variables) {
-                for (const [k, v] of Object.entries(char.variables)) {
-                    vars[k] = parseInt(v) || 0;
+            window.getActiveCharacterVariable = function(name) {
+                return vars[name] !== undefined ? vars[name] : null;
+            };
+
+            try {
+                if (char.variables) {
+                    for (const [k, v] of Object.entries(char.variables)) {
+                        vars[k] = parseInt(v) || 0;
+                    }
                 }
+                if (typeof engine === 'undefined' || !engine.savedQueues) return vars;
+                const charWidgets = engine.savedQueues.filter(w => w.characterId === char.id);
+                const isWidgetActive = (w) => {
+                    if (w.widgetType === 'toggle') return !!w.checked;
+                    if (w.addonToggle) return !!w.addonToggle.checked;
+                    return true;
+                };
+                const getWidgetValue = (w) => {
+                    if (w.widgetType === 'toggle') return w.checked ? 1 : 0;
+                    if (w.widgetType === 'roller') {
+                        const res = engine.calculateRoll(w.unifiedQueue || w.queue, true);
+                        return res ? (parseInt(res.total) || 0) : 0;
+                    }
+                    return parseInt(w.value) || 0;
+                };
+
+                const baseStats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+
+                // Process define/modify for base stats first
+                charWidgets.forEach(w => {
+                    if (w.bindsVariable && baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
+                        if (w.variableRelType === 'define') {
+                            vars[w.bindsVariable] = getWidgetValue(w);
+                        }
+                    }
+                });
+                charWidgets.forEach(w => {
+                    if (w.bindsVariable && baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
+                        if (w.variableRelType === 'modify') {
+                            vars[w.bindsVariable] = (vars[w.bindsVariable] || 0) + getWidgetValue(w);
+                        }
+                    }
+                });
+
+                // Calculate default modifiers for ability scores
+                baseStats.forEach(stat => {
+                    const modName = `${stat}_mod`;
+                    if (vars[stat] !== undefined) {
+                        vars[modName] = Math.floor((vars[stat] - 10) / 2);
+                    }
+                });
+
+                // Process define/modify for non-base-stat variables (like HP, AC, Level, etc.)
+                charWidgets.forEach(w => {
+                    if (w.bindsVariable && !baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
+                        if (w.variableRelType === 'define') {
+                            vars[w.bindsVariable] = getWidgetValue(w);
+                        }
+                    }
+                });
+                charWidgets.forEach(w => {
+                    if (w.bindsVariable && !baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
+                        if (w.variableRelType === 'modify') {
+                            vars[w.bindsVariable] = (vars[w.bindsVariable] || 0) + getWidgetValue(w);
+                        }
+                    }
+                });
+
+                // Calculate Backstab_Dice dynamically at the end if not already defined (1 + LVL / 2 rounded down)
+                if (vars["Backstab_Dice"] === undefined) {
+                    vars["Backstab_Dice"] = 1 + Math.floor((vars["LVL"] || 1) / 2);
+                }
+            } finally {
+                window.getActiveCharacterVariable = originalGetVar;
             }
-            if (typeof engine === 'undefined' || !engine.savedQueues) return vars;
-            const charWidgets = engine.savedQueues.filter(w => w.characterId === char.id);
-            const isWidgetActive = (w) => {
-                if (w.hidden) {
-                    // Hidden widgets are STILL active if they are not toggled off. 
-                    // Wait, let's treat hidden widgets as active, but check if they are toggled off.
-                }
-                if (w.widgetType === 'toggle') return !!w.checked;
-                if (w.addonToggle) return !!w.addonToggle.checked;
-                return true;
-            };
-            const getWidgetValue = (w) => {
-                if (w.widgetType === 'toggle') return w.checked ? 1 : 0;
-                return parseInt(w.value) || 0;
-            };
-
-            const baseStats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
-
-            // Process define/modify for base stats first
-            charWidgets.forEach(w => {
-                if (w.bindsVariable && baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
-                    if (w.variableRelType === 'define') {
-                        vars[w.bindsVariable] = getWidgetValue(w);
-                    }
-                }
-            });
-            charWidgets.forEach(w => {
-                if (w.bindsVariable && baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
-                    if (w.variableRelType === 'modify') {
-                        vars[w.bindsVariable] = (vars[w.bindsVariable] || 0) + getWidgetValue(w);
-                    }
-                }
-            });
-
-            // Calculate default modifiers for ability scores
-            baseStats.forEach(stat => {
-                const modName = `${stat}_mod`;
-                if (vars[stat] !== undefined) {
-                    vars[modName] = Math.floor((vars[stat] - 10) / 2);
-                }
-            });
-
-            // Process define/modify for non-base-stat variables (like HP, AC, Level, etc.)
-            charWidgets.forEach(w => {
-                if (w.bindsVariable && !baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
-                    if (w.variableRelType === 'define') {
-                        vars[w.bindsVariable] = getWidgetValue(w);
-                    }
-                }
-            });
-            charWidgets.forEach(w => {
-                if (w.bindsVariable && !baseStats.includes(w.bindsVariable) && isWidgetActive(w)) {
-                    if (w.variableRelType === 'modify') {
-                        vars[w.bindsVariable] = (vars[w.bindsVariable] || 0) + getWidgetValue(w);
-                    }
-                }
-            });
 
             return vars;
         }
@@ -8796,12 +8810,15 @@
                     toggleArsenalMenu(q.id, e);
                 });
 
+                const isDiceless = type === 'roller' && !(q.unifiedQueue || []).some(node => node.nodeType === 'node');
+
                 if (type === 'roller') {
                     item.onclick = (e) => {
                         if (isHold) {
                             isHold = false;
                             return;
                         }
+                        if (isDiceless) return; // Diceless formulas are evaluated statically, click is disabled
                         triggerRoll(e, { arsenalId: q.id });
                     };
                 } else if (type === 'text') {
@@ -8922,30 +8939,51 @@
                 `;
 
                 if (type === 'roller') {
-                    innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 pr-8">
-                            <div class="flex items-center gap-1.5">
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            </div>
-                            <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
-                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
-                        </div>
-                    `;
-
-                    if (q.addonToggle) {
-                        const t = q.addonToggle;
+                    if (isDiceless) {
+                        let resolvedVal = 0;
+                        const res = engine.calculateRoll(q.unifiedQueue || q.queue, true);
+                        if (res) resolvedVal = parseInt(res.total) || 0;
                         innerHtml += `
-                            <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
-                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
-                                    ${t.checked ? t.labelOn : t.labelOff}
-                                </span>
+                            <div class="flex-grow min-w-0 pl-2 pr-2">
+                                <div class="flex items-center gap-1.5">
+                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                                </div>
+                                <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
+                                ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
+                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
                             </div>
-                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
-                                 onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
-                                 style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                            <div class="flex items-center gap-2 mr-8 shrink-0 select-none" onclick="event.stopPropagation()">
+                                <div class="w-16 bg-[#020617]/60 border border-[#00ff88]/20 shadow-[0_0_10px_rgba(0,255,136,0.1)] rounded-lg py-1.5 text-center text-[#00ff88] font-black tabular-nums text-lg leading-none" title="Current value">
+                                    ${resolvedVal}
+                                </div>
                             </div>
                         `;
+                    } else {
+                        innerHtml += `
+                            <div class="flex-grow min-w-0 pl-2 pr-8">
+                                <div class="flex items-center gap-1.5">
+                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                                </div>
+                                <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
+                                ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
+                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                            </div>
+                        `;
+
+                        if (q.addonToggle) {
+                            const t = q.addonToggle;
+                            innerHtml += `
+                                <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
+                                    <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
+                                        ${t.checked ? t.labelOn : t.labelOff}
+                                    </span>
+                                </div>
+                                <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                                     onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
+                                     style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                                </div>
+                            `;
+                        }
                     }
                 } else if (type === 'stepper') {
                     let trackerHtml = '';
@@ -8981,13 +9019,28 @@
                         </div>
                     `;
                 } else if (type === 'number') {
+                    let displayVal = q.value;
+                    let isCalculated = false;
+                    if (q.bindsVariable) {
+                        const calculatedVars = ['STR_mod', 'DEX_mod', 'CON_mod', 'INT_mod', 'WIS_mod', 'CHA_mod', 'Backstab_Dice'];
+                        if (calculatedVars.includes(q.bindsVariable)) {
+                            isCalculated = true;
+                            const resolved = window.getActiveCharacterVariable(q.bindsVariable);
+                            if (resolved !== null) {
+                                displayVal = resolved;
+                                if (q.value !== resolved) {
+                                    q.value = resolved;
+                                }
+                            }
+                        }
+                    }
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2 mr-8 shrink-0 select-none" onclick="event.stopPropagation()">
-                            <input type="number" value="${q.value}" onchange="changeNumberValueDirect('${q.id}', this.value)" class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <input type="number" value="${displayVal}" ${isCalculated ? 'readonly disabled' : ''} onchange="changeNumberValueDirect('${q.id}', this.value)" class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isCalculated ? 'opacity-70 pointer-events-none' : ''}">
                         </div>
                     `;
                 } else if (type === 'text') {

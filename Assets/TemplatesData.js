@@ -16,12 +16,12 @@ window.StaticDiceTemplates = [
             "AC": "10",
             "STR": "10", "DEX": "10", "CON": "10", "INT": "10", "WIS": "10", "CHA": "10",
             "STR_mod": "0", "DEX_mod": "0", "CON_mod": "0", "INT_mod": "0", "WIS_mod": "0", "CHA_mod": "0",
-            "Attack_Melee": "0", "Attack_Ranged": "0", "Spellcheck": "0", "Backstab_Dice_Bonus": "0"
+            "Attack_Melee": "0", "Attack_Ranged": "0", "Spellcheck": "0", "Backstab_Dice_Bonus": "0", "Backstab_Dice": "1"
         },
         groups: [
-            { id: 'details', name: 'Details', color: '#00ff88' },
             { id: 'stats', name: 'Stats', color: '#00d4ff' },
-            { id: 'combat', name: 'Combat', color: '#ff003c' }
+            { id: 'combat', name: 'Combat', color: '#ff003c' },
+            { id: 'details', name: 'Details', color: '#00ff88' }
         ],
         widgets: [
             {
@@ -427,6 +427,19 @@ window.StaticDiceTemplates = [
                     { nodeType: 'modifier', type: 'variable', value: 'CHA_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
                     { nodeType: 'operator', operator: '+' },
                     { nodeType: 'modifier', type: 'variable', value: 'Spellcheck', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                ]
+            },
+            {
+                id: 'w_backstab_dice_display',
+                groupId: 'combat',
+                name: 'Backstab Dice',
+                widgetType: 'roller',
+                bindsVariable: 'Backstab_Dice',
+                variableRelType: 'define',
+                unifiedQueue: [
+                    { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
                 ]
             }
         ]
