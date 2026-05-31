@@ -608,22 +608,27 @@ class DiceEngine {
         if (this.rollRules.countThreshVal === undefined) this.rollRules.countThreshVal = null;
     }
 
+    findSavedQueue(id) {
+        if (!id) return null;
+        return this.savedQueues.find(q => String(q.id) === String(id)) || null;
+    }
+
     deleteQueue(id) {
-        this.savedQueues = this.savedQueues.filter(q => q.id !== id);
+        this.savedQueues = this.savedQueues.filter(q => String(q.id) !== String(id));
     }
 
     renameQueue(id, newName) {
-        const item = this.savedQueues.find(q => q.id === id);
+        const item = this.findSavedQueue(id);
         if (item) item.name = newName;
     }
 
     changeQueueColor(id, color) {
-        const item = this.savedQueues.find(q => q.id === id);
+        const item = this.findSavedQueue(id);
         if (item) item.color = color;
     }
 
     updateSavedQueue(id) {
-        const item = this.savedQueues.find(q => q.id === id);
+        const item = this.findSavedQueue(id);
         if (!item) return false;
 
         item.queue = JSON.parse(JSON.stringify(this.rollingQueue)); // for legacy backward compatibility

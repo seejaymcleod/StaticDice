@@ -80,12 +80,8 @@ describe('DiceEngine', () => {
             modifierLevel: 2
         });
 
-        engine.applyModifier('DIS'); // Swaps to DIS
-        expect(engine.queue[1]).toEqual({
-            nodeType: 'operator',
-            operator: 'DIS',
-            modifierLevel: 1
-        });
+        engine.applyModifier('DIS'); // Cancels out to neutral
+        expect(engine.queue[1]).toBeUndefined();
     });
 
     test('checkCondition correctly evaluates rules', () => {
