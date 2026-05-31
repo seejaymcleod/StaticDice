@@ -243,26 +243,25 @@
                 inset 0 0 15px rgba(0, 212, 255, 0.05);
         }
 
-        /* Compact Mode and individual visibility selectors */
-        .compact-mode .saved-item {
+        /* Widget display mode classes — applied to .arsenal-item-wrapper */
+        .widget-display-simple .saved-item,
+        .widget-display-compact .saved-item {
+            /* subtext hiding handled via child selectors below */
+        }
+
+        .widget-display-simple .widget-formula,
+        .widget-display-simple .widget-detail,
+        .widget-display-simple .widget-note,
+        .widget-display-compact .widget-formula,
+        .widget-display-compact .widget-detail,
+        .widget-display-compact .widget-note {
+            display: none !important;
+        }
+
+        .widget-display-compact .saved-item {
             min-height: 2.25rem !important;
             padding-top: 0.25rem !important;
             padding-bottom: 0.25rem !important;
-        }
-
-        .compact-mode .widget-formula,
-        .compact-mode .widget-detail,
-        .compact-mode .widget-note {
-            display: none !important;
-        }
-
-        .saved-item.hide-formula-active .widget-formula {
-            display: none !important;
-        }
-
-        .saved-item.hide-detail-active .widget-detail,
-        .saved-item.hide-detail-active .widget-note {
-            display: none !important;
         }
 
         #color-picker-overlay {
@@ -2373,10 +2372,10 @@
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
                     </button>
-                    <button onclick="toggleCompactMode()" id="toggle-compact-btn" title="Toggle Compact Mode"
-                        class="w-[1.75rem] h-[1.75rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-lg text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
+                    <button onclick="cycleGlobalLayout()" id="global-layout-btn" title="Cycle Layout Mode"
+                        class="w-[1.75rem] h-[1.75rem] flex items-center justify-center rounded-lg transition-all border active:scale-95 text-[#94a3b8] border-white/5 bg-[#020617]/40">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
-                            <path d="M4 12h16M12 4v4M12 20v-4M9 7l3 3 3-3M9 17l3-3 3 3"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
                         </svg>
                     </button>
                     <button onclick="openWidgetCreationModal()" title="Add Widget"
@@ -2947,19 +2946,24 @@
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
                 </div>
 
-                <!-- Visibility Options -->
-                <div class="space-y-2 pt-1">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Display Options</label>
-                    <div class="flex flex-col gap-2">
-                        <label id="widget-hide-formula-container" class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="widget-hide-formula"
-                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
-                            <span class="text-xs font-bold text-slate-300 uppercase">Hide Formula / Queue Info</span>
+                <!-- Display Mode Pill -->
+                <div class="space-y-1.5 pt-1">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Display Mode</label>
+                    <div class="grid grid-cols-3 gap-1" id="widget-display-mode-pills">
+                        <label class="display-mode-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-2 px-1 transition-all hover:bg-white/5">
+                            <input type="radio" name="widget-display-mode" value="normal" class="sr-only" checked onclick="updateDisplayModePills(this.value)">
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Normal</span>
+                            <span class="text-[8px] text-slate-500 font-medium">Full details</span>
                         </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="widget-hide-detail-text"
-                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
-                            <span class="text-xs font-bold text-slate-300 uppercase">Hide Detail Text</span>
+                        <label class="display-mode-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-2 px-1 transition-all hover:bg-white/5">
+                            <input type="radio" name="widget-display-mode" value="simple" class="sr-only" onclick="updateDisplayModePills(this.value)">
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Simple</span>
+                            <span class="text-[8px] text-slate-500 font-medium">Hide grey text</span>
+                        </label>
+                        <label class="display-mode-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-2 px-1 transition-all hover:bg-white/5">
+                            <input type="radio" name="widget-display-mode" value="compact" class="sr-only" onclick="updateDisplayModePills(this.value)">
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Compact</span>
+                            <span class="text-[8px] text-slate-500 font-medium">Always shrink</span>
                         </label>
                     </div>
                 </div>
@@ -3157,35 +3161,67 @@
             }
         }
 
-        let compactMode = localStorage.getItem('compact_mode') === 'true';
+        // Global layout mode: 'auto' | 'override-compact' | 'force-normal'
+        let globalLayout = localStorage.getItem('global_layout') || 'auto';
 
-        function toggleCompactMode() {
-            compactMode = !compactMode;
-            localStorage.setItem('compact_mode', compactMode);
-            updateCompactModeUI();
+        const GLOBAL_LAYOUT_STATES = ['auto', 'override-compact', 'force-normal'];
+
+        function cycleGlobalLayout() {
+            const idx = GLOBAL_LAYOUT_STATES.indexOf(globalLayout);
+            globalLayout = GLOBAL_LAYOUT_STATES[(idx + 1) % GLOBAL_LAYOUT_STATES.length];
+            localStorage.setItem('global_layout', globalLayout);
+            updateGlobalLayoutBtn();
             renderSavedQueues();
             vibrate(5);
         }
 
-        function updateCompactModeUI() {
-            const btn = document.getElementById('toggle-compact-btn');
-            if (btn) {
-                if (compactMode) {
-                    btn.classList.add('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10');
-                    btn.classList.remove('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40');
-                } else {
-                    btn.classList.remove('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10');
-                    btn.classList.add('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40');
-                }
+        function updateGlobalLayoutBtn() {
+            const btn = document.getElementById('global-layout-btn');
+            if (!btn) return;
+            // Reset classes
+            btn.classList.remove(
+                'text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10',
+                'text-amber-400', 'border-amber-400/30', 'bg-amber-400/10',
+                'text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40',
+                'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30',
+                'hover:text-amber-400', 'hover:border-amber-400/30'
+            );
+            if (globalLayout === 'override-compact') {
+                btn.classList.add('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10', 'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30');
+                btn.title = 'Layout: Override Compact (click to cycle)';
+                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>`;
+            } else if (globalLayout === 'force-normal') {
+                btn.classList.add('text-amber-400', 'border-amber-400/30', 'bg-amber-400/10', 'hover:text-amber-400', 'hover:border-amber-400/30');
+                btn.title = 'Layout: Force Normal (click to cycle)';
+                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`;
+            } else {
+                btn.classList.add('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40', 'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30');
+                btn.title = 'Layout: Auto (click to cycle)';
+                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
             }
-            const container = document.getElementById('arsenal-list-container');
-            if (container) {
-                if (compactMode) {
-                    container.classList.add('compact-mode');
+        }
+
+        // Resolves the effective display mode for a widget given the global layout
+        function getEffectiveDisplayMode(q) {
+            const widgetMode = q.displayMode || 'normal';
+            if (globalLayout === 'override-compact') return 'compact';
+            if (globalLayout === 'force-normal' && widgetMode !== 'compact') return 'normal';
+            return widgetMode;
+        }
+
+        // Update display mode pill selection visuals
+        function updateDisplayModePills(selectedValue) {
+            document.querySelectorAll('.display-mode-pill').forEach(pill => {
+                const radio = pill.querySelector('input[type="radio"]');
+                if (!radio) return;
+                if (radio.value === selectedValue) {
+                    pill.classList.add('border-sky-500/50', 'bg-sky-500/10');
+                    pill.classList.remove('border-white/10', 'bg-[#090d16]/60');
                 } else {
-                    container.classList.remove('compact-mode');
+                    pill.classList.remove('border-sky-500/50', 'bg-sky-500/10');
+                    pill.classList.add('border-white/10', 'bg-[#090d16]/60');
                 }
-            }
+            });
         }
 
         let modalResolve = () => { };
@@ -8105,8 +8141,8 @@
 
             document.getElementById('number-val').value = '10';
             document.getElementById('widget-detail-text').value = '';
-            document.getElementById('widget-hide-formula').checked = false;
-            document.getElementById('widget-hide-detail-text').checked = false;
+            const normalPill = document.querySelector('input[name="widget-display-mode"][value="normal"]');
+            if (normalPill) { normalPill.checked = true; updateDisplayModePills('normal'); }
             document.getElementById('widget-bind-var-check').checked = false;
             document.getElementById('widget-binds-variable').value = '';
             document.getElementById('widget-variable-rel-type').value = 'define';
@@ -8198,9 +8234,10 @@
             document.getElementById('widget-variable-rel-type').value = q.variableRelType || 'define';
             toggleWidgetVarBinding(hasVarBind);
 
-            // Populate visibility options
-            document.getElementById('widget-hide-formula').checked = !!q.hideFormula;
-            document.getElementById('widget-hide-detail-text').checked = !!q.hideDetailText;
+            // Populate display mode pill
+            const dm = q.displayMode || 'normal';
+            const dmPill = document.querySelector(`input[name="widget-display-mode"][value="${dm}"]`);
+            if (dmPill) { dmPill.checked = true; updateDisplayModePills(dm); }
 
             onWidgetTypeChange(typeSelect.value);
 
@@ -8242,16 +8279,6 @@
                 document.getElementById('widget-number-config').classList.remove('hidden');
             }
 
-            const hideFormulaContainer = document.getElementById('widget-hide-formula-container');
-            if (hideFormulaContainer) {
-                if (type === 'roller') {
-                    hideFormulaContainer.classList.remove('hidden');
-                    hideFormulaContainer.classList.add('flex');
-                } else {
-                    hideFormulaContainer.classList.add('hidden');
-                    hideFormulaContainer.classList.remove('flex');
-                }
-            }
         }
 
         function toggleWidgetVarBinding(checked) {
@@ -8322,8 +8349,7 @@
                 }
             }
             let detailText = document.getElementById('widget-detail-text').value.trim() || null;
-            const hideFormula = document.getElementById('widget-hide-formula').checked;
-            const hideDetailText = document.getElementById('widget-hide-detail-text').checked;
+            const displayMode = document.querySelector('input[name="widget-display-mode"]:checked')?.value || 'normal';
 
             if (editingWidgetId !== null) {
                 const q = engine.findSavedQueue(editingWidgetId);
@@ -8333,8 +8359,7 @@
                     q.detailText = detailText;
                     q.bindsVariable = bindsVariable;
                     q.variableRelType = variableRelType;
-                    q.hideFormula = hideFormula;
-                    q.hideDetailText = hideDetailText;
+                    q.displayMode = displayMode === 'normal' ? null : displayMode;
 
                     if (type === 'roller') {
                         const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
@@ -8410,8 +8435,7 @@
                 detailText: detailText,
                 bindsVariable: bindsVariable,
                 variableRelType: variableRelType,
-                hideFormula: hideFormula,
-                hideDetailText: hideDetailText
+                displayMode: displayMode === 'normal' ? null : displayMode
             };
 
             if (type === 'roller') {
@@ -9032,6 +9056,10 @@
                 if (q.hidden) {
                     wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
                 }
+                // Apply display mode class based on effective mode
+                const effectiveMode = getEffectiveDisplayMode(q);
+                if (effectiveMode === 'simple') wrapper.classList.add('widget-display-simple');
+                else if (effectiveMode === 'compact') wrapper.classList.add('widget-display-compact');
                 wrapper.draggable = true;
                 wrapper.dataset.id = q.id;
 
@@ -9092,8 +9120,8 @@
                 const item = document.createElement('div');
                 item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                 item.dataset.id = q.id;
-                if (q.hideFormula) item.classList.add('hide-formula-active');
-                if (q.hideDetailText) item.classList.add('hide-detail-active');
+
+
 
                 item.addEventListener('touchstart', startHold, { passive: true });
                 item.addEventListener('touchend', (e) => {
@@ -10920,7 +10948,7 @@
             renderCharacterSelect();
             renderGroupTabs();
             updateShowHiddenWidgetsButton();
-            updateCompactModeUI();
+            updateGlobalLayoutBtn();
         };
 
         // =========================================================================
