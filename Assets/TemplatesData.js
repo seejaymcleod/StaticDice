@@ -10,10 +10,10 @@ window.StaticDiceTemplates = [
         dndType: 'standard',
         isDefault: true,
         variables: {
-            "LVL": "1",
             "HP": "10",
             "MaxHP": "10",
             "AC": "10",
+            "LVL": "1", "XP": "0", "Gold": "0", "Luck": "0",
             "STR": "10", "DEX": "10", "CON": "10", "INT": "10", "WIS": "10", "CHA": "10",
             "STR_mod": "0", "DEX_mod": "0", "CON_mod": "0", "INT_mod": "0", "WIS_mod": "0", "CHA_mod": "0",
             "Attack_Melee": "0", "Attack_Ranged": "0", "Spellcheck": "0", "Backstab_Dice_Bonus": "0", "Backstab_Dice": "1"
@@ -83,7 +83,7 @@ window.StaticDiceTemplates = [
             },
             {
                 id: 'w_hp',
-                groupId: 'stats',
+                groupId: 'combat',
                 name: 'HP',
                 widgetType: 'stepper',
                 min: 0,
@@ -93,20 +93,11 @@ window.StaticDiceTemplates = [
             },
             {
                 id: 'w_ac',
-                groupId: 'stats',
+                groupId: 'combat',
                 name: 'AC',
                 widgetType: 'number',
                 value: 10,
                 bindsVariable: 'AC',
-                variableRelType: 'define'
-            },
-            {
-                id: 'w_lvl',
-                groupId: 'stats',
-                name: 'Level',
-                widgetType: 'number',
-                value: 1,
-                bindsVariable: 'LVL',
                 variableRelType: 'define'
             },
             {
@@ -180,6 +171,37 @@ window.StaticDiceTemplates = [
                     { nodeType: 'operator', operator: '+' },
                     { nodeType: 'modifier', type: 'variable', value: 'CHA_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
                 ]
+            },
+            {
+                id: 'w_luck',
+                groupId: 'stats',
+                name: 'Luck',
+                widgetType: 'stepper',
+                min: 0,
+                max: 1,
+                value: 0,
+                bindsVariable: 'Luck',
+                variableRelType: 'define'
+            },
+            {
+                id: 'w_lvl',
+                groupId: 'stats',
+                name: 'Level',
+                widgetType: 'number',
+                value: 1,
+                bindsVariable: 'LVL',
+                variableRelType: 'define'
+            },
+            {
+                id: 'w_xp',
+                groupId: 'stats',
+                name: 'XP',
+                widgetType: 'stepper',
+                min: 0,
+                max: 100,
+                value: 0,
+                bindsVariable: 'XP',
+                variableRelType: 'define'
             },
             {
                 id: 'w_score_str',
@@ -444,6 +466,17 @@ window.StaticDiceTemplates = [
                     { nodeType: 'operator', operator: '+' },
                     { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
                 ]
+            },
+            {
+                id: 'w_gold',
+                groupId: 'gear',
+                name: 'Gold',
+                widgetType: 'stepper',
+                min: 0,
+                max: 9999,
+                value: 0,
+                bindsVariable: 'Gold',
+                variableRelType: 'define'
             },
             {
                 id: 'w_gear_1',
