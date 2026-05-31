@@ -9593,8 +9593,7 @@
                     <span style="color:${sideColor};font-size:0.65rem;font-weight:900;margin-right:0.25rem;">${sign}</span>
                     <input type="number" class="ct-bd-num-input" value="${Math.abs(base)}"
                            style="color:${sideColor}"
-                           onchange="ctBdUpdateBase('${wid}','${side}',this.value)"
-                           oninput="ctBdUpdateBase('${wid}','${side}',this.value)">
+                           onchange="ctBdUpdateBase('${wid}','${side}',this.value)">
                 </div>
             `;
 
@@ -9604,12 +9603,10 @@
                         <span style="color:${sideColor};font-size:0.65rem;font-weight:900;flex-shrink:0;">${sign}</span>
                         <input type="text" class="ct-bd-mod-label-input" placeholder="Modifier name"
                                value="${(m.label || '').replace(/"/g, '&quot;')}"
-                               onchange="ctBdUpdateMod('${wid}','${side}',${idx},'label',this.value)"
-                               oninput="ctBdUpdateMod('${wid}','${side}',${idx},'label',this.value)">
+                               onchange="ctBdUpdateMod('${wid}','${side}',${idx},'label',this.value)">
                         <input type="number" class="ct-bd-num-input" value="${Math.abs(m.value || 0)}"
                                style="color:${sideColor}"
-                               onchange="ctBdUpdateMod('${wid}','${side}',${idx},'value',this.value)"
-                               oninput="ctBdUpdateMod('${wid}','${side}',${idx},'value',this.value)">
+                               onchange="ctBdUpdateMod('${wid}','${side}',${idx},'value',this.value)">
                         <button class="ct-bd-del-btn" onclick="ctBdRemoveMod('${wid}','${side}',${idx})">
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                         </button>
