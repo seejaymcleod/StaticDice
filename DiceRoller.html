@@ -2100,6 +2100,151 @@
             50% { opacity: 0.6; }
         }
         .ct-pulse { animation: ct-pulse 2s ease-in-out infinite; }
+
+        /* ============================================================
+           TIMER WIDGET
+           ============================================================ */
+        .timer-widget {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(2,6,23,0.55);
+            min-height: 5.25rem; /* Increased widget height for breathing room */
+        }
+
+        .timer-inner-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-bottom: 1.5rem; /* Reserve bottom 24px for the seek bar container */
+            flex: 1;
+            transition: background-color 0.5s ease, border-color 0.5s ease;
+        }
+
+        .timer-inner-container.timer-rundown {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .timer-step-btn {
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.35rem;
+            padding: 0.15rem 0.35rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .timer-step-btn:hover {
+            color: #ffffff;
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .timer-step-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Torch Animation */
+        .timer-anim-torches {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 80%, var(--widget-accent-color) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, var(--widget-accent-color) 0%, transparent 50%);
+            opacity: 0.25;
+            animation: torch-flicker 3s infinite ease-in-out;
+            mix-blend-mode: color-dodge;
+            z-index: 0;
+        }
+
+        @keyframes torch-flicker {
+            0%, 100% { opacity: 0.15; filter: blur(4px); }
+            25% { opacity: 0.35; filter: blur(6px); }
+            50% { opacity: 0.2; filter: blur(5px); }
+            75% { opacity: 0.4; filter: blur(3px); }
+        }
+
+        /* Forcefield Animation */
+        .timer-anim-forcefields {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .timer-anim-forcefields::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, 
+                transparent 45%, 
+                var(--widget-accent-color) 50%, 
+                transparent 55%
+            );
+            opacity: 0.3;
+            animation: forcefield-scan 2.5s infinite linear;
+        }
+        .timer-anim-forcefields::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%),
+                              linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%);
+            background-size: 12px 12px;
+            opacity: 0.15;
+        }
+
+        @keyframes forcefield-scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        /* Atomic Pulse Animation */
+        .timer-anim-atomic {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .timer-anim-atomic::before,
+        .timer-anim-atomic::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 200px;
+            height: 200px;
+            border: 2px solid var(--widget-accent-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0.1);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .timer-anim-atomic::before {
+            animation: atomic-ring-pulse 3s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+        .timer-anim-atomic::after {
+            animation: atomic-ring-pulse 3s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+            animation-delay: 1.5s;
+        }
+
+        @keyframes atomic-ring-pulse {
+            0% { transform: translate(-50%, -50%) scale(0.1); opacity: 0.6; }
+            50% { opacity: 0.3; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
     </style>
 </head>
 
@@ -3355,6 +3500,7 @@
                         <option value="number">Number Card</option>
                         <option value="text">Text</option>
                         <option value="countdown">Countdown Tracker</option>
+                        <option value="timer">Timer Widget</option>
                     </select>
                 </div>
 
@@ -3606,6 +3752,69 @@
                     <!-- Hidden color storage -->
                     <input type="hidden" id="ct-left-color" value="#f43f5e">
                     <input type="hidden" id="ct-right-color" value="#f59e0b">
+                </div>
+
+                <!-- Timer Widget Config -->
+                <div id="widget-timer-config" class="hidden space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Timer Settings</label>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Max Time (Min)</label>
+                            <input type="number" id="timer-max-min" value="10" min="1" max="1440"
+                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Current Time (MM:SS)</label>
+                            <div class="flex gap-1 items-center">
+                                <input type="number" id="timer-curr-min" value="10" min="0" max="1440" placeholder="Min"
+                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold text-center">
+                                <span class="text-slate-500 font-bold">:</span>
+                                <input type="number" id="timer-curr-sec" value="0" min="0" max="59" placeholder="Sec"
+                                    class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold text-center">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dice Roll Max Time -->
+                    <div class="space-y-1.5 pt-1.5 border-t border-white/5">
+                        <label class="text-[9px] font-black text-slate-500 uppercase block">Set Max Time via Dice Roll</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="timer-dice-formula" placeholder="E.g., 2d6+2" value="2d6"
+                                class="flex-1 bg-[#090d16] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                            <button type="button" onclick="rollTimerMaxTime(event)"
+                                class="px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/50 text-sky-400 font-black text-[10px] uppercase tracking-wider hover:bg-sky-500 hover:text-[#020617] transition-all">
+                                Roll
+                            </button>
+                        </div>
+                        <span class="text-[8px] text-slate-500 font-medium block">Evaluates formula to set max/current time in minutes.</span>
+                    </div>
+
+                    <!-- Rundown Text -->
+                    <div class="space-y-1 pt-1.5 border-t border-white/5">
+                        <label class="text-[9px] font-black text-slate-500 uppercase block">Rundown Text</label>
+                        <input type="text" id="timer-rundown-text" value="Time's Up!" placeholder="Alert message on rundown"
+                            class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-[#e2e8f0] font-bold">
+                    </div>
+
+                    <!-- Animation Shimmer Selector -->
+                    <div class="space-y-1 pt-1.5 border-t border-white/5">
+                        <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Face Animation Shimmer</label>
+                        <select id="timer-animation" class="char-select w-full !text-xs !py-2">
+                            <option value="none">None</option>
+                            <option value="torches">Torches (Flicker)</option>
+                            <option value="forcefields">Forcefields (Scanning Grid)</option>
+                            <option value="atomic">Atomic Pulse (Expanding Rings)</option>
+                        </select>
+                    </div>
+
+                    <!-- Reset Action -->
+                    <div class="flex gap-2 pt-1">
+                        <button type="button" onclick="resetTimerConfigInputs(event)"
+                            class="w-full py-3 rounded-xl border border-white/10 text-rose-400 hover:text-rose-300 hover:border-rose-500/30 hover:bg-rose-500/10 font-black text-xs uppercase tracking-wider active:scale-95 transition-all">
+                            Reset Timer
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Toggle Switch Config -->
@@ -8941,6 +9150,16 @@
                 ctWriteConfigFromWidget(q);
             }
 
+            // Populate timer config
+            if (q.widgetType === 'timer') {
+                document.getElementById('timer-max-min').value = Math.floor((q.maxTime || 600) / 60);
+                document.getElementById('timer-curr-min').value = Math.floor((q.currentTime ?? 600) / 60);
+                document.getElementById('timer-curr-sec').value = (q.currentTime ?? 600) % 60;
+                document.getElementById('timer-dice-formula').value = q.diceFormula || '2d6';
+                document.getElementById('timer-rundown-text').value = q.rundownText || "Time's Up!";
+                document.getElementById('timer-animation').value = q.animationType || 'none';
+            }
+
             // Populate detail text
             document.getElementById('widget-detail-text').value = q.detailText || '';
 
@@ -8985,6 +9204,7 @@
             document.getElementById('widget-text-config').classList.add('hidden');
             document.getElementById('widget-number-config').classList.add('hidden');
             document.getElementById('widget-countdown-config').classList.add('hidden');
+            document.getElementById('widget-timer-config')?.classList.add('hidden');
 
             if (type === 'roller') {
                 document.getElementById('widget-roller-addons').classList.remove('hidden');
@@ -8998,6 +9218,8 @@
                 document.getElementById('widget-number-config').classList.remove('hidden');
             } else if (type === 'countdown') {
                 document.getElementById('widget-countdown-config').classList.remove('hidden');
+            } else if (type === 'timer') {
+                document.getElementById('widget-timer-config')?.classList.remove('hidden');
             }
 
         }
@@ -9054,7 +9276,8 @@
                 stepper: '#00ff88',
                 toggle:  '#a855f7',
                 number:  '#ffea00',
-                text:    'none'
+                text:    'none',
+                timer:   '#ff5500'
             };
             const color = DEFAULT_COLORS_BY_TYPE[type] || '#00d4ff';
 
@@ -9138,6 +9361,18 @@
                         q.text = document.getElementById('text-card-content').value;
                     } else if (type === 'countdown') {
                         ctReadConfigIntoWidget(q);
+                    } else if (type === 'timer') {
+                        const maxMin = parseInt(document.getElementById('timer-max-min').value) || 10;
+                        const currMin = parseInt(document.getElementById('timer-curr-min').value) || 0;
+                        const currSec = parseInt(document.getElementById('timer-curr-sec').value) || 0;
+                        q.maxTime = maxMin * 60;
+                        q.currentTime = (currMin * 60) + currSec;
+                        q.diceFormula = document.getElementById('timer-dice-formula').value.trim() || '2d6';
+                        q.rundownText = document.getElementById('timer-rundown-text').value.trim() || "Time's Up!";
+                        q.animationType = document.getElementById('timer-animation').value || 'none';
+                        if (q.currentTime <= 0) {
+                            q.isPaused = true;
+                        }
                     }
 
                     persistSaved();
@@ -9232,6 +9467,16 @@
                 newWidget.collapsed = false;
             } else if (type === 'countdown') {
                 ctReadConfigIntoWidget(newWidget);
+            } else if (type === 'timer') {
+                const maxMin = parseInt(document.getElementById('timer-max-min').value) || 10;
+                const currMin = parseInt(document.getElementById('timer-curr-min').value) || 0;
+                const currSec = parseInt(document.getElementById('timer-curr-sec').value) || 0;
+                newWidget.maxTime = maxMin * 60;
+                newWidget.currentTime = (currMin * 60) + currSec;
+                newWidget.diceFormula = document.getElementById('timer-dice-formula').value.trim() || '2d6';
+                newWidget.rundownText = document.getElementById('timer-rundown-text').value.trim() || "Time's Up!";
+                newWidget.animationType = document.getElementById('timer-animation').value || 'none';
+                newWidget.isPaused = true;
             }
 
             engine.savedQueues.push(newWidget);
@@ -9804,6 +10049,389 @@
         }
 
         // =========================================================================
+        // TIMER WIDGET UTILITIES AND ACTIONS
+        // =========================================================================
+        let timerInterval = null;
+
+        function startGlobalTimerInterval() {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                let anyRunning = false;
+                engine.savedQueues.forEach(q => {
+                    if (q.widgetType === 'timer' && !q.isPaused) {
+                        anyRunning = true;
+                        if (q.currentTime > 0) {
+                            q.currentTime--;
+                            if (q.currentTime === 0) {
+                                q.isPaused = true;
+                                vibrate([100, 50, 100, 50, 100]); // Heavy alarm vibration
+                                playTimerFinishedSound();
+                            }
+                        }
+                    }
+                });
+                if (anyRunning) {
+                    updateTimerWidgetDOMs();
+                }
+            }, 1000);
+        }
+
+        function playTimerFinishedSound() {
+            if (soundEnabled) {
+                try {
+                    rollSound.currentTime = 0;
+                    rollSound.play();
+                } catch(e) {
+                    // Ignore autoplay restrictions
+                }
+            }
+        }
+
+        function updateTimerWidgetDOMs() {
+            engine.savedQueues.forEach(q => {
+                if (q.widgetType === 'timer') {
+                    const el = document.getElementById(`timer-card-${q.id}`);
+                    if (el) {
+                        // Update time text
+                        const displayEl = el.querySelector('.timer-time-display');
+                        if (displayEl) {
+                            displayEl.textContent = formatTime(q.currentTime || 0);
+                        }
+
+                        // Update progress bar
+                        const barFill = el.querySelector('.timer-bar-fill');
+                        if (barFill) {
+                            const maxVal = q.maxTime || 600;
+                            const currVal = q.currentTime ?? maxVal;
+                            const pct = maxVal > 0 ? (currVal / maxVal) * 100 : 0;
+                            barFill.style.width = `${pct}%`;
+                            const barThumb = el.querySelector('.timer-bar-thumb');
+                            if (barThumb) {
+                                barThumb.style.left = `${pct}%`;
+                            }
+                        }
+
+                        // Update play button icon
+                        const playBtn = el.querySelector('.timer-play-btn');
+                        if (playBtn) {
+                            const iconPlay = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M8 5v14l11-7z"/></svg>`;
+                            const iconPause = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+                            playBtn.innerHTML = q.isPaused ? iconPlay : iconPause;
+                            playBtn.title = q.isPaused ? "Start Timer" : "Pause Timer";
+                        }
+
+                        // Update layout styling for rundown status
+                        const innerContainer = el.querySelector('.timer-inner-container');
+                        const rundownTextEl = el.querySelector('.timer-rundown-text');
+                        if (innerContainer && rundownTextEl) {
+                            if (q.currentTime === 0) {
+                                innerContainer.classList.add('timer-rundown');
+                                rundownTextEl.classList.remove('hidden');
+                            } else {
+                                innerContainer.classList.remove('timer-rundown');
+                                rundownTextEl.classList.add('hidden');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function formatTime(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function parseDiceFormulaToQueue(formulaString) {
+            const clean = formulaString.replace(/\s+/g, '').toLowerCase();
+            const queue = [];
+            const regex = /([+-])?(\d*)d(\d+)|([+-])?(\d+)/g;
+            let match;
+            
+            while ((match = regex.exec(clean)) !== null) {
+                if (match[0] === '') continue;
+                
+                const isDice = match[3] !== undefined;
+                if (isDice) {
+                    const sign = match[1] || '+';
+                    const count = parseInt(match[2] || '1', 10);
+                    const sides = parseInt(match[3], 10);
+                    
+                    if (queue.length > 0) {
+                        queue.push({ nodeType: 'operator', operator: sign });
+                    } else if (sign === '-') {
+                        queue.push({ nodeType: 'modifier', type: 'literal', value: 0, operator: '+' });
+                        queue.push({ nodeType: 'operator', operator: '-' });
+                    }
+                    
+                    queue.push({
+                        nodeType: 'node',
+                        id: 'timer_dice_' + Math.random(),
+                        sides: sides,
+                        count: count,
+                        localModifier: null,
+                        localModLevel: 1,
+                        rerollOp: null,
+                        rerollVal: null,
+                        explodeOp: null,
+                        explodeVal: null
+                    });
+                } else {
+                    const sign = match[4] || '+';
+                    const val = parseInt(match[5], 10);
+                    
+                    if (queue.length > 0) {
+                        queue.push({ nodeType: 'operator', operator: sign });
+                    }
+                    
+                    queue.push({
+                        nodeType: 'modifier',
+                        id: 'timer_mod_' + Math.random(),
+                        type: 'literal',
+                        value: val,
+                        operator: sign,
+                        multiplierType: 'none',
+                        multiplierValue: 1,
+                        divisorType: 'none',
+                        divisorValue: 1,
+                        roundMode: 'none'
+                    });
+                }
+            }
+            return queue;
+        }
+
+        function rollTimerMaxTime(event) {
+            if (event) event.stopPropagation();
+            const formula = document.getElementById('timer-dice-formula').value.trim();
+            if (!formula) return;
+            try {
+                const queue = parseDiceFormulaToQueue(formula);
+                if (queue.length === 0) {
+                    haptics.error();
+                    return;
+                }
+                const res = engine.calculateRoll(queue, true);
+                if (res && res.total !== undefined) {
+                    const rolledMins = Math.max(1, parseInt(res.total) || 1);
+                    document.getElementById('timer-max-min').value = rolledMins;
+                    document.getElementById('timer-curr-min').value = rolledMins;
+                    document.getElementById('timer-curr-sec').value = 0;
+                    vibrate(15);
+                } else {
+                    haptics.error();
+                }
+            } catch (e) {
+                haptics.error();
+            }
+        }
+
+        function resetTimerConfigInputs(event) {
+            if (event) event.stopPropagation();
+            const maxVal = document.getElementById('timer-max-min').value;
+            document.getElementById('timer-curr-min').value = maxVal;
+            document.getElementById('timer-curr-sec').value = 0;
+            vibrate(10);
+        }
+
+        function adjustTimerMinutes(widgetId, deltaMins, event) {
+            if (event) event.stopPropagation();
+            const q = engine.findSavedQueue(widgetId);
+            if (q && q.widgetType === 'timer') {
+                const deltaSecs = deltaMins * 60;
+                q.currentTime = Math.max(0, Math.min(q.maxTime, (q.currentTime ?? q.maxTime) + deltaSecs));
+                persistSaved();
+                updateTimerWidgetDOMs();
+                vibrate(10);
+            }
+        }
+
+        function toggleTimerPlay(widgetId, event) {
+            if (event) event.stopPropagation();
+            const q = engine.findSavedQueue(widgetId);
+            if (q && q.widgetType === 'timer') {
+                if (q.currentTime === 0 && q.isPaused) {
+                    q.currentTime = q.maxTime;
+                }
+                q.isPaused = !q.isPaused;
+                persistSaved();
+                updateTimerWidgetDOMs();
+                vibrate(15);
+            }
+        }
+
+        function resetTimerWidget(widgetId, event) {
+            if (event) event.stopPropagation();
+            const q = engine.findSavedQueue(widgetId);
+            if (q && q.widgetType === 'timer') {
+                q.currentTime = q.maxTime;
+                q.isPaused = true;
+                persistSaved();
+                updateTimerWidgetDOMs();
+                vibrate(15);
+            }
+        }
+
+        function buildTimerWidget(q) {
+            const hasColor = q.color && q.color !== 'none';
+            const accentColor = hasColor ? q.color : '#00d4ff';
+            
+            const maxVal = q.maxTime || 600;
+            const currVal = q.currentTime ?? maxVal;
+            const pct = maxVal > 0 ? (currVal / maxVal) * 100 : 0;
+            
+            const isPaused = q.isPaused !== false;
+            const isFinished = currVal === 0;
+
+            const el = document.createElement('div');
+            el.className = 'timer-widget';
+            el.id = `timer-card-${q.id}`;
+            el.style.setProperty('--widget-accent-color', accentColor);
+
+            // Shimmer animation overlay
+            let animHtml = '';
+            if (q.animationType && q.animationType !== 'none') {
+                animHtml = `<div class="timer-anim-${q.animationType}"></div>`;
+            }
+
+            const iconPlay = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M8 5v14l11-7z"/></svg>`;
+            const iconPause = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+            const iconReset = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>`;
+
+            el.innerHTML = `
+                ${animHtml}
+                <div class="timer-inner-container ${isFinished ? 'timer-rundown' : ''}">
+                    <!-- Accent side bar -->
+                    <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
+                    
+                    <div class="flex items-center justify-between pl-8 pr-3 py-2 flex-grow min-w-0 z-10 relative">
+                        <!-- Left Info and Steppers -->
+                        <div class="flex-grow min-w-0 pr-2">
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                            
+                            <!-- Stepper buttons (Minutes) -->
+                            <div class="flex items-center gap-1.5 mt-1 select-none">
+                                <button onclick="adjustTimerMinutes('${q.id}', -1, event)" class="timer-step-btn" title="Subtract 1 minute">
+                                    −1m
+                                </button>
+                                <button onclick="adjustTimerMinutes('${q.id}', 1, event)" class="timer-step-btn" title="Add 1 minute">
+                                    +1m
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right: Alarm text OR standard time display and controls -->
+                        <div class="flex items-center gap-2.5 shrink-0 select-none">
+                            <!-- Time Display -->
+                            <div class="text-right flex flex-col justify-center">
+                                <span class="timer-time-display text-2xl font-black text-[#e2e8f0] tracking-tight tabular-nums leading-none">
+                                    ${formatTime(currVal)}
+                                </span>
+                                <span class="timer-rundown-text text-[9px] font-black text-rose-500 uppercase tracking-widest mt-0.5 animate-pulse ${isFinished ? '' : 'hidden'}">
+                                    ${q.rundownText || "Time's Up!"}
+                                </span>
+                            </div>
+
+                            <!-- Play/Pause Button -->
+                            <button onclick="toggleTimerPlay('${q.id}', event)" class="timer-play-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-[#e2e8f0] hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="${isPaused ? 'Start Timer' : 'Pause Timer'}">
+                                ${isPaused ? iconPlay : iconPause}
+                            </button>
+
+                            <!-- Reset Button -->
+                            <button onclick="resetTimerWidget('${q.id}', event)" class="timer-reset-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-slate-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="Reset Timer">
+                                ${iconReset}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="timer-bar-container absolute bottom-0 left-0 right-0 h-6 cursor-ew-resize select-none z-20 touch-none flex items-center" style="touch-action: none;">
+                        <div class="timer-bar-track relative w-full mx-8 h-1 bg-[#020617]/60 rounded-full">
+                            <div class="timer-bar-fill h-full transition-all duration-75 rounded-full" style="width: ${pct}%; background-color: var(--widget-accent-color); box-shadow: 0 0 10px var(--widget-accent-color);"></div>
+                            <div class="timer-bar-thumb absolute top-1/2 -translate-y-1/2 w-2 h-4.5 bg-[#e2e8f0] rounded-full shadow-[0_0_6px_var(--widget-accent-color)]" style="left: ${pct}%; pointer-events: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Bind draggable slider logic to the progress bar container
+            const bar = el.querySelector('.timer-bar-container');
+            const track = el.querySelector('.timer-bar-track');
+            if (bar && track) {
+                let isDragging = false;
+                
+                const updateTimeFromPointer = (e) => {
+                    const rect = track.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const offsetX = clientX - rect.left;
+                    const pct = Math.max(0, Math.min(1, offsetX / rect.width));
+                    
+                    const maxVal = q.maxTime || 600;
+                    q.currentTime = Math.round(pct * maxVal);
+                    
+                    // Update DOM display immediately for fluid responsiveness
+                    const displayEl = el.querySelector('.timer-time-display');
+                    if (displayEl) {
+                        displayEl.textContent = formatTime(q.currentTime);
+                    }
+                    const barFill = el.querySelector('.timer-bar-fill');
+                    if (barFill) {
+                        barFill.style.width = `${pct * 100}%`;
+                    }
+                    const barThumb = el.querySelector('.timer-bar-thumb');
+                    if (barThumb) {
+                        barThumb.style.left = `${pct * 100}%`;
+                    }
+                };
+
+                bar.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    
+                    const wrapper = bar.closest('.arsenal-item-wrapper');
+                    if (wrapper) {
+                        wrapper.draggable = false;
+                    }
+                    
+                    bar.setPointerCapture(e.pointerId);
+                    isDragging = true;
+                    updateTimeFromPointer(e);
+                    vibrate(5);
+                });
+
+                bar.addEventListener('pointermove', (e) => {
+                    if (!isDragging) return;
+                    e.stopPropagation();
+                    updateTimeFromPointer(e);
+                });
+
+                const stopDrag = (e) => {
+                    if (!isDragging) return;
+                    e.stopPropagation();
+                    bar.releasePointerCapture(e.pointerId);
+                    isDragging = false;
+                    
+                    const wrapper = bar.closest('.arsenal-item-wrapper');
+                    if (wrapper) {
+                        wrapper.draggable = true;
+                    }
+                    
+                    persistSaved();
+                    vibrate(10);
+                };
+
+                bar.addEventListener('pointerup', stopDrag);
+                bar.addEventListener('pointercancel', stopDrag);
+            }
+
+            return el;
+        }
+
+        // Start the global timer interval on script execution
+        startGlobalTimerInterval();
+
+        // =========================================================================
         // CHARACTER RESOURCES & VARIABLES MANAGEMENT
         // =========================================================================
 
@@ -10238,6 +10866,10 @@
                 wrapper.dataset.id = q.id;
 
                 wrapper.addEventListener('dragstart', (e) => {
+                    if (e.target.closest('.timer-bar-container') || e.target.closest('button') || e.target.closest('input')) {
+                        e.preventDefault();
+                        return;
+                    }
                     dragSrcId = q.id;
                     wrapper.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
@@ -10598,7 +11230,7 @@
                 }
 
                 item.innerHTML = innerHtml;
-                if (type !== 'countdown') {
+                if (type !== 'countdown' && type !== 'timer') {
                     wrapper.appendChild(item);
                 }
 
@@ -10691,6 +11323,14 @@
                 } else if (type === 'countdown') {
                     // Countdown widgets build their own self-contained element
                     const ctEl = buildCountdownWidget(q);
+                    ctEl.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleArsenalMenu(q.id, e);
+                    });
+                    wrapper.appendChild(ctEl);
+                } else if (type === 'timer') {
+                    const ctEl = buildTimerWidget(q);
                     ctEl.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
