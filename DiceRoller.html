@@ -2790,10 +2790,14 @@
                                 class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
                         <div>
-                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Initial</label>
-                            <input type="number" id="stepper-val" value="20"
+                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Current</label>
+                            <input type="number" id="stepper-val" value="10"
                                 class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                        <input type="checkbox" id="stepper-tracker" class="w-3.5 h-3.5 rounded border-white/10 bg-black/40 text-sky-500">
+                        <label for="stepper-tracker" class="text-[10px] font-black text-slate-400 uppercase tracking-wider cursor-pointer">Show Visual Resource Tracker Bar</label>
                     </div>
                 </div>
 
@@ -7945,6 +7949,7 @@
             document.getElementById('stepper-min').value = q.min !== undefined ? q.min : '0';
             document.getElementById('stepper-max').value = q.max !== undefined ? q.max : '20';
             document.getElementById('stepper-val').value = q.value !== undefined ? q.value : '20';
+            document.getElementById('stepper-tracker').checked = !!q.showTracker;
 
             // Populate standalone toggle configs
             document.getElementById('toggle-label-on').value = q.labelOn || 'On';
@@ -8119,6 +8124,7 @@
                         q.min = parseInt(document.getElementById('stepper-min').value) || 0;
                         q.max = parseInt(document.getElementById('stepper-max').value) || 20;
                         q.value = Math.max(q.min, Math.min(q.max, parseInt(document.getElementById('stepper-val').value) || 20));
+                        q.showTracker = document.getElementById('stepper-tracker').checked;
 
                         if (name.toLowerCase() === 'hit points' || name.toLowerCase() === 'hp') {
                             const char = characters.find(c => c.id === activeCharacterId);
@@ -8208,6 +8214,7 @@
                 newWidget.min = parseInt(document.getElementById('stepper-min').value) || 0;
                 newWidget.max = parseInt(document.getElementById('stepper-max').value) || 20;
                 newWidget.value = parseInt(document.getElementById('stepper-val').value) || 20;
+                newWidget.showTracker = document.getElementById('stepper-tracker').checked;
 
                 if (name.toLowerCase() === 'hit points' || name.toLowerCase() === 'hp') {
                     const char = characters.find(c => c.id === activeCharacterId);
@@ -8683,6 +8690,7 @@
             list.innerHTML = '';
 
             filtered.forEach(q => {
+                const type = q.widgetType || 'roller';
                 const wrapper = document.createElement('div');
                 wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative w-full';
                 if (q.hidden) {
@@ -8788,7 +8796,6 @@
                     toggleArsenalMenu(q.id, e);
                 });
 
-                const type = q.widgetType || 'roller';
                 if (type === 'roller') {
                     item.onclick = (e) => {
                         if (isHold) {
@@ -8903,10 +8910,11 @@
 
                 const hasColor = q.color && q.color !== 'none';
                 item.style.setProperty('--item-color', hasColor ? q.color : 'transparent');
+                const hideLeftTab = type === 'stepper' && q.showTracker;
                 let innerHtml = `
-                    ${hasColor
+                    ${(hasColor && !hideLeftTab)
                         ? `<div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
-                        : `<div class="absolute left-0 top-0 bottom-0 w-1 bg-white/5"></div>`
+                        : (!hideLeftTab ? `<div class="absolute left-0 top-0 bottom-0 w-1 bg-white/5"></div>` : '')
                     }
                     <div class="flex items-center justify-center w-5 h-full ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
@@ -8940,15 +8948,21 @@
                         `;
                     }
                 } else if (type === 'stepper') {
+                    let trackerHtml = '';
+                    if (q.showTracker) {
+                        const trackerColor = hasColor ? q.color : '#ffffff';
+                        const pct = q.max > 0 ? Math.min(100, Math.max(0, ((q.value - (q.min || 0)) / (q.max - (q.min || 0))) * 100)) : 0;
+                        trackerHtml = `
+                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#020617]/60 overflow-hidden">
+                                <div class="h-full transition-all duration-300" style="width: ${pct}%; background-color: ${trackerColor}; box-shadow: 0 0 10px ${trackerColor};"></div>
+                            </div>
+                        `;
+                    }
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2 pr-2">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
-                            <div class="flex items-center gap-2 mt-1" onclick="event.stopPropagation()">
-                                <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-14 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                                <span class="text-slate-500 font-black text-lg">/</span>
-                                <input type="number" value="${q.max}" onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-14 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-slate-400 font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                            </div>
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${q.name}</div>
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                            ${trackerHtml}
                         </div>
                     `;
                 } else if (type === 'toggle') {
@@ -9046,24 +9060,38 @@
                     wrapper.appendChild(valDisp);
                     wrapper.appendChild(incBtn);
                 } else if (type === 'stepper') {
+                    const stepperControls = document.createElement('div');
+                    stepperControls.className = 'shrink-0 flex items-stretch gap-1 select-none self-stretch';
+                    stepperControls.onclick = (e) => e.stopPropagation();
+
                     const decBtn = document.createElement('button');
-                    decBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
+                    decBtn.className = 'w-10 flex items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-[#00d4ff] hover:text-white text-xl font-black focus:outline-none';
                     decBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, -1);
                     };
                     decBtn.innerHTML = `−`;
 
+                    const valDisp = document.createElement('div');
+                    valDisp.className = 'flex items-center justify-center rounded-xl border border-white/5 bg-[#020617]/40 px-2 gap-0.5 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)]';
+                    valDisp.innerHTML = `
+                        <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-8 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                        <span class="text-slate-500 font-black text-lg leading-none">/</span>
+                        <input type="number" value="${q.max}" onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-8 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                    `;
+
                     const incBtn = document.createElement('button');
-                    incBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
+                    incBtn.className = 'w-10 flex items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-[#00d4ff] hover:text-white text-xl font-black focus:outline-none';
                     incBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, 1);
                     };
                     incBtn.innerHTML = `+`;
 
-                    wrapper.appendChild(decBtn);
-                    wrapper.appendChild(incBtn);
+                    stepperControls.appendChild(decBtn);
+                    stepperControls.appendChild(valDisp);
+                    stepperControls.appendChild(incBtn);
+                    wrapper.appendChild(stepperControls);
                 }
 
                 const otherGroups = filtered.length > 0 ? groups.filter(g => g.characterId === activeCharacterId && g.id !== activeGroupId) : [];
