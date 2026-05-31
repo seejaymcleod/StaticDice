@@ -243,6 +243,28 @@
                 inset 0 0 15px rgba(0, 212, 255, 0.05);
         }
 
+        /* Compact Mode and individual visibility selectors */
+        .compact-mode .saved-item {
+            min-height: 2.25rem !important;
+            padding-top: 0.25rem !important;
+            padding-bottom: 0.25rem !important;
+        }
+
+        .compact-mode .widget-formula,
+        .compact-mode .widget-detail,
+        .compact-mode .widget-note {
+            display: none !important;
+        }
+
+        .saved-item.hide-formula-active .widget-formula {
+            display: none !important;
+        }
+
+        .saved-item.hide-detail-active .widget-detail,
+        .saved-item.hide-detail-active .widget-note {
+            display: none !important;
+        }
+
         #color-picker-overlay {
             background: rgba(2, 6, 23, 0.96);
             backdrop-filter: blur(24px);
@@ -2351,6 +2373,12 @@
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
                     </button>
+                    <button onclick="toggleCompactMode()" id="toggle-compact-btn" title="Toggle Compact Mode"
+                        class="w-[1.75rem] h-[1.75rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-lg text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
+                            <path d="M4 12h16M12 4v4M12 20v-4M9 7l3 3 3-3M9 17l3-3 3 3"/>
+                        </svg>
+                    </button>
                     <button onclick="openWidgetCreationModal()" title="Add Widget"
                         class="w-[1.75rem] h-[1.75rem] flex items-center justify-center hover:bg-[#00d4ff]/10 rounded-lg text-[#94a3b8] transition-all border border-white/5 bg-[#020617]/40 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 active:scale-95">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5">
@@ -2919,6 +2947,23 @@
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
                 </div>
 
+                <!-- Visibility Options -->
+                <div class="space-y-2 pt-1">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Display Options</label>
+                    <div class="flex flex-col gap-2">
+                        <label id="widget-hide-formula-container" class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="widget-hide-formula"
+                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <span class="text-xs font-bold text-slate-300 uppercase">Hide Formula / Queue Info</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="widget-hide-detail-text"
+                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <span class="text-xs font-bold text-slate-300 uppercase">Hide Detail Text</span>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Variable Binding Config -->
                 <div id="widget-var-binding-config" class="space-y-3 pt-2 border-t border-white/5">
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -3109,6 +3154,37 @@
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
                     </svg>
                 `;
+            }
+        }
+
+        let compactMode = localStorage.getItem('compact_mode') === 'true';
+
+        function toggleCompactMode() {
+            compactMode = !compactMode;
+            localStorage.setItem('compact_mode', compactMode);
+            updateCompactModeUI();
+            renderSavedQueues();
+            vibrate(5);
+        }
+
+        function updateCompactModeUI() {
+            const btn = document.getElementById('toggle-compact-btn');
+            if (btn) {
+                if (compactMode) {
+                    btn.classList.add('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10');
+                    btn.classList.remove('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40');
+                } else {
+                    btn.classList.remove('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10');
+                    btn.classList.add('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40');
+                }
+            }
+            const container = document.getElementById('arsenal-list-container');
+            if (container) {
+                if (compactMode) {
+                    container.classList.add('compact-mode');
+                } else {
+                    container.classList.remove('compact-mode');
+                }
             }
         }
 
@@ -8029,6 +8105,8 @@
 
             document.getElementById('number-val').value = '10';
             document.getElementById('widget-detail-text').value = '';
+            document.getElementById('widget-hide-formula').checked = false;
+            document.getElementById('widget-hide-detail-text').checked = false;
             document.getElementById('widget-bind-var-check').checked = false;
             document.getElementById('widget-binds-variable').value = '';
             document.getElementById('widget-variable-rel-type').value = 'define';
@@ -8120,6 +8198,10 @@
             document.getElementById('widget-variable-rel-type').value = q.variableRelType || 'define';
             toggleWidgetVarBinding(hasVarBind);
 
+            // Populate visibility options
+            document.getElementById('widget-hide-formula').checked = !!q.hideFormula;
+            document.getElementById('widget-hide-detail-text').checked = !!q.hideDetailText;
+
             onWidgetTypeChange(typeSelect.value);
 
             overlay.classList.remove('hidden');
@@ -8141,7 +8223,7 @@
             vibrate(5);
         }
 
-         function onWidgetTypeChange(type) {
+        function onWidgetTypeChange(type) {
             document.getElementById('widget-roller-addons').classList.add('hidden');
             document.getElementById('widget-stepper-config').classList.add('hidden');
             document.getElementById('widget-toggle-config').classList.add('hidden');
@@ -8158,6 +8240,17 @@
                 document.getElementById('widget-text-config').classList.remove('hidden');
             } else if (type === 'number') {
                 document.getElementById('widget-number-config').classList.remove('hidden');
+            }
+
+            const hideFormulaContainer = document.getElementById('widget-hide-formula-container');
+            if (hideFormulaContainer) {
+                if (type === 'roller') {
+                    hideFormulaContainer.classList.remove('hidden');
+                    hideFormulaContainer.classList.add('flex');
+                } else {
+                    hideFormulaContainer.classList.add('hidden');
+                    hideFormulaContainer.classList.remove('flex');
+                }
             }
         }
 
@@ -8229,6 +8322,8 @@
                 }
             }
             let detailText = document.getElementById('widget-detail-text').value.trim() || null;
+            const hideFormula = document.getElementById('widget-hide-formula').checked;
+            const hideDetailText = document.getElementById('widget-hide-detail-text').checked;
 
             if (editingWidgetId !== null) {
                 const q = engine.findSavedQueue(editingWidgetId);
@@ -8238,6 +8333,8 @@
                     q.detailText = detailText;
                     q.bindsVariable = bindsVariable;
                     q.variableRelType = variableRelType;
+                    q.hideFormula = hideFormula;
+                    q.hideDetailText = hideDetailText;
 
                     if (type === 'roller') {
                         const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
@@ -8312,7 +8409,9 @@
                 queue: [],
                 detailText: detailText,
                 bindsVariable: bindsVariable,
-                variableRelType: variableRelType
+                variableRelType: variableRelType,
+                hideFormula: hideFormula,
+                hideDetailText: hideDetailText
             };
 
             if (type === 'roller') {
@@ -8993,6 +9092,8 @@
                 const item = document.createElement('div');
                 item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                 item.dataset.id = q.id;
+                if (q.hideFormula) item.classList.add('hide-formula-active');
+                if (q.hideDetailText) item.classList.add('hide-detail-active');
 
                 item.addEventListener('touchstart', startHold, { passive: true });
                 item.addEventListener('touchend', (e) => {
@@ -9185,9 +9286,9 @@
                                 <div class="flex items-center gap-1.5">
                                     <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                                 </div>
-                                <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
-                                ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
-                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                                <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula || 'Empty'}</div>
+                                ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
+                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             </div>
                             <div class="flex items-center gap-2 mr-8 shrink-0 select-none" onclick="event.stopPropagation()">
                                 <div class="w-16 bg-[#020617]/60 border border-[#00ff88]/20 shadow-[0_0_10px_rgba(0,255,136,0.1)] rounded-lg py-1.5 text-center text-[#00ff88] font-black tabular-nums text-lg leading-none" title="Current value">
@@ -9201,9 +9302,9 @@
                                 <div class="flex items-center gap-1.5">
                                     <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                                 </div>
-                                <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80">${formula || 'Empty'}</div>
-                                ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate">${q.addonNote}</div>` : ''}
-                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                                <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula || 'Empty'}</div>
+                                ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
+                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             </div>
                         `;
                     }
@@ -9236,7 +9337,7 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${q.name}</div>
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             ${trackerHtml}
                         </div>
                     `;
@@ -9244,7 +9345,7 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2 pr-8">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
                             <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${q.checked ? 'text-white' : 'text-slate-500'}">
@@ -9274,7 +9375,7 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-2 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2 mr-8 shrink-0 select-none" onclick="event.stopPropagation()">
                             <input type="number" value="${displayVal}" ${isCalculated ? 'readonly disabled' : ''} onchange="changeNumberValueDirect('${q.id}', this.value)" class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isCalculated ? 'opacity-70 pointer-events-none' : ''}">
@@ -9288,7 +9389,7 @@
                                 <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || ''}</div>
                                 <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
                             </div>
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             ${q.text ? `<div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed ? 'hidden' : ''}">${q.text}</div>` : ''}
                         </div>
                     `;
@@ -10819,6 +10920,7 @@
             renderCharacterSelect();
             renderGroupTabs();
             updateShowHiddenWidgetsButton();
+            updateCompactModeUI();
         };
 
         // =========================================================================
