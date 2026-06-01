@@ -107,6 +107,21 @@ Saved items in `engine.savedQueues` can act as different types of interactive ca
 - Executing a chain (`executeRollChain`) shifts the UI display to `#chain-cascade-container`.
 - Processes sequentially: displays step totals, updates rolling status animations, outputs the `flatDescription`, and halts if target checks fail or when the chain ends normally.
 
+### 6. Third-Party Character Importers
+- **Auto-Detection**: The `ThirdPartyImporters` namespace handles automatic detection and parsing of imported JSON files inside `importSettings(event)`. If a structure matches a registered importer, it bypasses standard settings imports and runs custom mapping logic.
+- **Shadowdarklings Importer**:
+  - Matches files with `.stats` objects, `.class`, `.ancestry`, and arrays for `.gear` and `.attacks`.
+  - Spawns a character instance using the `template_sd_character` blueprint.
+  - Maps basic stats (`HP`, `Level`, `XP`, `Gold`, and core scores).
+  - Maps Details page items (Class, Ancestry, etc.) with values assigned to the Widget Name (`name`) and clears notes.
+  - Automatically equips armor types matching a pre-defined AC database (chainmail, plate, leather, etc.) and shields, setting up active AC-binding modifiers.
+  - Maps Gear items sequentially to the predefined template slot widgets (`w_gear_1` to `w_gear_20`). For multi-slot items, subsequent slots are allocated as placeholder cards named `... extra slot` showing which item occupies them.
+  - Translates passive abilities and ancestry traits (such as Half-Orc Mighty +1 melee attack/damage or wizard spellcasting bonus) into interactive **Toggle widgets** under the `Passives` group. Each toggle widget is equipped with a `passiveModifiers` array, enabling dynamic runtime adjustments to modifier variables (`Attack_Melee`, `Attack_Ranged`, `Damage_Melee`, `Damage_Ranged`, `Spellcheck`) and allowing the user to turn passives on/off in the UI. Base variables and define widgets remain at 0 to avoid hardcoding.
+  - Maps weapons to combat groups as twin Attack and Damage roller widgets. Attack/Damage formulas dynamically reference core attributes (STR/DEX mod), group modifiers, and magic bonuses.
+  - Identifies class spellcasting attributes (e.g., INT for wizards, WIS for priests) to dynamically compile spell check roll widgets.
+  - Scans talents, features, and magic items for limited usage patterns (e.g. `1/day`, `once per combat`, or level-scaling limits like `/level`).
+  - Spawns limited-use abilities in a new `Passives` group as **Stepper widgets** with visual trackers. Max values can bind to variable strings (like `LVL`), rendering resolved values dynamically and locking direct max input on cards. Passive abilities with modifiers map as Toggles, and other descriptive passives map as Text widgets.
+
 ## 🎨 UI Hooks & Integration
 - **Character Variables**: DiceEngine calls `window.getActiveCharacterVariable(name)` to resolve stats (e.g., `STR`) dynamically:
 ```javascript

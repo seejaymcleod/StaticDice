@@ -1,0 +1,308 @@
+{
+  "name": "Rimas",
+  "stats": {
+    "STR": 14,
+    "DEX": 12,
+    "CON": 16,
+    "INT": 10,
+    "WIS": 9,
+    "CHA": 8
+  },
+  "rolledStats": {
+    "STR": 14,
+    "DEX": 12,
+    "CON": 16,
+    "INT": 10,
+    "WIS": 9,
+    "CHA": 8
+  },
+  "ancestry": "Half-Orc",
+  "class": "Pit Fighter",
+  "level": 2,
+  "levels": [
+    {
+      "stoutHitPointRoll": 0,
+      "Rolled12ChosenTalentName": "",
+      "talentRolledName": "IgnoreOneAttack",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "HitPointRoll": 8,
+      "level": 1,
+      "talentRolledDesc": "1/day, ignore all damage and effects from one attack",
+      "Rolled12ChosenTalentDesc": ""
+    },
+    {
+      "Rolled12TalentOrTwoStatPoints": "",
+      "talentRolledName": "",
+      "HitPointRoll": 5,
+      "Rolled12ChosenTalentDesc": "",
+      "talentRolledDesc": "",
+      "level": 2,
+      "stoutHitPointRoll": 0,
+      "Rolled12ChosenTalentName": ""
+    }
+  ],
+  "XP": 0,
+  "ambitionTalentLevel": {
+    "talentRolledDesc": "",
+    "level": 1,
+    "Rolled12ChosenTalentDesc": "",
+    "HitPointRoll": 0,
+    "Rolled12TalentOrTwoStatPoints": "",
+    "talentRolledName": "",
+    "Rolled12ChosenTalentName": "",
+    "stoutHitPointRoll": 0
+  },
+  "title": "Rookie",
+  "alignment": "Lawful",
+  "background": "Fisher",
+  "deity": "Gede",
+  "maxHitPoints": 16,
+  "armorClass": 14,
+  "gearSlotsTotal": 14,
+  "gearSlotsUsed": 10,
+  "bonuses": [
+    {
+      "sourceType": "Class",
+      "gainedAtLevel": 1,
+      "bonusTo": "",
+      "sourceName": "Pit Fighter",
+      "bonusName": "IgnoreOneAttack",
+      "sourceCategory": "Talent",
+      "name": "IgnoreOneAttack"
+    }
+  ],
+  "goldRolled": 50,
+  "gold": 6,
+  "silver": 2,
+  "copper": 0,
+  "gear": [
+    {
+      "instanceId": "mpue5erw",
+      "gearId": "w9",
+      "name": "Longsword",
+      "type": "weapon",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 9,
+      "currency": "gp"
+    },
+    {
+      "instanceId": "mpue5erx",
+      "gearId": "w24",
+      "name": "Whip",
+      "type": "weapon",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 10,
+      "currency": "gp"
+    },
+    {
+      "instanceId": "mpue5ery",
+      "gearId": "a1",
+      "name": "Leather armor",
+      "type": "armor",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 10,
+      "currency": "gp"
+    },
+    {
+      "instanceId": "mpue5erz",
+      "gearId": "a4",
+      "name": "Shield",
+      "type": "armor",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 10,
+      "currency": "gp"
+    },
+    {
+      "instanceId": "mpue5es0",
+      "gearId": "s2",
+      "name": "Backpack",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 0,
+      "cost": 2,
+      "currency": "gp"
+    },
+    {
+      "instanceId": "mpue5es1",
+      "gearId": "s8",
+      "name": "Flint and steel",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 5,
+      "currency": "sp"
+    },
+    {
+      "instanceId": "mpue5es2",
+      "gearId": "s17",
+      "name": "Torch",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 5,
+      "currency": "sp"
+    },
+    {
+      "instanceId": "mpue5es3",
+      "gearId": "s15",
+      "name": "Rations",
+      "type": "sundry",
+      "quantity": 2,
+      "totalUnits": 6,
+      "slots": 2,
+      "cost": 10,
+      "currency": "sp"
+    },
+    {
+      "instanceId": "mpue5es5",
+      "gearId": "s7",
+      "name": "Flask or bottle",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 3,
+      "currency": "sp"
+    },
+    {
+      "instanceId": "mpue5es6",
+      "gearId": "s6",
+      "name": "Crowbar",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 5,
+      "currency": "sp"
+    }
+  ],
+  "treasures": [],
+  "magicItems": [],
+  "attacks": [
+    "LONGSWORD: +3, 1d8+1",
+    "WHIP: +2 (N), 1d4 (FIN, LASH)"
+  ],
+  "ledger": [
+    {
+      "silverChange": 0,
+      "goldChange": 50,
+      "notes": "",
+      "copperChange": 0,
+      "desc": "Starting gold"
+    },
+    {
+      "notes": "",
+      "goldChange": -9,
+      "silverChange": 0,
+      "desc": "Buy Longsword",
+      "copperChange": 0
+    },
+    {
+      "goldChange": -10,
+      "silverChange": 0,
+      "notes": "",
+      "copperChange": 0,
+      "desc": "Buy Whip"
+    },
+    {
+      "desc": "Buy Leather armor",
+      "copperChange": 0,
+      "notes": "",
+      "silverChange": 0,
+      "goldChange": -10
+    },
+    {
+      "desc": "Buy Shield",
+      "copperChange": 0,
+      "notes": "",
+      "silverChange": 0,
+      "goldChange": -10
+    },
+    {
+      "silverChange": 0,
+      "goldChange": -2,
+      "notes": "",
+      "copperChange": 0,
+      "desc": "Buy Backpack"
+    },
+    {
+      "silverChange": -5,
+      "goldChange": 0,
+      "notes": "",
+      "copperChange": 0,
+      "desc": "Buy Flint and steel"
+    },
+    {
+      "notes": "",
+      "goldChange": 0,
+      "silverChange": -5,
+      "desc": "Buy Torch",
+      "copperChange": 0
+    },
+    {
+      "copperChange": 0,
+      "desc": "Buy Rations",
+      "goldChange": 0,
+      "silverChange": -5,
+      "notes": ""
+    },
+    {
+      "goldChange": 0,
+      "silverChange": -5,
+      "notes": "",
+      "copperChange": 0,
+      "desc": "Buy Rations"
+    },
+    {
+      "copperChange": 0,
+      "desc": "Buy Flask or bottle",
+      "goldChange": 0,
+      "silverChange": -3,
+      "notes": ""
+    },
+    {
+      "notes": "",
+      "silverChange": -5,
+      "goldChange": 0,
+      "desc": "Buy Crowbar",
+      "copperChange": 0
+    }
+  ],
+  "spellsKnown": "None",
+  "languages": "Common, Orcish",
+  "creationMethod": "Design",
+  "coreRulesOnly": true,
+  "activeSources": [
+    "CS1",
+    "CS2",
+    "CS3",
+    "CS4",
+    "SD",
+    "SG"
+  ],
+  "edits": [
+    {
+      "desc": "Stats set to STR 14, DEX 12, CON 16, INT 10, WIS 9, CHA 8",
+      "order": 2,
+      "level": 1,
+      "theField": "Stats"
+    },
+    {
+      "theField": "HitPointsLevel1",
+      "level": 1,
+      "desc": "Hit Points rolled at level 1 set to 8",
+      "order": 5
+    }
+  ]
+}

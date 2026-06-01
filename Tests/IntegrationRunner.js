@@ -24,6 +24,14 @@ const dom = new JSDOM(html, {
 const { window } = dom;
 const { document } = window;
 
+// Load Rimas.json for JSDOM third-party import test
+const rimasJson = fs.readFileSync(path.resolve(__dirname, '../temp assets/Rimas.json'), 'utf8');
+window.rimasJsonStr = rimasJson;
+
+// Load Horlabo.json for JSDOM third-party import test
+const horlaboJson = fs.readFileSync(path.resolve(__dirname, '../temp assets/Horlabo.json'), 'utf8');
+window.horlaboJsonStr = horlaboJson;
+
 // Mock audio and haptics
 window.Audio = class {
     constructor() {
@@ -492,6 +500,206 @@ window.addEventListener('load', () => {
                 if (customDice.length !== 2) throw new Error('Custom dice should be merged (length 2)');
                 if (customDice[0].d !== 12) throw new Error('Custom dice[0] should be 12');
                 if (customDice[1].d !== 33) throw new Error('Custom dice[1] should be 33');
+
+                // Test 12: Import third-party character sheet (Rimas.json)
+                console.log('Testing third-party character sheet import (Rimas.json)...');
+                
+                // Mock FileReader to read rimasData
+                window.FileReader = class {
+                    constructor() {
+                        this.onload = null;
+                    }
+                    readAsText(file) {
+                        const event = {
+                            target: {
+                                result: window.rimasJsonStr
+                            }
+                        };
+                        setTimeout(() => {
+                            if (this.onload) this.onload(event);
+                        }, 0);
+                    }
+                };
+                
+                // Trigger import settings (which will detect Shadowdarklings)
+                const mockRimasEvent = {
+                    target: {
+                        files: [{ name: 'Rimas.json' }],
+                        value: 'Rimas.json'
+                    }
+                };
+                
+                importSettings(mockRimasEvent);
+                
+                // Wait for import to complete
+                await new Promise(r => setTimeout(r, 100));
+
+                // Verify Rimas exists and is active
+                const rimasChar = characters.find(c => c.name === 'Rimas');
+                if (!rimasChar) throw new Error('Rimas character should be imported');
+                if (activeCharacterId !== rimasChar.id) throw new Error('Rimas should be the active character');
+                
+                // Verify details
+                const rimasWidgets = engine.savedQueues.filter(w => w.characterId === rimasChar.id);
+                const classWidget = rimasWidgets.find(w => w.detailText === 'Class');
+                if (!classWidget || classWidget.name !== 'Pit Fighter') throw new Error('Class should be Pit Fighter');
+                const ancestryWidget = rimasWidgets.find(w => w.detailText === 'Ancestry');
+                if (!ancestryWidget || ancestryWidget.name !== 'Half-Orc') throw new Error('Ancestry should be Half-Orc');
+                
+                // Verify stats variables
+                if (rimasChar.variables.STR !== '14') throw new Error('STR variable should be 14');
+                if (rimasChar.variables.CON !== '16') throw new Error('CON variable should be 16');
+                if (rimasChar.variables.STR_mod !== '2') throw new Error('STR_mod variable should be 2');
+                if (rimasChar.variables.WIS_mod !== '-1') throw new Error('WIS_mod variable should be -1');
+                
+                // Verify dynamic passive mods added to character variables
+                if (rimasChar.variables.Attack_Melee !== '1') throw new Error('Attack_Melee passive mod should be 1');
+                if (rimasChar.variables.Damage_Melee !== '1') throw new Error('Damage_Melee passive mod should be 1');
+
+                // Verify HP and Gold stepper values
+                const rimasHpW = rimasWidgets.find(w => w.name === 'HP' && w.widgetType === 'stepper');
+                if (!rimasHpW || rimasHpW.value !== 16 || rimasHpW.max !== 16) throw new Error('HP max/value should be 16');
+                
+                const rimasGoldW = rimasWidgets.find(w => w.name === 'Gold' && w.widgetType === 'stepper');
+                if (!rimasGoldW || rimasGoldW.value !== 6) throw new Error('Gold value should be 6');
+                
+                // Verify armor AC custom widgets
+                const leatherW = rimasWidgets.find(w => w.name === 'Leather armor' && w.widgetType === 'number');
+                if (!leatherW) throw new Error('Leather armor widget should be created');
+                if (leatherW.addonToggle.checked !== true) throw new Error('Leather armor should be equipped');
+                
+                const testShieldW = rimasWidgets.find(w => w.name === 'Shield' && w.widgetType === 'number');
+                if (!testShieldW || testShieldW.addonToggle.checked !== true) throw new Error('Shield should be equipped');
+                
+                // Verify weapon attacks (now dynamically using variables STR_mod + Attack_Melee)
+                const longswordAtkW = rimasWidgets.find(w => w.name === 'Longsword Attack');
+                if (!longswordAtkW) throw new Error('Longsword Attack widget should be created');
+                
+                const hasStrMod = longswordAtkW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'STR_mod');
+                const hasMeleeAtkMod = longswordAtkW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'Attack_Melee');
+                if (!hasStrMod || !hasMeleeAtkMod) throw new Error('Longsword Attack queue should reference STR_mod and Attack_Melee variables');
+                
+                const longswordDmgW = rimasWidgets.find(w => w.name === 'Longsword Damage');
+                if (!longswordDmgW) throw new Error('Longsword Damage widget should be created');
+                // formula is 1d8+Damage_Melee
+                const dNode = longswordDmgW.unifiedQueue.find(n => n.nodeType === 'node');
+                if (dNode.sides !== 8 || dNode.count !== 1) throw new Error('Longsword Damage should roll 1d8');
+                const dModNode = longswordDmgW.unifiedQueue.find(n => n.nodeType === 'modifier');
+                if (dModNode.value !== 'Damage_Melee') throw new Error('Longsword Damage modifier should reference Damage_Melee');
+                
+                // Verify talents and magic items listed in passives as a stepper
+                const ignoreAttackW = rimasWidgets.find(w => w.name === 'IGNORE ONE ATTACK');
+                if (!ignoreAttackW) throw new Error('IgnoreOneAttack feature widget should be created');
+                if (ignoreAttackW.widgetType !== 'stepper') throw new Error('IgnoreOneAttack should be a stepper widget due to 1/day limit');
+                if (ignoreAttackW.max !== 1 || ignoreAttackW.value !== 1) throw new Error('IgnoreOneAttack stepper limits should be 1/1');
+                if (!ignoreAttackW.detailText.includes('1/day, ignore all damage')) throw new Error('IgnoreOneAttack description is incorrect');
+
+                // Verify gear mapping slots
+                const slot1 = rimasWidgets.find(w => w.id.startsWith('w_gear_1_'));
+                if (!slot1 || slot1.name !== 'Longsword') throw new Error('Gear slot 1 should be Longsword, got: ' + (slot1 ? slot1.name : 'null'));
+
+                const slot8 = rimasWidgets.find(w => w.id.startsWith('w_gear_8_'));
+                if (!slot8 || slot8.name !== 'Rations') throw new Error('Gear slot 8 should be Rations, got: ' + (slot8 ? slot8.name : 'null'));
+
+                const slot9 = rimasWidgets.find(w => w.id.startsWith('w_gear_9_'));
+                if (!slot9 || slot9.name !== '... extra slot') throw new Error('Gear slot 9 should be "... extra slot" (placeholder for Rations), got: ' + (slot9 ? slot9.name : 'null'));
+
+                const slot10 = rimasWidgets.find(w => w.id.startsWith('w_gear_10_'));
+                if (!slot10 || slot10.name !== 'Flask or bottle') throw new Error('Gear slot 10 should be Flask or bottle, got: ' + (slot10 ? slot10.name : 'null'));
+
+                const slot11 = rimasWidgets.find(w => w.id.startsWith('w_gear_11_'));
+                if (!slot11 || slot11.name !== 'Crowbar') throw new Error('Gear slot 11 should be Crowbar, got: ' + (slot11 ? slot11.name : 'null'));
+
+                const slot12 = rimasWidgets.find(w => w.id.startsWith('w_gear_12_'));
+                if (!slot12 || slot12.name !== '') throw new Error('Gear slot 12 should remain empty, got: ' + (slot12 ? slot12.name : 'null'));
+
+                // Test 13: Import third-party character sheet (Horlabo.json)
+                console.log('Testing third-party character sheet import (Horlabo.json)...');
+
+                // Mock FileReader to read horlaboData
+                window.FileReader = class {
+                    constructor() {
+                        this.onload = null;
+                    }
+                    readAsText(file) {
+                        const event = {
+                            target: {
+                                result: window.horlaboJsonStr
+                            }
+                        };
+                        setTimeout(() => {
+                            if (this.onload) this.onload(event);
+                        }, 0);
+                    }
+                };
+
+                const mockHorlaboEvent = {
+                    target: {
+                        files: [{ name: 'Horlabo.json' }],
+                        value: 'Horlabo.json'
+                    }
+                };
+
+                importSettings(mockHorlaboEvent);
+
+                // Wait for import to complete
+                await new Promise(r => setTimeout(r, 100));
+
+                // Verify Horlabo exists and is active
+                const horlaboChar = characters.find(c => c.name === 'Horlabo');
+                if (!horlaboChar) throw new Error('Horlabo character should be imported');
+                if (activeCharacterId !== horlaboChar.id) throw new Error('Horlabo should be the active character');
+
+                // Verify details
+                const horlaboWidgets = engine.savedQueues.filter(w => w.characterId === horlaboChar.id);
+                const hClassW = horlaboWidgets.find(w => w.detailText === 'Class');
+                if (!hClassW || hClassW.name !== 'Wizard') throw new Error('Class should be Wizard');
+                const hAncestryW = horlaboWidgets.find(w => w.detailText === 'Ancestry');
+                if (!hAncestryW || hAncestryW.name !== 'Human') throw new Error('Ancestry should be Human');
+
+                // Verify stats variables
+                if (horlaboChar.variables.INT !== '21') throw new Error('INT variable should be 21');
+                if (horlaboChar.variables.INT_mod !== '5') throw new Error('INT_mod variable should be 5');
+
+                // Verify dynamic passive spellcheck modifiers (Plus1ToCastingSpells at level 7 and 9 should add to Spellcheck)
+                const activeSpellcheck = window.getActiveCharacterVariable('Spellcheck');
+                if (activeSpellcheck !== 2) throw new Error('Spellcheck modifier should be 2, got: ' + activeSpellcheck);
+
+                // Verify Spellcheck variable in character sheet
+                if (horlaboChar.variables.Spellcheck !== '2') throw new Error('Spellcheck variable should be 2, got: ' + horlaboChar.variables.Spellcheck);
+
+                // Verify casting spells widget rolls: 1d20 + INT_mod + Spellcheck
+                const spellCastW = horlaboWidgets.find(w => w.name === 'MAGIC MISSILE');
+                if (!spellCastW) throw new Error('Magic Missile widget should be created');
+
+                const hasIntMod = spellCastW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'INT_mod');
+                const hasSpellcheck = spellCastW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'Spellcheck');
+                if (!hasIntMod || !hasSpellcheck) throw new Error('Spell casting widget should reference INT_mod and Spellcheck variables');
+
+                // Verify gear mapping (seq slots and no extra slots)
+                const hSlot1 = horlaboWidgets.find(w => w.id.startsWith('w_gear_1_'));
+                if (!hSlot1 || hSlot1.name !== 'Dagger (obsidian)') throw new Error('Horlabo gear slot 1 should be Dagger (obsidian)');
+
+                const hSlot2 = horlaboWidgets.find(w => w.id.startsWith('w_gear_2_'));
+                if (!hSlot2 || hSlot2.name !== 'Backpack') throw new Error('Horlabo gear slot 2 should be Backpack');
+
+                const hSlot5 = horlaboWidgets.find(w => w.id.startsWith('w_gear_5_'));
+                if (!hSlot5 || hSlot5.name !== 'Crowbar') throw new Error('Horlabo gear slot 5 should be Crowbar');
+
+                const hSlot6 = horlaboWidgets.find(w => w.id.startsWith('w_gear_6_'));
+                if (!hSlot6 || hSlot6.name !== '') throw new Error('Horlabo gear slot 6 should be empty');
+
+                // Verify parsed ambition talent
+                const ambitionTalentW = horlaboWidgets.find(w => w.name === 'ADV ON CAST ONE SPELL');
+                if (!ambitionTalentW) throw new Error('Human ambition talent ADV ON CAST ONE SPELL should be parsed and created');
+                if (!ambitionTalentW.text || !ambitionTalentW.text.includes('advantage on casting one spell')) throw new Error('Human ambition talent description is incorrect');
+
+                // Verify metadata details widget in passives
+                const detailsW = horlaboWidgets.find(w => w.name === 'CHARACTER DETAILS');
+                if (!detailsW) throw new Error('CHARACTER DETAILS widget should be created');
+                if (!detailsW.text.includes('Title: Druid')) throw new Error('CHARACTER DETAILS should contain Title: Druid');
+                if (!detailsW.text.includes('Silver: 5')) throw new Error('CHARACTER DETAILS should contain Silver: 5');
+                if (!detailsW.text.includes('Gold Rolled: 40')) throw new Error('CHARACTER DETAILS should contain Gold Rolled: 40');
             })()
 
         `).then(() => {

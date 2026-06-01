@@ -17,13 +17,14 @@ window.StaticDiceTemplates = [
             "LVL": "1", "XP": "0", "Gold": "0", "Luck": "0",
             "STR": "10", "DEX": "10", "CON": "10", "INT": "10", "WIS": "10", "CHA": "10",
             "STR_mod": "0", "DEX_mod": "0", "CON_mod": "0", "INT_mod": "0", "WIS_mod": "0", "CHA_mod": "0",
-            "Attack_Melee": "0", "Attack_Ranged": "0", "Spellcheck": "0", "Backstab_Dice_Bonus": "0", "Backstab_Dice": "1"
+            "Attack_Melee": "0", "Attack_Ranged": "0", "Damage_Melee": "0", "Damage_Ranged": "0", "Spellcheck": "0", "Backstab_Dice_Bonus": "0", "Backstab_Dice": "1"
         },
         groups: [
             { id: 'stats', name: 'Stats', color: '#00d4ff' },
             { id: 'combat', name: 'Combat', color: '#ff003c' },
             { id: 'spells', name: 'Spells', color: '#b565ff' },
             { id: 'gear', name: 'Gear', color: '#ff9900' },
+            { id: 'passives', name: 'Passives', color: '#10b981' },
             { id: 'notes', name: 'Notes', color: '#ff55aa' },
             { id: 'details', name: 'Details', color: '#00ff88' }
         ],
@@ -405,6 +406,26 @@ window.StaticDiceTemplates = [
                 widgetType: 'number',
                 value: 0,
                 bindsVariable: 'Attack_Ranged',
+                variableRelType: 'define',
+                hidden: true
+            },
+            {
+                id: 'w_var_damage_melee',
+                groupId: 'stats',
+                name: 'Damage Melee Mod',
+                widgetType: 'number',
+                value: 0,
+                bindsVariable: 'Damage_Melee',
+                variableRelType: 'define',
+                hidden: true
+            },
+            {
+                id: 'w_var_damage_ranged',
+                groupId: 'stats',
+                name: 'Damage Ranged Mod',
+                widgetType: 'number',
+                value: 0,
+                bindsVariable: 'Damage_Ranged',
                 variableRelType: 'define',
                 hidden: true
             },
