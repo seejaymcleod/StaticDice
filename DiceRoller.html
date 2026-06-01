@@ -2147,7 +2147,7 @@
             overflow: hidden;
             border: 1px solid rgba(255,255,255,0.06);
             background: rgba(2,6,23,0.55);
-            min-height: 5.25rem; /* Increased widget height for breathing room */
+            min-height: 4.75rem;
         }
 
         .timer-inner-container {
@@ -10620,27 +10620,27 @@
                         <!-- Accent side bar -->
                         <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
                         
-                        <div class="flex items-center justify-between pl-8 pr-3 py-2 flex-grow min-w-0 z-10 relative">
-                            <!-- Left Info and Steppers -->
-                            <div class="flex-grow min-w-0 pr-2">
+                        <div class="flex flex-col justify-between pl-8 pr-3 py-2 flex-grow min-w-0 z-10 relative">
+                            <!-- Row 1: Title (left) | Detail text + Play (right) -->
+                            <div class="flex items-center justify-between w-full">
                                 <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
-                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
-                                
-                                <!-- Stepper buttons (Minutes) -->
-                                <div class="flex items-center gap-1.5 mt-1 select-none">
-                                    <button onclick="adjustTimerMinutes('${q.id}', -1, event)" class="timer-step-btn" title="Subtract 1 minute">
-                                        −1m
-                                    </button>
-                                    <button onclick="adjustTimerMinutes('${q.id}', 1, event)" class="timer-step-btn" title="Add 1 minute">
-                                        +1m
+                                <div class="flex items-center gap-2.5 shrink-0 select-none">
+                                    ${q.detailText ? `<span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">${q.detailText}</span>` : ''}
+                                    <button onclick="toggleTimerPlay('${q.id}', event)" class="timer-play-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-[#e2e8f0] hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="${isPaused ? 'Start Timer' : 'Pause Timer'}">
+                                        ${isPaused ? iconPlay : iconPause}
                                     </button>
                                 </div>
                             </div>
+                            
+                            <!-- Row 2: -1M (left) | Time display (center) | +1M (right) -->
+                            <div class="flex items-center justify-between w-full mt-1.5 select-none relative min-h-[2.25rem]">
+                                <!-- Left: -1M Button -->
+                                <button onclick="adjustTimerMinutes('${q.id}', -1, event)" class="timer-step-btn w-10 py-1" title="Subtract 1 minute">
+                                    −1m
+                                </button>
 
-                            <!-- Right: Alarm text OR standard time display and controls -->
-                            <div class="flex items-center gap-2.5 shrink-0 select-none">
-                                <!-- Time Display -->
-                                <div class="text-right flex flex-col justify-center">
+                                <!-- Center: Time Display -->
+                                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center flex flex-col items-center">
                                     <span class="timer-time-display text-2xl font-black text-[#e2e8f0] tracking-tight tabular-nums leading-none">
                                         ${formatTime(currVal)}
                                     </span>
@@ -10649,14 +10649,9 @@
                                     </span>
                                 </div>
 
-                                <!-- Play/Pause Button -->
-                                <button onclick="toggleTimerPlay('${q.id}', event)" class="timer-play-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-[#e2e8f0] hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="${isPaused ? 'Start Timer' : 'Pause Timer'}">
-                                    ${isPaused ? iconPlay : iconPause}
-                                </button>
-
-                                <!-- Reset Button -->
-                                <button onclick="resetTimerWidget('${q.id}', event)" class="timer-reset-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-slate-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="Reset Timer">
-                                    ${iconReset}
+                                <!-- Right: +1M Button -->
+                                <button onclick="adjustTimerMinutes('${q.id}', 1, event)" class="timer-step-btn w-10 py-1" title="Add 1 minute">
+                                    +1m
                                 </button>
                             </div>
                         </div>
@@ -11802,6 +11797,13 @@
                     </button>
                 ` : '';
 
+                const resetTimerMenuItemHtml = type === 'timer' ? `
+                    <button onclick="resetTimerWidget('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                        <span>Reset Timer</span>
+                    </button>
+                ` : '';
+
                 const menuContainer = document.createElement('div');
                 menuContainer.id = `menu-${q.id}`;
                 menuContainer.className = 'arsenal-menu absolute right-2 top-12 hidden';
@@ -11811,6 +11813,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         <span>Configure</span>
                     </button>
+                    ${resetTimerMenuItemHtml}
                     ${editLoadoutButtonHtml}
                     <button onclick="openColorPicker('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
