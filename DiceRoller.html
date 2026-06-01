@@ -264,6 +264,11 @@
             padding-bottom: 0.25rem !important;
         }
 
+        .widget-display-compact.widget-type-number .saved-item {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
         #color-picker-overlay {
             background: rgba(2, 6, 23, 0.96);
             backdrop-filter: blur(24px);
@@ -11063,7 +11068,7 @@
                 };
 
                 const wrapper = document.createElement('div');
-                wrapper.className = 'arsenal-item-wrapper flex items-center gap-2 relative w-full';
+                wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-${type}`;
                 if (q.hidden) {
                     wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
                 }

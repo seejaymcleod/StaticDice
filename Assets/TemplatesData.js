@@ -448,6 +448,7 @@ window.StaticDiceTemplates = [
                 name: 'Attack Melee - STR',
                 color: '#ff9900',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -462,6 +463,7 @@ window.StaticDiceTemplates = [
                 name: 'Attack Melee - DEX',
                 color: '#ff9900',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -476,6 +478,7 @@ window.StaticDiceTemplates = [
                 name: 'Attack Ranged - STR',
                 color: '#ffdd00',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -490,6 +493,7 @@ window.StaticDiceTemplates = [
                 name: 'Attack Ranged - DEX',
                 color: '#ffdd00',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -504,6 +508,7 @@ window.StaticDiceTemplates = [
                 name: 'Spellcheck - INT',
                 color: '#b565ff',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -518,6 +523,7 @@ window.StaticDiceTemplates = [
                 name: 'Spellcheck - WIS',
                 color: '#b565ff',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -532,6 +538,7 @@ window.StaticDiceTemplates = [
                 name: 'Spellcheck - CHA',
                 color: '#b565ff',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -584,7 +591,8 @@ window.StaticDiceTemplates = [
                 widgetType: 'number',
                 value: 0,
                 bindsVariable: 'AC_Mod',
-                variableRelType: 'define'
+                variableRelType: 'define',
+                hidden: true
             },
             {
                 id: 'w_backstab_dice_display',
