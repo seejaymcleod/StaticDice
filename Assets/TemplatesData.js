@@ -98,9 +98,10 @@ window.StaticDiceTemplates = [
                 groupId: 'combat',
                 name: 'Armor Class',
                 color: '#00d4ff',
-                widgetType: 'roller',
+                widgetType: 'number',
                 bindsVariable: 'AC',
                 variableRelType: 'define',
+                value: 10,
                 unifiedQueue: [
                     { nodeType: 'modifier', type: 'variable', value: 'AC_Armor', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
                     { nodeType: 'operator', operator: '+' },
@@ -278,60 +279,114 @@ window.StaticDiceTemplates = [
                 groupId: 'stats',
                 name: 'STR Modifier',
                 widgetType: 'number',
-                value: 0,
                 bindsVariable: 'STR_mod',
                 variableRelType: 'define',
-                hidden: true
+                value: 0,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'STR', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_dex',
                 groupId: 'stats',
                 name: 'DEX Modifier',
                 widgetType: 'number',
-                value: 0,
                 bindsVariable: 'DEX_mod',
                 variableRelType: 'define',
-                hidden: true
+                value: 0,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'DEX', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_con',
                 groupId: 'stats',
                 name: 'CON Modifier',
                 widgetType: 'number',
-                value: 0,
                 bindsVariable: 'CON_mod',
                 variableRelType: 'define',
-                hidden: true
+                value: 0,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'CON', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_int',
                 groupId: 'stats',
                 name: 'INT Modifier',
                 widgetType: 'number',
-                value: 0,
                 bindsVariable: 'INT_mod',
                 variableRelType: 'define',
-                hidden: true
+                value: 0,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'INT', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_wis',
                 groupId: 'stats',
                 name: 'WIS Modifier',
                 widgetType: 'number',
-                value: 0,
                 bindsVariable: 'WIS_mod',
                 variableRelType: 'define',
-                hidden: true
+                value: 0,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'WIS', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_cha',
                 groupId: 'stats',
                 name: 'CHA Modifier',
                 widgetType: 'number',
-                value: 0,
                 bindsVariable: 'CHA_mod',
                 variableRelType: 'define',
-                hidden: true
+                value: 0,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'CHA', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_var_attack_melee',
@@ -393,6 +448,7 @@ window.StaticDiceTemplates = [
                 name: 'Attack Melee - STR',
                 color: '#ff9900',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -407,6 +463,7 @@ window.StaticDiceTemplates = [
                 name: 'Attack Melee - DEX',
                 color: '#ff9900',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -421,6 +478,7 @@ window.StaticDiceTemplates = [
                 name: 'Attack Ranged - STR',
                 color: '#ffdd00',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -435,6 +493,7 @@ window.StaticDiceTemplates = [
                 name: 'Attack Ranged - DEX',
                 color: '#ffdd00',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -449,6 +508,7 @@ window.StaticDiceTemplates = [
                 name: 'Spellcheck - INT',
                 color: '#b565ff',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -463,6 +523,7 @@ window.StaticDiceTemplates = [
                 name: 'Spellcheck - WIS',
                 color: '#b565ff',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -477,6 +538,7 @@ window.StaticDiceTemplates = [
                 name: 'Spellcheck - CHA',
                 color: '#b565ff',
                 widgetType: 'roller',
+                includeAdvDis: true,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -490,7 +552,7 @@ window.StaticDiceTemplates = [
                 groupId: 'combat',
                 name: 'Unarmored',
                 color: '#00d4ff',
-                widgetType: 'roller',
+                widgetType: 'number',
                 bindsVariable: 'AC_Armor',
                 variableRelType: 'define',
                 addonToggle: {
@@ -509,7 +571,7 @@ window.StaticDiceTemplates = [
                 groupId: 'combat',
                 name: 'Shield',
                 color: '#00d4ff',
-                widgetType: 'roller',
+                widgetType: 'number',
                 bindsVariable: 'AC_Shield',
                 variableRelType: 'define',
                 addonToggle: {
@@ -529,15 +591,17 @@ window.StaticDiceTemplates = [
                 widgetType: 'number',
                 value: 0,
                 bindsVariable: 'AC_Mod',
-                variableRelType: 'define'
+                variableRelType: 'define',
+                hidden: true
             },
             {
                 id: 'w_backstab_dice_display',
                 groupId: 'combat',
                 name: 'Backstab Dice',
-                widgetType: 'roller',
+                widgetType: 'number',
                 bindsVariable: 'Backstab_Dice',
                 variableRelType: 'define',
+                value: 1,
                 unifiedQueue: [
                     { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
                     { nodeType: 'operator', operator: '+' },
