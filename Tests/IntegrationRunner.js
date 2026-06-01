@@ -588,11 +588,35 @@ window.addEventListener('load', () => {
                 if (dModNode.value !== 'Damage_Melee') throw new Error('Longsword Damage modifier should reference Damage_Melee');
                 
                 // Verify talents and magic items listed in passives as a stepper
-                const ignoreAttackW = rimasWidgets.find(w => w.name === 'IGNORE ONE ATTACK');
-                if (!ignoreAttackW) throw new Error('IgnoreOneAttack feature widget should be created');
-                if (ignoreAttackW.widgetType !== 'stepper') throw new Error('IgnoreOneAttack should be a stepper widget due to 1/day limit');
-                if (ignoreAttackW.max !== 1 || ignoreAttackW.value !== 1) throw new Error('IgnoreOneAttack stepper limits should be 1/1');
-                if (!ignoreAttackW.detailText.includes('1/day, ignore all damage')) throw new Error('IgnoreOneAttack description is incorrect');
+                const ignoreAttackW = rimasWidgets.find(w => w.name === 'WALK IT OFF');
+                if (!ignoreAttackW) throw new Error('WALK IT OFF feature widget should be created');
+                if (ignoreAttackW.widgetType !== 'stepper') throw new Error('WALK IT OFF should be a stepper widget due to 1/day limit');
+                if (ignoreAttackW.max !== 1 || ignoreAttackW.value !== 1) throw new Error('WALK IT OFF stepper limits should be 1/1');
+                if (!ignoreAttackW.detailText.includes('1/day, ignore all damage')) throw new Error('WALK IT OFF description is incorrect');
+
+                // Verify Title details widget
+                const rimasTitleW = rimasWidgets.find(w => w.detailText === 'Title');
+                if (!rimasTitleW || rimasTitleW.name !== 'Rookie') throw new Error('Rimas title details widget should be Rookie');
+
+                // Verify Pit Fighter class fallbacks
+                const flourishW = rimasWidgets.find(w => w.name === 'FLOURISH');
+                if (!flourishW || flourishW.widgetType !== 'stepper' || flourishW.max !== 3) throw new Error('FLOURISH stepper widget should be created');
+                
+                const implacableW = rimasWidgets.find(w => w.name === 'IMPLACABLE');
+                if (!implacableW || implacableW.widgetType !== 'text') throw new Error('IMPLACABLE text widget should be created');
+
+                const lastStandW = rimasWidgets.find(w => w.name === 'LAST STAND');
+                if (!lastStandW || lastStandW.widgetType !== 'text') throw new Error('LAST STAND text widget should be created');
+
+                const relentlessW = rimasWidgets.find(w => w.name === 'RELENTLESS');
+                if (!relentlessW || relentlessW.widgetType !== 'stepper' || relentlessW.max !== 1) throw new Error('RELENTLESS stepper widget should be created');
+
+                // Verify Mighty description suffix formatting
+                const mightyW = rimasWidgets.find(w => w.name === 'MIGHTY');
+                if (!mightyW) throw new Error('MIGHTY feature should exist');
+                if (!mightyW.detailText.includes('You gain +1 to melee attack and damage rolls. (Half-Orc Ancestry Trait)')) {
+                    throw new Error('Mighty description should place ancestry trait suffix after description');
+                }
 
                 // Verify gear mapping slots
                 const slot1 = rimasWidgets.find(w => w.id.startsWith('w_gear_1_'));
@@ -694,12 +718,13 @@ window.addEventListener('load', () => {
                 if (!ambitionTalentW) throw new Error('Human ambition talent ADV ON CAST ONE SPELL should be parsed and created');
                 if (!ambitionTalentW.text || !ambitionTalentW.text.includes('advantage on casting one spell')) throw new Error('Human ambition talent description is incorrect');
 
-                // Verify metadata details widget in passives
+                // Verify Title detail widget
+                const horlaboTitleW = horlaboWidgets.find(w => w.detailText === 'Title');
+                if (!horlaboTitleW || horlaboTitleW.name !== 'Druid') throw new Error('Horlabo title details widget should be Druid');
+
+                // Verify metadata details widget in passives is NOT created (since it is tossed)
                 const detailsW = horlaboWidgets.find(w => w.name === 'CHARACTER DETAILS');
-                if (!detailsW) throw new Error('CHARACTER DETAILS widget should be created');
-                if (!detailsW.text.includes('Title: Druid')) throw new Error('CHARACTER DETAILS should contain Title: Druid');
-                if (!detailsW.text.includes('Silver: 5')) throw new Error('CHARACTER DETAILS should contain Silver: 5');
-                if (!detailsW.text.includes('Gold Rolled: 40')) throw new Error('CHARACTER DETAILS should contain Gold Rolled: 40');
+                if (detailsW) throw new Error('CHARACTER DETAILS widget should NOT be created');
             })()
 
         `).then(() => {

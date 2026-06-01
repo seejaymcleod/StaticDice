@@ -39,6 +39,15 @@ window.StaticDiceTemplates = [
                 collapsed: false
             },
             {
+                id: 'w_title',
+                groupId: 'details',
+                name: '',
+                detailText: 'Title',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
+            {
                 id: 'w_ancestry',
                 groupId: 'details',
                 name: '',

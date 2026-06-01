@@ -7645,7 +7645,11 @@
                             cleaned = cleaned.replace(/^(half-orc|human|elf|dwarf|halfling|goblin|wizard|priest|cleric|druid|ranger|paladin|warlock|bard|fighter|thief|class|ancestry|pit fighter)[\s:-]+/i, '');
                             cleaned = cleaned.replace(/^(human|half-orc|elf|dwarf|halfling|goblin|wizard|priest|cleric|druid|ranger|paladin|warlock|bard|fighter|thief)\s+(?=\w)/i, '');
                             cleaned = cleaned.replace(/[\s:-]+/g, ' ');
-                            return cleaned.trim().toUpperCase();
+                            const result = cleaned.trim().toUpperCase();
+                            const SD_NAME_MAPPINGS = {
+                                'IGNORE ONE ATTACK': 'WALK IT OFF'
+                            };
+                            return SD_NAME_MAPPINGS[result] || result;
                         }
 
                         function addOrUpdateFeature(name, level, desc, mods, category) {
@@ -7696,7 +7700,7 @@
                             addOrUpdateFeature(
                                 'Mighty (Half-Orc)',
                                 1,
-                                'Half-Orc Ancestry Trait. You gain +1 to melee attack and damage rolls.',
+                                'You gain +1 to melee attack and damage rolls. (Half-Orc Ancestry Trait)',
                                 [
                                     { variable: 'Attack_Melee', value: 1 },
                                     { variable: 'Damage_Melee', value: 1 }
@@ -7707,7 +7711,7 @@
                             addOrUpdateFeature(
                                 'Human Ambition',
                                 1,
-                                'Human Ancestry Trait. You gain one additional random talent at character creation.',
+                                'You gain one additional random talent at character creation. (Human Ancestry Trait)',
                                 [],
                                 'Ancestry'
                             );
@@ -7715,7 +7719,7 @@
                             addOrUpdateFeature(
                                 'Farsight (Elf)',
                                 1,
-                                'Elf Ancestry Trait. You gain +1 to far ranged weapon attack rolls.',
+                                'You gain +1 to far ranged weapon attack rolls. (Elf Ancestry Trait)',
                                 [
                                     { variable: 'Attack_Ranged', value: 1 }
                                 ],
@@ -7725,7 +7729,7 @@
                             addOrUpdateFeature(
                                 'Stout (Dwarf)',
                                 1,
-                                'Dwarf Ancestry Trait. You gain +2 maximum hit points at character creation.',
+                                'You gain +2 maximum hit points at character creation. (Dwarf Ancestry Trait)',
                                 [],
                                 'Ancestry'
                             );
@@ -7733,7 +7737,7 @@
                             addOrUpdateFeature(
                                 'Stealthy (Halfling)',
                                 1,
-                                'Halfling Ancestry Trait. You gain advantage on stealth checks.',
+                                'You gain advantage on stealth checks. (Halfling Ancestry Trait)',
                                 [],
                                 'Ancestry'
                             );
@@ -7741,10 +7745,18 @@
                             addOrUpdateFeature(
                                 'Sneaky (Goblin)',
                                 1,
-                                'Goblin Ancestry Trait. You gain advantage on stealth/sneaking checks.',
+                                'You gain advantage on stealth/sneaking checks. (Goblin Ancestry Trait)',
                                 [],
                                 'Ancestry'
                             );
+                        }
+
+                        // Pit Fighter class features
+                        if (data.class && data.class.toLowerCase().includes('pit fighter')) {
+                            addOrUpdateFeature('FLOURISH', 1, '3/day, regain 1d6 hit points when you hit with a melee attack.', [], 'Class');
+                            addOrUpdateFeature('IMPLACABLE', 1, 'ADV on CON checks to resist injury, poison, or endure extreme environments.', [], 'Class');
+                            addOrUpdateFeature('LAST STAND', 1, 'You get up from dying with 1 hit point on a natural 20.', [], 'Class');
+                            addOrUpdateFeature('RELENTLESS', 1, '1/day, when you would be reduced to 0 hit points, you are reduced to 1 hit point instead.', [], 'Class');
                         }
 
                         // Talent / Abilities detection from data.bonuses
@@ -7912,6 +7924,7 @@
                         // Detail text widgets: value goes to name instead of text
                         const detailMappings = {
                             'Class': data.class || '',
+                            'Title': data.title || '',
                             'Ancestry': data.ancestry || '',
                             'Background': data.background || '',
                             'Deity': data.deity || '',
@@ -8299,15 +8312,6 @@
 
                         // 9. Additional Metadata and Treasures mapping (putting anything unmapped in passives)
                         const metadataLines = [];
-                        if (data.title) metadataLines.push(`Title: ${data.title}`);
-                        if (data.silver !== undefined) metadataLines.push(`Silver: ${data.silver}`);
-                        if (data.copper !== undefined) metadataLines.push(`Copper: ${data.copper}`);
-                        if (data.goldRolled !== undefined) metadataLines.push(`Gold Rolled: ${data.goldRolled}`);
-                        if (data.gearSlotsTotal !== undefined) {
-                            const used = data.gearSlotsUsed !== undefined ? data.gearSlotsUsed : 0;
-                            metadataLines.push(`Gear Slots: ${used} / ${data.gearSlotsTotal}`);
-                        }
-                        if (data.creationMethod) metadataLines.push(`Creation Method: ${data.creationMethod}`);
 
                         const handledKeys = new Set([
                             'name', 'stats', 'rolledStats', 'ancestry', 'class', 'level', 'levels',
@@ -11850,12 +11854,12 @@
                     ${animHtml}
                     <div class="timer-inner-container ${isFinished ? 'timer-rundown' : ''} flex flex-col h-full">
                         <!-- Accent side bar -->
-                        <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)] z-10" style="background-color: var(--widget-accent-color)"></div>
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_var(--widget-accent-color)] z-10" style="background-color: var(--widget-accent-color)"></div>
                         
                         <!-- Content area: single row with name left, timer text right -->
                         <div class="flex-1 min-h-0 flex items-center justify-between pr-3 z-10 relative">
                             <div class="flex items-center min-w-0 flex-shrink pr-2">
-                                <div class="flex items-center justify-center w-5 h-5 ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-2">
+                                <div class="flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                                 </div>
                                 <span class="text-[13px] font-black text-slate-400 truncate uppercase tracking-tight">${q.name || 'Timer'}</span>
@@ -11867,7 +11871,7 @@
                         </div>
                         
                         <!-- Track: in-flow flex child sits cleanly at the bottom with no overlap -->
-                        <div class="timer-bar-container relative h-3 shrink-0 cursor-ew-resize select-none z-20 touch-none flex items-center pl-11 pr-3" style="touch-action: none;">
+                        <div class="timer-bar-container relative h-3 shrink-0 cursor-ew-resize select-none z-20 touch-none flex items-center pl-7 pr-3" style="touch-action: none;">
                             <span class="text-[8px] font-black tracking-tight leading-none text-slate-500 mr-1.5 shrink-0 select-none">0</span>
                             <div class="timer-bar-track relative flex-grow h-[2px] bg-[#020617]/60 rounded-full">
                                 <!-- Endpoint indicators -->
@@ -11886,10 +11890,10 @@
                     ${animHtml}
                     <div class="timer-inner-container ${isFinished ? 'timer-rundown' : ''} flex flex-col h-full justify-between">
                         <!-- Accent side bar -->
-                        <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
                         
                         <!-- Row 1: Title (left) | Detail text + Play (right) -->
-                        <div class="flex items-center justify-between w-full pl-8 pr-3 pt-2 z-10 relative">
+                        <div class="flex items-center justify-between w-full pl-4 pr-3 pt-2 z-10 relative">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
                             <div class="flex items-center gap-2.5 shrink-0 select-none">
                                 ${q.detailText ? `<span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">${q.detailText}</span>` : ''}
@@ -11900,7 +11904,7 @@
                         </div>
                         
                         <!-- Row 2: -1M (left) | Time display (center) | +1M (right) -->
-                        <div class="flex items-center justify-between w-full pl-8 pr-3 select-none relative min-h-[2.25rem] z-10">
+                        <div class="flex items-center justify-between w-full pl-4 pr-3 select-none relative min-h-[2.25rem] z-10">
                             <!-- Left: -1M Button -->
                             <button onclick="adjustTimerMinutes('${q.id}', -1, event)" class="timer-step-btn w-10 py-1" title="Subtract 1 minute">
                                 −1m
@@ -11923,7 +11927,7 @@
                         </div>
 
                         <!-- Progress bar (In-flow flex item!) -->
-                        <div class="timer-bar-container relative h-6 shrink-0 cursor-ew-resize select-none z-20 touch-none flex items-center pl-8 pr-3 pb-2" style="touch-action: none;">
+                        <div class="timer-bar-container relative h-6 shrink-0 cursor-ew-resize select-none z-20 touch-none flex items-center pl-4 pr-3 pb-2" style="touch-action: none;">
                             <span class="text-[9px] font-black text-slate-500 mr-2.5 shrink-0 select-none">0</span>
                             <div class="timer-bar-track relative flex-grow h-1 bg-[#020617]/60 rounded-full">
                                 <!-- Endpoint indicators -->
@@ -12778,10 +12782,10 @@
                 const hideLeftTab = type === 'stepper' && q.showTracker;
                 let innerHtml = `
                     ${(hasColor && !hideLeftTab)
-                        ? `<div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
-                        : (!hideLeftTab ? `<div class="absolute left-0 top-0 bottom-0 w-1 bg-white/5"></div>` : '')
+                        ? `<div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
+                        : (!hideLeftTab ? `<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-white/5"></div>` : '')
                     }
-                    <div class="flex items-center justify-center w-5 h-full ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
+                    <div class="flex items-center justify-center w-4 h-full ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                     </div>
                 `;
@@ -12792,7 +12796,7 @@
                         const res = engine.calculateRoll(q.unifiedQueue || q.queue, true);
                         if (res) resolvedVal = parseInt(res.total) || 0;
                         innerHtml += `
-                            <div class="flex-grow min-w-0 pl-2 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
+                            <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
                                 <div class="flex items-center gap-1.5">
                                     <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                                 </div>
@@ -12808,7 +12812,7 @@
                         `;
                     } else {
                         innerHtml += `
-                            <div class="flex-grow min-w-0 pl-2 pr-8">
+                            <div class="flex-grow min-w-0 pl-1 pr-8">
                                 <div class="flex items-center gap-1.5">
                                     <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                                 </div>
@@ -12846,7 +12850,7 @@
                         `;
                     }
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 pr-2">
+                        <div class="flex-grow min-w-0 pl-1 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${q.name}</div>
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             ${trackerHtml}
@@ -12854,7 +12858,7 @@
                     `;
                 } else if (type === 'toggle') {
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 pr-8">
+                        <div class="flex-grow min-w-0 pl-1 pr-8">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                         </div>
@@ -12912,7 +12916,7 @@
                     }
 
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
+                        <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                             ${formula ? `<div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula}</div>` : ''}
                             ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
@@ -12939,7 +12943,7 @@
                 } else if (type === 'text') {
                     const isCollapsed = q.collapsed ?? false;
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2">
+                        <div class="flex-grow min-w-0 pl-1">
                             <div class="flex items-center gap-1.5 justify-between">
                                 <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || ''}</div>
                                 <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
@@ -13011,11 +13015,11 @@
                 } else if (type === 'stepper') {
                     const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
                     const stepperControls = document.createElement('div');
-                    stepperControls.className = 'shrink-0 flex items-stretch gap-1 select-none self-stretch';
+                    stepperControls.className = 'shrink-0 flex items-stretch border border-white/5 bg-[#020617]/40 rounded-xl select-none self-stretch overflow-hidden';
                     stepperControls.onclick = (e) => e.stopPropagation();
 
                     const decBtn = document.createElement('button');
-                    decBtn.className = 'w-10 flex items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-[#00d4ff] hover:text-white text-xl font-black focus:outline-none';
+                    decBtn.className = 'w-8 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white text-lg font-black focus:outline-none';
                     decBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, -1);
@@ -13023,17 +13027,17 @@
                     decBtn.innerHTML = `−`;
 
                     const valDisp = document.createElement('div');
-                    valDisp.className = 'flex items-center justify-center rounded-xl border border-white/5 bg-[#020617]/40 px-2 gap-0.5 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)]';
+                    valDisp.className = 'flex items-center justify-center border-l border-r border-white/5 px-1.5 gap-0 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)]';
                     const maxDisabled = typeof q.max === 'string' ? 'readonly disabled' : '';
                     const maxOpacity = typeof q.max === 'string' ? 'opacity-70 pointer-events-none' : '';
                     valDisp.innerHTML = `
-                        <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-8 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                        <span class="text-slate-500 font-black text-lg leading-none">/</span>
-                        <input type="number" value="${resolvedMax}" ${maxDisabled} onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-8 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxOpacity}">
+                        <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-6 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                        <span class="text-slate-600 font-bold text-xs mx-0.5 opacity-60 leading-none">|</span>
+                        <input type="number" value="${resolvedMax}" ${maxDisabled} onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-6 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxOpacity}">
                     `;
 
                     const incBtn = document.createElement('button');
-                    incBtn.className = 'w-10 flex items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-[#00d4ff] hover:text-white text-xl font-black focus:outline-none';
+                    incBtn.className = 'w-8 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white text-lg font-black focus:outline-none';
                     incBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, 1);
