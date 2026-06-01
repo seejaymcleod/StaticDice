@@ -366,7 +366,134 @@ window.addEventListener('load', () => {
                 if (window.getActiveCharacterVariable('STR') !== 15) throw new Error('STR should be 15 after unequipping Longsword, got ' + window.getActiveCharacterVariable('STR'));
                 if (window.getActiveCharacterVariable('STR_mod') !== 2) throw new Error('STR_mod should go back to 2, got ' + window.getActiveCharacterVariable('STR_mod'));
                 if (window.getActiveCharacterVariable('Attack_Melee') !== 0) throw new Error('Attack_Melee should return to 0, got ' + window.getActiveCharacterVariable('Attack_Melee'));
+
+                // Test 11: Export/Import Merge & Conflict-Resolution
+                console.log('Testing Export/Import Merge & Conflict-Resolution...');
+                
+                // Establish initial state
+                const testChar = characters.find(c => c.name === 'Direct Input Renamed Name');
+                const testCharId = testChar.id;
+                
+                // Find its 'Default' group
+                const defaultGrp = groups.find(g => g.characterId === testCharId && g.name === 'Default');
+                const defaultGrpId = defaultGrp.id;
+                
+                // Clear savedQueues for this test character to be clean
+                engine.savedQueues = engine.savedQueues.filter(w => w.characterId !== testCharId);
+                
+                // Add a widget to be overwritten
+                const widgetToOverwrite = {
+                    id: 'w_to_overwrite_id',
+                    characterId: testCharId,
+                    groupId: defaultGrpId,
+                    name: 'Fireball',
+                    formula: '8d6',
+                    widgetType: 'roller',
+                    color: 'none'
+                };
+                engine.savedQueues.push(widgetToOverwrite);
+                
+                // Set customDice to initial state
+                customDice = [{ d: 12 }];
+                
+                // Mock import JSON
+                const mockImport = {
+                    campaigns: [
+                        { id: 'camp_import_exist', name: 'Test Campaign' },
+                        { id: 'camp_import_new', name: 'Brand New Campaign' }
+                    ],
+                    characters: [
+                        { id: 'char_import_exist', name: 'Direct Input Renamed Name', campaignId: 'camp_import_exist', dndType: 'standard' },
+                        { id: 'char_import_new', name: 'Brand New Character', campaignId: 'camp_import_exist', dndType: 'standard' }
+                    ],
+                    groups: [
+                        { id: 'grp_import_exist', name: 'Default', characterId: 'char_import_exist', color: '#ff0000' },
+                        { id: 'grp_import_new', name: 'Spells', characterId: 'char_import_exist', color: '#00ff00' }
+                    ],
+                    queues: [
+                        // Conflicting name -> should overwrite widgetToOverwrite
+                        { id: 'w_imported_conflict', name: 'Fireball', characterId: 'char_import_exist', groupId: 'grp_import_exist', formula: '12d6', color: '#ff0000', widgetType: 'roller' },
+                        // New widget -> should be added
+                        { id: 'w_imported_new', name: 'Magic Missile', characterId: 'char_import_exist', groupId: 'grp_import_exist', formula: '3d4+3', color: '#0000ff', widgetType: 'roller' }
+                    ],
+                    settings: {
+                        customDice: [{ d: 33 }, { d: 12 }],
+                        soundEnabled: false
+                    }
+                };
+                
+                // Mock FileReader
+                window.FileReader = class {
+                    constructor() {
+                        this.onload = null;
+                    }
+                    readAsText(file) {
+                        const event = {
+                            target: {
+                                result: JSON.stringify(mockImport)
+                            }
+                        };
+                        setTimeout(() => {
+                            if (this.onload) this.onload(event);
+                        }, 0);
+                    }
+                };
+                
+                // Trigger import
+                showModal = (opts) => {
+                    // Mock click 'Merge'
+                    return Promise.resolve(true); 
+                };
+                
+                const mockEvent = {
+                    target: {
+                        files: [{ name: 'backup.json' }],
+                        value: 'backup.json'
+                    }
+                };
+                
+                importSettings(mockEvent);
+                
+                // Wait for async file reader and import completion
+                await new Promise(r => setTimeout(r, 50));
+                
+                // Assertions:
+                // 1. Campaigns: 'Test Campaign' should NOT be duplicated. 'Brand New Campaign' should be added.
+                const campaignNames = campaigns.map(c => c.name);
+                if (!campaignNames.includes('Test Campaign')) throw new Error('Should keep Test Campaign');
+                if (!campaignNames.includes('Brand New Campaign')) throw new Error('Should add Brand New Campaign');
+                if (campaigns.filter(c => c.name === 'Test Campaign').length !== 1) throw new Error('Test Campaign should not be duplicated');
+                
+                // 2. Characters: 'Direct Input Renamed Name' should NOT be duplicated under 'Test Campaign'. 'Brand New Character' should be added.
+                const activeCampObj = campaigns.find(c => c.name === 'Test Campaign');
+                const campChars = characters.filter(c => c.campaignId === activeCampObj.id);
+                if (campChars.filter(c => c.name === 'Direct Input Renamed Name').length !== 1) throw new Error('Direct Input Renamed Name should not be duplicated under Test Campaign');
+                if (!campChars.some(c => c.name === 'Brand New Character')) throw new Error('Should add Brand New Character');
+                
+                // 3. Groups: 'Default' group should not be duplicated. 'Spells' group should be added.
+                const charObj = characters.find(c => c.name === 'Direct Input Renamed Name' && c.campaignId === activeCampObj.id);
+                const charGroups = groups.filter(g => g.characterId === charObj.id);
+                if (charGroups.filter(g => g.name === 'Default').length !== 1) throw new Error('Default group should not be duplicated');
+                if (!charGroups.some(g => g.name === 'Spells')) throw new Error('Should add Spells group');
+                
+                // 4. SavedQueues (Widgets / Arsenals):
+                // 'Fireball' should be overwritten. The formula should change from '8d6' to '12d6', but the ID 'w_to_overwrite_id' MUST be preserved!
+                const fireballWidget = engine.savedQueues.find(q => q.characterId === charObj.id && q.name === 'Fireball');
+                if (!fireballWidget) throw new Error('Fireball widget should exist');
+                if (fireballWidget.id !== 'w_to_overwrite_id') throw new Error('Overwritten Fireball widget should preserve its original ID');
+                if (fireballWidget.formula !== '12d6') throw new Error('Fireball formula should be overwritten to 12d6');
+                
+                // 'Magic Missile' should be added as a new widget
+                const mmWidget = engine.savedQueues.find(q => q.characterId === charObj.id && q.name === 'Magic Missile');
+                if (!mmWidget) throw new Error('Magic Missile should be added');
+                if (mmWidget.formula !== '3d4+3') throw new Error('Magic Missile formula should be 3d4+3');
+                
+                // 5. CustomDice: merged correctly. Should have d12 and d33.
+                if (customDice.length !== 2) throw new Error('Custom dice should be merged (length 2)');
+                if (customDice[0].d !== 12) throw new Error('Custom dice[0] should be 12');
+                if (customDice[1].d !== 33) throw new Error('Custom dice[1] should be 33');
             })()
+
         `).then(() => {
             console.log('-> Passed.');
             console.log('\n🎉 ALL INTEGRATION DEEP DIVE TESTS PASSED SUCCESSFULLY! ✅');
