@@ -269,6 +269,36 @@
             padding-bottom: 0 !important;
         }
 
+        /* Compact Timer & Countdown Override Styles */
+        .widget-display-compact .timer-widget,
+        .timer-widget.widget-display-compact {
+            min-height: 4.25rem !important;
+            height: 4.25rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        /* timer-inner-container becomes the flex column — no padding, track is a flex child */
+        .widget-display-compact .timer-inner-container {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 0 !important;
+            height: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* ct-widget IS the flex column — no padding, track is a flex child */
+        .widget-display-compact .ct-widget,
+        .ct-widget.widget-display-compact {
+            min-height: 4.25rem !important;
+            height: 4.25rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+        }
+
         #color-picker-overlay {
             background: rgba(2, 6, 23, 0.96);
             backdrop-filter: blur(24px);
@@ -10047,7 +10077,6 @@
             const leftColor  = q.leftColor  || '#1e293b';
             const rightColor = q.rightColor || '#ffffff';
             const isBi       = q.biDirectional !== false;
-
             const { min: effMin, max: effMax } = ctEffectiveBounds(q);
             const trackVal   = q.trackValue ?? q.trackMin ?? 0;
             const range      = effMax - effMin;
@@ -10058,7 +10087,6 @@
             const net        = rightTotal - leftTotal;
             const netDisplay = net >= 0 ? `+${net}` : `${net}`;
 
-            // Compute net color: positive = rightColor, negative = leftColor, zero = slate
             let netColor = '#64748b';
             if (net > 0) netColor = rightColor;
             else if (net < 0) netColor = leftColor;
@@ -10068,6 +10096,101 @@
             const undoDisabled = !hasUndo ? 'disabled' : '';
 
             const el = document.createElement('div');
+            const effectiveMode = getEffectiveDisplayMode(q);
+
+            if (effectiveMode === 'compact') {
+                el.className = 'ct-widget widget-display-compact';
+                const roundLabel = `R${q.round || 1}`;
+                const pipBg = isBi ? ('linear-gradient(to bottom, ' + leftColor + ', ' + rightColor + ')') : rightColor;
+
+                let valuesHtml = '';
+                if (isBi) {
+                    valuesHtml = `<span class="cursor-pointer hover:underline" style="color: ${leftColor}" onclick="openCountdownBreakdown('${q.id}','left',event)">−${Math.abs(leftTotal)}</span>
+                                  <span class="text-slate-600 font-bold">/</span>
+                                  <span style="color: ${netColor}">${netDisplay}</span>
+                                  <span class="text-slate-600 font-bold">/</span>
+                                  <span class="cursor-pointer hover:underline" style="color: ${rightColor}" onclick="openCountdownBreakdown('${q.id}','right',event)">+${rightTotal}</span>`;
+                } else {
+                    valuesHtml = `<span class="cursor-pointer hover:underline" style="color: ${rightColor}" onclick="openCountdownBreakdown('${q.id}','right',event)">+${rightTotal}</span>`;
+                }
+
+                let innerHtml = `
+                    <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_rgba(255,255,255,0.15)] z-10" style="background: ${pipBg}"></div>
+                `;
+
+                if (isResolved) {
+                    innerHtml += `
+                        <!-- Resolved: content takes full height, no track needed -->
+                        <div class="flex-1 min-h-0 flex flex-col justify-between pr-3 pt-1 pb-1 z-10 relative">
+                            <!-- Row 1: Winner text, Reset button -->
+                            <div class="flex items-center justify-between w-full min-w-0">
+                                <div class="flex items-center min-w-0 flex-shrink pr-2">
+                                    <div class="flex items-center justify-center w-5 h-5 ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                                    </div>
+                                    <span class="text-xs font-black uppercase tracking-tight truncate" style="color:${q.resolvedSide === 'right' ? rightColor : leftColor}">
+                                        ${q.resolvedSide === 'right' ? (q.rightLabel || 'Right') : (q.leftLabel || 'Left')} Wins
+                                    </span>
+                                </div>
+                                <button class="ct-reset-btn text-[10px] font-black uppercase tracking-wider py-1 px-2.5 rounded-lg border border-white/10 bg-[#020617]/40 text-[#00d4ff] hover:bg-white/5 active:scale-95 transition-all shrink-0" onclick="countdownReset('${q.id}',event)">Reset</button>
+                            </div>
+                            <!-- Row 2: Completion subtitle -->
+                            <div class="flex items-center w-full">
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest pl-11">
+                                    Countdown Complete — Round ${(q.round || 1) - 1}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    innerHtml += `
+                        <!-- Content area: flex-1 so it grows above the track flex child -->
+                        <div class="flex-1 min-h-0 flex flex-col justify-between pr-3 pt-1 z-10 relative">
+                            <!-- Row 1: Name (muted context) + Round badge + END TURN (primary CTA) + Undo -->
+                            <div class="flex items-center justify-between w-full min-w-0">
+                                <div class="flex items-center min-w-0 flex-shrink pr-2">
+                                    <div class="flex items-center justify-center w-5 h-5 ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                                    </div>
+                                    <span class="ct-widget-name text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">${q.name || 'Countdown'}</span>
+                                    <span class="ct-round-badge text-[9px] font-black text-slate-500 bg-white/5 border border-white/8 rounded px-1.5 py-0.5 ml-1.5 shrink-0">${roundLabel}</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0 select-none">
+                                    <button class="ct-end-turn-btn text-[10px] font-black uppercase tracking-wider py-1 px-2.5 rounded-lg" onclick="countdownEndTurn('${q.id}',event)">End Turn</button>
+                                    <button class="ct-undo-btn w-7 h-7 flex items-center justify-center rounded-lg" onclick="countdownUndo('${q.id}',event)" ${undoDisabled} title="Undo last turn">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:0.7rem;height:0.7rem"><path d="M3 9h13a5 5 0 0 1 0 10H7"/><polyline points="3 9 7 5 3 5"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Row 2: Values (left, dominant) | current track position (right, muted) -->
+                            <div class="flex items-center justify-between w-full min-w-0 pb-0.5">
+                                <div class="flex items-center gap-2 select-none pl-11 font-black tabular-nums text-sm">
+                                    ${valuesHtml}
+                                </div>
+                                <span class="text-sm font-black tabular-nums text-slate-500 shrink-0 mr-0">${trackVal}</span>
+                            </div>
+                        </div>
+
+                        <!-- Track: in-flow flex child sits cleanly at the bottom with no overlap -->
+                        <div class="ct-compact-track relative h-3 shrink-0 select-none pointer-events-none z-20">
+                            <span class="absolute left-14 bottom-1 text-[8px] font-black tracking-tight leading-none pr-1.5 text-right inline-block" style="color: ${leftColor}; transform: translateX(-100%); min-width: 2rem;">${effMin}</span>
+                            <div class="ct-compact-track-line absolute bottom-1.5 left-14 right-11 h-[2px] bg-[#020617]/60 rounded-full">
+                                <!-- Endpoint indicators -->
+                                <div class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style="left: 0; background-color: ${leftColor}; transform: translate(-50%, -50%);"></div>
+                                <div class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style="left: 100%; background-color: ${rightColor}; transform: translate(-50%, -50%);"></div>
+
+                                <div class="h-full rounded-full" style="width:${pct}%; background:linear-gradient(to right,${leftColor},${rightColor});"></div>
+                                <div class="absolute top-1/2 w-1.5 h-1.5 bg-[#e2e8f0] rounded-full shadow-[0_0_4px_rgba(255,255,255,0.5)]" style="left: ${pct}%; transform: translate(-50%, -50%); pointer-events: none;"></div>
+                            </div>
+                            <span class="absolute right-3 bottom-1 text-[8px] font-black tracking-tight leading-none text-right inline-block" style="color: ${rightColor}; min-width: 2rem;">${effMax}</span>
+                        </div>
+                    `;
+                }
+
+                el.innerHTML = innerHtml;
+                return el;
+            }
+
             el.className = 'ct-widget';
 
             let pipStyle = '';
@@ -10127,17 +10250,21 @@
                 <div class="${isBi ? 'ct-track-row' : 'ct-track-row-compact'}">
                     <div class="ct-track-meta">
                         <div class="ct-track-endpoint">
-                            <span class="ct-track-endpoint-val">${effMin}</span>
+                            <span class="ct-track-endpoint-val" style="color:${leftColor}">${effMin}</span>
                         </div>
                         <div class="ct-track-center">
                             <span class="ct-track-current-val">${trackVal}</span>
                         </div>
                         <div class="ct-track-endpoint">
-                            <span class="ct-track-endpoint-val">${effMax}</span>
+                            <span class="ct-track-endpoint-val" style="color:${rightColor}">${effMax}</span>
                         </div>
                     </div>
                     <div class="ct-bar-container">
-                        <div class="ct-bar-track" style="background:rgba(15,23,42,0.6);"></div>
+                        <div class="ct-bar-track" style="background:rgba(15,23,42,0.6);">
+                            <!-- Endpoint indicators -->
+                            <div class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style="left: 0; background-color: ${leftColor}; transform: translate(-50%, -50%);"></div>
+                            <div class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style="left: 100%; background-color: ${rightColor}; transform: translate(-50%, -50%);"></div>
+                        </div>
                         <div class="ct-bar-fill" style="width:${pct}%; background:linear-gradient(to right,${leftColor},${rightColor});"></div>
                         <div class="ct-bar-thumb" style="left:${pct}%;"></div>
                     </div>
@@ -10430,62 +10557,125 @@
             const iconPause = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
             const iconReset = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>`;
 
-            el.innerHTML = `
-                ${animHtml}
-                <div class="timer-inner-container ${isFinished ? 'timer-rundown' : ''}">
-                    <!-- Accent side bar -->
-                    <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
-                    
-                    <div class="flex items-center justify-between pl-8 pr-3 py-2 flex-grow min-w-0 z-10 relative">
-                        <!-- Left Info and Steppers -->
-                        <div class="flex-grow min-w-0 pr-2">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
-                            
-                            <!-- Stepper buttons (Minutes) -->
-                            <div class="flex items-center gap-1.5 mt-1 select-none">
-                                <button onclick="adjustTimerMinutes('${q.id}', -1, event)" class="timer-step-btn" title="Subtract 1 minute">
-                                    −1m
+            const effectiveMode = getEffectiveDisplayMode(q);
+
+            if (effectiveMode === 'compact') {
+                el.className = 'timer-widget widget-display-compact';
+                el.innerHTML = `
+                    ${animHtml}
+                    <div class="timer-inner-container ${isFinished ? 'timer-rundown' : ''} flex flex-col h-full">
+                        <!-- Accent side bar -->
+                        <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)] z-10" style="background-color: var(--widget-accent-color)"></div>
+                        
+                        <!-- Content area: flex-1 grows above the track flex child -->
+                        <div class="flex-1 min-h-0 flex flex-col justify-between pr-3 pt-1 z-10 relative">
+                            <!-- Row 1: Name (context, muted) | Time (dominant) + Controls -->
+                            <div class="flex items-center justify-between w-full">
+                                <div class="flex items-center min-w-0 flex-shrink pr-2">
+                                    <div class="flex items-center justify-center w-5 h-5 ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-400 truncate uppercase tracking-widest">${q.name || 'Timer'}</span>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0 select-none">
+                                    <div class="flex flex-col items-end">
+                                        <span class="timer-time-display text-base font-black text-[#e2e8f0] tracking-tight tabular-nums leading-none" style="${isFinished ? 'color: rgb(248 113 113)' : ''}">${formatTime(currVal)}</span>
+                                        <span class="timer-rundown-text text-[7px] font-black text-rose-400 uppercase tracking-widest animate-pulse leading-none mt-0.5 ${isFinished ? '' : 'hidden'}">${q.rundownText || "Time's Up!"}</span>
+                                    </div>
+                                    <button onclick="toggleTimerPlay('${q.id}', event)" class="timer-play-btn w-7 h-7 flex items-center justify-center rounded-lg border border-white/10 bg-[#020617]/40 text-[#e2e8f0] hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="${isPaused ? 'Start Timer' : 'Pause Timer'}">
+                                        ${isPaused ? iconPlay : iconPause}
+                                    </button>
+                                    <button onclick="resetTimerWidget('${q.id}', event)" class="timer-reset-btn w-7 h-7 flex items-center justify-center rounded-lg border border-white/10 bg-[#020617]/40 text-slate-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="Reset Timer">
+                                        ${iconReset}
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Row 2: Steppers — utility, subdued -->
+                            <div class="flex items-center w-full pb-0.5">
+                                <div class="flex items-center gap-1 select-none pl-11">
+                                    <button onclick="adjustTimerMinutes('${q.id}', -1, event)" class="timer-step-btn !py-0.5 !px-1.5 !text-[9px] opacity-60 hover:opacity-100" title="Subtract 1 minute">−1m</button>
+                                    <button onclick="adjustTimerMinutes('${q.id}', 1, event)" class="timer-step-btn !py-0.5 !px-1.5 !text-[9px] opacity-60 hover:opacity-100" title="Add 1 minute">+1m</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Track: in-flow flex child sits cleanly at the bottom with no overlap -->
+                        <div class="timer-bar-container relative h-3 shrink-0 cursor-ew-resize select-none z-20 touch-none" style="touch-action: none;">
+                            <span class="absolute left-11 bottom-1 text-[8px] font-black tracking-tight leading-none text-left inline-block text-slate-500" style="min-width: 2rem;">0</span>
+                            <div class="timer-bar-track absolute bottom-1.5 left-14 right-11 h-[2px] bg-[#020617]/60 rounded-full">
+                                <!-- Endpoint indicators -->
+                                <div class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-slate-600" style="left: 0; transform: translate(-50%, -50%);"></div>
+                                <div class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style="left: 100%; background-color: var(--widget-accent-color); transform: translate(-50%, -50%);"></div>
+
+                                <div class="timer-bar-fill h-full transition-all duration-75 rounded-full" style="width: ${pct}%; background-color: var(--widget-accent-color); box-shadow: 0 0 8px var(--widget-accent-color);"></div>
+                                <div class="timer-bar-thumb absolute top-1/2 w-1.5 h-1.5 bg-[#e2e8f0] rounded-full shadow-[0_0_4px_var(--widget-accent-color)]" style="left: ${pct}%; transform: translate(-50%, -50%); pointer-events: none;"></div>
+                            </div>
+                            <span class="absolute right-3 bottom-1 text-[8px] font-black tracking-tight leading-none text-right inline-block" style="color: var(--widget-accent-color); min-width: 2rem;">${Math.round(maxVal / 60)}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                el.innerHTML = `
+                    ${animHtml}
+                    <div class="timer-inner-container ${isFinished ? 'timer-rundown' : ''}">
+                        <!-- Accent side bar -->
+                        <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
+                        
+                        <div class="flex items-center justify-between pl-8 pr-3 py-2 flex-grow min-w-0 z-10 relative">
+                            <!-- Left Info and Steppers -->
+                            <div class="flex-grow min-w-0 pr-2">
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
+                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap">${q.detailText}</div>` : ''}
+                                
+                                <!-- Stepper buttons (Minutes) -->
+                                <div class="flex items-center gap-1.5 mt-1 select-none">
+                                    <button onclick="adjustTimerMinutes('${q.id}', -1, event)" class="timer-step-btn" title="Subtract 1 minute">
+                                        −1m
+                                    </button>
+                                    <button onclick="adjustTimerMinutes('${q.id}', 1, event)" class="timer-step-btn" title="Add 1 minute">
+                                        +1m
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right: Alarm text OR standard time display and controls -->
+                            <div class="flex items-center gap-2.5 shrink-0 select-none">
+                                <!-- Time Display -->
+                                <div class="text-right flex flex-col justify-center">
+                                    <span class="timer-time-display text-2xl font-black text-[#e2e8f0] tracking-tight tabular-nums leading-none">
+                                        ${formatTime(currVal)}
+                                    </span>
+                                    <span class="timer-rundown-text text-[9px] font-black text-rose-500 uppercase tracking-widest mt-0.5 animate-pulse ${isFinished ? '' : 'hidden'}">
+                                        ${q.rundownText || "Time's Up!"}
+                                    </span>
+                                </div>
+
+                                <!-- Play/Pause Button -->
+                                <button onclick="toggleTimerPlay('${q.id}', event)" class="timer-play-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-[#e2e8f0] hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="${isPaused ? 'Start Timer' : 'Pause Timer'}">
+                                    ${isPaused ? iconPlay : iconPause}
                                 </button>
-                                <button onclick="adjustTimerMinutes('${q.id}', 1, event)" class="timer-step-btn" title="Add 1 minute">
-                                    +1m
+
+                                <!-- Reset Button -->
+                                <button onclick="resetTimerWidget('${q.id}', event)" class="timer-reset-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-slate-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="Reset Timer">
+                                    ${iconReset}
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Right: Alarm text OR standard time display and controls -->
-                        <div class="flex items-center gap-2.5 shrink-0 select-none">
-                            <!-- Time Display -->
-                            <div class="text-right flex flex-col justify-center">
-                                <span class="timer-time-display text-2xl font-black text-[#e2e8f0] tracking-tight tabular-nums leading-none">
-                                    ${formatTime(currVal)}
-                                </span>
-                                <span class="timer-rundown-text text-[9px] font-black text-rose-500 uppercase tracking-widest mt-0.5 animate-pulse ${isFinished ? '' : 'hidden'}">
-                                    ${q.rundownText || "Time's Up!"}
-                                </span>
+                        <!-- Progress bar -->
+                        <div class="timer-bar-container absolute bottom-0 left-0 right-0 h-6 cursor-ew-resize select-none z-20 touch-none flex items-center" style="touch-action: none;">
+                            <div class="timer-bar-track relative w-full mx-8 h-1 bg-[#020617]/60 rounded-full">
+                                <!-- Endpoint indicators -->
+                                <div class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-slate-600" style="left: 0; transform: translate(-50%, -50%);"></div>
+                                <div class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style="left: 100%; background-color: var(--widget-accent-color); transform: translate(-50%, -50%);"></div>
+
+                                <div class="timer-bar-fill h-full transition-all duration-75 rounded-full" style="width: ${pct}%; background-color: var(--widget-accent-color); box-shadow: 0 0 10px var(--widget-accent-color);"></div>
+                                <div class="timer-bar-thumb absolute top-1/2 w-2 h-4.5 bg-[#e2e8f0] rounded-full shadow-[0_0_6px_var(--widget-accent-color)]" style="left: ${pct}%; transform: translate(-50%, -50%); pointer-events: none;"></div>
                             </div>
-
-                            <!-- Play/Pause Button -->
-                            <button onclick="toggleTimerPlay('${q.id}', event)" class="timer-play-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-[#e2e8f0] hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="${isPaused ? 'Start Timer' : 'Pause Timer'}">
-                                ${isPaused ? iconPlay : iconPause}
-                            </button>
-
-                            <!-- Reset Button -->
-                            <button onclick="resetTimerWidget('${q.id}', event)" class="timer-reset-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-slate-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="Reset Timer">
-                                ${iconReset}
-                            </button>
                         </div>
                     </div>
-
-                    <!-- Progress bar -->
-                    <div class="timer-bar-container absolute bottom-0 left-0 right-0 h-6 cursor-ew-resize select-none z-20 touch-none flex items-center" style="touch-action: none;">
-                        <div class="timer-bar-track relative w-full mx-8 h-1 bg-[#020617]/60 rounded-full">
-                            <div class="timer-bar-fill h-full transition-all duration-75 rounded-full" style="width: ${pct}%; background-color: var(--widget-accent-color); box-shadow: 0 0 10px var(--widget-accent-color);"></div>
-                            <div class="timer-bar-thumb absolute top-1/2 -translate-y-1/2 w-2 h-4.5 bg-[#e2e8f0] rounded-full shadow-[0_0_6px_var(--widget-accent-color)]" style="left: ${pct}%; pointer-events: none;"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                `;
+            }
 
             // Bind draggable slider logic to the progress bar container
             const bar = el.querySelector('.timer-bar-container');
