@@ -3911,6 +3911,24 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Passive Modifiers Config -->
+                <div id="widget-passive-modifiers-config" class="space-y-3 pt-2 border-t border-white/5">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="widget-passive-mods-check" onchange="toggleWidgetPassiveModifiers(this.checked)"
+                            class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Passive Variable Modifiers</span>
+                    </label>
+                    <div id="widget-passive-mods-fields" class="hidden space-y-3 pl-6">
+                        <div id="passive-mods-list" class="space-y-2">
+                            <!-- Injected rows -->
+                        </div>
+                        <button type="button" onclick="addPassiveModifierRow()"
+                            class="w-full py-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 font-black text-[10px] uppercase tracking-wider hover:bg-sky-500 hover:text-[#020617] transition-all">
+                            + Add Modifier
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Footer Buttons -->
@@ -8225,6 +8243,8 @@
             activeCharacterId = newCharId;
             activeGroupId = newGroups.length > 0 ? newGroups[0].id : null;
 
+            syncCharacterVariables(newChar);
+
             persistArsenal();
             persistSaved();
 
@@ -8382,6 +8402,8 @@
 
             activeCharacterId = newCharId;
             activeGroupId = newGroups.length > 0 ? newGroups[0].id : null;
+
+            syncCharacterVariables(newChar);
 
             persistArsenal();
             persistSaved();
@@ -9036,7 +9058,8 @@
             const typeSelect = document.getElementById('widget-type');
 
             if (isSavingQueue && engine.queue.length > 0) {
-                typeSelect.value = 'roller';
+                const hasDice = engine.queue.some(node => node.nodeType === 'node');
+                typeSelect.value = hasDice ? 'roller' : 'number';
             } else {
                 typeSelect.value = 'stepper';
             }
@@ -9068,6 +9091,10 @@
             document.getElementById('widget-binds-variable').value = '';
             document.getElementById('widget-variable-rel-type').value = 'define';
             toggleWidgetVarBinding(false);
+
+            document.getElementById('widget-passive-mods-check').checked = false;
+            document.getElementById('passive-mods-list').innerHTML = '';
+            toggleWidgetPassiveModifiers(false);
 
             onWidgetTypeChange(typeSelect.value);
 
@@ -9171,6 +9198,18 @@
             document.getElementById('widget-variable-rel-type').value = q.variableRelType || 'define';
             toggleWidgetVarBinding(hasVarBind);
 
+            // Populate passive modifiers
+            const hasPassiveMods = Array.isArray(q.passiveModifiers) && q.passiveModifiers.length > 0;
+            document.getElementById('widget-passive-mods-check').checked = hasPassiveMods;
+            const pmList = document.getElementById('passive-mods-list');
+            if (pmList) pmList.innerHTML = '';
+            if (hasPassiveMods) {
+                q.passiveModifiers.forEach(pm => {
+                    addPassiveModifierRow(pm.variable, pm.value);
+                });
+            }
+            toggleWidgetPassiveModifiers(hasPassiveMods);
+
             // Populate display mode pill
             const dm = q.displayMode || 'normal';
             const dmPill = document.querySelector(`input[name="widget-display-mode"][value="${dm}"]`);
@@ -9206,7 +9245,7 @@
             document.getElementById('widget-countdown-config').classList.add('hidden');
             document.getElementById('widget-timer-config')?.classList.add('hidden');
 
-            if (type === 'roller') {
+            if (type === 'roller' || type === 'number') {
                 document.getElementById('widget-roller-addons').classList.remove('hidden');
             } else if (type === 'stepper') {
                 document.getElementById('widget-stepper-config').classList.remove('hidden');
@@ -9231,6 +9270,34 @@
                 if (checked) fields.classList.remove('hidden');
                 else fields.classList.add('hidden');
             }
+        }
+
+        function toggleWidgetPassiveModifiers(checked) {
+            const fields = document.getElementById('widget-passive-mods-fields');
+            if (fields) {
+                if (checked) fields.classList.remove('hidden');
+                else fields.classList.add('hidden');
+            }
+        }
+
+        function addPassiveModifierRow(variable = '', value = '') {
+            const container = document.getElementById('passive-mods-list');
+            if (!container) return;
+
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2 passive-mod-row';
+            row.innerHTML = `
+                <input type="text" placeholder="STR" value="${variable.toUpperCase()}" 
+                    class="flex-1 bg-[#090d16] border border-white/10 rounded-lg px-2.5 py-2 text-xs text-[#e2e8f0] font-bold uppercase pm-variable">
+                <input type="number" placeholder="+2" value="${value}" 
+                    class="w-16 bg-[#090d16] border border-white/10 rounded-lg px-2.5 py-2 text-xs text-[#e2e8f0] font-bold text-center pm-value">
+                <button type="button" onclick="this.parentElement.remove()" class="text-slate-500 hover:text-rose-500 p-1 shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+            container.appendChild(row);
         }
 
         function selectAddonWidget(type) {
@@ -9293,6 +9360,25 @@
                     }
                 }
             }
+
+            let passiveModifiers = null;
+            if (document.getElementById('widget-passive-mods-check').checked) {
+                const rows = document.querySelectorAll('.passive-mod-row');
+                const list = [];
+                rows.forEach(row => {
+                    const varInput = row.querySelector('.pm-variable');
+                    const valInput = row.querySelector('.pm-value');
+                    const variableName = varInput ? varInput.value.trim().toUpperCase() : '';
+                    const modifierVal = valInput ? parseInt(valInput.value, 10) : 0;
+                    if (variableName) {
+                        list.push({ variable: variableName, value: modifierVal });
+                    }
+                });
+                if (list.length > 0) {
+                    passiveModifiers = list;
+                }
+            }
+
             let detailText = document.getElementById('widget-detail-text').value.trim() || null;
             const displayMode = document.querySelector('input[name="widget-display-mode"]:checked')?.value || 'normal';
 
@@ -9304,11 +9390,12 @@
                     q.detailText = detailText;
                     q.bindsVariable = bindsVariable;
                     q.variableRelType = variableRelType;
+                    q.passiveModifiers = passiveModifiers;
                     q.displayMode = displayMode === 'normal' ? null : displayMode;
 
-                    if (type === 'roller') {
+                    if (type === 'roller' || type === 'number') {
                         const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
-                        q.includeAdvDis = selectedAddon === 'advdis';
+                        q.includeAdvDis = type === 'roller' && selectedAddon === 'advdis';
 
                         if (selectedAddon === 'stepper') {
                             q.addonCounter = {
@@ -9376,6 +9463,10 @@
                     }
 
                     persistSaved();
+                    const char = characters.find(c => c.id === activeCharacterId);
+                    if (char) {
+                        syncCharacterVariables(char);
+                    }
                     renderSavedQueues();
                     closeWidgetCreationModal();
                     vibrate(10);
@@ -9394,10 +9485,11 @@
                 detailText: detailText,
                 bindsVariable: bindsVariable,
                 variableRelType: variableRelType,
+                passiveModifiers: passiveModifiers,
                 displayMode: displayMode === 'normal' ? null : displayMode
             };
 
-            if (type === 'roller') {
+            if (type === 'roller' || type === 'number') {
                 if (engine.queue.length > 0) {
                     const saved = engine.saveQueue(name, color);
                     if (saved) {
@@ -9410,9 +9502,11 @@
                         engine.savedQueues = engine.savedQueues.filter(q => q.id !== saved.id);
                     }
                 }
+            }
 
+            if (type === 'roller' || type === 'number') {
                 const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
-                newWidget.includeAdvDis = selectedAddon === 'advdis';
+                newWidget.includeAdvDis = type === 'roller' && selectedAddon === 'advdis';
 
                 if (selectedAddon === 'stepper') {
                     newWidget.addonCounter = {
@@ -9461,7 +9555,12 @@
                 newWidget.labelOn = document.getElementById('toggle-label-on').value.trim() || 'On';
                 newWidget.labelOff = document.getElementById('toggle-label-off').value.trim() || 'Off';
             } else if (type === 'number') {
-                newWidget.value = parseInt(document.getElementById('number-val').value) || 0;
+                if (newWidget.unifiedQueue && newWidget.unifiedQueue.length > 0) {
+                    const res = engine.calculateRoll(newWidget.unifiedQueue, true);
+                    newWidget.value = res ? (parseInt(res.total) || 0) : 0;
+                } else {
+                    newWidget.value = parseInt(document.getElementById('number-val').value) || 0;
+                }
             } else if (type === 'text') {
                 newWidget.text = document.getElementById('text-card-content').value;
                 newWidget.collapsed = false;
@@ -9481,6 +9580,10 @@
 
             engine.savedQueues.push(newWidget);
             persistSaved();
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char) {
+                syncCharacterVariables(char);
+            }
             renderSavedQueues();
             closeWidgetCreationModal();
             vibrate(10);
@@ -9491,6 +9594,10 @@
             if (q && q.widgetType === 'number') {
                 q.value = parseInt(newValue, 10) || 0;
                 persistSaved();
+                const char = characters.find(c => c.id === activeCharacterId);
+                if (char) {
+                    syncCharacterVariables(char);
+                }
                 renderSavedQueues();
                 if (q.bindsVariable) {
                     populateRulesVariableDropdowns();
@@ -9534,6 +9641,10 @@
                     }
                 }
                 persistSaved();
+                const char = characters.find(c => c.id === activeCharacterId);
+                if (char) {
+                    syncCharacterVariables(char);
+                }
                 renderSavedQueues();
                 vibrate(5);
             }
@@ -9554,6 +9665,10 @@
                     }
                 }
                 persistSaved();
+                const char = characters.find(c => c.id === activeCharacterId);
+                if (char) {
+                    syncCharacterVariables(char);
+                }
                 renderSavedQueues();
                 vibrate(5);
             }
@@ -9564,6 +9679,10 @@
             if (q && q.widgetType === 'toggle') {
                 q.checked = checked;
                 persistSaved();
+                const char = characters.find(c => c.id === activeCharacterId);
+                if (char) {
+                    syncCharacterVariables(char);
+                }
                 renderSavedQueues();
                 vibrate(5);
             }
@@ -10043,6 +10162,10 @@
             if (q && q.addonToggle) {
                 q.addonToggle.checked = checked;
                 persistSaved();
+                const char = characters.find(c => c.id === activeCharacterId);
+                if (char) {
+                    syncCharacterVariables(char);
+                }
                 renderSavedQueues();
                 vibrate(5);
             }
@@ -10462,7 +10585,7 @@
 
             const getWidgetValue = (w) => {
                 if (w.widgetType === 'toggle') return w.checked ? 1 : 0;
-                if (w.widgetType === 'roller') {
+                if (w.widgetType === 'roller' || (w.widgetType === 'number' && w.unifiedQueue && w.unifiedQueue.length > 0)) {
                     const res = engine.calculateRoll(w.unifiedQueue || w.queue, true);
                     return res ? (parseInt(res.total) || 0) : 0;
                 }
@@ -10504,7 +10627,24 @@
                     // Find active widgets that bind to this variable
                     const activeBinders = charWidgets.filter(w => w.bindsVariable && w.bindsVariable.toUpperCase() === upperName && isWidgetActive(w));
 
-                    if (activeBinders.length > 0 || hasDefineWidget) {
+                    // Find passive modifiers from active widgets for this variable
+                    const activePassiveModifiers = [];
+                    charWidgets.forEach(w => {
+                        if (isWidgetActive(w) && Array.isArray(w.passiveModifiers)) {
+                            w.passiveModifiers.forEach(pm => {
+                                if (pm.variable && pm.variable.toUpperCase() === upperName) {
+                                    activePassiveModifiers.push({
+                                        value: parseInt(pm.value) || 0,
+                                        widget: w
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+
+
+                    if (activeBinders.length > 0 || hasDefineWidget || activePassiveModifiers.length > 0) {
                         // 1. Process define
                         const defWidget = activeBinders.find(w => w.variableRelType === 'define');
                         let val = 0;
@@ -10521,6 +10661,12 @@
                                 val += getWidgetValue(w);
                             }
                         });
+
+                        // 3. Process passive modifiers
+                        activePassiveModifiers.forEach(pm => {
+                            val += pm.value;
+                        });
+
                         vars[upperName] = val;
                     } else {
                         // No widgets bind to this variable, fallback to rawVars or 0
@@ -10542,6 +10688,13 @@
                 charWidgets.forEach(w => {
                     if (w.bindsVariable) {
                         resolveVariable(w.bindsVariable);
+                    }
+                    if (isWidgetActive(w) && Array.isArray(w.passiveModifiers)) {
+                        w.passiveModifiers.forEach(pm => {
+                            if (pm.variable) {
+                                resolveVariable(pm.variable);
+                            }
+                        });
                     }
                 });
 
@@ -10576,6 +10729,54 @@
             }
             return null;
         };
+
+        function syncCharacterVariables(char) {
+            if (!char) return;
+            const vars = getCalculatedVariables(char);
+            if (!char.variables) char.variables = {};
+            let changed = false;
+            
+            // Sync all calculated vars to char.variables
+            Object.keys(vars).forEach(k => {
+                const existingKey = Object.keys(char.variables).find(x => x.toUpperCase() === k);
+                const strVal = String(vars[k]);
+                if (existingKey) {
+                    if (char.variables[existingKey] !== strVal) {
+                        char.variables[existingKey] = strVal;
+                        changed = true;
+                    }
+                } else {
+                    char.variables[k] = strVal;
+                    changed = true;
+                }
+            });
+
+            // Also keep widgets' value in sync in engine.savedQueues
+            if (typeof engine !== 'undefined' && engine.savedQueues) {
+                const charWidgets = engine.savedQueues.filter(w => w.characterId === char.id);
+                charWidgets.forEach(w => {
+                    if (w.widgetType === 'number' && w.bindsVariable) {
+                        const hasFormula = w.unifiedQueue && w.unifiedQueue.length > 0;
+                        if (w.variableRelType === 'define' && !hasFormula) {
+                            return;
+                        }
+                        const upperBindVar = w.bindsVariable.toUpperCase();
+                        if (vars[upperBindVar] !== undefined) {
+                            const targetVal = vars[upperBindVar];
+                            if (w.value !== targetVal) {
+                                w.value = targetVal;
+                                changed = true;
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (changed) {
+                persistArsenal();
+                persistSaved();
+            }
+        }
 
         function populateRulesVariableDropdowns() {
             const sumValEl = document.getElementById('rule-sum-val');
@@ -11001,6 +11202,16 @@
                         }
                         triggerRoll(e, { arsenalId: q.id });
                     };
+                } else if (type === 'number') {
+                    item.onclick = (e) => {
+                        if (isHold) {
+                            isHold = false;
+                            return;
+                        }
+                        if (q.addonToggle) {
+                            toggleCardAddonState(q.id, !q.addonToggle.checked);
+                        }
+                    };
                 } else if (type === 'text') {
                     item.onclick = (e) => {
                         if (isHold) {
@@ -11020,7 +11231,7 @@
                 }
 
                 let formula = '';
-                if (type === 'roller') {
+                if (type === 'roller' || type === 'number') {
                     if (q.unifiedQueue && Array.isArray(q.unifiedQueue) && q.unifiedQueue.length > 0) {
                         formula = q.unifiedQueue.map(node => {
                             if (node.nodeType === 'node') {
@@ -11101,7 +11312,7 @@
                     }
                 }
 
-                if (type === 'roller' && q.addonToggle && !q.addonToggle.checked) {
+                if ((type === 'roller' || type === 'number') && q.addonToggle && !q.addonToggle.checked) {
                     item.classList.add('opacity-40');
                 }
 
@@ -11201,7 +11412,16 @@
                 } else if (type === 'number') {
                     let displayVal = q.value;
                     let isCalculated = false;
-                    if (q.bindsVariable) {
+                    if (q.unifiedQueue && Array.isArray(q.unifiedQueue) && q.unifiedQueue.length > 0) {
+                        isCalculated = true;
+                        const res = engine.calculateRoll(q.unifiedQueue, true);
+                        if (res) {
+                            displayVal = parseInt(res.total) || 0;
+                            if (q.value !== displayVal) {
+                                q.value = displayVal;
+                            }
+                        }
+                    } else if (q.bindsVariable) {
                         const calculatedVars = ['STR_MOD', 'DEX_MOD', 'CON_MOD', 'INT_MOD', 'WIS_MOD', 'CHA_MOD', 'BACKSTAB_DICE'];
                         const upperBindVar = q.bindsVariable.toUpperCase();
                         if (calculatedVars.includes(upperBindVar)) {
@@ -11215,15 +11435,32 @@
                             }
                         }
                     }
+                    const isInputDisabled = isCalculated || (q.addonToggle && !q.addonToggle.checked);
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 pr-2">
+                        <div class="flex-grow min-w-0 pl-2 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            ${formula ? `<div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula}</div>` : ''}
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                         </div>
-                        <div class="flex items-center gap-2 mr-8 shrink-0 select-none" onclick="event.stopPropagation()">
-                            <input type="number" value="${displayVal}" ${isCalculated ? 'readonly disabled' : ''} onchange="changeNumberValueDirect('${q.id}', this.value)" class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isCalculated ? 'opacity-70 pointer-events-none' : ''}">
+                        <div class="flex items-center gap-2 ${q.addonToggle ? 'mr-8' : 'mr-2'} shrink-0 select-none" onclick="event.stopPropagation()">
+                            <input type="number" value="${displayVal}" ${isInputDisabled ? 'readonly disabled' : ''} onchange="changeNumberValueDirect('${q.id}', this.value)" class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isInputDisabled ? 'opacity-70 pointer-events-none' : ''}">
                         </div>
                     `;
+                    if (q.addonToggle) {
+                        const t = q.addonToggle;
+                        innerHtml += `
+                            <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
+                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
+                                    ${t.checked ? t.labelOn : t.labelOff}
+                                </span>
+                            </div>
+                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                                 onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
+                                 style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                            </div>
+                        `;
+                    }
                 } else if (type === 'text') {
                     const isCollapsed = q.collapsed ?? false;
                     innerHtml += `
@@ -11268,7 +11505,7 @@
 
                     wrapper.appendChild(advBtn);
                     wrapper.appendChild(disBtn);
-                } else if (type === 'roller' && q.addonCounter) {
+                } else if ((type === 'roller' || type === 'number') && q.addonCounter) {
                     const c = q.addonCounter;
                     const decBtn = document.createElement('button');
                     decBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
@@ -11358,7 +11595,7 @@
                     </button>
                 ` : '';
 
-                const editLoadoutButtonHtml = (type === 'roller') ? `
+                const editLoadoutButtonHtml = (type === 'roller' || (type === 'number' && q.unifiedQueue && q.unifiedQueue.length > 0)) ? `
                     <button onclick="loadQueue('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         <span>Edit Loadout</span>

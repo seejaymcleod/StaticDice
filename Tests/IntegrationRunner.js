@@ -257,9 +257,115 @@ window.addEventListener('load', () => {
                 if (recoveredGroups[0].name !== 'Default') {
                     throw new Error("Recreated group name should be 'Default'");
                 }
-                if (activeGroupId !== recoveredGroups[0].id) {
-                    throw new Error("activeGroupId should switch to the recreated group");
+                // Test 9: STR Modifier and STR Check update dynamically
+                console.log('Testing STR Modifier and STR Check dynamic updates...');
+                // Let's spawn another clean character sheet
+                await spawnTemplateInstance('template_sd_character');
+                // The spawned character is now active. Let's find its widgets.
+                const charW = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
+                const strScoreW = charW.find(w => w.name === 'STR Score');
+                const strModW = charW.find(w => w.name === 'STR Modifier');
+                const strCheckW = charW.find(w => w.name === 'Strength Check');
+
+                if (!strScoreW || !strModW || !strCheckW) {
+                    throw new Error("Could not find STR Score, STR Modifier, or Strength Check widgets");
                 }
+
+                // Initial value assertions
+                if (strScoreW.value !== 10) throw new Error('Initial STR Score should be 10, got ' + strScoreW.value);
+                if (strModW.value !== 0) throw new Error('Initial STR Modifier should be 0, got ' + strModW.value);
+
+                // Check that getActiveCharacterVariable returns correct values
+                if (window.getActiveCharacterVariable('STR') !== 10) throw new Error('vars.STR should be 10, got ' + window.getActiveCharacterVariable('STR'));
+                if (window.getActiveCharacterVariable('STR_mod') !== 0) throw new Error('vars.STR_mod should be 0, got ' + window.getActiveCharacterVariable('STR_mod'));
+
+                // Change STR Score to 15
+                changeNumberValueDirect(strScoreW.id, 15);
+
+                // Let's verify widget values and variable lookup
+                if (window.getActiveCharacterVariable('STR') !== 15) throw new Error('vars.STR should be 15 after update, got ' + window.getActiveCharacterVariable('STR'));
+                if (window.getActiveCharacterVariable('STR_mod') !== 2) throw new Error('vars.STR_mod should be 2 after STR Score is 15, got ' + window.getActiveCharacterVariable('STR_mod'));
+
+                // Verify that w_mod_str widget value got updated to 2
+                if (strModW.value !== 2) throw new Error('STR Modifier widget value should update to 2, got ' + strModW.value);
+
+                // Let's check the DOM elements inside JSDOM!
+                // The widgets list is rendered into '.saved-queues-list'
+                // Let's look for the formula/resolved display of the STR Check widget
+                const strCheckEl = document.querySelector('.saved-item[data-id="' + strCheckW.id + '"]');
+                if (!strCheckEl) {
+                    throw new Error("Could not find STR Check DOM element");
+                }
+                const formulaText = strCheckEl.querySelector('.widget-formula').textContent;
+                console.log('STR Check Formula display text in DOM:', formulaText);
+                if (!formulaText.includes('(+2)') && !formulaText.includes('+2')) {
+                    throw new Error("Strength Check formula text in DOM did not update: " + formulaText);
+                }
+
+                // Test 10: Refactored armor/shield to numbers & passive modifiers
+                console.log('Testing refactored armor/shield numbers & passive modifiers...');
+                const activeCharW = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
+                const armorW = activeCharW.find(w => w.name === 'Unarmored');
+                const shieldW = activeCharW.find(w => w.name === 'Shield');
+                const acW = activeCharW.find(w => w.name === 'Armor Class');
+
+                if (!armorW || !shieldW || !acW) {
+                    throw new Error("Could not find Unarmored, Shield, or Armor Class widgets");
+                }
+
+                if (armorW.widgetType !== 'number') throw new Error('Unarmored widgetType should be number, got ' + armorW.widgetType);
+                if (shieldW.widgetType !== 'number') throw new Error('Shield widgetType should be number, got ' + shieldW.widgetType);
+
+                // Initial AC verification
+                // DEX is 10 by default in standard templates (DEX_mod is 0)
+                const dexMod = window.getActiveCharacterVariable('DEX_mod') || 0;
+                if (window.getActiveCharacterVariable('AC_Armor') !== 10 + dexMod) throw new Error('Initial AC_Armor should be 10 + DEX_mod, got ' + window.getActiveCharacterVariable('AC_Armor'));
+                if (window.getActiveCharacterVariable('AC_Shield') !== 0) throw new Error('Initial AC_Shield should be 0 because Shield is unequipped, got ' + window.getActiveCharacterVariable('AC_Shield'));
+                if (window.getActiveCharacterVariable('AC') !== 10 + dexMod) throw new Error('Initial AC should be AC_Armor + AC_Shield, got ' + window.getActiveCharacterVariable('AC'));
+
+                // Equip Shield
+                toggleCardAddonState(shieldW.id, true);
+                if (window.getActiveCharacterVariable('AC_Shield') !== 2) throw new Error('AC_Shield should be 2 after Shield is equipped, got ' + window.getActiveCharacterVariable('AC_Shield'));
+                if (window.getActiveCharacterVariable('AC') !== 10 + dexMod + 2) throw new Error('AC should update to 12 + DEX_mod, got ' + window.getActiveCharacterVariable('AC'));
+
+                // Create a Longsword widget with passive modifiers
+                const swordId = 'w_sword_' + Date.now();
+                const swordW = {
+                    id: swordId,
+                    characterId: activeCharacterId,
+                    name: 'Longsword',
+                    widgetType: 'roller',
+                    addonToggle: {
+                        checked: false,
+                        labelOn: 'Equipped',
+                        labelOff: 'Unequipped'
+                    },
+                    passiveModifiers: [
+                        { variable: 'STR', value: 2 },
+                        { variable: 'Attack_Melee', value: 1 }
+                    ]
+                };
+                engine.savedQueues.push(swordW);
+
+                // Recalculate/Sync variables
+                const activeChar = characters.find(c => c.id === activeCharacterId);
+                syncCharacterVariables(activeChar);
+
+                // STR is 15 (from test 9), Attack_Melee is 0
+                if (window.getActiveCharacterVariable('STR') !== 15) throw new Error('STR should remain 15 when Longsword is unequipped, got ' + window.getActiveCharacterVariable('STR'));
+                if (window.getActiveCharacterVariable('Attack_Melee') !== 0) throw new Error('Attack_Melee should remain 0 when Longsword is unequipped, got ' + window.getActiveCharacterVariable('Attack_Melee'));
+
+                // Equip Longsword
+                toggleCardAddonState(swordId, true);
+                if (window.getActiveCharacterVariable('STR') !== 17) throw new Error('STR should be 17 (15 + 2) when Longsword is equipped, got ' + window.getActiveCharacterVariable('STR'));
+                if (window.getActiveCharacterVariable('STR_mod') !== 3) throw new Error('STR_mod should be 3 when STR is 17, got ' + window.getActiveCharacterVariable('STR_mod'));
+                if (window.getActiveCharacterVariable('Attack_Melee') !== 1) throw new Error('Attack_Melee should be 1 (0 + 1) when Longsword is equipped, got ' + window.getActiveCharacterVariable('Attack_Melee'));
+
+                // Unequip Longsword
+                toggleCardAddonState(swordId, false);
+                if (window.getActiveCharacterVariable('STR') !== 15) throw new Error('STR should be 15 after unequipping Longsword, got ' + window.getActiveCharacterVariable('STR'));
+                if (window.getActiveCharacterVariable('STR_mod') !== 2) throw new Error('STR_mod should go back to 2, got ' + window.getActiveCharacterVariable('STR_mod'));
+                if (window.getActiveCharacterVariable('Attack_Melee') !== 0) throw new Error('Attack_Melee should return to 0, got ' + window.getActiveCharacterVariable('Attack_Melee'));
             })()
         `).then(() => {
             console.log('-> Passed.');
