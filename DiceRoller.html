@@ -10447,7 +10447,7 @@
 
             if (char.variables) {
                 for (const [k, v] of Object.entries(char.variables)) {
-                    rawVars[k] = parseInt(v) || 0;
+                    rawVars[k.toUpperCase()] = parseInt(v) || 0;
                 }
             }
 
@@ -10473,34 +10473,36 @@
 
             // Resolve a variable on-demand
             function resolveVariable(name) {
+                if (!name) return 0;
+                const upperName = name.toUpperCase();
                 // If already computed, return it
-                if (vars[name] !== undefined) {
-                    return vars[name];
+                if (vars[upperName] !== undefined) {
+                    return vars[upperName];
                 }
                 // Detect circular dependency
-                if (computing.has(name)) {
+                if (computing.has(upperName)) {
                     // Return fallback value from rawVars or 0 to break loop
-                    return rawVars[name] !== undefined ? rawVars[name] : 0;
+                    return rawVars[upperName] !== undefined ? rawVars[upperName] : 0;
                 }
 
-                computing.add(name);
+                computing.add(upperName);
 
                 try {
-                    // If it's a base stat modifier (e.g., DEX_mod)
-                    if (name.endsWith('_mod')) {
-                        const baseName = name.slice(0, -4);
+                    // Check if there is any widget that defines this variable
+                    const hasDefineWidget = charWidgets.some(w => w.bindsVariable && w.bindsVariable.toUpperCase() === upperName && w.variableRelType === 'define');
+
+                    // If it's a base stat modifier (e.g., DEX_mod) and we don't have a define widget for it
+                    if (upperName.endsWith('_MOD') && !hasDefineWidget) {
+                        const baseName = upperName.slice(0, -4);
                         if (baseStats.includes(baseName)) {
                             const baseVal = resolveVariable(baseName);
-                            vars[name] = Math.floor((baseVal - 10) / 2);
-                            return vars[name];
+                            vars[upperName] = Math.floor((baseVal - 10) / 2);
+                            return vars[upperName];
                         }
                     }
 
-                    // Check if there is any widget that defines this variable
-                    const hasDefineWidget = charWidgets.some(w => w.bindsVariable === name && w.variableRelType === 'define');
-
                     // Find active widgets that bind to this variable
-                    const activeBinders = charWidgets.filter(w => w.bindsVariable === name && isWidgetActive(w));
+                    const activeBinders = charWidgets.filter(w => w.bindsVariable && w.bindsVariable.toUpperCase() === upperName && isWidgetActive(w));
 
                     if (activeBinders.length > 0 || hasDefineWidget) {
                         // 1. Process define
@@ -10510,7 +10512,7 @@
                             val = getWidgetValue(defWidget);
                         } else if (!hasDefineWidget) {
                             // If there is no define widget at all, fallback to rawVars
-                            val = rawVars[name] !== undefined ? rawVars[name] : 0;
+                            val = rawVars[upperName] !== undefined ? rawVars[upperName] : 0;
                         }
                         
                         // 2. Process modifies
@@ -10519,14 +10521,14 @@
                                 val += getWidgetValue(w);
                             }
                         });
-                        vars[name] = val;
+                        vars[upperName] = val;
                     } else {
                         // No widgets bind to this variable, fallback to rawVars or 0
-                        vars[name] = rawVars[name] !== undefined ? rawVars[name] : 0;
+                        vars[upperName] = rawVars[upperName] !== undefined ? rawVars[upperName] : 0;
                     }
-                    return vars[name];
+                    return vars[upperName];
                 } finally {
-                    computing.delete(name);
+                    computing.delete(upperName);
                 }
             }
 
@@ -10546,13 +10548,13 @@
                 // Also make sure all base stats and their modifiers are resolved
                 baseStats.forEach(stat => {
                     resolveVariable(stat);
-                    resolveVariable(`${stat}_mod`);
+                    resolveVariable(`${stat}_MOD`);
                 });
 
                 // Calculate Backstab_Dice dynamically at the end if not already defined (1 + LVL / 2 rounded down)
-                if (vars["Backstab_Dice"] === undefined) {
+                if (vars["BACKSTAB_DICE"] === undefined) {
                     const lvl = resolveVariable("LVL");
-                    vars["Backstab_Dice"] = 1 + Math.floor((lvl || 1) / 2);
+                    vars["BACKSTAB_DICE"] = 1 + Math.floor((lvl || 1) / 2);
                 }
             } finally {
                 window.getActiveCharacterVariable = originalGetVar;
@@ -10566,8 +10568,11 @@
             const char = characters.find(c => c.id === activeCharacterId);
             if (!char) return null;
             const vars = getCalculatedVariables(char);
-            if (vars[name] !== undefined) {
-                return vars[name];
+            if (name) {
+                const upperName = name.toUpperCase();
+                if (vars[upperName] !== undefined) {
+                    return vars[upperName];
+                }
             }
             return null;
         };
@@ -11197,10 +11202,11 @@
                     let displayVal = q.value;
                     let isCalculated = false;
                     if (q.bindsVariable) {
-                        const calculatedVars = ['STR_mod', 'DEX_mod', 'CON_mod', 'INT_mod', 'WIS_mod', 'CHA_mod', 'Backstab_Dice'];
-                        if (calculatedVars.includes(q.bindsVariable)) {
+                        const calculatedVars = ['STR_MOD', 'DEX_MOD', 'CON_MOD', 'INT_MOD', 'WIS_MOD', 'CHA_MOD', 'BACKSTAB_DICE'];
+                        const upperBindVar = q.bindsVariable.toUpperCase();
+                        if (calculatedVars.includes(upperBindVar)) {
                             isCalculated = true;
-                            const resolved = window.getActiveCharacterVariable(q.bindsVariable);
+                            const resolved = window.getActiveCharacterVariable(upperBindVar);
                             if (resolved !== null) {
                                 displayVal = resolved;
                                 if (q.value !== resolved) {

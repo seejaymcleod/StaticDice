@@ -277,61 +277,109 @@ window.StaticDiceTemplates = [
                 id: 'w_mod_str',
                 groupId: 'stats',
                 name: 'STR Modifier',
-                widgetType: 'number',
-                value: 0,
+                widgetType: 'roller',
                 bindsVariable: 'STR_mod',
                 variableRelType: 'define',
-                hidden: true
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'STR', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_dex',
                 groupId: 'stats',
                 name: 'DEX Modifier',
-                widgetType: 'number',
-                value: 0,
+                widgetType: 'roller',
                 bindsVariable: 'DEX_mod',
                 variableRelType: 'define',
-                hidden: true
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'DEX', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_con',
                 groupId: 'stats',
                 name: 'CON Modifier',
-                widgetType: 'number',
-                value: 0,
+                widgetType: 'roller',
                 bindsVariable: 'CON_mod',
                 variableRelType: 'define',
-                hidden: true
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'CON', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_int',
                 groupId: 'stats',
                 name: 'INT Modifier',
-                widgetType: 'number',
-                value: 0,
+                widgetType: 'roller',
                 bindsVariable: 'INT_mod',
                 variableRelType: 'define',
-                hidden: true
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'INT', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_wis',
                 groupId: 'stats',
                 name: 'WIS Modifier',
-                widgetType: 'number',
-                value: 0,
+                widgetType: 'roller',
                 bindsVariable: 'WIS_mod',
                 variableRelType: 'define',
-                hidden: true
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'WIS', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_mod_cha',
                 groupId: 'stats',
                 name: 'CHA Modifier',
-                widgetType: 'number',
-                value: 0,
+                widgetType: 'roller',
                 bindsVariable: 'CHA_mod',
                 variableRelType: 'define',
-                hidden: true
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'operator', operator: '(' },
+                    { nodeType: 'modifier', type: 'variable', value: 'CHA', operator: '+' },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 10, operator: '+' },
+                    { nodeType: 'operator', operator: ')' },
+                    { nodeType: 'operator', operator: '/', roundMode: 'down' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
             },
             {
                 id: 'w_var_attack_melee',
