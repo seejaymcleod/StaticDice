@@ -9,12 +9,16 @@ console.log('🧪 Starting JSDOM Integration Deep Dive Test...');
 const engineCode = fs.readFileSync(path.resolve(__dirname, '../DiceEngine.js'), 'utf8');
 const archCode = fs.readFileSync(path.resolve(__dirname, '../DataArchitecture.js'), 'utf8');
 const templatesCode = fs.readFileSync(path.resolve(__dirname, '../Assets/TemplatesData.js'), 'utf8');
+const parserRegistryCode = fs.readFileSync(path.resolve(__dirname, '../Parsers/ParserRegistry.js'), 'utf8');
+const shadowdarkParserCode = fs.readFileSync(path.resolve(__dirname, '../Parsers/ShadowdarkParser.js'), 'utf8');
 let html = fs.readFileSync(path.resolve(__dirname, '../DiceRoller.html'), 'utf8');
 
 // Inline scripts inside html script tags
 html = html.replace('<script src="Assets/TemplatesData.js"></script>', `<script>${templatesCode}</script>`);
 html = html.replace('<script src="DataArchitecture.js"></script>', `<script>${archCode}</script>`);
 html = html.replace('<script src="DiceEngine.js"></script>', `<script>${engineCode}</script>`);
+html = html.replace('<script src="Parsers/ParserRegistry.js"></script>', `<script>${parserRegistryCode}</script>`);
+html = html.replace('<script src="Parsers/ShadowdarkParser.js"></script>', `<script>${shadowdarkParserCode}</script>`);
 
 // 2. Initialize JSDOM
 const dom = new JSDOM(html, {
