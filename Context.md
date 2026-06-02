@@ -2,8 +2,12 @@
 
 ## 📁 Repository Blueprint
 - **DiceEngine.js**: Mathematical core & parser (pure JS).
-- **DiceRoller.html**: UI layer (single-file, Tailwind CSS CDN, audio, haptics).
-- **Tests/DiceEngine.test.js**: Jest mathematical test suite.
+- **DataArchitecture.js**: Core structural classes for Systems, Blueprints, Instances, and Containers (Campaigns/Encounters).
+- **DiceRoller.html**: UI layer (single-file HTML containing Tailwind CSS classes, inline scripts, audio, haptics).
+- **Parsers/**: Directory containing third-party importer logic.
+  - `ParserRegistry.js`: Global registry for detecting and routing imported data.
+  - `ShadowdarkParser.js`: Specialized parser for Shadowdarklings character exports.
+- **Tests/**: Jest mathematical test suite (`DiceEngine.test.js`, `IntegrationRunner.js`).
 - **package.json**: Contains scripts/dependencies (Jest, jsdom).
 
 ## 🎲 DiceEngine State & Schemas
@@ -69,69 +73,44 @@
 - **Target Modes**: `sum` (math total), `count` (success count), `list` (raw results).
 - **Sets Mode**: Filters and groups matching dice sizes using `setsOp` & `setsVal` (e.g. pairs, triples).
 
+## 🗃️ Data Architecture (CMS Store)
+- Defines base classes: `DiceSystem`, `Blueprint` (Entity & Component), `Instance` (Entity & Component), and `Container` (Campaign & Encounter).
+- **Global Store (`CMSStore`)**: Stores active instances and overarching state across the application.
+- **Shadowdark System**: Pre-loaded system schema defining base entity blueprints (Characters, Monsters) and expected variable states (STR, DEX, AC, HP).
+
 ## 🗃️ Dice Arsenal, Binder Drawer & Polymorphic Widgets
 
 ### 1. Dice Binder Drawer
-- **Navigation**: Access via the drawer icon `☰` sticky button in the page header and the top-left of the main sticky result container (`#result-main`).
+- **Navigation**: Access via the drawer icon `☰` sticky button. Its width scales up to a maximum on desktop displays.
 - **Functionality**:
   - Displays list of campaigns, characters, templates, and RPG blueprints.
-  - Allows quick character selection, deletion, or template spawning (e.g. Fighter, Mage).
-  - Integrates JSON Import/Export triggers at the bottom.
+  - Character Sheet Variables: Modifiable character-specific stats dynamically injected into equations.
+  - JSON Import/Export triggers cleanly integrated.
 
 ### 2. Polymorphic Saved Widgets
-Saved items in `engine.savedQueues` can act as different types of interactive cards based on their `widgetType` property:
-- **Roller Widget (`widgetType: 'roller'`)**: Performs dice queue rolls. Supports nested addons rendered visually beside or inside the card:
-  - **ADV/DIS Buttons**: Sibling buttons (`w-[3rem]`, auto-stretching to match card height) to roll with advantage or disadvantage.
-  - **Resource Counter Addon (`addonCounter: { label, max, value }`)**: Tracker for usages/ammunition rendered as external `-`, `value/max`, and `+` buttons next to the card. Auto-stretches vertically to match card height.
-  - **Toggle Addon (`addonToggle: { checked, labelOn, labelOff }`)**: Replaces switches with a clean vertical "bulb" stripe (`w-6`) on the right end of the card. Fully illuminated with a themed color glow when active, and dim when inactive. Toggled via a text status label next to it. When unchecked, card opacity dims to 40% and rolls are blocked.
-  - **Note Addon (`addonNote`)**: Small description label displayed below the card name inside the card.
-- **Stepper Widget (`widgetType: 'stepper'`)**: Standalone counter card. Displays a label and value, with external stretching `+` and `-` buttons.
-- **Toggle Widget (`widgetType: 'toggle'`)**: Standalone switch card. Displays status labels next to a vertical right-hand "bulb" stripe (glowing colored when active, dim when inactive). The entire card acts as a click toggle.
-- **Text Widget (`widgetType: 'text'`)**: Standalone collapsible text block for campaign rules, spells, or character notes.
+Saved items in `engine.savedQueues` act as different interactive cards based on their `widgetType`:
+- **Roller Widget (`widgetType: 'roller'`)**: Performs dice rolls. Supports addons:
+  - **ADV/DIS Buttons**: Advantage/Disadvantage triggers.
+  - **Resource Counter Addon**: Tracker for ammunition (`value/max`).
+  - **Toggle Addon**: Clean vertical "bulb" stripe on the right end, blocks rolls when off.
+  - **Note Addon**: Description label below the card name.
+- **Compact Widgets**: A slimline version of widgets (especially for resource trackers) to optimize screen space.
+- **Timer / Dynamic Countdown Widget (`widgetType: 'timer'`)**: Specialized widget for tracking time-sensitive effects, buffs, or countdowns.
+- **Stepper Widget (`widgetType: 'stepper'`)**: Standalone counter card with `+` and `-` buttons.
+- **Toggle Widget (`widgetType: 'toggle'`)**: Standalone switch card with glowing status bulb.
+- **Text Widget (`widgetType: 'text'`)**: Standalone collapsible text block.
 
-### 3. Drag-and-Drop Interaction
-- **Reordering**: Dragging items triggers index swaps inside `engine.savedQueues`, persisted via `persistSaved()` and re-rendered.
-- **Empty Group Drop**: Dragging onto an empty group triggers `assignQueueGroup(dragSrcId, activeGroupId)` to move the item to that group.
-
-### 4. Actions Menu (Hold / Right-Click)
-- **Menu Trigger**: Replaces the physical gear button to eliminate clutter. Accessed via a **hold (long-press) for 500ms** on mobile/desktop, or a **right-click (contextmenu)** on desktop. The dropdown context menu is dynamically positioned relative to the click/touch coordinates.
-- **Configure (`configureSavedWidget`)**: Opens the widget modal in edit mode to modify name, type, and addons. Saves edits using `editingWidgetId`.
-- **Edit Loadout (`loadQueue`)**: Restores the saved unified queue to the active roll panel.
-- **Overwrite (`updateSavedQueue`)**: Overwrites the card's active roll formula with the current queue.
-- **Appearance (`openColorPicker`)**: Selects the accent highlight color using the preset palette (`COLOR_PALETTE`).
-- **Move to Group (`moveQueueToGroup`)**: Changes `groupId` to target another category.
-- **Delete (`deleteQueue`)**: Splices the widget card from `engine.savedQueues` completely.
-
-### 5. Cascade Roll Chains
-- Loadouts can define post-roll chain configurations (`chainSuccessSelect`, `chainCritSelect`, `chainFailSelect`).
-- Executing a chain (`executeRollChain`) shifts the UI display to `#chain-cascade-container`.
-- Processes sequentially: displays step totals, updates rolling status animations, outputs the `flatDescription`, and halts if target checks fail or when the chain ends normally.
-
-### 6. Third-Party Character Importers
-- **Auto-Detection**: The `ThirdPartyImporters` namespace handles automatic detection and parsing of imported JSON files inside `importSettings(event)`. If a structure matches a registered importer, it bypasses standard settings imports and runs custom mapping logic.
-- **Shadowdarklings Importer**:
-  - Matches files with `.stats` objects, `.class`, `.ancestry`, and arrays for `.gear` and `.attacks`.
-  - Spawns a character instance using the `template_sd_character` blueprint.
-  - Maps basic stats (`HP`, `Level`, `XP`, `Gold`, and core scores).
-  - Maps Details page items (Class, Ancestry, etc.) with values assigned to the Widget Name (`name`) and clears notes.
-  - Automatically equips armor types matching a pre-defined AC database (chainmail, plate, leather, etc.) and shields, setting up active AC-binding modifiers.
-  - Maps Gear items sequentially to the predefined template slot widgets (`w_gear_1` to `w_gear_20`). For multi-slot items, subsequent slots are allocated as placeholder cards named `... extra slot` showing which item occupies them.
-  - Translates passive abilities and ancestry traits (such as Half-Orc Mighty +1 melee attack/damage or wizard spellcasting bonus) into interactive **Toggle widgets** under the `Passives` group. Each toggle widget is equipped with a `passiveModifiers` array, enabling dynamic runtime adjustments to modifier variables (`Attack_Melee`, `Attack_Ranged`, `Damage_Melee`, `Damage_Ranged`, `Spellcheck`) and allowing the user to turn passives on/off in the UI. Base variables and define widgets remain at 0 to avoid hardcoding.
-  - Maps weapons to combat groups as twin Attack and Damage roller widgets. Attack/Damage formulas dynamically reference core attributes (STR/DEX mod), group modifiers, and magic bonuses.
-  - Identifies class spellcasting attributes (e.g., INT for wizards, WIS for priests) to dynamically compile spell check roll widgets.
-  - Scans talents, features, and magic items for limited usage patterns (e.g. `1/day`, `once per combat`, or level-scaling limits like `/level`).
-  - Spawns limited-use abilities in a new `Passives` group as **Stepper widgets** with visual trackers. Max values can bind to variable strings (like `LVL`), rendering resolved values dynamically and locking direct max input on cards. Passive abilities with modifiers map as Toggles, and other descriptive passives map as Text widgets.
+### 3. Third-Party Character Importers (`Parsers/`)
+- **Parser Registry (`ParserRegistry.js`)**: Automatically detects imported JSON formats and routes them to the correct parser.
+- **Shadowdarklings Importer (`ShadowdarkParser.js`)**:
+  - Maps stats, gear, and combat states to the generic Shadowdark templates.
+  - Passives Display: Passive traits from class/ancestry are imported as Toggles/Text widgets. The source prefix (e.g., "Wizard-1") is moved to the widget's **Notes field** (formatted as `Bonus: Wizard(Class)-1`) to keep the primary widget name clean.
+  - Auto-calculates attack/damage properties based on core stat modifiers.
 
 ## 🎨 UI Hooks & Integration
-- **Character Variables**: DiceEngine calls `window.getActiveCharacterVariable(name)` to resolve stats (e.g., `STR`) dynamically:
-```javascript
-window.getActiveCharacterVariable = function (name) {
-    const char = characters.find(c => c.id === activeCharacterId);
-    return (char && char.variables && char.variables[name] !== undefined) ? parseInt(char.variables[name]) : null;
-};
-```
-- **Haptics**: `haptics.tap()` (15ms standard), `haptics.thud()` (40ms heavy roll), `haptics.error()` (pattern [45, 50, 45]).
-- **Sound**: Audio constructor using `Assets/353844__magnesus__dice8.flac`.
+- **Character Variables**: DiceEngine dynamically resolves stats using `window.getActiveCharacterVariable(name)`.
+- **Haptics**: `haptics.tap()`, `haptics.thud()`, `haptics.error()`.
+- **Sound**: Audio constructor using loaded sound assets.
 
 ## 🧪 Testing
 - Jest unit tests (`Tests/DiceEngine.test.js`) and JSDOM integration tests (`Tests/IntegrationRunner.js`) run sequentially via `npm test`.
@@ -141,9 +120,6 @@ engine.setRng((sides) => sides); // Returns max value
 ```
 
 ## 💡 AI Prompting Tips
-- **Contiguous Edits**: In prompts, ask for targeted function replacements or git diffs rather than rewriting full files.
-- **Math First**: Implement new math mechanics in `DiceEngine.js` and verify via `DiceEngine.test.js` before making UI changes in `DiceRoller.html`.
-- **Schema Strictness**: Generate queue elements adhering strictly to the Node JSON schemas above.
-
-# RULES
-For Git, NEVER EVER COMMIT, REVERT OR CHANGE BRANCHES
+- **Contiguous Edits**: Ask for targeted function replacements or git diffs rather than rewriting full files.
+- **Math First**: Implement new math mechanics in `DiceEngine.js` and verify via tests before making UI changes.
+- **Schema Strictness**: Generate queue elements adhering strictly to the Node JSON schemas.
