@@ -7792,9 +7792,6 @@
                             }
                             
                             let finalResult = mapped;
-                            if (prefixMatch) {
-                                finalResult = (prefix + mapped).trim();
-                            }
                             return (finalResult + choiceSuffix).toUpperCase();
                         }
 
@@ -8806,7 +8803,64 @@
                             const isItemFeature = f.category === 'Item' || f.category === 'MagicItem' || (f.category && f.category.toLowerCase().includes('item'));
                             const targetGrpId = isItemFeature ? (groupIdMap['gear'] || passivesGrpId) : passivesGrpId;
 
-                            const limit = parseUsageLimit(f.desc);
+                            // Generically parse source name, level, and category from the feature
+                            let sourceName = '';
+                            let sourceType = f.category || 'Class';
+                            let level = f.level || null;
+                            let hasLevelPrefix = false;
+
+                            const prefixMatch = (f.name || '').match(/^([A-Z\s0-9_-]+)-(\d+):(.*)$/i);
+                            if (prefixMatch) {
+                                const rawSource = prefixMatch[1].trim();
+                                level = parseInt(prefixMatch[2]) || level;
+                                hasLevelPrefix = true;
+                                sourceName = rawSource.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                            }
+
+                            if (f.desc) {
+                                const bonusFromMatch = f.desc.match(/Bonus from\s+([^(]+)\s*\((Class|Ancestry|Item|Talent)\)/i);
+                                if (bonusFromMatch) {
+                                    sourceName = bonusFromMatch[1].trim();
+                                    sourceType = bonusFromMatch[2].trim();
+                                }
+                            }
+
+                            if (!sourceName) {
+                                const parenMatch = (f.name || '').match(/\((Half-Orc|Human|Elf|Dwarf|Halfling|Goblin|Wizard|Priest|Cleric|Druid|Ranger|Paladin|Warlock|Bard|Fighter|Thief)\)/i);
+                                if (parenMatch) {
+                                    sourceName = parenMatch[1].trim();
+                                    sourceType = 'Ancestry';
+                                } else if (f.category) {
+                                    sourceName = f.category;
+                                    sourceType = f.category;
+                                }
+                            }
+
+                            if (sourceName) {
+                                sourceName = sourceName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+                                const knownAncestries = ['human', 'elf', 'dwarf', 'halfling', 'goblin', 'half-orc', 'human ambition'];
+                                if (knownAncestries.includes(sourceName.toLowerCase()) || (f.category && f.category.toLowerCase() === 'ancestry') || (sourceType && sourceType.toLowerCase() === 'ancestry')) {
+                                    sourceType = 'Ancestry';
+                                } else if ((f.category && f.category.toLowerCase() === 'class') || (sourceType && sourceType.toLowerCase() === 'class')) {
+                                    sourceType = 'Class';
+                                }
+                            }
+
+                            let addonNoteVal = '';
+                            if (sourceName) {
+                                addonNoteVal = `Bonus: ${sourceName}(${sourceType})`;
+                                if (hasLevelPrefix && level !== null) {
+                                    addonNoteVal += `-${level}`;
+                                }
+                            }
+
+                            let cleanDesc = f.desc || '';
+                            if (cleanDesc) {
+                                cleanDesc = cleanDesc.replace(/Bonus from\s+[^(]+\s*\((Class|Ancestry|Item|Talent)\)/gi, '').trim();
+                                cleanDesc = cleanDesc.replace(/^\n+/, '').replace(/\n+$/, '').trim();
+                            }
+
+                            const limit = parseUsageLimit(cleanDesc);
                             if (limit !== null) {
                                 const widget = {
                                     id: 'w_feat_stepper_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -8818,7 +8872,8 @@
                                     max: limit,
                                     value: typeof limit === 'number' ? limit : (data.level || 1),
                                     showTracker: true,
-                                    detailText: f.desc || '',
+                                    addonNote: addonNoteVal || null,
+                                    detailText: cleanDesc || '',
                                     passiveModifiers: f.mods && f.mods.length > 0 ? f.mods : null
                                 };
                                 newWidgets.push(widget);
@@ -8829,7 +8884,8 @@
                                     groupId: targetGrpId,
                                     name: cleanFeatureName(f.name),
                                     widgetType: 'text',
-                                    text: f.desc || 'No description.',
+                                    addonNote: addonNoteVal || null,
+                                    text: cleanDesc || 'No description.',
                                     collapsed: true,
                                     passiveModifiers: f.mods && f.mods.length > 0 ? f.mods : null
                                 };
