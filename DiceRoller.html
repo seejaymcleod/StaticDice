@@ -8831,12 +8831,27 @@
                                     sourceName = parenMatch[1].trim();
                                     sourceType = 'Ancestry';
                                 } else if (f.category) {
-                                    sourceName = f.category;
-                                    sourceType = f.category;
+                                    if (f.category.toLowerCase() === 'class') {
+                                        sourceName = data.class || 'Class';
+                                        sourceType = 'Class';
+                                    } else if (f.category.toLowerCase() === 'ancestry') {
+                                        sourceName = data.ancestry || 'Ancestry';
+                                        sourceType = 'Ancestry';
+                                    } else {
+                                        sourceName = f.category;
+                                        sourceType = f.category;
+                                    }
                                 }
                             }
 
                             if (sourceName) {
+                                if (sourceName.toLowerCase() === 'class') {
+                                    sourceName = data.class || 'Class';
+                                    sourceType = 'Class';
+                                } else if (sourceName.toLowerCase() === 'ancestry') {
+                                    sourceName = data.ancestry || 'Ancestry';
+                                    sourceType = 'Ancestry';
+                                }
                                 sourceName = sourceName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
                                 const knownAncestries = ['human', 'elf', 'dwarf', 'halfling', 'goblin', 'half-orc', 'human ambition'];
                                 if (knownAncestries.includes(sourceName.toLowerCase()) || (f.category && f.category.toLowerCase() === 'ancestry') || (sourceType && sourceType.toLowerCase() === 'ancestry')) {
