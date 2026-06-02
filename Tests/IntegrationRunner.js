@@ -24,6 +24,14 @@ const dom = new JSDOM(html, {
 const { window } = dom;
 const { document } = window;
 
+// Load Rimas.json for JSDOM third-party import test
+const rimasJson = fs.readFileSync(path.resolve(__dirname, '../temp assets/Rimas.json'), 'utf8');
+window.rimasJsonStr = rimasJson;
+
+// Load Horlabo.json for JSDOM third-party import test
+const horlaboJson = fs.readFileSync(path.resolve(__dirname, '../temp assets/Horlabo.json'), 'utf8');
+window.horlaboJsonStr = horlaboJson;
+
 // Mock audio and haptics
 window.Audio = class {
     constructor() {
@@ -366,7 +374,500 @@ window.addEventListener('load', () => {
                 if (window.getActiveCharacterVariable('STR') !== 15) throw new Error('STR should be 15 after unequipping Longsword, got ' + window.getActiveCharacterVariable('STR'));
                 if (window.getActiveCharacterVariable('STR_mod') !== 2) throw new Error('STR_mod should go back to 2, got ' + window.getActiveCharacterVariable('STR_mod'));
                 if (window.getActiveCharacterVariable('Attack_Melee') !== 0) throw new Error('Attack_Melee should return to 0, got ' + window.getActiveCharacterVariable('Attack_Melee'));
+
+                // Test 11: Export/Import Merge & Conflict-Resolution
+                console.log('Testing Export/Import Merge & Conflict-Resolution...');
+                
+                // Establish initial state
+                const testChar = characters.find(c => c.name === 'Direct Input Renamed Name');
+                const testCharId = testChar.id;
+                
+                // Find its 'Default' group
+                const defaultGrp = groups.find(g => g.characterId === testCharId && g.name === 'Default');
+                const defaultGrpId = defaultGrp.id;
+                
+                // Clear savedQueues for this test character to be clean
+                engine.savedQueues = engine.savedQueues.filter(w => w.characterId !== testCharId);
+                
+                // Add a widget to be overwritten
+                const widgetToOverwrite = {
+                    id: 'w_to_overwrite_id',
+                    characterId: testCharId,
+                    groupId: defaultGrpId,
+                    name: 'Fireball',
+                    formula: '8d6',
+                    widgetType: 'roller',
+                    color: 'none'
+                };
+                engine.savedQueues.push(widgetToOverwrite);
+                
+                // Set customDice to initial state
+                customDice = [{ d: 12 }];
+                
+                // Mock import JSON
+                const mockImport = {
+                    campaigns: [
+                        { id: 'camp_import_exist', name: 'Test Campaign' },
+                        { id: 'camp_import_new', name: 'Brand New Campaign' }
+                    ],
+                    characters: [
+                        { id: 'char_import_exist', name: 'Direct Input Renamed Name', campaignId: 'camp_import_exist', dndType: 'standard' },
+                        { id: 'char_import_new', name: 'Brand New Character', campaignId: 'camp_import_exist', dndType: 'standard' }
+                    ],
+                    groups: [
+                        { id: 'grp_import_exist', name: 'Default', characterId: 'char_import_exist', color: '#ff0000' },
+                        { id: 'grp_import_new', name: 'Spells', characterId: 'char_import_exist', color: '#00ff00' }
+                    ],
+                    queues: [
+                        // Conflicting name -> should overwrite widgetToOverwrite
+                        { id: 'w_imported_conflict', name: 'Fireball', characterId: 'char_import_exist', groupId: 'grp_import_exist', formula: '12d6', color: '#ff0000', widgetType: 'roller' },
+                        // New widget -> should be added
+                        { id: 'w_imported_new', name: 'Magic Missile', characterId: 'char_import_exist', groupId: 'grp_import_exist', formula: '3d4+3', color: '#0000ff', widgetType: 'roller' }
+                    ],
+                    settings: {
+                        customDice: [{ d: 33 }, { d: 12 }],
+                        soundEnabled: false
+                    }
+                };
+                
+                // Mock FileReader
+                window.FileReader = class {
+                    constructor() {
+                        this.onload = null;
+                    }
+                    readAsText(file) {
+                        const event = {
+                            target: {
+                                result: JSON.stringify(mockImport)
+                            }
+                        };
+                        setTimeout(() => {
+                            if (this.onload) this.onload(event);
+                        }, 0);
+                    }
+                };
+                
+                // Trigger import
+                showModal = (opts) => {
+                    // Mock click 'Merge'
+                    return Promise.resolve(true); 
+                };
+                
+                const mockEvent = {
+                    target: {
+                        files: [{ name: 'backup.json' }],
+                        value: 'backup.json'
+                    }
+                };
+                
+                importSettings(mockEvent);
+                
+                // Wait for async file reader and import completion
+                await new Promise(r => setTimeout(r, 50));
+                
+                // Assertions:
+                // 1. Campaigns: 'Test Campaign' should NOT be duplicated. 'Brand New Campaign' should be added.
+                const campaignNames = campaigns.map(c => c.name);
+                if (!campaignNames.includes('Test Campaign')) throw new Error('Should keep Test Campaign');
+                if (!campaignNames.includes('Brand New Campaign')) throw new Error('Should add Brand New Campaign');
+                if (campaigns.filter(c => c.name === 'Test Campaign').length !== 1) throw new Error('Test Campaign should not be duplicated');
+                
+                // 2. Characters: 'Direct Input Renamed Name' should NOT be duplicated under 'Test Campaign'. 'Brand New Character' should be added.
+                const activeCampObj = campaigns.find(c => c.name === 'Test Campaign');
+                const campChars = characters.filter(c => c.campaignId === activeCampObj.id);
+                if (campChars.filter(c => c.name === 'Direct Input Renamed Name').length !== 1) throw new Error('Direct Input Renamed Name should not be duplicated under Test Campaign');
+                if (!campChars.some(c => c.name === 'Brand New Character')) throw new Error('Should add Brand New Character');
+                
+                // 3. Groups: 'Default' group should not be duplicated. 'Spells' group should be added.
+                const charObj = characters.find(c => c.name === 'Direct Input Renamed Name' && c.campaignId === activeCampObj.id);
+                const charGroups = groups.filter(g => g.characterId === charObj.id);
+                if (charGroups.filter(g => g.name === 'Default').length !== 1) throw new Error('Default group should not be duplicated');
+                if (!charGroups.some(g => g.name === 'Spells')) throw new Error('Should add Spells group');
+                
+                // 4. SavedQueues (Widgets / Arsenals):
+                // 'Fireball' should be overwritten. The formula should change from '8d6' to '12d6', but the ID 'w_to_overwrite_id' MUST be preserved!
+                const fireballWidget = engine.savedQueues.find(q => q.characterId === charObj.id && q.name === 'Fireball');
+                if (!fireballWidget) throw new Error('Fireball widget should exist');
+                if (fireballWidget.id !== 'w_to_overwrite_id') throw new Error('Overwritten Fireball widget should preserve its original ID');
+                if (fireballWidget.formula !== '12d6') throw new Error('Fireball formula should be overwritten to 12d6');
+                
+                // 'Magic Missile' should be added as a new widget
+                const mmWidget = engine.savedQueues.find(q => q.characterId === charObj.id && q.name === 'Magic Missile');
+                if (!mmWidget) throw new Error('Magic Missile should be added');
+                if (mmWidget.formula !== '3d4+3') throw new Error('Magic Missile formula should be 3d4+3');
+                
+                // 5. CustomDice: merged correctly. Should have d12 and d33.
+                if (customDice.length !== 2) throw new Error('Custom dice should be merged (length 2)');
+                if (customDice[0].d !== 12) throw new Error('Custom dice[0] should be 12');
+                if (customDice[1].d !== 33) throw new Error('Custom dice[1] should be 33');
+
+                // Test 12: Import third-party character sheet (Rimas.json)
+                console.log('Testing third-party character sheet import (Rimas.json)...');
+                
+                // Mock FileReader to read rimasData
+                window.FileReader = class {
+                    constructor() {
+                        this.onload = null;
+                    }
+                    readAsText(file) {
+                        const event = {
+                            target: {
+                                result: window.rimasJsonStr
+                            }
+                        };
+                        setTimeout(() => {
+                            if (this.onload) this.onload(event);
+                        }, 0);
+                    }
+                };
+                
+                // Trigger import settings (which will detect Shadowdarklings)
+                const mockRimasEvent = {
+                    target: {
+                        files: [{ name: 'Rimas.json' }],
+                        value: 'Rimas.json'
+                    }
+                };
+                
+                importSettings(mockRimasEvent);
+                
+                // Wait for import to complete
+                await new Promise(r => setTimeout(r, 100));
+
+                // Verify Rimas exists and is active
+                const rimasChar = characters.find(c => c.name === 'Rimas');
+                if (!rimasChar) throw new Error('Rimas character should be imported');
+                if (activeCharacterId !== rimasChar.id) throw new Error('Rimas should be the active character');
+                
+                // Verify details
+                const rimasWidgets = engine.savedQueues.filter(w => w.characterId === rimasChar.id);
+                const classWidget = rimasWidgets.find(w => w.detailText === 'Class');
+                if (!classWidget || classWidget.name !== 'Pit Fighter') throw new Error('Class should be Pit Fighter');
+                const ancestryWidget = rimasWidgets.find(w => w.detailText === 'Ancestry');
+                if (!ancestryWidget || ancestryWidget.name !== 'Half-Orc') throw new Error('Ancestry should be Half-Orc');
+                
+                // Verify stats variables
+                if (rimasChar.variables.STR !== '14') throw new Error('STR variable should be 14');
+                if (rimasChar.variables.CON !== '16') throw new Error('CON variable should be 16');
+                if (rimasChar.variables.STR_mod !== '2') throw new Error('STR_mod variable should be 2');
+                if (rimasChar.variables.WIS_mod !== '-1') throw new Error('WIS_mod variable should be -1');
+                
+                // Verify dynamic passive mods added to character variables
+                if (rimasChar.variables.Attack_Melee !== '1') throw new Error('Attack_Melee passive mod should be 1');
+                if (rimasChar.variables.Damage_Melee !== '1') throw new Error('Damage_Melee passive mod should be 1');
+
+                // Verify HP and Gold stepper values
+                const rimasHpW = rimasWidgets.find(w => w.name === 'HP' && w.widgetType === 'stepper');
+                if (!rimasHpW || rimasHpW.value !== 16 || rimasHpW.max !== 16) throw new Error('HP max/value should be 16');
+                
+                const rimasGoldW = rimasWidgets.find(w => w.name === 'Gold' && w.widgetType === 'stepper');
+                if (!rimasGoldW || rimasGoldW.value !== 6) throw new Error('Gold value should be 6');
+                
+                // Verify armor AC custom widgets
+                const leatherW = rimasWidgets.find(w => w.name === 'Leather armor' && w.widgetType === 'number');
+                if (!leatherW) throw new Error('Leather armor widget should be created');
+                if (leatherW.addonToggle.checked !== true) throw new Error('Leather armor should be equipped');
+                
+                const testShieldW = rimasWidgets.find(w => w.name === 'Shield' && w.widgetType === 'number');
+                if (!testShieldW || testShieldW.addonToggle.checked !== true) throw new Error('Shield should be equipped');
+                
+                // Verify weapon attacks (now dynamically using variables STR_mod + Attack_Melee)
+                const longswordAtkW = rimasWidgets.find(w => w.name === 'Longsword Attack');
+                if (!longswordAtkW) throw new Error('Longsword Attack widget should be created');
+                
+                const hasStrMod = longswordAtkW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'STR_mod');
+                const hasMeleeAtkMod = longswordAtkW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'Attack_Melee');
+                if (!hasStrMod || !hasMeleeAtkMod) throw new Error('Longsword Attack queue should reference STR_mod and Attack_Melee variables');
+                
+                const longswordDmgW = rimasWidgets.find(w => w.name === 'Longsword Damage');
+                if (!longswordDmgW) throw new Error('Longsword Damage widget should be created');
+                // formula is 1d8+Damage_Melee
+                const dNode = longswordDmgW.unifiedQueue.find(n => n.nodeType === 'node');
+                if (dNode.sides !== 8 || dNode.count !== 1) throw new Error('Longsword Damage should roll 1d8');
+                const dModNode = longswordDmgW.unifiedQueue.find(n => n.nodeType === 'modifier');
+                if (dModNode.value !== 'Damage_Melee') throw new Error('Longsword Damage modifier should reference Damage_Melee');
+                
+                // Verify talents and magic items listed in passives as a stepper
+                const ignoreAttackW = rimasWidgets.find(w => w.name === 'WALK IT OFF');
+                if (!ignoreAttackW) throw new Error('WALK IT OFF feature widget should be created');
+                if (ignoreAttackW.widgetType !== 'stepper') throw new Error('WALK IT OFF should be a stepper widget due to 1/day limit');
+                if (ignoreAttackW.max !== 1 || ignoreAttackW.value !== 1) throw new Error('WALK IT OFF stepper limits should be 1/1');
+                if (!ignoreAttackW.detailText.includes('1/day, ignore all damage')) throw new Error('WALK IT OFF description is incorrect');
+
+                // Verify Title details widget
+                const rimasTitleW = rimasWidgets.find(w => w.detailText === 'Title');
+                if (!rimasTitleW || rimasTitleW.name !== 'Rookie') throw new Error('Rimas title details widget should be Rookie');
+
+                // Verify Pit Fighter class fallbacks
+                const flourishW = rimasWidgets.find(w => w.name === 'FLOURISH');
+                if (!flourishW || flourishW.widgetType !== 'stepper' || flourishW.max !== 3) throw new Error('FLOURISH stepper widget should be created');
+                
+                const implacableW = rimasWidgets.find(w => w.name === 'IMPLACABLE');
+                if (!implacableW || implacableW.widgetType !== 'text') throw new Error('IMPLACABLE text widget should be created');
+
+                const lastStandW = rimasWidgets.find(w => w.name === 'LAST STAND');
+                if (!lastStandW || lastStandW.widgetType !== 'text') throw new Error('LAST STAND text widget should be created');
+
+                const relentlessW = rimasWidgets.find(w => w.name === 'RELENTLESS');
+                if (!relentlessW || relentlessW.widgetType !== 'stepper' || relentlessW.max !== 1) throw new Error('RELENTLESS stepper widget should be created');
+
+                // Verify Mighty description suffix formatting
+                const mightyW = rimasWidgets.find(w => w.name === 'MIGHTY');
+                if (!mightyW) throw new Error('MIGHTY feature should exist');
+                if (!mightyW.text.includes('You gain +1 to melee attack and damage rolls. (Half-Orc Ancestry Trait)')) {
+                    throw new Error('Mighty description should place ancestry trait suffix after description');
+                }
+
+                // Verify gear mapping slots
+                const slot1 = rimasWidgets.find(w => w.id.startsWith('w_gear_1_'));
+                if (!slot1 || slot1.name !== 'Longsword') throw new Error('Gear slot 1 should be Longsword, got: ' + (slot1 ? slot1.name : 'null'));
+
+                const slot8 = rimasWidgets.find(w => w.id.startsWith('w_gear_8_'));
+                if (!slot8 || slot8.name !== 'Rations') throw new Error('Gear slot 8 should be Rations, got: ' + (slot8 ? slot8.name : 'null'));
+
+                const slot9 = rimasWidgets.find(w => w.id.startsWith('w_gear_9_'));
+                if (!slot9 || slot9.name !== '... extra slot') throw new Error('Gear slot 9 should be "... extra slot" (placeholder for Rations), got: ' + (slot9 ? slot9.name : 'null'));
+
+                const slot10 = rimasWidgets.find(w => w.id.startsWith('w_gear_10_'));
+                if (!slot10 || slot10.name !== 'Flask or bottle') throw new Error('Gear slot 10 should be Flask or bottle, got: ' + (slot10 ? slot10.name : 'null'));
+
+                const slot11 = rimasWidgets.find(w => w.id.startsWith('w_gear_11_'));
+                if (!slot11 || slot11.name !== 'Crowbar') throw new Error('Gear slot 11 should be Crowbar, got: ' + (slot11 ? slot11.name : 'null'));
+
+                const slot12 = rimasWidgets.find(w => w.id.startsWith('w_gear_12_'));
+                if (!slot12 || slot12.name !== '') throw new Error('Gear slot 12 should remain empty, got: ' + (slot12 ? slot12.name : 'null'));
+
+                // Test 13: Import third-party character sheet (Horlabo.json)
+                console.log('Testing third-party character sheet import (Horlabo.json)...');
+
+                // Mock FileReader to read horlaboData
+                window.FileReader = class {
+                    constructor() {
+                        this.onload = null;
+                    }
+                    readAsText(file) {
+                        const event = {
+                            target: {
+                                result: window.horlaboJsonStr
+                            }
+                        };
+                        setTimeout(() => {
+                            if (this.onload) this.onload(event);
+                        }, 0);
+                    }
+                };
+
+                const mockHorlaboEvent = {
+                    target: {
+                        files: [{ name: 'Horlabo.json' }],
+                        value: 'Horlabo.json'
+                    }
+                };
+
+                importSettings(mockHorlaboEvent);
+
+                // Wait for import to complete
+                await new Promise(r => setTimeout(r, 100));
+
+                // Verify Horlabo exists and is active
+                const horlaboChar = characters.find(c => c.name === 'Horlabo');
+                if (!horlaboChar) throw new Error('Horlabo character should be imported');
+                if (activeCharacterId !== horlaboChar.id) throw new Error('Horlabo should be the active character');
+
+                // Verify details
+                const horlaboWidgets = engine.savedQueues.filter(w => w.characterId === horlaboChar.id);
+                const hClassW = horlaboWidgets.find(w => w.detailText === 'Class');
+                if (!hClassW || hClassW.name !== 'Wizard') throw new Error('Class should be Wizard');
+                const hAncestryW = horlaboWidgets.find(w => w.detailText === 'Ancestry');
+                if (!hAncestryW || hAncestryW.name !== 'Human') throw new Error('Ancestry should be Human');
+
+                // Verify stats variables
+                if (horlaboChar.variables.INT !== '21') throw new Error('INT variable should be 21');
+                if (horlaboChar.variables.INT_mod !== '5') throw new Error('INT_mod variable should be 5');
+
+                // Verify dynamic passive spellcheck modifiers (Plus1ToCastingSpells at level 7 and 9 should add to Spellcheck)
+                const activeSpellcheck = window.getActiveCharacterVariable('Spellcheck');
+                if (activeSpellcheck !== 2) throw new Error('Spellcheck modifier should be 2, got: ' + activeSpellcheck);
+
+                // Verify Spellcheck variable in character sheet
+                if (horlaboChar.variables.Spellcheck !== '2') throw new Error('Spellcheck variable should be 2, got: ' + horlaboChar.variables.Spellcheck);
+
+                // Verify casting spells widget rolls: 1d20 + INT_mod + Spellcheck
+                const spellCastW = horlaboWidgets.find(w => w.name === 'MAGIC MISSILE');
+                if (!spellCastW) throw new Error('Magic Missile widget should be created');
+
+                const hasIntMod = spellCastW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'INT_mod');
+                const hasSpellcheck = spellCastW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'Spellcheck');
+                if (!hasIntMod || !hasSpellcheck) throw new Error('Spell casting widget should reference INT_mod and Spellcheck variables');
+
+                // Verify spell advantage checks, tier notes mapping, and sorting:
+                const spellsGroup = groups.find(g => g.characterId === horlaboChar.id && g.name.toLowerCase() === 'spells');
+                const spellWidgets = horlaboWidgets.filter(w => w.id.startsWith('w_spell_custom_'));
+                const spellNames = spellWidgets.map(w => w.name);
+                const expectedNames = [
+                    "BURNING HANDS", "DETECT MAGIC", "HOLD PORTAL", "MAGIC MISSILE",
+                    "HOLD PERSON", "INVISIBILITY", "MIRROR IMAGE", "MISTY STEP",
+                    "FIREBALL", "GASEOUS FORM", "ILLUSION", "SENDING",
+                    "CONTROL WATER", "DIVINATION",
+                    "SCRYING", "SUMMON EXTRAPLANAR"
+                ];
+                for (let i = 0; i < expectedNames.length; i++) {
+                    if (spellNames[i] !== expectedNames[i]) {
+                        throw new Error('Spell sorting order mismatch at index ' + i + ': expected ' + expectedNames[i] + ', got ' + spellNames[i]);
+                    }
+                }
+
+                const detectMagicW = spellWidgets.find(w => w.name === 'DETECT MAGIC');
+                if (detectMagicW.includeAdvDis !== true) throw new Error('DETECT MAGIC should have Advantage/Disadvantage enabled');
+                if (detectMagicW.addonNote !== 'T1 DC Wizard Spellcasting') throw new Error('DETECT MAGIC addonNote is incorrect: ' + detectMagicW.addonNote);
+
+                const magicMissileW = spellWidgets.find(w => w.name === 'MAGIC MISSILE');
+                if (magicMissileW.includeAdvDis !== false) throw new Error('MAGIC MISSILE should NOT have Advantage/Disadvantage enabled');
+                if (magicMissileW.addonNote !== 'T1 DC Wizard Spellcasting') throw new Error('MAGIC MISSILE addonNote is incorrect: ' + magicMissileW.addonNote);
+
+                const fireballW = spellWidgets.find(w => w.name === 'FIREBALL');
+                if (fireballW.addonNote !== 'T3 DC Wizard Spellcasting') throw new Error('FIREBALL addonNote is incorrect: ' + fireballW.addonNote);
+
+                // Verify gear mapping (seq slots and no extra slots)
+                const hSlot1 = horlaboWidgets.find(w => w.id.startsWith('w_gear_1_'));
+                if (!hSlot1 || hSlot1.name !== 'Dagger (obsidian)') throw new Error('Horlabo gear slot 1 should be Dagger (obsidian)');
+                if (hSlot1.detailText !== '1. - Quantity: 1 | Slots: 1 | Cost: 3 gp') {
+                    throw new Error('Horlabo gear slot 1 detailText is incorrect: ' + hSlot1.detailText);
+                }
+
+                const hSlot2 = horlaboWidgets.find(w => w.id.startsWith('w_gear_2_'));
+                if (!hSlot2 || hSlot2.name !== 'Backpack') throw new Error('Horlabo gear slot 2 should be Backpack');
+
+                const hSlot5 = horlaboWidgets.find(w => w.id.startsWith('w_gear_5_'));
+                if (!hSlot5 || hSlot5.name !== 'Crowbar') throw new Error('Horlabo gear slot 5 should be Crowbar');
+
+                const hSlot6 = horlaboWidgets.find(w => w.id.startsWith('w_gear_6_'));
+                if (!hSlot6 || hSlot6.name !== 'Blade of Vengeance') throw new Error('Horlabo gear slot 6 should be Blade of Vengeance, got: ' + (hSlot6 ? hSlot6.name : 'null'));
+                if (!hSlot6.detailText.includes('Quantity: 1 | Slots: 1')) throw new Error('Horlabo gear slot 6 detailText is incorrect: ' + hSlot6.detailText);
+                if (!hSlot6.text.includes('Benefits: You have advantage on attacks against undead creatures')) throw new Error('Horlabo gear slot 6 text is incorrect: ' + hSlot6.text);
+
+                const hSlot7 = horlaboWidgets.find(w => w.id.startsWith('w_gear_7_'));
+                if (!hSlot7 || hSlot7.name !== 'Egg of the Cockatrice') throw new Error('Horlabo gear slot 7 should be Egg of the Cockatrice, got: ' + (hSlot7 ? hSlot7.name : 'null'));
+
+                const hSlot8 = horlaboWidgets.find(w => w.id.startsWith('w_gear_8_'));
+                if (!hSlot8 || hSlot8.name !== 'Tome Mordanticus') throw new Error('Horlabo gear slot 8 should be Tome Mordanticus, got: ' + (hSlot8 ? hSlot8.name : 'null'));
+
+                const hSlot9 = horlaboWidgets.find(w => w.id.startsWith('w_gear_9_'));
+                if (!hSlot9 || hSlot9.name !== '') throw new Error('Horlabo gear slot 9 should be empty');
+
+                // Verify parsed ambition talent and other merged class talents
+                const ambitionTalentW = horlaboWidgets.find(w => w.name === 'HUMAN AMBITION-1: SPELL MASTERY (DETECT MAGIC)');
+                if (!ambitionTalentW) throw new Error('Human ambition talent SPELL MASTERY should be parsed and created');
+                if (!ambitionTalentW.text || !ambitionTalentW.text.includes('advantage on casting one spell')) throw new Error('Human ambition talent description is incorrect');
+
+                const statBonusTalentW = horlaboWidgets.find(w => w.name === 'WIZARD-1: STAT BONUS (+2 INT)');
+                if (!statBonusTalentW) throw new Error('Wizard level 1 STAT BONUS (+2 INT) widget should be created');
+
+                const statBonusTalentW5 = horlaboWidgets.find(w => w.name === 'WIZARD-5: STAT BONUS (+2 INT)');
+                if (!statBonusTalentW5) throw new Error('Wizard level 5 STAT BONUS (+2 INT) widget should be created');
+
+                const castingTalentW7 = horlaboWidgets.find(w => w.name === 'WIZARD-7: SPELLCASTING (+1 CASTING)');
+                if (!castingTalentW7) throw new Error('Wizard level 7 SPELLCASTING (+1 CASTING) widget should be created');
+
+                const castingTalentW9 = horlaboWidgets.find(w => w.name === 'WIZARD-9: SPELLCASTING (+1 CASTING)');
+                if (!castingTalentW9) throw new Error('Wizard level 9 SPELLCASTING (+1 CASTING) widget should be created');
+
+                // Verify Title detail widget
+                const horlaboTitleW = horlaboWidgets.find(w => w.detailText === 'Title');
+                if (!horlaboTitleW || horlaboTitleW.name !== 'Druid') throw new Error('Horlabo title details widget should be Druid');
+
+                // Verify metadata details widget in passives is NOT created (since it is tossed)
+                const detailsW = horlaboWidgets.find(w => w.name === 'CHARACTER DETAILS');
+                if (detailsW) throw new Error('CHARACTER DETAILS widget should NOT be created');
+
+                // Test 14: Import mock character sheet for refactored features (versatile, Weapon Mastery, Armor Master)
+                console.log('Testing third-party character sheet importer refactored features...');
+                const mockData = JSON.parse(window.rimasJsonStr);
+                mockData.name = "Testy Refactor";
+                mockData.level = 2;
+                mockData.stats = { STR: 14, DEX: 12, CON: 16, INT: 10, WIS: 9, CHA: 8 };
+                mockData.gear = [
+                    { name: "Bastard Sword", type: "weapon", quantity: 1 },
+                    { name: "Mithril chainmail", type: "armor", quantity: 1 }
+                ];
+                mockData.attacks = [
+                    "BASTARD SWORD: +5, 1d8+3/1d10+3"
+                ];
+                mockData.bonuses = [
+                    {
+                        name: "WeaponMastery",
+                        bonusName: "WeaponMastery",
+                        bonusTo: "Bastard Sword",
+                        bonusAmount: 1,
+                        gainedAtLevel: 1,
+                        sourceCategory: "Talent"
+                    },
+                    {
+                        name: "ArmorMaster",
+                        bonusName: "ArmorMaster",
+                        bonusTo: "Mithril chainmail",
+                        bonusAmount: 1,
+                        gainedAtLevel: 1,
+                        sourceCategory: "Talent"
+                    }
+                ];
+
+                window.FileReader = class {
+                    constructor() { this.onload = null; }
+                    readAsText(file) {
+                        const event = { target: { result: JSON.stringify(mockData) } };
+                        setTimeout(() => { if (this.onload) this.onload(event); }, 0);
+                    }
+                };
+
+                const mockTestyEvent = {
+                    target: {
+                        files: [{ name: 'Testy.json' }],
+                        value: 'Testy.json'
+                    }
+                };
+
+                importSettings(mockTestyEvent);
+                await new Promise(r => setTimeout(r, 100));
+
+                const testyChar = characters.find(c => c.name === 'Testy Refactor');
+                if (!testyChar) throw new Error('Testy Refactor character should be imported');
+
+                const testyWidgets = engine.savedQueues.filter(w => w.characterId === testyChar.id);
+
+                // 1. Verify versatile weapon creation (one attack, two damage widgets)
+                const bastardAtkW = testyWidgets.find(w => w.name === 'Bastard Sword Attack');
+                if (!bastardAtkW) throw new Error('Bastard Sword Attack widget should be created');
+
+                const bastardDmg1 = testyWidgets.find(w => w.name === 'Bastard Sword Damage (1-Hand)');
+                const bastardDmg2 = testyWidgets.find(w => w.name === 'Bastard Sword Damage (2-Hand)');
+                if (!bastardDmg1) throw new Error('Bastard Sword Damage (1-Hand) widget should be created');
+                if (!bastardDmg2) throw new Error('Bastard Sword Damage (2-Hand) widget should be created');
+
+                // 2. Verify Weapon Mastery (scaling levels variable node in attack/damage, base magic bonus isolated)
+                const masteryNode = bastardAtkW.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'LVL');
+                if (!masteryNode) throw new Error('Bastard Sword Attack should have level-scaling Weapon Mastery queue node');
+                if (masteryNode.divisorValue !== 2 || masteryNode.divisorType !== 'literal') {
+                    throw new Error('Weapon Mastery level-scaling node has incorrect divisor configuration');
+                }
+
+                // Verify base magical bonus is +1 in attack queue
+                const magicAtkNode = bastardAtkW.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'literal' && n.value === 1 && n.operator === '+');
+                if (!magicAtkNode) throw new Error('Bastard Sword Attack should isolate and add base magical bonus +1');
+
+                // Verify damage queues: 1d8 / 1d10 + Damage_Melee + (Weapon Mastery level-scaling) + magicDmgBonus (+1)
+                const d1Node = bastardDmg1.unifiedQueue.find(n => n.nodeType === 'node');
+                if (d1Node.sides !== 8 || d1Node.count !== 1) throw new Error('Bastard Sword Damage (1-Hand) should roll 1d8');
+                const magicDmgNode = bastardDmg1.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'literal' && n.value === 1 && n.operator === '+');
+                if (!magicDmgNode) throw new Error('Bastard Sword Damage (1-Hand) should isolate and add base magical damage bonus +1');
+
+                // 3. Verify Armor Master AC modifier application
+                const mithrilW = testyWidgets.find(w => w.name === 'Mithril chainmail' && w.widgetType === 'number');
+                if (!mithrilW) throw new Error('Mithril chainmail widget should be created');
+                const armorMasterAcNode = mithrilW.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'literal' && n.value === 1 && n.operator === '+');
+                if (!armorMasterAcNode) throw new Error('Mithril chainmail should have Armor Master modifier +1 in AC queue');
             })()
+
         `).then(() => {
             console.log('-> Passed.');
             console.log('\n🎉 ALL INTEGRATION DEEP DIVE TESTS PASSED SUCCESSFULLY! ✅');

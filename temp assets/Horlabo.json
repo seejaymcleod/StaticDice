@@ -1,0 +1,612 @@
+{
+  "name": "Horlabo",
+  "stats": {
+    "STR": 10,
+    "DEX": 9,
+    "CON": 11,
+    "INT": 21,
+    "WIS": 13,
+    "CHA": 11
+  },
+  "rolledStats": {
+    "STR": 10,
+    "DEX": 9,
+    "CON": 11,
+    "INT": 17,
+    "WIS": 13,
+    "CHA": 11
+  },
+  "ancestry": "Human",
+  "class": "Wizard",
+  "level": 10,
+  "levels": [
+    {
+      "HitPointRoll": 1,
+      "Rolled12ChosenTalentName": "",
+      "Rolled12ChosenTalentDesc": "",
+      "level": 1,
+      "stoutHitPointRoll": 0,
+      "talentRolledName": "Plus2INTOrPlus1Casting",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "talentRolledDesc": "+2 to Intelligence stat or +1 to wizard spellcasting checks"
+    },
+    {
+      "HitPointRoll": 4,
+      "Rolled12ChosenTalentName": "",
+      "level": 2,
+      "Rolled12ChosenTalentDesc": "",
+      "stoutHitPointRoll": 0,
+      "talentRolledName": "",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "talentRolledDesc": ""
+    },
+    {
+      "Rolled12ChosenTalentDesc": "",
+      "level": 3,
+      "stoutHitPointRoll": 0,
+      "HitPointRoll": 3,
+      "Rolled12ChosenTalentName": "",
+      "talentRolledDesc": "Gain advantage on casting one spell you know",
+      "talentRolledName": "AdvOnCastOneSpell",
+      "Rolled12TalentOrTwoStatPoints": ""
+    },
+    {
+      "talentRolledDesc": "",
+      "talentRolledName": "",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "Rolled12ChosenTalentDesc": "",
+      "level": 4,
+      "stoutHitPointRoll": 0,
+      "HitPointRoll": 3,
+      "Rolled12ChosenTalentName": ""
+    },
+    {
+      "talentRolledDesc": "+2 to Intelligence stat or +1 to wizard spellcasting checks",
+      "talentRolledName": "Plus2INTOrPlus1Casting",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "level": 5,
+      "Rolled12ChosenTalentDesc": "",
+      "stoutHitPointRoll": 0,
+      "HitPointRoll": 4,
+      "Rolled12ChosenTalentName": ""
+    },
+    {
+      "talentRolledName": "",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "talentRolledDesc": "",
+      "HitPointRoll": 3,
+      "Rolled12ChosenTalentName": "",
+      "level": 6,
+      "Rolled12ChosenTalentDesc": "",
+      "stoutHitPointRoll": 0
+    },
+    {
+      "stoutHitPointRoll": 0,
+      "Rolled12ChosenTalentDesc": "",
+      "level": 7,
+      "HitPointRoll": 3,
+      "Rolled12ChosenTalentName": "",
+      "talentRolledDesc": "+2 to Intelligence stat or +1 to wizard spellcasting checks",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "talentRolledName": "Plus2INTOrPlus1Casting"
+    },
+    {
+      "talentRolledName": "",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "talentRolledDesc": "",
+      "HitPointRoll": 1,
+      "Rolled12ChosenTalentName": "",
+      "Rolled12ChosenTalentDesc": "",
+      "level": 8,
+      "stoutHitPointRoll": 0
+    },
+    {
+      "HitPointRoll": 2,
+      "Rolled12ChosenTalentName": "",
+      "level": 9,
+      "Rolled12ChosenTalentDesc": "",
+      "stoutHitPointRoll": 0,
+      "talentRolledName": "Plus2INTOrPlus1Casting",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "talentRolledDesc": "+2 to Intelligence stat or +1 to wizard spellcasting checks"
+    },
+    {
+      "HitPointRoll": 2,
+      "Rolled12ChosenTalentName": "",
+      "Rolled12ChosenTalentDesc": "",
+      "level": 10,
+      "stoutHitPointRoll": 0,
+      "talentRolledName": "",
+      "Rolled12TalentOrTwoStatPoints": "",
+      "talentRolledDesc": ""
+    }
+  ],
+  "XP": 0,
+  "ambitionTalentLevel": {
+    "talentRolledDesc": "Gain advantage on casting one spell you know",
+    "Rolled12TalentOrTwoStatPoints": "",
+    "talentRolledName": "AdvOnCastOneSpell",
+    "stoutHitPointRoll": 0,
+    "Rolled12ChosenTalentDesc": "",
+    "level": 1,
+    "HitPointRoll": 0,
+    "Rolled12ChosenTalentName": ""
+  },
+  "title": "Druid",
+  "alignment": "Neutral",
+  "background": "Drifter",
+  "deity": "Ord",
+  "maxHitPoints": 26,
+  "armorClass": 9,
+  "gearSlotsTotal": 10,
+  "gearSlotsUsed": 8,
+  "bonuses": [
+    {
+      "sourceName": "Human",
+      "bonusName": "Sylvan",
+      "bonusTo": "Languages",
+      "gainedAtLevel": 1,
+      "sourceCategory": "Ability",
+      "name": "ExtraLanguage: Human undefined",
+      "sourceType": "Ancestry"
+    },
+    {
+      "name": "ExtraLanguage: Wizard 1",
+      "sourceCategory": "Ability",
+      "bonusName": "Dwarvish",
+      "bonusTo": "Languages",
+      "gainedAtLevel": 1,
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceType": "Class",
+      "bonusName": "Thanian",
+      "gainedAtLevel": 1,
+      "bonusTo": "Languages",
+      "name": "ExtraLanguage: Wizard 2",
+      "sourceCategory": "Ability"
+    },
+    {
+      "name": "ExtraLanguage: Wizard 3",
+      "sourceCategory": "Ability",
+      "bonusName": "Primordial",
+      "gainedAtLevel": 1,
+      "bonusTo": "Languages",
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceCategory": "Ability",
+      "name": "ExtraLanguage: Wizard 4",
+      "bonusName": "Celestial",
+      "gainedAtLevel": 1,
+      "bonusTo": "Languages",
+      "sourceType": "Class"
+    },
+    {
+      "sourceName": "Wizard",
+      "bonusName": "Burning Hands",
+      "gainedAtLevel": 1,
+      "bonusTo": "Tier:1, Spell:1",
+      "name": "Spell: Wizard, Tier 1, Spell 1",
+      "sourceCategory": "Ability",
+      "sourceType": "Class"
+    },
+    {
+      "sourceType": "Class",
+      "name": "Spell: Wizard, Tier 1, Spell 2",
+      "sourceCategory": "Ability",
+      "bonusTo": "Tier:1, Spell:2",
+      "bonusName": "Magic Missile",
+      "gainedAtLevel": 1,
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceType": "Class",
+      "bonusTo": "Tier:1, Spell:3",
+      "bonusName": "Detect Magic",
+      "gainedAtLevel": 1,
+      "sourceCategory": "Ability",
+      "name": "Spell: Wizard, Tier 1, Spell 3",
+      "sourceName": "Wizard"
+    },
+    {
+      "bonusName": "Plus2INTOrPlus1Casting",
+      "bonusTo": "",
+      "gainedAtLevel": 1,
+      "name": "Plus2INTOrPlus1Casting",
+      "sourceCategory": "Talent",
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "name": "PlusTwoIntOrPlusOneWizCasting",
+      "sourceCategory": "Talent",
+      "gainedAtLevel": 1,
+      "bonusTo": "INT:+2",
+      "bonusName": "StatBonus",
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceName": "Human Ambition",
+      "sourceType": "Ancestry",
+      "bonusName": "Detect Magic",
+      "bonusTo": "AdvOnCastOneSpell",
+      "gainedAtLevel": 1,
+      "sourceCategory": "Talent",
+      "name": "AdvOnCastOneSpell"
+    },
+    {
+      "gainedAtLevel": 2,
+      "bonusTo": "Tier:1, Spell:4",
+      "bonusName": "Hold Portal",
+      "name": "Spell: Wizard, Tier 1, Spell 4",
+      "sourceCategory": "Ability",
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceType": "Class",
+      "name": "AdvOnCastOneSpell",
+      "sourceCategory": "Talent",
+      "bonusName": "Detect Magic",
+      "bonusTo": "AdvOnCastOneSpell",
+      "gainedAtLevel": 3
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceType": "Class",
+      "bonusName": "Hold Person",
+      "gainedAtLevel": 3,
+      "bonusTo": "Tier:2, Spell:1",
+      "name": "Spell: Wizard, Tier 2, Spell 1",
+      "sourceCategory": "Ability"
+    },
+    {
+      "sourceCategory": "Ability",
+      "name": "Spell: Wizard, Tier 2, Spell 2",
+      "bonusTo": "Tier:2, Spell:2",
+      "bonusName": "Invisibility",
+      "gainedAtLevel": 4,
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceCategory": "Talent",
+      "name": "Plus2INTOrPlus1Casting",
+      "bonusName": "Plus2INTOrPlus1Casting",
+      "gainedAtLevel": 5,
+      "bonusTo": "",
+      "sourceType": "Class"
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceType": "Class",
+      "bonusName": "StatBonus",
+      "bonusTo": "INT:+2",
+      "gainedAtLevel": 5,
+      "sourceCategory": "Talent",
+      "name": "PlusTwoIntOrPlusOneWizCasting"
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceType": "Class",
+      "name": "Spell: Wizard, Tier 3, Spell 1",
+      "sourceCategory": "Ability",
+      "bonusTo": "Tier:3, Spell:1",
+      "bonusName": "Illusion",
+      "gainedAtLevel": 5
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceType": "Class",
+      "bonusTo": "Tier:2, Spell:3",
+      "gainedAtLevel": 6,
+      "bonusName": "Mirror Image",
+      "name": "Spell: Wizard, Tier 2, Spell 3",
+      "sourceCategory": "Ability"
+    },
+    {
+      "bonusTo": "Tier:3, Spell:2",
+      "bonusName": "Fireball",
+      "gainedAtLevel": 6,
+      "name": "Spell: Wizard, Tier 3, Spell 2",
+      "sourceCategory": "Ability",
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "gainedAtLevel": 7,
+      "bonusName": "Plus2INTOrPlus1Casting",
+      "bonusTo": "",
+      "name": "Plus2INTOrPlus1Casting",
+      "sourceCategory": "Talent",
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceType": "Class",
+      "bonusName": "Plus1ToCastingSpells",
+      "gainedAtLevel": 7,
+      "bonusTo": "Wizard",
+      "sourceCategory": "Talent",
+      "name": "PlusTwoIntOrPlusOneWizCasting",
+      "bonusAmount": 1,
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceCategory": "Ability",
+      "name": "Spell: Wizard, Tier 4, Spell 1",
+      "bonusTo": "Tier:4, Spell:1",
+      "gainedAtLevel": 7,
+      "bonusName": "Divination",
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceType": "Class",
+      "name": "Spell: Wizard, Tier 2, Spell 4",
+      "sourceCategory": "Ability",
+      "gainedAtLevel": 8,
+      "bonusTo": "Tier:2, Spell:4",
+      "bonusName": "Misty Step",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceType": "Class",
+      "sourceCategory": "Ability",
+      "name": "Spell: Wizard, Tier 4, Spell 2",
+      "bonusTo": "Tier:4, Spell:2",
+      "gainedAtLevel": 8,
+      "bonusName": "Control Water"
+    },
+    {
+      "sourceType": "Class",
+      "sourceCategory": "Talent",
+      "name": "Plus2INTOrPlus1Casting",
+      "bonusTo": "",
+      "bonusName": "Plus2INTOrPlus1Casting",
+      "gainedAtLevel": 9,
+      "sourceName": "Wizard"
+    },
+    {
+      "bonusAmount": 1,
+      "sourceName": "Wizard",
+      "sourceType": "Class",
+      "gainedAtLevel": 9,
+      "bonusTo": "Wizard",
+      "bonusName": "Plus1ToCastingSpells",
+      "name": "PlusTwoIntOrPlusOneWizCasting",
+      "sourceCategory": "Talent"
+    },
+    {
+      "sourceType": "Class",
+      "bonusTo": "Tier:3, Spell:3",
+      "gainedAtLevel": 9,
+      "bonusName": "Gaseous Form",
+      "name": "Spell: Wizard, Tier 3, Spell 3",
+      "sourceCategory": "Ability",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceName": "Wizard",
+      "bonusTo": "Tier:5, Spell:1",
+      "gainedAtLevel": 9,
+      "bonusName": "Summon Extraplanar",
+      "name": "Spell: Wizard, Tier 5, Spell 1",
+      "sourceCategory": "Ability",
+      "sourceType": "Class"
+    },
+    {
+      "sourceCategory": "Ability",
+      "name": "Spell: Wizard, Tier 3, Spell 4",
+      "bonusName": "Sending",
+      "gainedAtLevel": 10,
+      "bonusTo": "Tier:3, Spell:4",
+      "sourceType": "Class",
+      "sourceName": "Wizard"
+    },
+    {
+      "sourceName": "Wizard",
+      "sourceCategory": "Ability",
+      "name": "Spell: Wizard, Tier 5, Spell 2",
+      "bonusName": "Scrying",
+      "gainedAtLevel": 10,
+      "bonusTo": "Tier:5, Spell:2",
+      "sourceType": "Class"
+    }
+  ],
+  "goldRolled": 40,
+  "gold": 33,
+  "silver": 5,
+  "copper": 0,
+  "gear": [
+    {
+      "instanceId": "mpvkclq7",
+      "gearId": "w36",
+      "name": "Dagger (obsidian)",
+      "type": "weapon",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 3,
+      "currency": "gp"
+    },
+    {
+      "instanceId": "mpvkclq8",
+      "gearId": "s2",
+      "name": "Backpack",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 0,
+      "cost": 2,
+      "currency": "gp"
+    },
+    {
+      "instanceId": "mpvkclq9",
+      "gearId": "s8",
+      "name": "Flint and steel",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 5,
+      "currency": "sp"
+    },
+    {
+      "instanceId": "mpvkclqa",
+      "gearId": "s17",
+      "name": "Torch",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 5,
+      "currency": "sp"
+    },
+    {
+      "instanceId": "mpvkclqb",
+      "gearId": "s6",
+      "name": "Crowbar",
+      "type": "sundry",
+      "quantity": 1,
+      "totalUnits": 1,
+      "slots": 1,
+      "cost": 5,
+      "currency": "sp"
+    }
+  ],
+  "treasures": [],
+  "magicItems": [
+    {
+      "slots": 1,
+      "personalityTraits": "Grim, suspicious. Forged as a failsafe against the Witch-Kings if they should fall to darkness, which they did. Demands they be slain.",
+      "bonusNote": "Cannot be wielded by undead.",
+      "bonus": 2,
+      "itemTypeId": "w1",
+      "hasPersonality": true,
+      "id": "mpvkeuc5",
+      "features": "A gray blade with a diamondcut ruby in the pommel. It whistles sharply with each slice.",
+      "spellDesc": "",
+      "properties": [],
+      "benefits": "You have advantage on attacks against undead creatures with this sword. You can use the sword to cast turn undead once per day (+4 bonus).",
+      "magicItemType": "magicWeapon",
+      "personalityFlaws": "",
+      "personalityVirtue": "Lawful.",
+      "name": "Blade of Vengeance",
+      "attackNote": "adv attacks vs undead",
+      "curses": "",
+      "itemType": "weapon"
+    },
+    {
+      "properties": [],
+      "spellDesc": "",
+      "id": "mpvkf32h",
+      "features": "A blue, hard egg as big as a coconut and heavy as a stone.",
+      "hasPersonality": false,
+      "itemTypeId": "x",
+      "bonus": 0,
+      "bonusNote": "",
+      "slots": 1,
+      "personalityTraits": "",
+      "itemType": "sundry",
+      "curses": "",
+      "attackNote": "",
+      "name": "Egg of the Cockatrice",
+      "personalityVirtue": "",
+      "magicItemType": "magicMisc",
+      "personalityFlaws": "",
+      "benefits": "Once per week, you can speak a command word that causes a cockatrice to hatch and follow your commands for 5 rounds before flying away. The egg repairs itself over one week."
+    },
+    {
+      "name": "Tome Mordanticus",
+      "attackNote": "",
+      "curses": "",
+      "itemType": "sundry",
+      "benefits": "When you read the tome, you learn three True Names (pg. 319) of three beings you choose. Your True Name also appears in the book after reading it.",
+      "personalityFlaws": "Pedantic, fussy. The book constantly tries to escape its owner and can telepathically reach out a near distance to any creature.",
+      "magicItemType": "magicMisc",
+      "personalityVirtue": "Neutral.",
+      "itemTypeId": "x",
+      "hasPersonality": true,
+      "features": "A hand-drawn bestiary of the multiverse's most notable creatures and people.",
+      "spellDesc": "",
+      "id": "mpvkffbx",
+      "properties": [],
+      "personalityTraits": "",
+      "slots": 1,
+      "bonus": 0,
+      "bonusNote": ""
+    }
+  ],
+  "attacks": [
+    "BLADE OF VENGEANCE (BASTARD SWORD +2): +2, 1d8+2/1d10+2 (V, NOT PROFICIENT), adv attacks vs undead, Magic",
+    "DAGGER (OBSIDIAN): +0 (N), 1d6 (BREAKABLE, FIN)",
+    "SPELLS: To cast a Wizard spell, roll 1d20+6 vs a DC equal to 10 + the spell's tier."
+  ],
+  "ledger": [
+    {
+      "copperChange": 0,
+      "silverChange": 0,
+      "notes": "",
+      "desc": "Starting gold",
+      "goldChange": 40
+    },
+    {
+      "goldChange": -3,
+      "desc": "Buy Dagger (obsidian)",
+      "notes": "",
+      "copperChange": 0,
+      "silverChange": 0
+    },
+    {
+      "desc": "Buy Backpack",
+      "goldChange": -2,
+      "silverChange": 0,
+      "copperChange": 0,
+      "notes": ""
+    },
+    {
+      "silverChange": -5,
+      "copperChange": 0,
+      "notes": "",
+      "desc": "Buy Flint and steel",
+      "goldChange": 0
+    },
+    {
+      "notes": "",
+      "copperChange": 0,
+      "silverChange": -5,
+      "goldChange": 0,
+      "desc": "Buy Torch"
+    },
+    {
+      "silverChange": -5,
+      "copperChange": 0,
+      "notes": "",
+      "desc": "Buy Crowbar",
+      "goldChange": 0
+    }
+  ],
+  "spellsKnown": "Burning Hands, Control Water, Detect Magic, Divination, Fireball, Gaseous Form, Hold Person, Hold Portal, Illusion, Invisibility, Magic Missile, Mirror Image, Misty Step, Scrying, Sending, Summon Extraplanar",
+  "languages": "Celestial, Common, Dwarvish, Primordial, Sylvan, Thanian",
+  "creationMethod": "Random 1",
+  "coreRulesOnly": true,
+  "activeSources": [
+    "SD",
+    "SG",
+    "CS1",
+    "CS2",
+    "CS3",
+    "CS4"
+  ],
+  "edits": []
+}

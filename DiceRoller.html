@@ -3770,22 +3770,7 @@
                             </div>
                         </div>
 
-                        <label
-                            class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
-                            <input type="radio" name="addon-widget" id="addon-note-check" value="note"
-                                onchange="selectAddonWidget('note')" class="addon-radio-input">
-                            <div class="flex flex-col">
-                                <span class="text-xs font-bold text-slate-200 uppercase">Text Note Addon</span>
-                                <span class="text-[9px] text-slate-400 font-medium">Adds a small text description below
-                                    the formula.</span>
-                            </div>
-                        </label>
-                        <div id="addon-note-config" class="hidden pl-6">
-                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Note
-                                Description</label>
-                            <input type="text" id="addon-note-text" placeholder="E.g., Deals double damage on crit"
-                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
-                        </div>
+
                     </div>
                 </div>
 
@@ -3801,7 +3786,7 @@
                         </div>
                         <div>
                             <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Max</label>
-                            <input type="number" id="stepper-max" value="20"
+                            <input type="text" id="stepper-max" value="20"
                                 class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
                         <div>
@@ -4082,6 +4067,13 @@
                         Text (Optional)</label>
                     <textarea id="widget-detail-text" placeholder="E.g., Makes you smarter somehow." rows="2"
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
+                </div>
+
+                <!-- Note Text -->
+                <div id="widget-note-config" class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Note (Optional)</label>
+                    <input type="text" id="addon-note-text" placeholder="E.g., Deals double damage on crit"
+                        class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors">
                 </div>
 
                 <!-- Display Mode Pill -->
@@ -7516,6 +7508,1360 @@
             URL.revokeObjectURL(url);
         }
 
+        function parseUsageLimit(desc) {
+            if (!desc) return null;
+            const cleanDesc = desc.toLowerCase();
+            if (cleanDesc.includes('per level') || cleanDesc.includes('/level')) {
+                return 'LVL';
+            }
+            if (cleanDesc.includes('once per') || cleanDesc.includes('1/day') || cleanDesc.includes('1 per day') || cleanDesc.includes('1/combat') || cleanDesc.includes('1 per combat') || cleanDesc.includes('once/day')) {
+                return 1;
+            }
+            if (cleanDesc.includes('twice per') || cleanDesc.includes('2/day') || cleanDesc.includes('2 per day') || cleanDesc.includes('2/combat') || cleanDesc.includes('2 per combat') || cleanDesc.includes('twice/day')) {
+                return 2;
+            }
+            if (cleanDesc.includes('three times') || cleanDesc.includes('3/day') || cleanDesc.includes('3 per day') || cleanDesc.includes('3/combat') || cleanDesc.includes('3 per combat')) {
+                return 3;
+            }
+            const match = cleanDesc.match(/(\d+)\s*(?:\/|per)\s*(?:day|combat|week|encounter|rest)/);
+            if (match) {
+                return parseInt(match[1]) || 1;
+            }
+            return null;
+        }
+
+        function parseDamageFormula(formula) {
+            if (!formula) return [{ nodeType: 'node', sides: 6, count: 1 }];
+            let cleanFormula = formula.split('/')[0].trim();
+            const dmgMatch = cleanFormula.match(/^(\d+d\d+(?:[+-]\d+)?)/);
+            if (dmgMatch) {
+                cleanFormula = dmgMatch[1];
+            }
+            const match = cleanFormula.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/);
+            if (match) {
+                const count = parseInt(match[1]);
+                const sides = parseInt(match[2]);
+                const queue = [
+                    { nodeType: 'node', sides: sides, count: count }
+                ];
+                if (match[3] && match[4]) {
+                    const op = match[3];
+                    const val = parseInt(match[4]);
+                    queue.push(
+                        { nodeType: 'operator', operator: op },
+                        { nodeType: 'modifier', type: 'literal', value: val, operator: op }
+                    );
+                }
+                return queue;
+            }
+            return [{ nodeType: 'node', sides: 6, count: 1 }];
+        }
+
+        const ThirdPartyImporters = {
+            importers: [
+                {
+                    name: 'Shadowdarklings (Shadowdark)',
+                    detect(data) {
+                        return data && typeof data === 'object' && 
+                               (data.stats || data.rolledStats) &&
+                               data.ancestry !== undefined && 
+                               data.class !== undefined;
+                    },
+                    import: function(data) {
+                        // 1. Get the template
+                        const tpl = templates.find(t => t.id === 'template_sd_character');
+                        
+                        // 2. Spawn character
+                        const newCharId = 'char_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                        const newChar = {
+                            id: newCharId,
+                            name: data.name || 'Imported Character',
+                            dndType: (tpl && tpl.dndType) ? tpl.dndType : 'standard',
+                            campaignId: activeCampaignId,
+                            variables: JSON.parse(JSON.stringify((tpl && tpl.variables) ? tpl.variables : {}))
+                        };
+
+                        const groupIdMap = {};
+                        const newGroups = (tpl ? tpl.groups : []).map((g, idx) => {
+                            const newGrpId = 'grp_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
+                            groupIdMap[g.id] = newGrpId;
+                            return {
+                                id: newGrpId,
+                                name: g.name,
+                                color: g.color || '#00d4ff',
+                                characterId: newCharId
+                            };
+                        });
+
+                        const newWidgets = (tpl ? tpl.widgets : []).map((w, idx) => {
+                            const prefix = w.id || 'w';
+                            const newWId = prefix + '_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
+                            return {
+                                ...JSON.parse(JSON.stringify(w)),
+                                id: newWId,
+                                characterId: newCharId,
+                                groupId: groupIdMap[w.groupId] || null
+                            };
+                        });
+
+                        // Check if a passives group exists or add it
+                        let passivesGrpId = groupIdMap['passives'];
+                        if (!passivesGrpId) {
+                            const existingPassivesGrp = newGroups.find(g => g.name.toLowerCase() === 'passives');
+                            if (existingPassivesGrp) {
+                                passivesGrpId = existingPassivesGrp.id;
+                            } else {
+                                passivesGrpId = 'grp_' + Date.now() + '_passives_' + Math.random().toString(36).substring(2, 5);
+                                newGroups.push({
+                                    id: passivesGrpId,
+                                    name: 'Passives',
+                                    color: '#10b981',
+                                    characterId: newCharId
+                                });
+                            }
+                        }
+
+                        // Embed Compendiums
+                        const WEAPON_COMPENDIUM = {
+                            "bastard sword": { name: "Bastard Sword", properties: ["Versatile"], range: "Close", type: "Melee", damage: { oneHanded: "1d8", twoHanded: "1d10" } },
+                            "greataxe": { name: "Greataxe", properties: ["Versatile"], range: "Close", type: "Melee", damage: { oneHanded: "1d8", twoHanded: "1d10" } },
+                            "staff": { name: "Staff", properties: ["Versatile"], range: "Close", type: "Melee", damage: { twoHanded: "1d4" } },
+                            "javelin": { name: "Javelin", properties: ["Thrown"], range: "Close/Far", type: "MeleeRanged", damage: { oneHanded: "1d4" } },
+                            "dagger": { name: "Dagger", properties: ["Finesse", "Thrown"], range: "Close/Near", type: "MeleeRanged", damage: { oneHanded: "1d4" } },
+                            "dagger (obsidian)": { name: "Dagger (obsidian)", properties: ["Finesse", "Thrown"], range: "Close/Near", type: "MeleeRanged", damage: { oneHanded: "1d4" } },
+                            "longbow": { name: "Longbow", properties: [], range: "Far", type: "Ranged", damage: { twoHanded: "1d8" } },
+                            "shortbow": { name: "Shortbow", properties: [], range: "Far", type: "Ranged", damage: { twoHanded: "1d4" } },
+                            "club": { name: "Club", properties: [], range: "Close", type: "Melee", damage: { oneHanded: "1d4" } },
+                            "greatsword": { name: "Greatsword", properties: [], range: "Close", type: "Melee", damage: { twoHanded: "1d12" } },
+                            "longsword": { name: "Longsword", properties: [], range: "Close", type: "Melee", damage: { oneHanded: "1d8" } },
+                            "shortsword": { name: "Shortsword", properties: [], range: "Close", type: "Melee", damage: { oneHanded: "1d6" } },
+                            "spear": { name: "Spear", properties: ["Thrown"], range: "Close/Near", type: "MeleeRanged", damage: { oneHanded: "1d6" } },
+                            "crossbow": { name: "Crossbow", properties: ["Loading"], range: "Far", type: "Ranged", damage: { twoHanded: "1d6" } },
+                            "mace": { name: "Mace", properties: [], range: "Close", type: "Melee", damage: { oneHanded: "1d6" } },
+                            "warhammer": { name: "Warhammer", properties: [], range: "Close", type: "Melee", damage: { twoHanded: "1d10" } },
+                            "whip": { name: "Whip", properties: ["Finesse"], range: "Near", type: "Melee", damage: { oneHanded: "1d4" } }
+                        };
+
+                        const ARMOR_COMPENDIUM = {
+                            "leather armor": { base: 11, addDex: true },
+                            "leather": { base: 11, addDex: true },
+                            "chainmail": { base: 13, addDex: true },
+                            "plate mail": { base: 15, addDex: false },
+                            "plate": { base: 15, addDex: false },
+                            "brigandine": { base: 12, addDex: true },
+                            "hide": { base: 12, addDex: true },
+                            "hide armor": { base: 12, addDex: true },
+                            "studded": { base: 12, addDex: true },
+                            "studded leather": { base: 12, addDex: true },
+                            "mithril plate": { base: 15, addDex: false },
+                            "mithril plate mail": { base: 15, addDex: false },
+                            "mithril chainmail": { base: 13, addDex: true }
+                        };
+
+                        function findWeaponInfo(wpName) {
+                            const nameLower = (wpName || '').toLowerCase().trim();
+                            if (WEAPON_COMPENDIUM[nameLower]) {
+                                return WEAPON_COMPENDIUM[nameLower];
+                            }
+                            for (const [key, info] of Object.entries(WEAPON_COMPENDIUM)) {
+                                if (nameLower.includes(key)) {
+                                    return info;
+                                }
+                            }
+                            return null;
+                        }
+
+                        function findArmorInfo(armName) {
+                            const nameLower = (armName || '').toLowerCase().trim();
+                            if (ARMOR_COMPENDIUM[nameLower]) {
+                                return ARMOR_COMPENDIUM[nameLower];
+                            }
+                            for (const [key, info] of Object.entries(ARMOR_COMPENDIUM)) {
+                                if (nameLower.includes(key)) {
+                                    return info;
+                                }
+                            }
+                            return null;
+                        }
+
+                        // Build a map of features (ancestry, bonuses, level talents)
+                        const featuresMap = new Map();
+
+                        function normalizeSourceName(sourceName) {
+                            if (!sourceName) return 'Class';
+                            let cleaned = sourceName.replace(/\(Class\)/gi, '').replace(/\(Ancestry\)/gi, '').trim();
+                            if (cleaned.toLowerCase().includes('wizard')) return 'Wizard';
+                            if (cleaned.toLowerCase().includes('priest') || cleaned.toLowerCase().includes('cleric')) return 'Priest';
+                            if (cleaned.toLowerCase().includes('fighter')) return 'Fighter';
+                            if (cleaned.toLowerCase().includes('thief')) return 'Thief';
+                            if (cleaned.toLowerCase().includes('ranger')) return 'Ranger';
+                            if (cleaned.toLowerCase().includes('paladin')) return 'Paladin';
+                            if (cleaned.toLowerCase().includes('warlock')) return 'Warlock';
+                            if (cleaned.toLowerCase().includes('bard')) return 'Bard';
+                            if (cleaned.toLowerCase().includes('druid')) return 'Druid';
+                            return cleaned;
+                        }
+
+                        function normalizeTalentName(name, desc) {
+                            const nameUpper = (name || '').toUpperCase();
+                            const descUpper = (desc || '').toUpperCase();
+                            
+                            if (nameUpper.includes('SPELL MASTERY') || nameUpper.includes('ADVONCASTONESPELL') || descUpper.includes('ADVANTAGE WHEN CASTING') || descUpper.includes('ADVANTAGE ON CASTING') || descUpper.includes('SPELL MASTERY')) {
+                                return 'SPELL MASTERY';
+                            }
+                            if (nameUpper.includes('STAT BONUS') || nameUpper.includes('STATBONUS') || descUpper.includes('+2 TO ') || (descUpper.includes('+2') && descUpper.includes('INTELLIGENCE')) || (descUpper.includes('+2') && descUpper.includes('STRENGTH')) || (descUpper.includes('+2') && descUpper.includes('DEXTERITY')) || (descUpper.includes('+2') && descUpper.includes('CONSTITUTION')) || (descUpper.includes('+2') && descUpper.includes('WISDOM')) || (descUpper.includes('+2') && descUpper.includes('CHARISMA'))) {
+                                return 'STAT BONUS';
+                            }
+                            if (nameUpper.includes('CASTING') || descUpper.includes('+1 TO WIZARD SPELL CASTING') || descUpper.includes('+1 TO WIZARD SPELLCASTING') || descUpper.includes('+1 TO PRIEST SPELL CASTING') || descUpper.includes('+1 TO PRIEST SPELLCASTING') || descUpper.includes('SPELL CASTING ROLLS') || descUpper.includes('SPELLCASTING ROLLS') || descUpper.includes('SPELL CASTING') || descUpper.includes('SPELLCASTING')) {
+                                return 'CASTING';
+                            }
+                            return name;
+                        }
+
+                        function parseStatBonusModifiers(desc) {
+                            return []; // Core stats are initialized to final values; no need to double-apply stat modifiers from talents
+                            const descLower = desc.toLowerCase();
+                            const mods = [];
+                            const stats = {
+                                'strength': 'STR',
+                                'dexterity': 'DEX',
+                                'constitution': 'CON',
+                                'intelligence': 'INT',
+                                'wisdom': 'WIS',
+                                'charisma': 'CHA'
+                            };
+                            for (const [statName, varName] of Object.entries(stats)) {
+                                const regex = new RegExp(`\\+(\\d+)\\s+(?:to\\s+)?${statName}`, 'i');
+                                const match = descLower.match(regex);
+                                if (match) {
+                                    mods.push({ variable: varName, value: parseInt(match[1]) || 2 });
+                                }
+                            }
+                            return mods;
+                        }
+
+                        function cleanFeatureName(name) {
+                            if (!name) return '';
+                            let prefix = '';
+                            let namePart = name;
+                            const prefixMatch = name.match(/^([A-Z\s0-9_]+-\d+):(.*)$/i);
+                            if (prefixMatch) {
+                                prefix = prefixMatch[1].trim().toUpperCase() + ': ';
+                                namePart = prefixMatch[2];
+                            }
+                            
+                            // Extract parenthesized choice suffix if uppercase/choice-like
+                            let choiceSuffix = "";
+                            const choiceMatch = namePart.match(/\s*\(([^)]+)\)$/);
+                            if (choiceMatch) {
+                                const inside = choiceMatch[1];
+                                if (inside === inside.toUpperCase() || inside.startsWith('+') || inside.startsWith('-')) {
+                                    choiceSuffix = ` (${inside})`;
+                                    namePart = namePart.substring(0, choiceMatch.index);
+                                }
+                            }
+                            
+                            let cleaned = namePart.replace(/\bpassive\b/gi, '');
+                            cleaned = cleaned.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+                            cleaned = cleaned.replace(/_/g, ' ');
+                            cleaned = cleaned.replace(/\s*\([^)]+\)/g, '');
+                            cleaned = cleaned.replace(/^(half-orc|human|elf|dwarf|halfling|goblin|wizard|priest|cleric|druid|ranger|paladin|warlock|bard|fighter|thief|class|ancestry|pit fighter)[\s:-]+/i, '');
+                            cleaned = cleaned.replace(/^(human|half-orc|elf|dwarf|halfling|goblin|wizard|priest|cleric|druid|ranger|paladin|warlock|bard|fighter|thief)\s+(?=\w)/i, '');
+                            cleaned = cleaned.replace(/[\s:-]+/g, ' ');
+                            const result = cleaned.trim().toUpperCase();
+                            const SD_NAME_MAPPINGS = {
+                                'IGNORE ONE ATTACK': 'WALK IT OFF',
+                                'IGNOREONEATTACK': 'WALK IT OFF'
+                            };
+                            const mapped = SD_NAME_MAPPINGS[result] || result;
+                            
+                            if (mapped === 'WALK IT OFF') {
+                                return 'WALK IT OFF';
+                            }
+                            
+                            let finalResult = mapped;
+                            if (prefixMatch) {
+                                finalResult = (prefix + mapped).trim();
+                            }
+                            return (finalResult + choiceSuffix).toUpperCase();
+                        }
+
+                        function addOrUpdateFeature(name, level, desc, mods, category) {
+                            if (!name || !name.trim()) return;
+
+                            if (!/^[a-zA-Z\s0-9_]+-\d+:/i.test(name)) {
+                                let parts = name.split(':').map(p => p.trim());
+                                if (parts.length >= 2) {
+                                    const firstLower = parts[0].toLowerCase();
+                                    const knownSources = ['half-orc', 'human', 'elf', 'dwarf', 'halfling', 'goblin', 'wizard', 'priest', 'cleric', 'druid', 'ranger', 'paladin', 'warlock', 'bard', 'fighter', 'thief', 'pit fighter', 'class', 'ancestry'];
+                                    if (knownSources.includes(firstLower)) {
+                                        parts.shift();
+                                    }
+                                }
+                                if (parts.length >= 2) {
+                                    name = parts[0];
+                                    desc = parts.slice(1).join(': ').trim() + (desc ? '\n' + desc : '');
+                                } else if (parts.length === 1) {
+                                    name = parts[0];
+                                }
+                            }
+
+                            const key = `${name.toLowerCase().trim()}_${level}`;
+                            if (featuresMap.has(key)) {
+                                const existing = featuresMap.get(key);
+                                if (desc && (!existing.desc || existing.desc.length < desc.length)) {
+                                    existing.desc = desc;
+                                }
+                                if (mods && mods.length > 0) {
+                                    mods.forEach(m => {
+                                        if (!existing.mods.some(em => em.variable === m.variable)) {
+                                            existing.mods.push(m);
+                                        }
+                                    });
+                                }
+                            } else {
+                                featuresMap.set(key, {
+                                    name: name.trim(),
+                                    level: level,
+                                    desc: desc || '',
+                                    mods: mods || [],
+                                    category: category || ''
+                                });
+                            }
+                        }
+
+                        // Ancestry detection
+                        const ancestry = data.ancestry || 'Human';
+                        if (ancestry.toLowerCase().includes('half-orc') || ancestry.toLowerCase().includes('halforc')) {
+                            addOrUpdateFeature(
+                                'Mighty (Half-Orc)',
+                                1,
+                                'You gain +1 to melee attack and damage rolls. (Half-Orc Ancestry Trait)',
+                                [
+                                    { variable: 'Attack_Melee', value: 1 },
+                                    { variable: 'Damage_Melee', value: 1 }
+                                ],
+                                'Ancestry'
+                            );
+                        } else if (ancestry.toLowerCase().includes('human')) {
+                            addOrUpdateFeature(
+                                'Human Ambition',
+                                1,
+                                'You gain one additional random talent at character creation. (Human Ancestry Trait)',
+                                [],
+                                'Ancestry'
+                            );
+                        } else if (ancestry.toLowerCase().includes('elf')) {
+                            addOrUpdateFeature(
+                                'Farsight (Elf)',
+                                1,
+                                'You gain +1 to far ranged weapon attack rolls. (Elf Ancestry Trait)',
+                                [
+                                    { variable: 'Attack_Ranged', value: 1 }
+                                ],
+                                'Ancestry'
+                            );
+                        } else if (ancestry.toLowerCase().includes('dwarf')) {
+                            addOrUpdateFeature(
+                                'Stout (Dwarf)',
+                                1,
+                                'You gain +2 maximum hit points at character creation. (Dwarf Ancestry Trait)',
+                                [],
+                                'Ancestry'
+                            );
+                        } else if (ancestry.toLowerCase().includes('halfling')) {
+                            addOrUpdateFeature(
+                                'Stealthy (Halfling)',
+                                1,
+                                'You gain advantage on stealth checks. (Halfling Ancestry Trait)',
+                                [],
+                                'Ancestry'
+                            );
+                        } else if (ancestry.toLowerCase().includes('goblin')) {
+                            addOrUpdateFeature(
+                                'Sneaky (Goblin)',
+                                1,
+                                'You gain advantage on stealth/sneaking checks. (Goblin Ancestry Trait)',
+                                [],
+                                'Ancestry'
+                            );
+                        }
+
+                        // Pit Fighter class features
+                        if (data.class && data.class.toLowerCase().includes('pit fighter')) {
+                            addOrUpdateFeature('FLOURISH', 1, '3/day, regain 1d6 hit points when you hit with a melee attack.', [], 'Class');
+                            addOrUpdateFeature('IMPLACABLE', 1, 'ADV on CON checks to resist injury, poison, or endure extreme environments.', [], 'Class');
+                            addOrUpdateFeature('LAST STAND', 1, 'You get up from dying with 1 hit point on a natural 20.', [], 'Class');
+                            addOrUpdateFeature('RELENTLESS', 1, '1/day, when you would be reduced to 0 hit points, you are reduced to 1 hit point instead.', [], 'Class');
+                        }
+
+                        // Wizard class features
+                        if (data.class && data.class.toLowerCase().includes('wizard')) {
+                            addOrUpdateFeature(
+                                'WIZARD-1: LEARNING SPELLS',
+                                1,
+                                'You can learn a wizard spell from a scroll with DC 15 INT check.',
+                                [],
+                                'Class'
+                            );
+                            addOrUpdateFeature(
+                                'WIZARD-1: WIZARD SPELLCASTING',
+                                1,
+                                "To cast a Wizard spell, roll 1d20 + INT modifier + Spellcheck vs a DC equal to 10 + the spell's tier.",
+                                [],
+                                'Class'
+                            );
+                        }
+
+                        // Parse bonuses
+                        const weaponMasteryList = [];
+                        const armorMasterList = [];
+                        let plus1ToHitMelee = 0;
+                        let plus1ToHitRanged = 0;
+                        let plus1ToDmgMelee = 0;
+                        let plus1ToDmgRanged = 0;
+                        let spellcheckBonus = 0;
+                        let backstabDiceBonus = 0;
+                        let advInitiative = false;
+                        const weaponDamageD12List = [];
+
+                        if (data.bonuses) {
+                            data.bonuses.forEach(b => {
+                                const bName = (b.name || '').toLowerCase();
+                                const bBonusName = (b.bonusName || '').toLowerCase();
+                                const bBonusTo = (b.bonusTo || '').toLowerCase();
+                                const bDesc = (b.desc || b.talentRolledDesc || '').toLowerCase();
+                                const amount = parseInt(b.bonusAmount) || 1;
+
+                                if (bName === 'weaponmastery' || bBonusName === 'weaponmastery') {
+                                    weaponMasteryList.push({ weapon: bBonusTo.trim().toLowerCase(), amount: amount });
+                                } else if (bName === 'armormaster' || bBonusName === 'armormaster') {
+                                    armorMasterList.push({ armor: bBonusTo.trim().toLowerCase(), amount: amount });
+                                } else if (bName === 'backstabincrease' || bBonusName === 'backstabincrease') {
+                                    backstabDiceBonus += amount;
+                                } else if (bName === 'plus1tohit' || bBonusName === 'plus1tohit') {
+                                    plus1ToHitMelee += amount;
+                                    plus1ToHitRanged += amount;
+                                } else if (bName === 'plus1tohitanddamage' || bBonusName === 'plus1tohitanddamage') {
+                                    if (bBonusTo.includes('ranged')) {
+                                        plus1ToHitRanged += amount;
+                                        plus1ToDmgRanged += amount;
+                                    } else {
+                                        plus1ToHitMelee += amount;
+                                        plus1ToDmgMelee += amount;
+                                    }
+                                } else if (bBonusName === 'plus1tocastingspells' || bName === 'plus1tocastingspells' || 
+                                           (bName === 'plustwointorplusonewizcasting' && bBonusTo === 'wizard') ||
+                                           (bName === 'plustwointorplusonewizcasting' && bBonusName === 'plus1tocastingspells')) {
+                                    spellcheckBonus += amount;
+                                } else if (bName === 'advoninitiative' || bBonusName === 'advoninitiative') {
+                                    advInitiative = true;
+                                } else if (bName === 'setweapontypedamage' || bBonusName === 'setweapontypedamage') {
+                                    const wpName = bBonusTo.split(':')[0].trim().toLowerCase();
+                                    weaponDamageD12List.push(wpName);
+                                }
+                            });
+                        }
+
+                        // Talent / Abilities detection from data.bonuses & levels
+                        const rawTalents = [];
+
+                        if (data.bonuses) {
+                            data.bonuses.forEach(b => {
+                                if (b.sourceCategory === 'Talent' || b.sourceCategory === 'Ability' || b.sourceCategory === 'Item' || b.sourceType === 'Item') {
+                                    if (b.bonusTo && b.bonusTo.startsWith('Tier:')) return;
+                                    if (b.bonusTo === 'Languages') return;
+                                    
+                                    const mods = [];
+                                    const bNameLower = (b.bonusName || '').toLowerCase();
+                                    const bToLower = (b.bonusTo || '').toLowerCase();
+                                    const descLower = (b.talentRolledDesc || b.desc || '').toLowerCase();
+                                    const amount = parseInt(b.bonusAmount) || 1;
+
+                                    const isWeaponMastery = b.name === 'WeaponMastery' || b.bonusName === 'WeaponMastery';
+                                    const isArmorMaster = b.name === 'ArmorMaster' || b.bonusName === 'ArmorMaster';
+
+                                    if (!isWeaponMastery && !isArmorMaster) {
+                                        // Parse stat bonus modifiers (like +2 to Intelligence)
+                                        const statMods = parseStatBonusModifiers(descLower);
+                                        if (statMods.length > 0) mods.push(...statMods);
+
+                                        // Also parse from b.bonusTo if it defines a stat bonus (e.g. "INT:+2")
+                                        if (b.bonusTo && /^([A-Z]{3}):\+?(-?\d+)/i.test(b.bonusTo)) {
+                                            const match = b.bonusTo.match(/^([A-Z]{3}):\+?(-?\d+)/i);
+                                            const varName = match[1].toUpperCase();
+                                            const val = parseInt(match[2]) || 0;
+                                            const coreStats = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+                                            if (!coreStats.includes(varName) && !mods.some(m => m.variable === varName)) {
+                                                mods.push({ variable: varName, value: val });
+                                            }
+                                        }
+
+                                        if (bNameLower.includes('plus1tocastingspells') || 
+                                            bToLower.includes('spellcasting') || 
+                                            bToLower.includes('spell casting') || 
+                                            (descLower.includes('spellcasting check') && !descLower.includes(' or ')) || 
+                                            (descLower.includes('spell casting check') && !descLower.includes(' or ')) || 
+                                            descLower.includes('spell casting rolls') ||
+                                            descLower.includes('spellcasting rolls') ||
+                                            (bNameLower.includes('plustwointorplusonewizcasting') && (descLower.includes('casting') || descLower.includes('spellcasting') || descLower.includes('spell casting')) && !descLower.includes(' or '))) {
+                                            mods.push({ variable: 'Spellcheck', value: amount });
+                                        }
+                                        if ((descLower.includes('+1 to melee attack') || descLower.includes('+1 melee attack')) && !descLower.includes(' or ')) {
+                                            mods.push({ variable: 'Attack_Melee', value: amount });
+                                        }
+                                        if ((descLower.includes('+1 to melee damage') || descLower.includes('+1 melee damage')) && !descLower.includes(' or ')) {
+                                            mods.push({ variable: 'Damage_Melee', value: amount });
+                                        }
+                                        if ((descLower.includes('+1 to ranged attack') || descLower.includes('+1 ranged attack')) && !descLower.includes(' or ')) {
+                                            mods.push({ variable: 'Attack_Ranged', value: amount });
+                                        }
+                                        if ((descLower.includes('+1 to ranged damage') || descLower.includes('+1 ranged damage')) && !descLower.includes(' or ')) {
+                                            mods.push({ variable: 'Damage_Ranged', value: amount });
+                                        }
+                                        if (bNameLower.includes('backstabincrease') || bToLower.includes('backstabincrease')) {
+                                            mods.push({ variable: 'Backstab_Dice_Bonus', value: amount });
+                                        }
+                                        if (bToLower === 'ac') {
+                                            mods.push({ variable: 'AC_Mod', value: amount });
+                                        }
+                                    }
+
+                                    const level = b.gainedAtLevel || 1;
+                                    const desc = b.talentRolledDesc || b.desc || `Bonus from ${b.sourceName} (${b.sourceType})`;
+                                    const source = normalizeSourceName(b.sourceName || 'Class');
+
+                                    if (b.sourceCategory === 'Talent') {
+                                        rawTalents.push({
+                                            type: 'bonus',
+                                            level: level,
+                                            source: source,
+                                            name: b.name,
+                                            bonusName: b.bonusName,
+                                            bonusTo: b.bonusTo,
+                                            desc: desc,
+                                            mods: mods,
+                                            rawBonus: b
+                                        });
+                                    } else {
+                                        addOrUpdateFeature(b.bonusName || b.name, level, desc, mods, b.sourceCategory);
+                                    }
+                                }
+                            });
+                        }
+
+                        if (data.levels) {
+                            data.levels.forEach(lvl => {
+                                const level = lvl.level || 1;
+                                const source = normalizeSourceName(data.class || 'Class');
+                                if (lvl.talentRolledName && lvl.talentRolledName.trim()) {
+                                    rawTalents.push({
+                                        type: 'roll',
+                                        level: level,
+                                        source: source,
+                                        name: lvl.talentRolledName,
+                                        desc: lvl.talentRolledDesc
+                                    });
+                                }
+                                if (lvl.Rolled12ChosenTalentName && lvl.Rolled12ChosenTalentName.trim()) {
+                                    rawTalents.push({
+                                        type: 'roll',
+                                        level: level,
+                                        source: source,
+                                        name: lvl.Rolled12ChosenTalentName,
+                                        desc: lvl.Rolled12ChosenTalentDesc
+                                    });
+                                }
+                            });
+                        }
+
+                        if (data.ambitionTalentLevel) {
+                            const level = data.ambitionTalentLevel.level || 1;
+                            const source = 'Human Ambition';
+                            if (data.ambitionTalentLevel.talentRolledName && data.ambitionTalentLevel.talentRolledName.trim()) {
+                                rawTalents.push({
+                                    type: 'roll',
+                                    level: level,
+                                    source: source,
+                                    name: data.ambitionTalentLevel.talentRolledName,
+                                    desc: data.ambitionTalentLevel.talentRolledDesc
+                                });
+                            }
+                            if (data.ambitionTalentLevel.Rolled12ChosenTalentName && data.ambitionTalentLevel.Rolled12ChosenTalentName.trim()) {
+                                rawTalents.push({
+                                    type: 'roll',
+                                    level: level,
+                                    source: source,
+                                    name: data.ambitionTalentLevel.Rolled12ChosenTalentName,
+                                    desc: data.ambitionTalentLevel.Rolled12ChosenTalentDesc
+                                });
+                            }
+                        }
+
+                        // Group rawTalents by (source, level)
+                        const groupedTalents = {};
+                        rawTalents.forEach(t => {
+                            const key = `${t.source.toLowerCase().trim()}_${t.level}`;
+                            if (!groupedTalents[key]) {
+                                groupedTalents[key] = {
+                                    source: t.source,
+                                    level: t.level,
+                                    entries: []
+                                };
+                            }
+                            groupedTalents[key].entries.push(t);
+                        });
+
+                        // Merge each group and add to featuresMap
+                        Object.values(groupedTalents).forEach(group => {
+                            const source = group.source;
+                            const level = group.level;
+
+                            let hasStatBonusChoice = false;
+                            let statChoiceDetails = '';
+                            let hasCastingChoice = false;
+                            let castingChoiceDetails = '';
+                            let hasSpellMasteryChoice = false;
+                            let spellMasteryDetails = '';
+                            const allMods = [];
+                            const descriptions = [];
+
+                            group.entries.forEach(e => {
+                                if (e.desc) descriptions.push(e.desc);
+                                if (e.mods) allMods.push(...e.mods);
+
+                                if (e.type === 'bonus') {
+                                    const b = e.rawBonus;
+                                    const bName = (b.name || '').toLowerCase();
+                                    const bBonusName = (b.bonusName || '').toLowerCase();
+                                    const bBonusTo = (b.bonusTo || '').toLowerCase();
+                                    const amount = parseInt(b.bonusAmount) || 2;
+
+                                    if (bBonusName === 'statbonus' || bName === 'statbonus' || bBonusTo.includes(':+') || bBonusTo.includes(':-')) {
+                                        hasStatBonusChoice = true;
+                                        if (b.bonusTo && b.bonusTo.includes(':')) {
+                                            const parts = b.bonusTo.split(':');
+                                            const cleanVal = parts[1].replace(/^\+/, '');
+                                            statChoiceDetails = `+${cleanVal} ${parts[0].toUpperCase()}`;
+                                        } else if (b.desc && b.desc.toUpperCase().includes('+2 TO ')) {
+                                            const match = b.desc.toUpperCase().match(/\+2 TO ([A-Z]+)/);
+                                            if (match) {
+                                                statChoiceDetails = `+2 ${match[1].substring(0, 3)}`;
+                                            } else {
+                                                statChoiceDetails = `+2 INT`;
+                                            }
+                                        } else {
+                                            statChoiceDetails = `+2 INT`;
+                                        }
+                                    }
+                                    if (bBonusName === 'plus1tocastingspells' || bName === 'plus1tocastingspells' || bBonusTo === 'wizard' || bBonusTo === 'priest') {
+                                        if (bBonusName === 'plus1tocastingspells' || bName === 'plus1tocastingspells') {
+                                            hasCastingChoice = true;
+                                            castingChoiceDetails = `+1 CASTING`;
+                                        }
+                                    }
+                                    if (bBonusTo === 'advoncastonespell' || bName === 'advoncastonespell') {
+                                        hasSpellMasteryChoice = true;
+                                        if (b.bonusName) {
+                                            spellMasteryDetails = b.bonusName.toUpperCase();
+                                        }
+                                    }
+                                }
+                            });
+
+                            let mergedName = '';
+                            const levelStr = `${source.toUpperCase()}-${level}`;
+
+                            if (hasSpellMasteryChoice) {
+                                mergedName = `${levelStr}: SPELL MASTERY (${spellMasteryDetails})`;
+                            } else if (hasStatBonusChoice) {
+                                mergedName = `${levelStr}: STAT BONUS (${statChoiceDetails})`;
+                            } else if (hasCastingChoice) {
+                                mergedName = `${levelStr}: SPELLCASTING (${castingChoiceDetails})`;
+                            } else {
+                                const firstEntry = group.entries[0];
+                                const cleanedName = cleanFeatureName(firstEntry.name || firstEntry.bonusName || '');
+                                if (cleanedName.includes(':')) {
+                                    mergedName = cleanedName;
+                                } else {
+                                    mergedName = `${levelStr}: ${cleanedName}`;
+                                }
+                            }
+
+                            const uniqueDescs = Array.from(new Set(descriptions.map(d => d.trim()))).filter(Boolean);
+                            const mergedDesc = uniqueDescs.join('\n\n');
+
+                            const uniqueMods = [];
+                            allMods.forEach(m => {
+                                if (!uniqueMods.some(um => um.variable === m.variable)) {
+                                    uniqueMods.push(m);
+                                }
+                            });
+
+                            addOrUpdateFeature(mergedName, level, mergedDesc, uniqueMods, 'Talent');
+                        });
+
+                        // Sum passive modifier variables locally (to adjust weapons magic bonuses calculations)
+                        let attackMeleeMod = 0;
+                        let attackRangedMod = 0;
+                        let damageMeleeMod = 0;
+                        let damageRangedMod = 0;
+                        let spellcheckMod = 0;
+
+                        Array.from(featuresMap.values()).forEach(f => {
+                            if (f.mods) {
+                                f.mods.forEach(m => {
+                                    if (m.variable === 'Attack_Melee') attackMeleeMod += m.value;
+                                    if (m.variable === 'Attack_Ranged') attackRangedMod += m.value;
+                                    if (m.variable === 'Damage_Melee') damageMeleeMod += m.value;
+                                    if (m.variable === 'Damage_Ranged') damageRangedMod += m.value;
+                                    if (m.variable === 'Spellcheck') spellcheckMod += m.value;
+                                });
+                            }
+                        });
+
+                        // Set baseline variables to '0' (will be dynamically updated by active passives)
+                        newChar.variables['Attack_Melee'] = '0';
+                        newChar.variables['Attack_Ranged'] = '0';
+                        newChar.variables['Damage_Melee'] = '0';
+                        newChar.variables['Damage_Ranged'] = '0';
+                        newChar.variables['Spellcheck'] = '0';
+                        newChar.variables['Backstab_Dice_Bonus'] = '0';
+
+                        // Do not modify the define widgets values (leave them at 0)
+                        const atkMeleeWidget = newWidgets.find(w => w.bindsVariable === 'Attack_Melee' && w.variableRelType === 'define');
+                        if (atkMeleeWidget) atkMeleeWidget.value = 0;
+                        
+                        const atkRangedWidget = newWidgets.find(w => w.bindsVariable === 'Attack_Ranged' && w.variableRelType === 'define');
+                        if (atkRangedWidget) atkRangedWidget.value = 0;
+
+                        const dmgMeleeWidget = newWidgets.find(w => w.bindsVariable === 'Damage_Melee' && w.variableRelType === 'define');
+                        if (dmgMeleeWidget) dmgMeleeWidget.value = 0;
+
+                        const dmgRangedWidget = newWidgets.find(w => w.bindsVariable === 'Damage_Ranged' && w.variableRelType === 'define');
+                        if (dmgRangedWidget) dmgRangedWidget.value = 0;
+
+                        const spellcheckWidget = newWidgets.find(w => w.bindsVariable === 'Spellcheck' && w.variableRelType === 'define');
+                        if (spellcheckWidget) spellcheckWidget.value = 0;
+
+                        // Modify Backstab dice display widget to add Backstab_Dice_Bonus if not already present
+                        const backstabDiceWidget = newWidgets.find(w => w.bindsVariable === 'Backstab_Dice' && w.variableRelType === 'define');
+                        if (backstabDiceWidget && Array.isArray(backstabDiceWidget.unifiedQueue)) {
+                            const hasBonusRef = backstabDiceWidget.unifiedQueue.some(node => node.type === 'variable' && node.value === 'Backstab_Dice_Bonus');
+                            if (!hasBonusRef) {
+                                backstabDiceWidget.unifiedQueue.push(
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'variable', value: 'Backstab_Dice_Bonus', operator: '+' }
+                                );
+                            }
+                        }
+
+                        // 3. Populate basic stats
+                        const hpW = newWidgets.find(w => w.name === 'HP' && w.widgetType === 'stepper');
+                        if (hpW) {
+                            hpW.max = data.maxHitPoints || 10;
+                            hpW.value = data.maxHitPoints || 10;
+                        }
+                        
+                        const lvlW = newWidgets.find(w => w.name === 'Level' && w.widgetType === 'number');
+                        if (lvlW) lvlW.value = data.level || 1;
+                        
+                        const xpW = newWidgets.find(w => w.name === 'XP' && w.widgetType === 'stepper');
+                        if (xpW) xpW.value = data.XP || 0;
+                        
+                        const goldW = newWidgets.find(w => w.name === 'Gold' && w.widgetType === 'stepper');
+                        if (goldW) goldW.value = data.gold || 0;
+                        
+                        // Score widgets
+                        const statKeys = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+                        statKeys.forEach(k => {
+                            const scoreW = newWidgets.find(w => w.name === `${k} Score` && w.widgetType === 'number');
+                            if (scoreW) {
+                                if (data.stats && data.stats[k] !== undefined) {
+                                    scoreW.value = data.stats[k];
+                                } else if (data.rolledStats && data.rolledStats[k] !== undefined) {
+                                    scoreW.value = data.rolledStats[k];
+                                }
+                            }
+                        });
+                        
+                        // Detail text widgets: value goes to name instead of text
+                        const detailMappings = {
+                            'Class': data.class || '',
+                            'Title': data.title || '',
+                            'Ancestry': data.ancestry || '',
+                            'Background': data.background || '',
+                            'Deity': data.deity || '',
+                            'Alignment': data.alignment || '',
+                            'Languages': data.languages || ''
+                        };
+                        Object.entries(detailMappings).forEach(([key, val]) => {
+                            const detailW = newWidgets.find(w => w.detailText === key && w.widgetType === 'text');
+                            if (detailW) {
+                                detailW.name = val;
+                                detailW.text = '';
+                            }
+                        });
+
+                        // 4. Armor and Shield equipping
+                        let hasShield = false;
+                        const bodyArmorWidgets = [];
+                        
+                        if (data.gear) {
+                            data.gear.forEach(item => {
+                                const nameLower = item.name.toLowerCase();
+                                if (nameLower.includes('shield')) {
+                                    hasShield = true;
+                                } else {
+                                    const baseInfo = findArmorInfo(item.name);
+                                    if (baseInfo) {
+                                        const armorId = 'w_armor_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                        const armorQueue = [
+                                            { nodeType: 'modifier', type: 'literal', value: baseInfo.base, operator: '+' }
+                                        ];
+                                        if (baseInfo.addDex) {
+                                            armorQueue.push(
+                                                { nodeType: 'operator', operator: '+' },
+                                                { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+' }
+                                            );
+                                        }
+
+                                        // Apply ArmorMaster AC bonus if applicable
+                                        const amBonus = armorMasterList.find(am => nameLower.includes(am.armor));
+                                        if (amBonus) {
+                                            armorQueue.push(
+                                                { nodeType: 'operator', operator: '+' },
+                                                { nodeType: 'modifier', type: 'literal', value: amBonus.amount, operator: '+' }
+                                            );
+                                        }
+                                        
+                                        const bodyArmorWidget = {
+                                            id: armorId,
+                                            characterId: newCharId,
+                                            groupId: groupIdMap['combat'],
+                                            name: item.name,
+                                            color: '#00d4ff',
+                                            widgetType: 'number',
+                                            bindsVariable: 'AC_Armor',
+                                            variableRelType: 'define',
+                                            addonToggle: {
+                                                labelOn: 'Equipped',
+                                                labelOff: 'Unequipped',
+                                                checked: false
+                                            },
+                                            unifiedQueue: armorQueue
+                                        };
+                                        bodyArmorWidgets.push(bodyArmorWidget);
+                                    }
+                                }
+                            });
+                        }
+                        
+                        const shieldW = newWidgets.find(w => w.id.includes('w_shield') || w.name === 'Shield');
+                        if (shieldW) {
+                            shieldW.addonToggle.checked = hasShield;
+                            // Shield AC bonus from ArmorMaster
+                            const shieldAmBonus = armorMasterList.find(am => am.armor.includes('shield'));
+                            if (shieldAmBonus && shieldW.unifiedQueue) {
+                                shieldW.unifiedQueue.push(
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'literal', value: shieldAmBonus.amount, operator: '+' }
+                                );
+                            }
+                        }
+                        
+                        if (bodyArmorWidgets.length > 0) {
+                            // Equip only the first body armor widget
+                            bodyArmorWidgets[0].addonToggle.checked = true;
+                            bodyArmorWidgets.forEach(w => newWidgets.push(w));
+                            
+                            const unarmoredW = newWidgets.find(w => w.id.includes('w_armor') && w.name === 'Unarmored');
+                            if (unarmoredW) {
+                                unarmoredW.addonToggle.checked = false;
+                            }
+                        }
+
+                        // 5. Gear mapping: combine normal gear and magic items sequentially
+                        const allGearItems = [];
+                        if (data.gear) {
+                            data.gear.forEach(g => {
+                                allGearItems.push({
+                                    name: g.name,
+                                    quantity: g.quantity || 1,
+                                    slots: g.slots !== undefined ? g.slots : 1,
+                                    cost: g.cost || 0,
+                                    currency: g.currency || 'gp',
+                                    isMagic: false,
+                                    raw: g
+                                });
+                            });
+                        }
+                        if (data.magicItems) {
+                            data.magicItems.forEach(mi => {
+                                allGearItems.push({
+                                    name: mi.name,
+                                    quantity: 1,
+                                    slots: mi.slots !== undefined ? mi.slots : 1,
+                                    cost: 0,
+                                    currency: 'gp',
+                                    isMagic: true,
+                                    raw: mi
+                                });
+                            });
+                        }
+
+                        let slotNum = 1;
+                        allGearItems.forEach(item => {
+                            const gearWidget = newWidgets.find(w => w.id.includes(`w_gear_${slotNum}`));
+                            if (gearWidget) {
+                                gearWidget.name = item.name;
+                                
+                                const infoParts = [
+                                    `Quantity: ${item.quantity}`,
+                                    `Slots: ${item.slots}`
+                                ];
+                                if (item.cost > 0) {
+                                    infoParts.push(`Cost: ${item.cost} ${item.currency}`);
+                                }
+                                const gearInfoStr = infoParts.join(' | ');
+                                gearWidget.detailText = `${slotNum}. - ${gearInfoStr}`;
+                                
+                                if (item.isMagic) {
+                                    const details = [];
+                                    const mi = item.raw;
+                                    if (mi.benefits) details.push(`Benefits: ${mi.benefits}`);
+                                    if (mi.features) details.push(`Features: ${mi.features}`);
+                                    if (mi.personalityTraits) details.push(`Personality: ${mi.personalityTraits}`);
+                                    if (mi.personalityVirtue) details.push(`Virtue: ${mi.personalityVirtue}`);
+                                    if (mi.personalityFlaws) details.push(`Flaws: ${mi.personalityFlaws}`);
+                                    if (mi.curses) details.push(`Curses: ${mi.curses}`);
+                                    if (mi.bonusNote) details.push(`Note: ${mi.bonusNote}`);
+                                    if (mi.attackNote) details.push(`Attack Note: ${mi.attackNote}`);
+                                    
+                                    gearWidget.text = details.join('\n\n');
+                                    gearWidget.collapsed = true;
+                                } else {
+                                    gearWidget.text = "";
+                                    gearWidget.collapsed = true;
+                                }
+                            }
+                            
+                            const slotsToConsume = item.slots;
+                            if (slotsToConsume > 1) {
+                                for (let extra = 1; extra < slotsToConsume; extra++) {
+                                    slotNum++;
+                                    const extraWidget = newWidgets.find(w => w.id.includes(`w_gear_${slotNum}`));
+                                    if (extraWidget) {
+                                        extraWidget.name = `... extra slot`;
+                                        extraWidget.detailText = `${slotNum}.`;
+                                        extraWidget.text = `Occupied by extra slot for ${item.name}`;
+                                        extraWidget.collapsed = true;
+                                    }
+                                }
+                            }
+                            slotNum++;
+                        });
+
+                        // 6. Weapon attacks mapping (using Attack_Melee / Damage_Melee etc.)
+                        const strValVal = data.stats.STR || 10;
+                        const dexValVal = data.stats.DEX || 10;
+                        const parsedStrMod = Math.floor((strValVal - 10) / 2);
+                        const parsedDexMod = Math.floor((dexValVal - 10) / 2);
+
+                        if (data.attacks) {
+                            data.attacks.forEach(attackStr => {
+                                if (attackStr.trim().startsWith('SPELLS:') || attackStr.toLowerCase().includes('to cast a')) {
+                                    return;
+                                }
+                                
+                                let name = "Weapon Attack";
+                                let bonus = 0;
+                                let damage = "1d6";
+                                let notes = "";
+                                
+                                const parts = attackStr.split(':');
+                                if (parts.length >= 2) {
+                                    name = parts[0].trim();
+                                    name = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+                                    
+                                    const remaining = parts.slice(1).join(':').trim();
+                                    const commaIdx = remaining.indexOf(',');
+                                    if (commaIdx !== -1) {
+                                        const attackPart = remaining.substring(0, commaIdx).trim();
+                                        const damagePart = remaining.substring(commaIdx + 1).trim();
+                                        
+                                        const bonusMatch = attackPart.match(/^([+-]?\d+)/);
+                                        if (bonusMatch) {
+                                            bonus = parseInt(bonusMatch[1]);
+                                        }
+                                        if (attackPart.includes('(N)')) {
+                                            notes += "Near. ";
+                                        }
+                                        
+                                        const dmgMatch = damagePart.match(/^(\d+d\d+(?:[+-]\d+)?)/);
+                                        if (dmgMatch) {
+                                            damage = damagePart;
+                                            notes += damagePart.substring(dmgMatch[1].length).trim();
+                                        } else {
+                                            damage = damagePart;
+                                        }
+                                    }
+                                }
+
+                                const nameLower = name.toLowerCase();
+                                const wInfo = findWeaponInfo(name);
+
+                                // Check properties
+                                const isFinesse = (wInfo && wInfo.properties.includes("Finesse")) || attackStr.toLowerCase().includes('fin') || nameLower.includes('whip') || nameLower.includes('dagger');
+                                const isRanged = (wInfo && wInfo.type === "Ranged") || nameLower.includes('bow') || nameLower.includes('crossbow') || nameLower.includes('sling') || nameLower.includes('pistol') || nameLower.includes('rifle') || attackStr.includes('(N)') || attackStr.includes('(F)') || notes.includes('Near') || notes.includes('Far');
+                                const isVersatile = (wInfo && wInfo.properties.includes("Versatile")) || damage.includes('/');
+
+                                // Dynamic stat modifier choosing for Finesse
+                                const attackStat = isFinesse 
+                                    ? (parsedDexMod >= parsedStrMod ? 'DEX_mod' : 'STR_mod')
+                                    : (isRanged ? 'DEX_mod' : 'STR_mod');
+                                
+                                const attackModVal = isFinesse 
+                                    ? Math.max(parsedStrMod, parsedDexMod)
+                                    : (isRanged ? parsedDexMod : parsedStrMod);
+
+                                const attackModVar = isRanged ? 'Attack_Ranged' : 'Attack_Melee';
+                                const currentGlobalAttackMod = isRanged ? attackRangedMod : attackMeleeMod;
+                                
+                                // Determine Weapon Mastery values
+                                const hasMastery = weaponMasteryList.find(wm => nameLower.includes(wm.weapon));
+                                const masteryBonusVal = hasMastery ? (1 + Math.floor((data.level || 1) * 0.5)) : 0;
+
+                                // Subtraction formula to isolate weapon's magical bonus
+                                const magicBonus = bonus - attackModVal - currentGlobalAttackMod - masteryBonusVal;
+
+                                // Build Attack Widget
+                                const attackWId = 'w_atk_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                const attackQueue = buildAttackQueue(attackStat, attackModVar, magicBonus, masteryBonusVal);
+
+                                const attackWidget = {
+                                    id: attackWId,
+                                    characterId: newCharId,
+                                    groupId: groupIdMap['combat'],
+                                    name: `${name} Attack`,
+                                    color: '#ff9900',
+                                    widgetType: 'roller',
+                                    includeAdvDis: true,
+                                    addonNote: notes ? `Notes: ${notes.trim()}` : '',
+                                    unifiedQueue: attackQueue
+                                };
+                                newWidgets.push(attackWidget);
+                                
+                                // Build Damage Widget(s)
+                                const damageModVar = isRanged ? 'Damage_Ranged' : 'Damage_Melee';
+                                const currentGlobalDamageMod = isRanged ? damageRangedMod : damageMeleeMod;
+                                const isD12Weapon = weaponDamageD12List.some(w => nameLower.includes(w));
+
+                                function parseAndPushDamageWidget(dmgFormula, labelSuffix) {
+                                    const damageWId = 'w_dmg_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                    const damageQueue = buildDamageQueue(dmgFormula, damageModVar, currentGlobalDamageMod, masteryBonusVal, isD12Weapon);
+                                    
+                                    const damageWidget = {
+                                        id: damageWId,
+                                        characterId: newCharId,
+                                        groupId: groupIdMap['combat'],
+                                        name: `${name} Damage${labelSuffix}`,
+                                        color: '#ff3c00',
+                                        widgetType: 'roller',
+                                        includeAdvDis: false,
+                                        unifiedQueue: damageQueue
+                                    };
+                                    newWidgets.push(damageWidget);
+                                }
+
+                                if (isVersatile) {
+                                    let cleanDmg = damage.split('(')[0].trim();
+                                    const versatileParts = cleanDmg.split('/');
+                                    if (versatileParts.length >= 2) {
+                                        parseAndPushDamageWidget(versatileParts[0].trim(), " (1-Hand)");
+                                        parseAndPushDamageWidget(versatileParts[1].trim(), " (2-Hand)");
+                                    } else if (wInfo && wInfo.damage.oneHanded && wInfo.damage.twoHanded) {
+                                        const cleanFormula = damage.split('(')[0].trim();
+                                        const dmgMatch = cleanFormula.match(/^1d\d+(?:([+-])(\d+))?$/);
+                                        const modifierSuffix = (dmgMatch && dmgMatch[1] && dmgMatch[2]) ? `${dmgMatch[1]}${dmgMatch[2]}` : "";
+                                        
+                                        const oneHandedFormula = `${wInfo.damage.oneHanded.numDice}${wInfo.damage.oneHanded.diceType}${modifierSuffix}`;
+                                        const twoHandedFormula = `${wInfo.damage.twoHanded.numDice}${wInfo.damage.twoHanded.diceType}${modifierSuffix}`;
+                                        parseAndPushDamageWidget(oneHandedFormula, " (1-Hand)");
+                                        parseAndPushDamageWidget(twoHandedFormula, " (2-Hand)");
+                                    } else {
+                                        parseAndPushDamageWidget(damage, "");
+                                    }
+                                } else {
+                                    parseAndPushDamageWidget(damage, "");
+                                }
+                            });
+                        }
+
+                        // Helper functions for building queues
+                        function buildAttackQueue(attackStat, attackModVar, magicBonus, masteryBonusVal) {
+                            const queue = [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: attackStat, operator: '+' },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: attackModVar, operator: '+' }
+                            ];
+
+                            if (masteryBonusVal > 0) {
+                                queue.push(
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
+                                );
+                            }
+
+                            if (magicBonus !== 0) {
+                                const op = magicBonus > 0 ? '+' : '-';
+                                queue.push(
+                                    { nodeType: 'operator', operator: op },
+                                    { nodeType: 'modifier', type: 'literal', value: Math.abs(magicBonus), operator: op }
+                                );
+                            }
+                            return queue;
+                        }
+
+                        function buildDamageQueue(formulaStr, damageModVar, currentGlobalDamageMod, masteryBonusVal, isD12Weapon) {
+                            let cleanDmg = (formulaStr || '1d6').split('(')[0].trim();
+                            const dmgRegexMatch = cleanDmg.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/);
+                            if (dmgRegexMatch) {
+                                const dCount = parseInt(dmgRegexMatch[1]);
+                                let dSides = isD12Weapon ? 12 : parseInt(dmgRegexMatch[2]);
+                                const dOp = dmgRegexMatch[3] || '+';
+                                const dModVal = dmgRegexMatch[4] ? parseInt(dmgRegexMatch[4]) : 0;
+                                const signedModVal = dOp === '-' ? -dModVal : dModVal;
+                                
+                                const magicDmgBonus = signedModVal - currentGlobalDamageMod - (masteryBonusVal || 0);
+                                
+                                const queue = [
+                                    { nodeType: 'node', sides: dSides, count: dCount },
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'variable', value: damageModVar, operator: '+' }
+                                ];
+
+                                if (masteryBonusVal > 0) {
+                                    queue.push(
+                                        { nodeType: 'operator', operator: '+' },
+                                        { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
+                                        { nodeType: 'operator', operator: '+' },
+                                        { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
+                                    );
+                                }
+
+                                if (magicDmgBonus !== 0) {
+                                    const op = magicDmgBonus > 0 ? '+' : '-';
+                                    queue.push(
+                                        { nodeType: 'operator', operator: op },
+                                        { nodeType: 'modifier', type: 'literal', value: Math.abs(magicDmgBonus), operator: op }
+                                    );
+                                }
+                                return queue;
+                            }
+                            return [{ nodeType: 'node', sides: 6, count: 1 }];
+                        }
+
+                        // 7. Spells known mapping
+                        if (data.spellsKnown && data.spellsKnown.trim().toLowerCase() !== 'none') {
+                            const spellList = data.spellsKnown.split(',').map(s => s.trim()).filter(Boolean);
+                            const clsLower = (data.class || '').trim().toLowerCase();
+                            const castingStatMap = {
+                                'wizard': 'INT',
+                                'priest': 'WIS',
+                                'cleric': 'WIS',
+                                'druid': 'WIS',
+                                'ranger': 'WIS',
+                                'paladin': 'WIS',
+                                'warlock': 'CHA',
+                                'bard': 'CHA'
+                            };
+                            const castStat = castingStatMap[clsLower] || 'INT';
+                            const castModVar = `${castStat}_mod`;
+
+                            const findSpellTier = (spellName, bonuses) => {
+                                if (!bonuses) return 1;
+                                const spellNameLower = spellName.toLowerCase().trim();
+                                for (const b of bonuses) {
+                                    const bName = (b.bonusName || '').toLowerCase().trim();
+                                    if (bName === spellNameLower && b.bonusTo) {
+                                        const tierMatch = b.bonusTo.match(/Tier:(\d+)/i);
+                                        if (tierMatch) return parseInt(tierMatch[1]) || 1;
+                                    }
+                                    if (bName === spellNameLower && b.name) {
+                                        const tierMatch = b.name.match(/Tier\s+(\d+)/i);
+                                        if (tierMatch) return parseInt(tierMatch[1]) || 1;
+                                    }
+                                }
+                                return 1;
+                            };
+                            
+                            const spellsWithTier = spellList.map(spellName => {
+                                return {
+                                    name: spellName,
+                                    tier: findSpellTier(spellName, data.bonuses)
+                                };
+                            });
+
+                            // Sort by tier ascending, then alphabetically by name
+                            spellsWithTier.sort((a, b) => {
+                                if (a.tier !== b.tier) {
+                                    return a.tier - b.tier;
+                                }
+                                return a.name.localeCompare(b.name);
+                            });
+
+                            spellsWithTier.forEach(spellObj => {
+                                const spellName = spellObj.name;
+                                const tier = spellObj.tier;
+                                const hasSpellAdv = data.bonuses && data.bonuses.some(b => 
+                                    b.bonusTo === 'AdvOnCastOneSpell' && 
+                                    (b.bonusName || '').toLowerCase().trim() === spellName.toLowerCase().trim()
+                                );
+                                const includeAdvDis = !!hasSpellAdv;
+                                const classTitle = (data.class || 'Wizard').trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+                                const spellWId = 'w_spell_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                const spellWidget = {
+                                    id: spellWId,
+                                    characterId: newCharId,
+                                    groupId: groupIdMap['spells'],
+                                    name: spellName.toUpperCase(),
+                                    widgetType: 'roller',
+                                    includeAdvDis: includeAdvDis,
+                                    addonNote: `T${tier} DC ${classTitle} Spellcasting`,
+                                    addonToggle: {
+                                        checked: true,
+                                        labelOn: 'Ready',
+                                        labelOff: 'Miscast'
+                                    },
+                                    unifiedQueue: [
+                                        { nodeType: 'node', sides: 20, count: 1 },
+                                        { nodeType: 'operator', operator: '+' },
+                                        { nodeType: 'modifier', type: 'variable', value: castModVar, operator: '+' },
+                                        { nodeType: 'operator', operator: '+' },
+                                        { nodeType: 'modifier', type: 'variable', value: 'Spellcheck', operator: '+' }
+                                    ]
+                                };
+                                newWidgets.push(spellWidget);
+                            });
+                        }
+
+                        // 8. Custom talents, class abilities, magic items, and ancestry traits mapping
+                        Array.from(featuresMap.values()).forEach(f => {
+                            const isItemFeature = f.category === 'Item' || f.category === 'MagicItem' || (f.category && f.category.toLowerCase().includes('item'));
+                            const targetGrpId = isItemFeature ? (groupIdMap['gear'] || passivesGrpId) : passivesGrpId;
+
+                            const limit = parseUsageLimit(f.desc);
+                            if (limit !== null) {
+                                const widget = {
+                                    id: 'w_feat_stepper_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                    characterId: newCharId,
+                                    groupId: targetGrpId,
+                                    name: cleanFeatureName(f.name),
+                                    widgetType: 'stepper',
+                                    min: 0,
+                                    max: limit,
+                                    value: typeof limit === 'number' ? limit : (data.level || 1),
+                                    showTracker: true,
+                                    detailText: f.desc || '',
+                                    passiveModifiers: f.mods && f.mods.length > 0 ? f.mods : null
+                                };
+                                newWidgets.push(widget);
+                            } else {
+                                const widget = {
+                                    id: 'w_feat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                    characterId: newCharId,
+                                    groupId: targetGrpId,
+                                    name: cleanFeatureName(f.name),
+                                    widgetType: 'text',
+                                    text: f.desc || 'No description.',
+                                    collapsed: true,
+                                    passiveModifiers: f.mods && f.mods.length > 0 ? f.mods : null
+                                };
+                                newWidgets.push(widget);
+                            }
+                        });
+
+
+
+                        // 9. Additional Metadata and Treasures mapping (putting anything unmapped in passives)
+                        const metadataLines = [];
+
+                        const handledKeys = new Set([
+                            'name', 'stats', 'rolledStats', 'ancestry', 'class', 'level', 'levels',
+                            'XP', 'ambitionTalentLevel', 'title', 'alignment', 'background', 'deity',
+                            'maxHitPoints', 'armorClass', 'gearSlotsTotal', 'gearSlotsUsed', 'bonuses',
+                            'goldRolled', 'gold', 'silver', 'copper', 'gear', 'treasures', 'magicItems',
+                            'attacks', 'ledger', 'spellsKnown', 'languages', 'creationMethod', 'coreRulesOnly',
+                            'activeSources', 'edits'
+                        ]);
+                        Object.keys(data).forEach(key => {
+                            if (!handledKeys.has(key)) {
+                                const val = data[key];
+                                if (val !== null && val !== undefined) {
+                                    if (typeof val === 'object') {
+                                        metadataLines.push(`${key}: ${JSON.stringify(val)}`);
+                                    } else {
+                                        metadataLines.push(`${key}: ${val}`);
+                                    }
+                                }
+                            }
+                        });
+                        
+                        if (metadataLines.length > 0) {
+                            newWidgets.push({
+                                id: 'w_meta_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                characterId: newCharId,
+                                groupId: passivesGrpId,
+                                name: 'CHARACTER DETAILS',
+                                widgetType: 'text',
+                                text: metadataLines.join('\n'),
+                                collapsed: true
+                            });
+                        }
+
+                        if (data.treasures && data.treasures.length > 0) {
+                            const treasureLines = data.treasures.map(t => {
+                                const costText = t.cost ? ` (${t.cost} ${t.currency || 'gp'})` : '';
+                                return `- ${t.name}${costText}`;
+                            });
+                            newWidgets.push({
+                                id: 'w_treasures_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                characterId: newCharId,
+                                groupId: passivesGrpId,
+                                name: 'TREASURES',
+                                widgetType: 'text',
+                                text: treasureLines.join('\n'),
+                                collapsed: true
+                            });
+                        }
+
+                        return {
+                            character: newChar,
+                            groups: newGroups,
+                            widgets: newWidgets
+                        };
+                    }
+                }
+            ],
+            detectAndImport(data) {
+                for (const imp of this.importers) {
+                    if (imp.detect(data)) {
+                        return {
+                            importerName: imp.name,
+                            result: imp.import(data)
+                        };
+                    }
+                }
+                return null;
+            }
+        };
+
         function importSettings(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -7524,6 +8870,50 @@
             reader.onload = function (e) {
                 try {
                     const imported = JSON.parse(e.target.result);
+                    
+                    const detectResult = ThirdPartyImporters.detectAndImport(imported);
+                    if (detectResult) {
+                        const { character, groups: newGroups, widgets: newWidgets } = detectResult.result;
+                        
+                        if (!activeCampaignId) {
+                            if (campaigns.length === 0) {
+                                campaigns = [{ id: 'default_campaign', name: 'Default Campaign' }];
+                                activeCampaignId = 'default_campaign';
+                                openTabs = [activeCampaignId];
+                            } else {
+                                activeCampaignId = campaigns[0].id;
+                            }
+                        }
+                        
+                        character.campaignId = activeCampaignId;
+                        characters.push(character);
+                        groups.push(...newGroups);
+                        engine.savedQueues.push(...newWidgets);
+                        
+                        activeCharacterId = character.id;
+                        activeGroupId = newGroups.length > 0 ? newGroups[0].id : null;
+                        
+                        syncCharacterVariables(character);
+                        
+                        persistArsenal();
+                        persistSaved();
+                        
+                        renderCampaignSelect();
+                        renderCharacterSelect();
+                        renderGroupTabs();
+                        renderSavedQueues();
+                        renderBinder();
+                        
+                        showModal({
+                            title: 'Character Imported!',
+                            body: `Successfully imported "${character.name}" (${detectResult.importerName})! All stats, weapons, spells, and gear have been loaded.`,
+                            alertOnly: true
+                        });
+                        
+                        event.target.value = '';
+                        return;
+                    }
+
                     let importedQueues = [];
                     let importedSettings = null;
 
@@ -7545,93 +8935,179 @@
                         const mode = mergeChosen ? 'merge' : 'overwrite';
 
                         if (mode === 'merge') {
-                            // Merge characters & groups mapping to prevent ID collision
+                            const campIdMap = {};
                             const charIdMap = {};
                             const grpIdMap = {};
-                            const campIdMap = {};
+                            const widgetIdMap = {};
 
+                            // 1. Merge campaigns (conflict is case-insensitive trimmed name)
                             if (imported.campaigns) {
                                 imported.campaigns.forEach(c => {
-                                    const exists = campaigns.find(curr => curr.id === c.id);
-                                    if (!exists) {
-                                        campaigns.push(c);
-                                        campIdMap[c.id] = c.id;
+                                    const existing = campaigns.find(curr => curr.name.trim().toLowerCase() === c.name.trim().toLowerCase());
+                                    if (existing) {
+                                        campIdMap[c.id] = existing.id;
                                     } else {
-                                        if (exists.name === c.name) {
-                                            campIdMap[c.id] = exists.id;
-                                        } else {
-                                            const newId = 'camp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                                            campaigns.push({ id: newId, name: `${c.name} (Imported)` });
-                                            campIdMap[c.id] = newId;
-                                        }
+                                        const idCollision = campaigns.some(curr => curr.id === c.id);
+                                        const targetCampId = idCollision ? 'camp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) : c.id;
+                                        campaigns.push({
+                                            id: targetCampId,
+                                            name: c.name
+                                        });
+                                        campIdMap[c.id] = targetCampId;
                                     }
                                 });
                             }
 
+                            // 2. Merge characters (conflict is case-insensitive trimmed name under the same mapped campaign)
                             if (imported.characters) {
                                 imported.characters.forEach(c => {
-                                    const mappedCampId = campIdMap[c.campaignId] || c.campaignId || 'default_campaign';
-                                    const exists = characters.find(curr => curr.id === c.id);
-                                    if (!exists) {
-                                        characters.push({ ...c, campaignId: mappedCampId });
-                                        charIdMap[c.id] = c.id;
+                                    const targetCampId = campIdMap[c.campaignId] || c.campaignId || activeCampaignId || 'default_campaign';
+                                    const existing = characters.find(curr => curr.campaignId === targetCampId && curr.name.trim().toLowerCase() === c.name.trim().toLowerCase());
+                                    if (existing) {
+                                        const targetCharId = existing.id;
+                                        Object.assign(existing, c, { id: targetCharId, campaignId: targetCampId });
+                                        charIdMap[c.id] = targetCharId;
                                     } else {
-                                        if (exists.name === c.name && exists.campaignId === mappedCampId) {
-                                            charIdMap[c.id] = exists.id;
-                                        } else {
-                                            const newId = 'char_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                                            characters.push({ ...c, id: newId, name: `${c.name} (Imported)`, campaignId: mappedCampId });
-                                            charIdMap[c.id] = newId;
-                                        }
+                                        const idCollision = characters.some(curr => curr.id === c.id);
+                                        const targetCharId = idCollision ? 'char_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) : c.id;
+                                        characters.push({
+                                            ...c,
+                                            id: targetCharId,
+                                            campaignId: targetCampId
+                                        });
+                                        charIdMap[c.id] = targetCharId;
                                     }
                                 });
                             }
 
+                            // 3. Merge groups (conflict is case-insensitive trimmed name under the same mapped character)
                             if (imported.groups) {
                                 imported.groups.forEach(g => {
-                                    const mappedCharId = charIdMap[g.characterId] || g.characterId || activeCharacterId;
-                                    const exists = groups.find(curr => curr.id === g.id);
-                                    if (!exists) {
-                                        groups.push({ ...g, characterId: mappedCharId });
-                                        grpIdMap[g.id] = g.id;
+                                    const targetCharId = charIdMap[g.characterId] || g.characterId || activeCharacterId;
+                                    const existing = groups.find(curr => curr.characterId === targetCharId && curr.name.trim().toLowerCase() === g.name.trim().toLowerCase());
+                                    if (existing) {
+                                        const targetGrpId = existing.id;
+                                        Object.assign(existing, g, { id: targetGrpId, characterId: targetCharId });
+                                        grpIdMap[g.id] = targetGrpId;
                                     } else {
-                                        if (exists.name === g.name && exists.characterId === mappedCharId) {
-                                            grpIdMap[g.id] = exists.id;
-                                        } else {
-                                            const newId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                                            groups.push({ ...g, id: newId, characterId: mappedCharId, name: `${g.name} (Imported)` });
-                                            grpIdMap[g.id] = newId;
-                                        }
+                                        const idCollision = groups.some(curr => curr.id === g.id);
+                                        const targetGrpId = idCollision ? 'grp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) : g.id;
+                                        groups.push({
+                                            ...g,
+                                            id: targetGrpId,
+                                            characterId: targetCharId
+                                        });
+                                        grpIdMap[g.id] = targetGrpId;
                                     }
                                 });
                             }
 
-                            // Keep current active selections but ensure they are valid
-                            if (!activeCharacterId && characters.length > 0) activeCharacterId = characters[0].id;
-                            if (!activeGroupId && groups.length > 0) {
-                                const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                            // Ensure current active selections map to valid entities if they were mapped
+                            if (imported.activeCampaignId && campIdMap[imported.activeCampaignId]) {
+                                activeCampaignId = campIdMap[imported.activeCampaignId];
+                            }
+                            if (imported.activeCharacterId && charIdMap[imported.activeCharacterId]) {
+                                activeCharacterId = charIdMap[imported.activeCharacterId];
+                            }
+                            if (imported.activeGroupId && grpIdMap[imported.activeGroupId]) {
+                                activeGroupId = grpIdMap[imported.activeGroupId];
+                            }
+
+                            // Keep current active selections valid
+                            if (!campaigns.some(c => c.id === activeCampaignId)) {
+                                activeCampaignId = campaigns.length > 0 ? campaigns[0].id : null;
+                            }
+                            const campaignChars = characters.filter(c => c.campaignId === activeCampaignId);
+                            if (!campaignChars.some(c => c.id === activeCharacterId)) {
+                                activeCharacterId = campaignChars.length > 0 ? campaignChars[0].id : null;
+                            }
+                            const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+                            if (!charGroups.some(g => g.id === activeGroupId)) {
                                 activeGroupId = charGroups.length > 0 ? charGroups[0].id : null;
                             }
 
-                            // Import loadouts/queues remapped to merged IDs
-                            const currentIds = new Set(engine.savedQueues.map(q => q.id));
+                            // 4. Merge/Overwrite dice arsenals (saved queues/widgets)
                             importedQueues.forEach(item => {
-                                const mappedCharId = charIdMap[item.characterId] || item.characterId || activeCharacterId;
-                                const mappedGrpId = grpIdMap[item.groupId] || item.groupId || activeGroupId;
+                                const targetCharId = charIdMap[item.characterId] || item.characterId || activeCharacterId;
+                                const targetGrpId = grpIdMap[item.groupId] || item.groupId || activeGroupId;
 
-                                const newItem = {
-                                    ...item,
-                                    characterId: mappedCharId,
-                                    groupId: mappedGrpId
-                                };
+                                if (!targetCharId || !targetGrpId) return; // safety check
 
-                                if (!currentIds.has(item.id)) {
-                                    engine.savedQueues.push(newItem);
+                                const existing = engine.savedQueues.find(q =>
+                                    q.characterId === targetCharId &&
+                                    q.groupId === targetGrpId &&
+                                    q.name.trim().toLowerCase() === item.name.trim().toLowerCase()
+                                );
+
+                                if (existing) {
+                                    const targetWidgetId = existing.id;
+                                    // Construct clean widget containing all incoming fields but keeping the existing ID
+                                    const cleanWidget = {
+                                        ...item,
+                                        id: targetWidgetId,
+                                        characterId: targetCharId,
+                                        groupId: targetGrpId
+                                    };
+                                    const idx = engine.savedQueues.indexOf(existing);
+                                    if (idx !== -1) {
+                                        engine.savedQueues[idx] = cleanWidget;
+                                    }
+                                    widgetIdMap[item.id] = targetWidgetId;
                                 } else {
-                                    newItem.id = Date.now() + Math.random();
-                                    engine.savedQueues.push(newItem);
+                                    const idCollision = engine.savedQueues.some(q => q.id === item.id);
+                                    const targetWidgetId = idCollision ? 'w_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) : item.id;
+                                    const newWidget = {
+                                        ...item,
+                                        id: targetWidgetId,
+                                        characterId: targetCharId,
+                                        groupId: targetGrpId
+                                    };
+                                    engine.savedQueues.push(newWidget);
+                                    widgetIdMap[item.id] = targetWidgetId;
                                 }
                             });
+
+                            // 5. Update/Remap widget IDs referenced in cascade roll chains
+                            engine.savedQueues.forEach(q => {
+                                if (q.chain) {
+                                    if (q.chain.preRoll && q.chain.preRoll.arsenalId) {
+                                        const oldId = q.chain.preRoll.arsenalId;
+                                        if (widgetIdMap[oldId]) {
+                                            q.chain.preRoll.arsenalId = widgetIdMap[oldId];
+                                        }
+                                    }
+                                    if (q.chain.postRoll) {
+                                        if (q.chain.postRoll.success && q.chain.postRoll.success.arsenalId) {
+                                            const oldId = q.chain.postRoll.success.arsenalId;
+                                            if (widgetIdMap[oldId]) {
+                                                q.chain.postRoll.success.arsenalId = widgetIdMap[oldId];
+                                            }
+                                        }
+                                        if (q.chain.postRoll.crit && q.chain.postRoll.crit.arsenalId) {
+                                            const oldId = q.chain.postRoll.crit.arsenalId;
+                                            if (widgetIdMap[oldId]) {
+                                                q.chain.postRoll.crit.arsenalId = widgetIdMap[oldId];
+                                            }
+                                        }
+                                        if (q.chain.postRoll.fail && q.chain.postRoll.fail.arsenalId) {
+                                            const oldId = q.chain.postRoll.fail.arsenalId;
+                                            if (widgetIdMap[oldId]) {
+                                                q.chain.postRoll.fail.arsenalId = widgetIdMap[oldId];
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+
+                            // Merge open tabs
+                            if (imported.openTabs) {
+                                imported.openTabs.forEach(tId => {
+                                    const mappedId = campIdMap[tId];
+                                    if (mappedId && !openTabs.includes(mappedId)) {
+                                        openTabs.push(mappedId);
+                                    }
+                                });
+                            }
                         } else {
                             // Overwrite mode
                             if (imported.campaigns && imported.campaigns.length > 0) {
@@ -7701,7 +9177,16 @@
                                 isModdedQuick = importedSettings.moddedQuick;
                             }
                             if (importedSettings.customDice !== undefined) {
-                                customDice = importedSettings.customDice;
+                                if (mode === 'merge') {
+                                    importedSettings.customDice.forEach(d => {
+                                        if (!customDice.some(existing => existing.d === d.d)) {
+                                            customDice.push(d);
+                                        }
+                                    });
+                                    customDice.sort((a, b) => a.d - b.d);
+                                } else {
+                                    customDice = importedSettings.customDice;
+                                }
                             }
                             if (importedSettings.currentTargetMode !== undefined) {
                                 currentTargetMode = importedSettings.currentTargetMode;
@@ -9381,19 +10866,17 @@
             // Determine which addon radio to select
             const hasCounter = !!q.addonCounter;
             const hasToggle = !!q.addonToggle;
-            const hasNote = !!q.addonNote;
             let activeAddon = 'none';
             if (q.includeAdvDis) activeAddon = 'advdis';
             else if (hasCounter) activeAddon = 'stepper';
             else if (hasToggle) activeAddon = 'toggle';
-            else if (hasNote) activeAddon = 'note';
 
             document.getElementById('addon-stepper-label').value = hasCounter ? q.addonCounter.label : 'Resource';
             document.getElementById('addon-stepper-max').value = hasCounter ? q.addonCounter.max : '20';
             document.getElementById('addon-stepper-val').value = hasCounter ? q.addonCounter.value : '20';
             document.getElementById('addon-toggle-on').value = hasToggle ? q.addonToggle.labelOn : 'Ready';
             document.getElementById('addon-toggle-off').value = hasToggle ? q.addonToggle.labelOff : 'Miscast';
-            document.getElementById('addon-note-text').value = hasNote ? q.addonNote : '';
+            document.getElementById('addon-note-text').value = q.addonNote || '';
 
             // Set the correct radio and show its config
             const radioEl = document.querySelector(`input[name="addon-widget"][value="${activeAddon}"]`);
@@ -9549,7 +11032,6 @@
             // Hide all addon config panels
             document.getElementById('addon-stepper-config').classList.add('hidden');
             document.getElementById('addon-toggle-config').classList.add('hidden');
-            document.getElementById('addon-note-config').classList.add('hidden');
 
             // Highlight the selected radio label
             document.querySelectorAll('.addon-radio-label').forEach(lbl => {
@@ -9568,8 +11050,6 @@
                 document.getElementById('addon-stepper-config').classList.remove('hidden');
             } else if (type === 'toggle') {
                 document.getElementById('addon-toggle-config').classList.remove('hidden');
-            } else if (type === 'note') {
-                document.getElementById('addon-note-config').classList.remove('hidden');
             }
         }
 
@@ -9633,6 +11113,7 @@
                     q.name = name;
                     q.widgetType = type;
                     q.detailText = detailText;
+                    q.addonNote = document.getElementById('addon-note-text').value.trim() || null;
                     q.bindsVariable = bindsVariable;
                     q.variableRelType = variableRelType;
                     q.passiveModifiers = passiveModifiers;
@@ -9661,16 +11142,14 @@
                         } else {
                             q.addonToggle = null;
                         }
-
-                        if (selectedAddon === 'note') {
-                            q.addonNote = document.getElementById('addon-note-text').value.trim() || null;
-                        } else {
-                            q.addonNote = null;
-                        }
                     } else if (type === 'stepper') {
                         q.min = parseInt(document.getElementById('stepper-min').value) || 0;
-                        q.max = parseInt(document.getElementById('stepper-max').value) || 20;
-                        q.value = Math.max(q.min, Math.min(q.max, parseInt(document.getElementById('stepper-val').value) || 20));
+                        const maxValRaw = document.getElementById('stepper-max').value.trim();
+                        const parsedMaxVal = parseInt(maxValRaw, 10);
+                        q.max = isNaN(parsedMaxVal) ? maxValRaw : parsedMaxVal;
+                        
+                        const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
+                        q.value = Math.max(q.min, Math.min(resolvedMax, parseInt(document.getElementById('stepper-val').value) || 20));
                         q.showTracker = document.getElementById('stepper-tracker').checked;
 
                         if (name.toLowerCase() === 'hit points' || name.toLowerCase() === 'hp') {
@@ -9728,6 +11207,7 @@
                 widgetType: type,
                 queue: [],
                 detailText: detailText,
+                addonNote: document.getElementById('addon-note-text').value.trim() || null,
                 bindsVariable: bindsVariable,
                 variableRelType: variableRelType,
                 passiveModifiers: passiveModifiers,
@@ -9771,12 +11251,6 @@
                     };
                 } else {
                     newWidget.addonToggle = null;
-                }
-
-                if (selectedAddon === 'note') {
-                    newWidget.addonNote = document.getElementById('addon-note-text').value.trim() || null;
-                } else {
-                    newWidget.addonNote = null;
                 }
 
             } else if (type === 'stepper') {
@@ -9834,6 +11308,65 @@
             vibrate(10);
         }
 
+        function showVariableModal(widgetId) {
+            const q = engine.findSavedQueue(widgetId);
+            if (!q || !q.bindsVariable) return;
+
+            const varName = q.bindsVariable;
+            const currentVal = window.getActiveCharacterVariable(varName) ?? 0;
+            const initialVal = q.value ?? 0;
+
+            const isCalculatedOnly = q.variableRelType !== 'define' || (q.unifiedQueue && q.unifiedQueue.length > 0);
+
+            // Construct the modal body
+            let bodyHtml = `
+                <div class="space-y-4 text-left">
+                    <div class="flex justify-between items-center bg-slate-900 border border-white/5 rounded-xl px-4 py-2.5">
+                        <span class="text-xs font-bold text-slate-400">Current Calculated Value</span>
+                        <span class="text-lg font-black text-[#00d4ff] tabular-nums">${currentVal >= 0 ? '+' : ''}${currentVal}</span>
+                    </div>
+            `;
+
+            if (isCalculatedOnly) {
+                bodyHtml += `
+                    <div class="text-xs text-slate-500 text-center leading-normal italic px-2">
+                        This variable is calculated dynamically and cannot be edited directly.
+                    </div>
+                </div>
+                `;
+                
+                showModal({
+                    title: `VARIABLE: ${varName.toUpperCase()}`,
+                    body: bodyHtml,
+                    alertOnly: true
+                });
+            } else {
+                bodyHtml += `
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 block">Base (Initial) Value</label>
+                        <input type="number" id="variable-initial-input" value="${initialVal}" 
+                               class="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-bold text-center outline-none focus:border-[#00d4ff] transition-colors">
+                    </div>
+                </div>
+                `;
+
+                showModal({
+                    title: `VARIABLE: ${varName.toUpperCase()}`,
+                    body: bodyHtml,
+                    confirmText: 'Save Base Value',
+                    cancelText: 'Cancel'
+                }).then(confirmed => {
+                    if (confirmed) {
+                        const inputEl = document.getElementById('variable-initial-input');
+                        if (inputEl) {
+                            const newBaseVal = parseInt(inputEl.value, 10) || 0;
+                            changeNumberValueDirect(widgetId, newBaseVal);
+                        }
+                    }
+                });
+            }
+        }
+
         function changeNumberValueDirect(widgetId, newValue) {
             const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'number') {
@@ -9868,8 +11401,9 @@
             const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'stepper') {
                 const parsed = parseInt(newValue, 10) || 0;
+                const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
                 if (isCurrent) {
-                    q.value = Math.max(q.min ?? 0, Math.min(q.max ?? 100, parsed));
+                    q.value = Math.max(q.min ?? 0, Math.min(resolvedMax, parsed));
                 } else {
                     q.max = parsed;
                     q.value = Math.max(q.min ?? 0, Math.min(q.max, q.value));
@@ -9898,7 +11432,8 @@
         function changeStepperValue(widgetId, delta) {
             const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'stepper') {
-                q.value = Math.max(q.min ?? 0, Math.min(q.max ?? 100, q.value + delta));
+                const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
+                q.value = Math.max(q.min ?? 0, Math.min(resolvedMax, q.value + delta));
                 if (q.name.toLowerCase() === 'hit points' || q.name.toLowerCase() === 'hp') {
                     const char = characters.find(c => c.id === activeCharacterId);
                     if (char) {
@@ -10783,12 +12318,12 @@
                     ${animHtml}
                     <div class="timer-inner-container ${isFinished ? 'timer-rundown' : ''} flex flex-col h-full">
                         <!-- Accent side bar -->
-                        <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)] z-10" style="background-color: var(--widget-accent-color)"></div>
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_var(--widget-accent-color)] z-10" style="background-color: var(--widget-accent-color)"></div>
                         
                         <!-- Content area: single row with name left, timer text right -->
                         <div class="flex-1 min-h-0 flex items-center justify-between pr-3 z-10 relative">
                             <div class="flex items-center min-w-0 flex-shrink pr-2">
-                                <div class="flex items-center justify-center w-5 h-5 ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-2">
+                                <div class="flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                                 </div>
                                 <span class="text-[13px] font-black text-slate-400 truncate uppercase tracking-tight">${q.name || 'Timer'}</span>
@@ -10800,7 +12335,7 @@
                         </div>
                         
                         <!-- Track: in-flow flex child sits cleanly at the bottom with no overlap -->
-                        <div class="timer-bar-container relative h-3 shrink-0 cursor-ew-resize select-none z-20 touch-none flex items-center pl-11 pr-3" style="touch-action: none;">
+                        <div class="timer-bar-container relative h-3 shrink-0 cursor-ew-resize select-none z-20 touch-none flex items-center pl-7 pr-3" style="touch-action: none;">
                             <span class="text-[8px] font-black tracking-tight leading-none text-slate-500 mr-1.5 shrink-0 select-none">0</span>
                             <div class="timer-bar-track relative flex-grow h-[2px] bg-[#020617]/60 rounded-full">
                                 <!-- Endpoint indicators -->
@@ -10819,10 +12354,10 @@
                     ${animHtml}
                     <div class="timer-inner-container ${isFinished ? 'timer-rundown' : ''} flex flex-col h-full justify-between">
                         <!-- Accent side bar -->
-                        <div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
                         
                         <!-- Row 1: Title (left) | Detail text + Play (right) -->
-                        <div class="flex items-center justify-between w-full pl-8 pr-3 pt-2 z-10 relative">
+                        <div class="flex items-center justify-between w-full pl-4 pr-3 pt-2 z-10 relative">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
                             <div class="flex items-center gap-2.5 shrink-0 select-none">
                                 ${q.detailText ? `<span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">${q.detailText}</span>` : ''}
@@ -10833,7 +12368,7 @@
                         </div>
                         
                         <!-- Row 2: -1M (left) | Time display (center) | +1M (right) -->
-                        <div class="flex items-center justify-between w-full pl-8 pr-3 select-none relative min-h-[2.25rem] z-10">
+                        <div class="flex items-center justify-between w-full pl-4 pr-3 select-none relative min-h-[2.25rem] z-10">
                             <!-- Left: -1M Button -->
                             <button onclick="adjustTimerMinutes('${q.id}', -1, event)" class="timer-step-btn w-10 py-1" title="Subtract 1 minute">
                                 −1m
@@ -10856,7 +12391,7 @@
                         </div>
 
                         <!-- Progress bar (In-flow flex item!) -->
-                        <div class="timer-bar-container relative h-6 shrink-0 cursor-ew-resize select-none z-20 touch-none flex items-center pl-8 pr-3 pb-2" style="touch-action: none;">
+                        <div class="timer-bar-container relative h-6 shrink-0 cursor-ew-resize select-none z-20 touch-none flex items-center pl-4 pr-3 pb-2" style="touch-action: none;">
                             <span class="text-[9px] font-black text-slate-500 mr-2.5 shrink-0 select-none">0</span>
                             <div class="timer-bar-track relative flex-grow h-1 bg-[#020617]/60 rounded-full">
                                 <!-- Endpoint indicators -->
@@ -11711,10 +13246,10 @@
                 const hideLeftTab = type === 'stepper' && q.showTracker;
                 let innerHtml = `
                     ${(hasColor && !hideLeftTab)
-                        ? `<div class="absolute left-0 top-0 bottom-0 w-3 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
-                        : (!hideLeftTab ? `<div class="absolute left-0 top-0 bottom-0 w-1 bg-white/5"></div>` : '')
+                        ? `<div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
+                        : (!hideLeftTab ? `<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-white/5"></div>` : '')
                     }
-                    <div class="flex items-center justify-center w-5 h-full ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
+                    <div class="flex items-center justify-center w-4 h-full ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                     </div>
                 `;
@@ -11725,7 +13260,7 @@
                         const res = engine.calculateRoll(q.unifiedQueue || q.queue, true);
                         if (res) resolvedVal = parseInt(res.total) || 0;
                         innerHtml += `
-                            <div class="flex-grow min-w-0 pl-2 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
+                            <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
                                 <div class="flex items-center gap-1.5">
                                     <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                                 </div>
@@ -11741,7 +13276,7 @@
                         `;
                     } else {
                         innerHtml += `
-                            <div class="flex-grow min-w-0 pl-2 pr-8">
+                            <div class="flex-grow min-w-0 pl-1 pr-8">
                                 <div class="flex items-center gap-1.5">
                                     <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                                 </div>
@@ -11755,22 +13290,21 @@
                     if (q.addonToggle) {
                         const t = q.addonToggle;
                         innerHtml += `
-                            <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
-                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
-                                    ${t.checked ? t.labelOn : t.labelOff}
-                                </span>
-                            </div>
-                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                            <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
                                  onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
                                  style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                                <svg class="w-3.5 h-3.5 transition-colors duration-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="color: ${t.checked ? '#090d16' : '#64748b'}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 3v9" />
+                                </svg>
                             </div>
                         `;
                     }
                 } else if (type === 'stepper') {
+                    const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
                     let trackerHtml = '';
                     if (q.showTracker) {
                         const trackerColor = hasColor ? q.color : '#ffffff';
-                        const pct = q.max > 0 ? Math.min(100, Math.max(0, ((q.value - (q.min || 0)) / (q.max - (q.min || 0))) * 100)) : 0;
+                        const pct = resolvedMax > 0 ? Math.min(100, Math.max(0, ((q.value - (q.min || 0)) / (resolvedMax - (q.min || 0))) * 100)) : 0;
                         trackerHtml = `
                             <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#020617]/60 overflow-hidden">
                                 <div class="h-full transition-all duration-300" style="width: ${pct}%; background-color: ${trackerColor}; box-shadow: 0 0 10px ${trackerColor};"></div>
@@ -11778,16 +13312,18 @@
                         `;
                     }
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 pr-2">
+                        <div class="flex-grow min-w-0 pl-1 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${q.name}</div>
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             ${trackerHtml}
                         </div>
                     `;
                 } else if (type === 'toggle') {
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 pr-8">
+                        <div class="flex-grow min-w-0 pl-1 pr-8">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
@@ -11802,6 +13338,8 @@
                 } else if (type === 'number') {
                     let displayVal = q.value;
                     let isCalculated = false;
+                    let hasVariable = false;
+
                     if (q.unifiedQueue && Array.isArray(q.unifiedQueue) && q.unifiedQueue.length > 0) {
                         isCalculated = true;
                         const res = engine.calculateRoll(q.unifiedQueue, true);
@@ -11812,53 +13350,67 @@
                             }
                         }
                     } else if (q.bindsVariable) {
+                        hasVariable = true;
+                        const resolved = window.getActiveCharacterVariable(q.bindsVariable);
+                        if (resolved !== null) {
+                            displayVal = resolved;
+                        }
                         const calculatedVars = ['STR_MOD', 'DEX_MOD', 'CON_MOD', 'INT_MOD', 'WIS_MOD', 'CHA_MOD', 'BACKSTAB_DICE'];
                         const upperBindVar = q.bindsVariable.toUpperCase();
                         if (calculatedVars.includes(upperBindVar)) {
                             isCalculated = true;
-                            const resolved = window.getActiveCharacterVariable(upperBindVar);
-                            if (resolved !== null) {
-                                displayVal = resolved;
-                                if (q.value !== resolved) {
-                                    q.value = resolved;
-                                }
-                            }
                         }
                     }
+
                     const isInputDisabled = isCalculated || (q.addonToggle && !q.addonToggle.checked);
+                    
+                    let inputHtml = '';
+                    if (hasVariable) {
+                        inputHtml = `
+                            <input type="text" value="${displayVal >= 0 ? '+' : ''}${displayVal}" readonly 
+                                   onclick="event.stopPropagation(); showVariableModal('${q.id}')" 
+                                   class="w-16 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg cursor-pointer hover:border-[#00d4ff]/40">
+                        `;
+                    } else {
+                        inputHtml = `
+                            <input type="number" value="${displayVal}" ${isInputDisabled ? 'readonly disabled' : ''} 
+                                   onchange="changeNumberValueDirect('${q.id}', this.value)" 
+                                   class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isInputDisabled ? 'opacity-70 pointer-events-none' : ''}">
+                        `;
+                    }
+
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
+                        <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
                             ${formula ? `<div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula}</div>` : ''}
                             ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2 ${q.addonToggle ? 'mr-8' : 'mr-2'} shrink-0 select-none" onclick="event.stopPropagation()">
-                            <input type="number" value="${displayVal}" ${isInputDisabled ? 'readonly disabled' : ''} onchange="changeNumberValueDirect('${q.id}', this.value)" class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isInputDisabled ? 'opacity-70 pointer-events-none' : ''}">
+                            ${inputHtml}
                         </div>
                     `;
                     if (q.addonToggle) {
                         const t = q.addonToggle;
                         innerHtml += `
-                            <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
-                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
-                                    ${t.checked ? t.labelOn : t.labelOff}
-                                </span>
-                            </div>
-                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                            <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
                                  onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
                                  style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                                <svg class="w-3.5 h-3.5 transition-colors duration-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="color: ${t.checked ? '#090d16' : '#64748b'}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 3v9" />
+                                </svg>
                             </div>
                         `;
                     }
                 } else if (type === 'text') {
-                    const isCollapsed = q.collapsed ?? false;
+                    const isCollapsed = (globalLayout === 'force-normal') ? false : (q.collapsed ?? false);
                     innerHtml += `
-                        <div class="flex-grow min-w-0 pl-2">
+                        <div class="flex-grow min-w-0 pl-1">
                             <div class="flex items-center gap-1.5 justify-between">
                                 <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || ''}</div>
                                 <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
                             </div>
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             ${q.text ? `<div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed ? 'hidden' : ''}">${q.text}</div>` : ''}
                         </div>
@@ -11924,12 +13476,13 @@
                     wrapper.appendChild(valDisp);
                     wrapper.appendChild(incBtn);
                 } else if (type === 'stepper') {
+                    const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
                     const stepperControls = document.createElement('div');
-                    stepperControls.className = 'shrink-0 flex items-stretch gap-1 select-none self-stretch';
+                    stepperControls.className = 'shrink-0 flex items-stretch border border-white/5 bg-[#020617]/40 rounded-xl select-none self-stretch overflow-hidden';
                     stepperControls.onclick = (e) => e.stopPropagation();
 
                     const decBtn = document.createElement('button');
-                    decBtn.className = 'w-10 flex items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-[#00d4ff] hover:text-white text-xl font-black focus:outline-none';
+                    decBtn.className = 'w-8 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white text-lg font-black focus:outline-none';
                     decBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, -1);
@@ -11937,15 +13490,17 @@
                     decBtn.innerHTML = `−`;
 
                     const valDisp = document.createElement('div');
-                    valDisp.className = 'flex items-center justify-center rounded-xl border border-white/5 bg-[#020617]/40 px-2 gap-0.5 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)]';
+                    valDisp.className = 'flex items-center justify-center border-l border-r border-white/5 px-1.5 gap-0 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)]';
+                    const maxDisabled = typeof q.max === 'string' ? 'readonly disabled' : '';
+                    const maxOpacity = typeof q.max === 'string' ? 'opacity-70 pointer-events-none' : '';
                     valDisp.innerHTML = `
-                        <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-8 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                        <span class="text-slate-500 font-black text-lg leading-none">/</span>
-                        <input type="number" value="${q.max}" onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-8 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                        <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-6 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                        <span class="text-slate-600 font-bold text-xs mx-0.5 opacity-60 leading-none">|</span>
+                        <input type="number" value="${resolvedMax}" ${maxDisabled} onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-6 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxOpacity}">
                     `;
 
                     const incBtn = document.createElement('button');
-                    incBtn.className = 'w-10 flex items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-[#00d4ff] hover:text-white text-xl font-black focus:outline-none';
+                    incBtn.className = 'w-8 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white text-lg font-black focus:outline-none';
                     incBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, 1);
