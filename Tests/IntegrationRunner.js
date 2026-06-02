@@ -614,7 +614,7 @@ window.addEventListener('load', () => {
                 // Verify Mighty description suffix formatting
                 const mightyW = rimasWidgets.find(w => w.name === 'MIGHTY');
                 if (!mightyW) throw new Error('MIGHTY feature should exist');
-                if (!mightyW.detailText.includes('You gain +1 to melee attack and damage rolls. (Half-Orc Ancestry Trait)')) {
+                if (!mightyW.text.includes('You gain +1 to melee attack and damage rolls. (Half-Orc Ancestry Trait)')) {
                     throw new Error('Mighty description should place ancestry trait suffix after description');
                 }
 
@@ -700,9 +700,40 @@ window.addEventListener('load', () => {
                 const hasSpellcheck = spellCastW.unifiedQueue.some(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'Spellcheck');
                 if (!hasIntMod || !hasSpellcheck) throw new Error('Spell casting widget should reference INT_mod and Spellcheck variables');
 
+                // Verify spell advantage checks, tier notes mapping, and sorting:
+                const spellsGroup = groups.find(g => g.characterId === horlaboChar.id && g.name.toLowerCase() === 'spells');
+                const spellWidgets = horlaboWidgets.filter(w => w.id.startsWith('w_spell_custom_'));
+                const spellNames = spellWidgets.map(w => w.name);
+                const expectedNames = [
+                    "BURNING HANDS", "DETECT MAGIC", "HOLD PORTAL", "MAGIC MISSILE",
+                    "HOLD PERSON", "INVISIBILITY", "MIRROR IMAGE", "MISTY STEP",
+                    "FIREBALL", "GASEOUS FORM", "ILLUSION", "SENDING",
+                    "CONTROL WATER", "DIVINATION",
+                    "SCRYING", "SUMMON EXTRAPLANAR"
+                ];
+                for (let i = 0; i < expectedNames.length; i++) {
+                    if (spellNames[i] !== expectedNames[i]) {
+                        throw new Error('Spell sorting order mismatch at index ' + i + ': expected ' + expectedNames[i] + ', got ' + spellNames[i]);
+                    }
+                }
+
+                const detectMagicW = spellWidgets.find(w => w.name === 'DETECT MAGIC');
+                if (detectMagicW.includeAdvDis !== true) throw new Error('DETECT MAGIC should have Advantage/Disadvantage enabled');
+                if (detectMagicW.addonNote !== 'T1 DC Wizard Spellcasting') throw new Error('DETECT MAGIC addonNote is incorrect: ' + detectMagicW.addonNote);
+
+                const magicMissileW = spellWidgets.find(w => w.name === 'MAGIC MISSILE');
+                if (magicMissileW.includeAdvDis !== false) throw new Error('MAGIC MISSILE should NOT have Advantage/Disadvantage enabled');
+                if (magicMissileW.addonNote !== 'T1 DC Wizard Spellcasting') throw new Error('MAGIC MISSILE addonNote is incorrect: ' + magicMissileW.addonNote);
+
+                const fireballW = spellWidgets.find(w => w.name === 'FIREBALL');
+                if (fireballW.addonNote !== 'T3 DC Wizard Spellcasting') throw new Error('FIREBALL addonNote is incorrect: ' + fireballW.addonNote);
+
                 // Verify gear mapping (seq slots and no extra slots)
                 const hSlot1 = horlaboWidgets.find(w => w.id.startsWith('w_gear_1_'));
                 if (!hSlot1 || hSlot1.name !== 'Dagger (obsidian)') throw new Error('Horlabo gear slot 1 should be Dagger (obsidian)');
+                if (hSlot1.detailText !== '1. - Quantity: 1 | Slots: 1 | Cost: 3 gp') {
+                    throw new Error('Horlabo gear slot 1 detailText is incorrect: ' + hSlot1.detailText);
+                }
 
                 const hSlot2 = horlaboWidgets.find(w => w.id.startsWith('w_gear_2_'));
                 if (!hSlot2 || hSlot2.name !== 'Backpack') throw new Error('Horlabo gear slot 2 should be Backpack');
@@ -711,12 +742,35 @@ window.addEventListener('load', () => {
                 if (!hSlot5 || hSlot5.name !== 'Crowbar') throw new Error('Horlabo gear slot 5 should be Crowbar');
 
                 const hSlot6 = horlaboWidgets.find(w => w.id.startsWith('w_gear_6_'));
-                if (!hSlot6 || hSlot6.name !== '') throw new Error('Horlabo gear slot 6 should be empty');
+                if (!hSlot6 || hSlot6.name !== 'Blade of Vengeance') throw new Error('Horlabo gear slot 6 should be Blade of Vengeance, got: ' + (hSlot6 ? hSlot6.name : 'null'));
+                if (!hSlot6.detailText.includes('Quantity: 1 | Slots: 1')) throw new Error('Horlabo gear slot 6 detailText is incorrect: ' + hSlot6.detailText);
+                if (!hSlot6.text.includes('Benefits: You have advantage on attacks against undead creatures')) throw new Error('Horlabo gear slot 6 text is incorrect: ' + hSlot6.text);
 
-                // Verify parsed ambition talent
-                const ambitionTalentW = horlaboWidgets.find(w => w.name.includes('SPELL MASTERY'));
+                const hSlot7 = horlaboWidgets.find(w => w.id.startsWith('w_gear_7_'));
+                if (!hSlot7 || hSlot7.name !== 'Egg of the Cockatrice') throw new Error('Horlabo gear slot 7 should be Egg of the Cockatrice, got: ' + (hSlot7 ? hSlot7.name : 'null'));
+
+                const hSlot8 = horlaboWidgets.find(w => w.id.startsWith('w_gear_8_'));
+                if (!hSlot8 || hSlot8.name !== 'Tome Mordanticus') throw new Error('Horlabo gear slot 8 should be Tome Mordanticus, got: ' + (hSlot8 ? hSlot8.name : 'null'));
+
+                const hSlot9 = horlaboWidgets.find(w => w.id.startsWith('w_gear_9_'));
+                if (!hSlot9 || hSlot9.name !== '') throw new Error('Horlabo gear slot 9 should be empty');
+
+                // Verify parsed ambition talent and other merged class talents
+                const ambitionTalentW = horlaboWidgets.find(w => w.name === 'HUMAN AMBITION-1: SPELL MASTERY (DETECT MAGIC)');
                 if (!ambitionTalentW) throw new Error('Human ambition talent SPELL MASTERY should be parsed and created');
                 if (!ambitionTalentW.text || !ambitionTalentW.text.includes('advantage on casting one spell')) throw new Error('Human ambition talent description is incorrect');
+
+                const statBonusTalentW = horlaboWidgets.find(w => w.name === 'WIZARD-1: STAT BONUS (+2 INT)');
+                if (!statBonusTalentW) throw new Error('Wizard level 1 STAT BONUS (+2 INT) widget should be created');
+
+                const statBonusTalentW5 = horlaboWidgets.find(w => w.name === 'WIZARD-5: STAT BONUS (+2 INT)');
+                if (!statBonusTalentW5) throw new Error('Wizard level 5 STAT BONUS (+2 INT) widget should be created');
+
+                const castingTalentW7 = horlaboWidgets.find(w => w.name === 'WIZARD-7: SPELLCASTING (+1 CASTING)');
+                if (!castingTalentW7) throw new Error('Wizard level 7 SPELLCASTING (+1 CASTING) widget should be created');
+
+                const castingTalentW9 = horlaboWidgets.find(w => w.name === 'WIZARD-9: SPELLCASTING (+1 CASTING)');
+                if (!castingTalentW9) throw new Error('Wizard level 9 SPELLCASTING (+1 CASTING) widget should be created');
 
                 // Verify Title detail widget
                 const horlaboTitleW = horlaboWidgets.find(w => w.detailText === 'Title');
@@ -725,6 +779,93 @@ window.addEventListener('load', () => {
                 // Verify metadata details widget in passives is NOT created (since it is tossed)
                 const detailsW = horlaboWidgets.find(w => w.name === 'CHARACTER DETAILS');
                 if (detailsW) throw new Error('CHARACTER DETAILS widget should NOT be created');
+
+                // Test 14: Import mock character sheet for refactored features (versatile, Weapon Mastery, Armor Master)
+                console.log('Testing third-party character sheet importer refactored features...');
+                const mockData = JSON.parse(window.rimasJsonStr);
+                mockData.name = "Testy Refactor";
+                mockData.level = 2;
+                mockData.stats = { STR: 14, DEX: 12, CON: 16, INT: 10, WIS: 9, CHA: 8 };
+                mockData.gear = [
+                    { name: "Bastard Sword", type: "weapon", quantity: 1 },
+                    { name: "Mithril chainmail", type: "armor", quantity: 1 }
+                ];
+                mockData.attacks = [
+                    "BASTARD SWORD: +5, 1d8+3/1d10+3"
+                ];
+                mockData.bonuses = [
+                    {
+                        name: "WeaponMastery",
+                        bonusName: "WeaponMastery",
+                        bonusTo: "Bastard Sword",
+                        bonusAmount: 1,
+                        gainedAtLevel: 1,
+                        sourceCategory: "Talent"
+                    },
+                    {
+                        name: "ArmorMaster",
+                        bonusName: "ArmorMaster",
+                        bonusTo: "Mithril chainmail",
+                        bonusAmount: 1,
+                        gainedAtLevel: 1,
+                        sourceCategory: "Talent"
+                    }
+                ];
+
+                window.FileReader = class {
+                    constructor() { this.onload = null; }
+                    readAsText(file) {
+                        const event = { target: { result: JSON.stringify(mockData) } };
+                        setTimeout(() => { if (this.onload) this.onload(event); }, 0);
+                    }
+                };
+
+                const mockTestyEvent = {
+                    target: {
+                        files: [{ name: 'Testy.json' }],
+                        value: 'Testy.json'
+                    }
+                };
+
+                importSettings(mockTestyEvent);
+                await new Promise(r => setTimeout(r, 100));
+
+                const testyChar = characters.find(c => c.name === 'Testy Refactor');
+                if (!testyChar) throw new Error('Testy Refactor character should be imported');
+
+                const testyWidgets = engine.savedQueues.filter(w => w.characterId === testyChar.id);
+
+                // 1. Verify versatile weapon creation (one attack, two damage widgets)
+                const bastardAtkW = testyWidgets.find(w => w.name === 'Bastard Sword Attack');
+                if (!bastardAtkW) throw new Error('Bastard Sword Attack widget should be created');
+
+                const bastardDmg1 = testyWidgets.find(w => w.name === 'Bastard Sword Damage (1-Hand)');
+                const bastardDmg2 = testyWidgets.find(w => w.name === 'Bastard Sword Damage (2-Hand)');
+                if (!bastardDmg1) throw new Error('Bastard Sword Damage (1-Hand) widget should be created');
+                if (!bastardDmg2) throw new Error('Bastard Sword Damage (2-Hand) widget should be created');
+
+                // 2. Verify Weapon Mastery (scaling levels variable node in attack/damage, base magic bonus isolated)
+                const masteryNode = bastardAtkW.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'variable' && n.value === 'LVL');
+                if (!masteryNode) throw new Error('Bastard Sword Attack should have level-scaling Weapon Mastery queue node');
+                if (masteryNode.divisorValue !== 2 || masteryNode.divisorType !== 'literal') {
+                    throw new Error('Weapon Mastery level-scaling node has incorrect divisor configuration');
+                }
+
+                // Verify base magical bonus is +1 in attack queue
+                const magicAtkNode = bastardAtkW.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'literal' && n.value === 1 && n.operator === '+');
+                if (!magicAtkNode) throw new Error('Bastard Sword Attack should isolate and add base magical bonus +1');
+
+                // Verify damage queues: 1d8 / 1d10 + Damage_Melee + (Weapon Mastery level-scaling) + magicDmgBonus (+1)
+                const d1Node = bastardDmg1.unifiedQueue.find(n => n.nodeType === 'node');
+                if (d1Node.sides !== 8 || d1Node.count !== 1) throw new Error('Bastard Sword Damage (1-Hand) should roll 1d8');
+                const magicDmgNode = bastardDmg1.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'literal' && n.value === 1 && n.operator === '+');
+                if (!magicDmgNode) throw new Error('Bastard Sword Damage (1-Hand) should isolate and add base magical damage bonus +1');
+
+                // 3. Verify Armor Master AC modifier application
+                const mithrilW = testyWidgets.find(w => w.name === 'Mithril chainmail' && w.widgetType === 'number');
+                if (!mithrilW) throw new Error('Mithril chainmail widget should be created');
+                const armorMasterAcNode = mithrilW.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'literal' && n.value === 1 && n.operator === '+');
+                if (!armorMasterAcNode) throw new Error('Mithril chainmail should have Armor Master modifier +1 in AC queue');
             })()
 
         `).then(() => {

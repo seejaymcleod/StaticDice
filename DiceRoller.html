@@ -7563,15 +7563,11 @@
                     name: 'Shadowdarklings (Shadowdark)',
                     detect(data) {
                         return data && typeof data === 'object' && 
-                               data.stats && typeof data.stats === 'object' &&
-                               typeof data.stats.STR === 'number' && 
-                               typeof data.stats.DEX === 'number' && 
+                               (data.stats || data.rolledStats) &&
                                data.ancestry !== undefined && 
-                               data.class !== undefined && 
-                               Array.isArray(data.gear) && 
-                               Array.isArray(data.attacks);
+                               data.class !== undefined;
                     },
-                    import(data) {
+                    import: function(data) {
                         // 1. Get the template
                         const tpl = templates.find(t => t.id === 'template_sd_character');
                         
@@ -7625,6 +7621,69 @@
                             }
                         }
 
+                        // Embed Compendiums
+                        const WEAPON_COMPENDIUM = {
+                            "bastard sword": { name: "Bastard Sword", properties: ["Versatile"], range: "Close", type: "Melee", damage: { oneHanded: "1d8", twoHanded: "1d10" } },
+                            "greataxe": { name: "Greataxe", properties: ["Versatile"], range: "Close", type: "Melee", damage: { oneHanded: "1d8", twoHanded: "1d10" } },
+                            "staff": { name: "Staff", properties: ["Versatile"], range: "Close", type: "Melee", damage: { twoHanded: "1d4" } },
+                            "javelin": { name: "Javelin", properties: ["Thrown"], range: "Close/Far", type: "MeleeRanged", damage: { oneHanded: "1d4" } },
+                            "dagger": { name: "Dagger", properties: ["Finesse", "Thrown"], range: "Close/Near", type: "MeleeRanged", damage: { oneHanded: "1d4" } },
+                            "dagger (obsidian)": { name: "Dagger (obsidian)", properties: ["Finesse", "Thrown"], range: "Close/Near", type: "MeleeRanged", damage: { oneHanded: "1d4" } },
+                            "longbow": { name: "Longbow", properties: [], range: "Far", type: "Ranged", damage: { twoHanded: "1d8" } },
+                            "shortbow": { name: "Shortbow", properties: [], range: "Far", type: "Ranged", damage: { twoHanded: "1d4" } },
+                            "club": { name: "Club", properties: [], range: "Close", type: "Melee", damage: { oneHanded: "1d4" } },
+                            "greatsword": { name: "Greatsword", properties: [], range: "Close", type: "Melee", damage: { twoHanded: "1d12" } },
+                            "longsword": { name: "Longsword", properties: [], range: "Close", type: "Melee", damage: { oneHanded: "1d8" } },
+                            "shortsword": { name: "Shortsword", properties: [], range: "Close", type: "Melee", damage: { oneHanded: "1d6" } },
+                            "spear": { name: "Spear", properties: ["Thrown"], range: "Close/Near", type: "MeleeRanged", damage: { oneHanded: "1d6" } },
+                            "crossbow": { name: "Crossbow", properties: ["Loading"], range: "Far", type: "Ranged", damage: { twoHanded: "1d6" } },
+                            "mace": { name: "Mace", properties: [], range: "Close", type: "Melee", damage: { oneHanded: "1d6" } },
+                            "warhammer": { name: "Warhammer", properties: [], range: "Close", type: "Melee", damage: { twoHanded: "1d10" } },
+                            "whip": { name: "Whip", properties: ["Finesse"], range: "Near", type: "Melee", damage: { oneHanded: "1d4" } }
+                        };
+
+                        const ARMOR_COMPENDIUM = {
+                            "leather armor": { base: 11, addDex: true },
+                            "leather": { base: 11, addDex: true },
+                            "chainmail": { base: 13, addDex: true },
+                            "plate mail": { base: 15, addDex: false },
+                            "plate": { base: 15, addDex: false },
+                            "brigandine": { base: 12, addDex: true },
+                            "hide": { base: 12, addDex: true },
+                            "hide armor": { base: 12, addDex: true },
+                            "studded": { base: 12, addDex: true },
+                            "studded leather": { base: 12, addDex: true },
+                            "mithril plate": { base: 15, addDex: false },
+                            "mithril plate mail": { base: 15, addDex: false },
+                            "mithril chainmail": { base: 13, addDex: true }
+                        };
+
+                        function findWeaponInfo(wpName) {
+                            const nameLower = (wpName || '').toLowerCase().trim();
+                            if (WEAPON_COMPENDIUM[nameLower]) {
+                                return WEAPON_COMPENDIUM[nameLower];
+                            }
+                            for (const [key, info] of Object.entries(WEAPON_COMPENDIUM)) {
+                                if (nameLower.includes(key)) {
+                                    return info;
+                                }
+                            }
+                            return null;
+                        }
+
+                        function findArmorInfo(armName) {
+                            const nameLower = (armName || '').toLowerCase().trim();
+                            if (ARMOR_COMPENDIUM[nameLower]) {
+                                return ARMOR_COMPENDIUM[nameLower];
+                            }
+                            for (const [key, info] of Object.entries(ARMOR_COMPENDIUM)) {
+                                if (nameLower.includes(key)) {
+                                    return info;
+                                }
+                            }
+                            return null;
+                        }
+
                         // Build a map of features (ancestry, bonuses, level talents)
                         const featuresMap = new Map();
 
@@ -7660,7 +7719,7 @@
                         }
 
                         function parseStatBonusModifiers(desc) {
-                            if (!desc) return [];
+                            return []; // Core stats are initialized to final values; no need to double-apply stat modifiers from talents
                             const descLower = desc.toLowerCase();
                             const mods = [];
                             const stats = {
@@ -7691,6 +7750,17 @@
                                 namePart = prefixMatch[2];
                             }
                             
+                            // Extract parenthesized choice suffix if uppercase/choice-like
+                            let choiceSuffix = "";
+                            const choiceMatch = namePart.match(/\s*\(([^)]+)\)$/);
+                            if (choiceMatch) {
+                                const inside = choiceMatch[1];
+                                if (inside === inside.toUpperCase() || inside.startsWith('+') || inside.startsWith('-')) {
+                                    choiceSuffix = ` (${inside})`;
+                                    namePart = namePart.substring(0, choiceMatch.index);
+                                }
+                            }
+                            
                             let cleaned = namePart.replace(/\bpassive\b/gi, '');
                             cleaned = cleaned.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
                             cleaned = cleaned.replace(/_/g, ' ');
@@ -7709,10 +7779,11 @@
                                 return 'WALK IT OFF';
                             }
                             
+                            let finalResult = mapped;
                             if (prefixMatch) {
-                                return (prefix + mapped).trim().toUpperCase();
+                                finalResult = (prefix + mapped).trim();
                             }
-                            return mapped;
+                            return (finalResult + choiceSuffix).toUpperCase();
                         }
 
                         function addOrUpdateFeature(name, level, desc, mods, category) {
@@ -7842,7 +7913,59 @@
                             );
                         }
 
-                        // Talent / Abilities detection from data.bonuses
+                        // Parse bonuses
+                        const weaponMasteryList = [];
+                        const armorMasterList = [];
+                        let plus1ToHitMelee = 0;
+                        let plus1ToHitRanged = 0;
+                        let plus1ToDmgMelee = 0;
+                        let plus1ToDmgRanged = 0;
+                        let spellcheckBonus = 0;
+                        let backstabDiceBonus = 0;
+                        let advInitiative = false;
+                        const weaponDamageD12List = [];
+
+                        if (data.bonuses) {
+                            data.bonuses.forEach(b => {
+                                const bName = (b.name || '').toLowerCase();
+                                const bBonusName = (b.bonusName || '').toLowerCase();
+                                const bBonusTo = (b.bonusTo || '').toLowerCase();
+                                const bDesc = (b.desc || b.talentRolledDesc || '').toLowerCase();
+                                const amount = parseInt(b.bonusAmount) || 1;
+
+                                if (bName === 'weaponmastery' || bBonusName === 'weaponmastery') {
+                                    weaponMasteryList.push({ weapon: bBonusTo.trim().toLowerCase(), amount: amount });
+                                } else if (bName === 'armormaster' || bBonusName === 'armormaster') {
+                                    armorMasterList.push({ armor: bBonusTo.trim().toLowerCase(), amount: amount });
+                                } else if (bName === 'backstabincrease' || bBonusName === 'backstabincrease') {
+                                    backstabDiceBonus += amount;
+                                } else if (bName === 'plus1tohit' || bBonusName === 'plus1tohit') {
+                                    plus1ToHitMelee += amount;
+                                    plus1ToHitRanged += amount;
+                                } else if (bName === 'plus1tohitanddamage' || bBonusName === 'plus1tohitanddamage') {
+                                    if (bBonusTo.includes('ranged')) {
+                                        plus1ToHitRanged += amount;
+                                        plus1ToDmgRanged += amount;
+                                    } else {
+                                        plus1ToHitMelee += amount;
+                                        plus1ToDmgMelee += amount;
+                                    }
+                                } else if (bBonusName === 'plus1tocastingspells' || bName === 'plus1tocastingspells' || 
+                                           (bName === 'plustwointorplusonewizcasting' && bBonusTo === 'wizard') ||
+                                           (bName === 'plustwointorplusonewizcasting' && bBonusName === 'plus1tocastingspells')) {
+                                    spellcheckBonus += amount;
+                                } else if (bName === 'advoninitiative' || bBonusName === 'advoninitiative') {
+                                    advInitiative = true;
+                                } else if (bName === 'setweapontypedamage' || bBonusName === 'setweapontypedamage') {
+                                    const wpName = bBonusTo.split(':')[0].trim().toLowerCase();
+                                    weaponDamageD12List.push(wpName);
+                                }
+                            });
+                        }
+
+                        // Talent / Abilities detection from data.bonuses & levels
+                        const rawTalents = [];
+
                         if (data.bonuses) {
                             data.bonuses.forEach(b => {
                                 if (b.sourceCategory === 'Talent' || b.sourceCategory === 'Ability' || b.sourceCategory === 'Item' || b.sourceType === 'Item') {
@@ -7855,150 +7978,228 @@
                                     const descLower = (b.talentRolledDesc || b.desc || '').toLowerCase();
                                     const amount = parseInt(b.bonusAmount) || 1;
 
-                                    // Parse stat bonus modifiers (like +2 to Intelligence)
-                                    const statMods = parseStatBonusModifiers(descLower);
-                                    if (statMods.length > 0) mods.push(...statMods);
+                                    const isWeaponMastery = b.name === 'WeaponMastery' || b.bonusName === 'WeaponMastery';
+                                    const isArmorMaster = b.name === 'ArmorMaster' || b.bonusName === 'ArmorMaster';
 
-                                    // Also parse from b.bonusTo if it defines a stat bonus (e.g. "INT:+2")
-                                    if (b.bonusTo && /^([A-Z]{3}):\+?(-?\d+)/i.test(b.bonusTo)) {
-                                        const match = b.bonusTo.match(/^([A-Z]{3}):\+?(-?\d+)/i);
-                                        const varName = match[1].toUpperCase();
-                                        const val = parseInt(match[2]) || 0;
-                                        if (!mods.some(m => m.variable === varName)) {
-                                            mods.push({ variable: varName, value: val });
+                                    if (!isWeaponMastery && !isArmorMaster) {
+                                        // Parse stat bonus modifiers (like +2 to Intelligence)
+                                        const statMods = parseStatBonusModifiers(descLower);
+                                        if (statMods.length > 0) mods.push(...statMods);
+
+                                        // Also parse from b.bonusTo if it defines a stat bonus (e.g. "INT:+2")
+                                        if (b.bonusTo && /^([A-Z]{3}):\+?(-?\d+)/i.test(b.bonusTo)) {
+                                            const match = b.bonusTo.match(/^([A-Z]{3}):\+?(-?\d+)/i);
+                                            const varName = match[1].toUpperCase();
+                                            const val = parseInt(match[2]) || 0;
+                                            const coreStats = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+                                            if (!coreStats.includes(varName) && !mods.some(m => m.variable === varName)) {
+                                                mods.push({ variable: varName, value: val });
+                                            }
                                         }
-                                    }
 
-                                    if (bNameLower.includes('plus1tocastingspells') || 
-                                        bToLower.includes('spellcasting') || 
-                                        bToLower.includes('spell casting') || 
-                                        (descLower.includes('spellcasting check') && !descLower.includes(' or ')) || 
-                                        (descLower.includes('spell casting check') && !descLower.includes(' or ')) || 
-                                        descLower.includes('spell casting rolls') ||
-                                        descLower.includes('spellcasting rolls') ||
-                                        (bNameLower.includes('plustwointorplusonewizcasting') && (descLower.includes('casting') || descLower.includes('spellcasting') || descLower.includes('spell casting')) && !descLower.includes(' or '))) {
-                                        mods.push({ variable: 'Spellcheck', value: amount });
-                                    }
-                                    if ((descLower.includes('+1 to melee attack') || descLower.includes('+1 melee attack')) && !descLower.includes(' or ')) {
-                                        mods.push({ variable: 'Attack_Melee', value: amount });
-                                    }
-                                    if ((descLower.includes('+1 to melee damage') || descLower.includes('+1 melee damage')) && !descLower.includes(' or ')) {
-                                        mods.push({ variable: 'Damage_Melee', value: amount });
-                                    }
-                                    if ((descLower.includes('+1 to ranged attack') || descLower.includes('+1 ranged attack')) && !descLower.includes(' or ')) {
-                                        mods.push({ variable: 'Attack_Ranged', value: amount });
-                                    }
-                                    if ((descLower.includes('+1 to ranged damage') || descLower.includes('+1 ranged damage')) && !descLower.includes(' or ')) {
-                                        mods.push({ variable: 'Damage_Ranged', value: amount });
+                                        if (bNameLower.includes('plus1tocastingspells') || 
+                                            bToLower.includes('spellcasting') || 
+                                            bToLower.includes('spell casting') || 
+                                            (descLower.includes('spellcasting check') && !descLower.includes(' or ')) || 
+                                            (descLower.includes('spell casting check') && !descLower.includes(' or ')) || 
+                                            descLower.includes('spell casting rolls') ||
+                                            descLower.includes('spellcasting rolls') ||
+                                            (bNameLower.includes('plustwointorplusonewizcasting') && (descLower.includes('casting') || descLower.includes('spellcasting') || descLower.includes('spell casting')) && !descLower.includes(' or '))) {
+                                            mods.push({ variable: 'Spellcheck', value: amount });
+                                        }
+                                        if ((descLower.includes('+1 to melee attack') || descLower.includes('+1 melee attack')) && !descLower.includes(' or ')) {
+                                            mods.push({ variable: 'Attack_Melee', value: amount });
+                                        }
+                                        if ((descLower.includes('+1 to melee damage') || descLower.includes('+1 melee damage')) && !descLower.includes(' or ')) {
+                                            mods.push({ variable: 'Damage_Melee', value: amount });
+                                        }
+                                        if ((descLower.includes('+1 to ranged attack') || descLower.includes('+1 ranged attack')) && !descLower.includes(' or ')) {
+                                            mods.push({ variable: 'Attack_Ranged', value: amount });
+                                        }
+                                        if ((descLower.includes('+1 to ranged damage') || descLower.includes('+1 ranged damage')) && !descLower.includes(' or ')) {
+                                            mods.push({ variable: 'Damage_Ranged', value: amount });
+                                        }
+                                        if (bNameLower.includes('backstabincrease') || bToLower.includes('backstabincrease')) {
+                                            mods.push({ variable: 'Backstab_Dice_Bonus', value: amount });
+                                        }
+                                        if (bToLower === 'ac') {
+                                            mods.push({ variable: 'AC_Mod', value: amount });
+                                        }
                                     }
 
                                     const level = b.gainedAtLevel || 1;
                                     const desc = b.talentRolledDesc || b.desc || `Bonus from ${b.sourceName} (${b.sourceType})`;
-                                    
-                                    let finalName;
+                                    const source = normalizeSourceName(b.sourceName || 'Class');
+
                                     if (b.sourceCategory === 'Talent') {
-                                        const sourceNameClean = normalizeSourceName(b.sourceName || 'Class');
-                                        const talentName = normalizeTalentName(b.bonusName || b.name, descLower);
-                                        finalName = `${sourceNameClean.toUpperCase()}-${level}: ${talentName.toUpperCase()}`;
+                                        rawTalents.push({
+                                            type: 'bonus',
+                                            level: level,
+                                            source: source,
+                                            name: b.name,
+                                            bonusName: b.bonusName,
+                                            bonusTo: b.bonusTo,
+                                            desc: desc,
+                                            mods: mods,
+                                            rawBonus: b
+                                        });
                                     } else {
-                                        finalName = b.bonusName || b.name;
+                                        addOrUpdateFeature(b.bonusName || b.name, level, desc, mods, b.sourceCategory);
                                     }
-                                    
-                                    addOrUpdateFeature(finalName, level, desc, mods, b.sourceCategory);
                                 }
                             });
                         }
 
-                        function parseTalentObject(lvl, lvlNum, sourceName) {
-                            if (!lvl) return;
-                            const sourceNameClean = normalizeSourceName(sourceName);
-                            if (lvl.talentRolledName && lvl.talentRolledName.trim()) {
-                                const mods = [];
-                                const descLower = (lvl.talentRolledDesc || '').toLowerCase();
-                                
-                                if (!descLower.includes(' or ')) {
-                                    // Parse stat bonus modifiers
-                                    const statMods = parseStatBonusModifiers(lvl.talentRolledDesc);
-                                    if (statMods.length > 0) mods.push(...statMods);
-
-                                    if (descLower.includes('+1 to melee attack') || descLower.includes('+1 melee attack')) {
-                                        mods.push({ variable: 'Attack_Melee', value: 1 });
-                                    }
-                                    if (descLower.includes('+1 to melee damage') || descLower.includes('+1 melee damage')) {
-                                        mods.push({ variable: 'Damage_Melee', value: 1 });
-                                    }
-                                    if (descLower.includes('+1 to ranged attack') || descLower.includes('+1 ranged attack')) {
-                                        mods.push({ variable: 'Attack_Ranged', value: 1 });
-                                    }
-                                    if (descLower.includes('+1 to ranged damage') || descLower.includes('+1 ranged damage')) {
-                                        mods.push({ variable: 'Damage_Ranged', value: 1 });
-                                    }
-                                    if (descLower.includes('+1 to wizard spellcasting') || 
-                                        descLower.includes('+1 to wizard spell casting') || 
-                                        descLower.includes('+1 to priest spellcasting') || 
-                                        descLower.includes('+1 to priest spell casting') || 
-                                        descLower.includes('+1 to spellcasting') || 
-                                        descLower.includes('+1 to spell casting') || 
-                                        descLower.includes('spellcasting check') ||
-                                        descLower.includes('spell casting check') ||
-                                        descLower.includes('spell casting rolls') ||
-                                        descLower.includes('spellcasting rolls')) {
-                                        mods.push({ variable: 'Spellcheck', value: 1 });
-                                    }
-                                }
-                                const talentName = normalizeTalentName(lvl.talentRolledName, lvl.talentRolledDesc);
-                                const finalName = `${sourceNameClean.toUpperCase()}-${lvlNum}: ${talentName.toUpperCase()}`;
-                                addOrUpdateFeature(finalName, lvlNum, lvl.talentRolledDesc, mods, 'Talent');
-                            }
-                            if (lvl.Rolled12ChosenTalentName && lvl.Rolled12ChosenTalentName.trim()) {
-                                const mods = [];
-                                const descLower = (lvl.Rolled12ChosenTalentDesc || '').toLowerCase();
-
-                                if (!descLower.includes(' or ')) {
-                                    // Parse stat bonus modifiers
-                                    const statMods = parseStatBonusModifiers(lvl.Rolled12ChosenTalentDesc);
-                                    if (statMods.length > 0) mods.push(...statMods);
-
-                                    if (descLower.includes('+1 to melee attack') || descLower.includes('+1 melee attack')) {
-                                        mods.push({ variable: 'Attack_Melee', value: 1 });
-                                    }
-                                    if (descLower.includes('+1 to melee damage') || descLower.includes('+1 melee damage')) {
-                                        mods.push({ variable: 'Damage_Melee', value: 1 });
-                                    }
-                                    if (descLower.includes('+1 to ranged attack') || descLower.includes('+1 ranged attack')) {
-                                        mods.push({ variable: 'Attack_Ranged', value: 1 });
-                                    }
-                                    if (descLower.includes('+1 to ranged damage') || descLower.includes('+1 ranged damage')) {
-                                        mods.push({ variable: 'Damage_Ranged', value: 1 });
-                                    }
-                                    if (descLower.includes('+1 to wizard spellcasting') || 
-                                        descLower.includes('+1 to wizard spell casting') || 
-                                        descLower.includes('+1 to priest spellcasting') || 
-                                        descLower.includes('+1 to priest spell casting') || 
-                                        descLower.includes('+1 to spellcasting') || 
-                                        descLower.includes('+1 to spell casting') || 
-                                        descLower.includes('spellcasting check') ||
-                                        descLower.includes('spell casting check') ||
-                                        descLower.includes('spell casting rolls') ||
-                                        descLower.includes('spellcasting rolls')) {
-                                        mods.push({ variable: 'Spellcheck', value: 1 });
-                                    }
-                                }
-                                const talentName = normalizeTalentName(lvl.Rolled12ChosenTalentName, lvl.Rolled12ChosenTalentDesc);
-                                const finalName = `${sourceNameClean.toUpperCase()}-${lvlNum}: ${talentName.toUpperCase()}`;
-                                addOrUpdateFeature(finalName, lvlNum, lvl.Rolled12ChosenTalentDesc, mods, 'Talent');
-                            }
-                        }
-
-                        // Talent / Abilities detection from data.levels
                         if (data.levels) {
                             data.levels.forEach(lvl => {
-                                parseTalentObject(lvl, lvl.level || 1, data.class || 'Class');
+                                const level = lvl.level || 1;
+                                const source = normalizeSourceName(data.class || 'Class');
+                                if (lvl.talentRolledName && lvl.talentRolledName.trim()) {
+                                    rawTalents.push({
+                                        type: 'roll',
+                                        level: level,
+                                        source: source,
+                                        name: lvl.talentRolledName,
+                                        desc: lvl.talentRolledDesc
+                                    });
+                                }
+                                if (lvl.Rolled12ChosenTalentName && lvl.Rolled12ChosenTalentName.trim()) {
+                                    rawTalents.push({
+                                        type: 'roll',
+                                        level: level,
+                                        source: source,
+                                        name: lvl.Rolled12ChosenTalentName,
+                                        desc: lvl.Rolled12ChosenTalentDesc
+                                    });
+                                }
                             });
                         }
+
                         if (data.ambitionTalentLevel) {
-                            parseTalentObject(data.ambitionTalentLevel, data.ambitionTalentLevel.level || 1, 'Human Ambition');
+                            const level = data.ambitionTalentLevel.level || 1;
+                            const source = 'Human Ambition';
+                            if (data.ambitionTalentLevel.talentRolledName && data.ambitionTalentLevel.talentRolledName.trim()) {
+                                rawTalents.push({
+                                    type: 'roll',
+                                    level: level,
+                                    source: source,
+                                    name: data.ambitionTalentLevel.talentRolledName,
+                                    desc: data.ambitionTalentLevel.talentRolledDesc
+                                });
+                            }
+                            if (data.ambitionTalentLevel.Rolled12ChosenTalentName && data.ambitionTalentLevel.Rolled12ChosenTalentName.trim()) {
+                                rawTalents.push({
+                                    type: 'roll',
+                                    level: level,
+                                    source: source,
+                                    name: data.ambitionTalentLevel.Rolled12ChosenTalentName,
+                                    desc: data.ambitionTalentLevel.Rolled12ChosenTalentDesc
+                                });
+                            }
                         }
+
+                        // Group rawTalents by (source, level)
+                        const groupedTalents = {};
+                        rawTalents.forEach(t => {
+                            const key = `${t.source.toLowerCase().trim()}_${t.level}`;
+                            if (!groupedTalents[key]) {
+                                groupedTalents[key] = {
+                                    source: t.source,
+                                    level: t.level,
+                                    entries: []
+                                };
+                            }
+                            groupedTalents[key].entries.push(t);
+                        });
+
+                        // Merge each group and add to featuresMap
+                        Object.values(groupedTalents).forEach(group => {
+                            const source = group.source;
+                            const level = group.level;
+
+                            let hasStatBonusChoice = false;
+                            let statChoiceDetails = '';
+                            let hasCastingChoice = false;
+                            let castingChoiceDetails = '';
+                            let hasSpellMasteryChoice = false;
+                            let spellMasteryDetails = '';
+                            const allMods = [];
+                            const descriptions = [];
+
+                            group.entries.forEach(e => {
+                                if (e.desc) descriptions.push(e.desc);
+                                if (e.mods) allMods.push(...e.mods);
+
+                                if (e.type === 'bonus') {
+                                    const b = e.rawBonus;
+                                    const bName = (b.name || '').toLowerCase();
+                                    const bBonusName = (b.bonusName || '').toLowerCase();
+                                    const bBonusTo = (b.bonusTo || '').toLowerCase();
+                                    const amount = parseInt(b.bonusAmount) || 2;
+
+                                    if (bBonusName === 'statbonus' || bName === 'statbonus' || bBonusTo.includes(':+') || bBonusTo.includes(':-')) {
+                                        hasStatBonusChoice = true;
+                                        if (b.bonusTo && b.bonusTo.includes(':')) {
+                                            const parts = b.bonusTo.split(':');
+                                            const cleanVal = parts[1].replace(/^\+/, '');
+                                            statChoiceDetails = `+${cleanVal} ${parts[0].toUpperCase()}`;
+                                        } else if (b.desc && b.desc.toUpperCase().includes('+2 TO ')) {
+                                            const match = b.desc.toUpperCase().match(/\+2 TO ([A-Z]+)/);
+                                            if (match) {
+                                                statChoiceDetails = `+2 ${match[1].substring(0, 3)}`;
+                                            } else {
+                                                statChoiceDetails = `+2 INT`;
+                                            }
+                                        } else {
+                                            statChoiceDetails = `+2 INT`;
+                                        }
+                                    }
+                                    if (bBonusName === 'plus1tocastingspells' || bName === 'plus1tocastingspells' || bBonusTo === 'wizard' || bBonusTo === 'priest') {
+                                        if (bBonusName === 'plus1tocastingspells' || bName === 'plus1tocastingspells') {
+                                            hasCastingChoice = true;
+                                            castingChoiceDetails = `+1 CASTING`;
+                                        }
+                                    }
+                                    if (bBonusTo === 'advoncastonespell' || bName === 'advoncastonespell') {
+                                        hasSpellMasteryChoice = true;
+                                        if (b.bonusName) {
+                                            spellMasteryDetails = b.bonusName.toUpperCase();
+                                        }
+                                    }
+                                }
+                            });
+
+                            let mergedName = '';
+                            const levelStr = `${source.toUpperCase()}-${level}`;
+
+                            if (hasSpellMasteryChoice) {
+                                mergedName = `${levelStr}: SPELL MASTERY (${spellMasteryDetails})`;
+                            } else if (hasStatBonusChoice) {
+                                mergedName = `${levelStr}: STAT BONUS (${statChoiceDetails})`;
+                            } else if (hasCastingChoice) {
+                                mergedName = `${levelStr}: SPELLCASTING (${castingChoiceDetails})`;
+                            } else {
+                                const firstEntry = group.entries[0];
+                                const cleanedName = cleanFeatureName(firstEntry.name || firstEntry.bonusName || '');
+                                if (cleanedName.includes(':')) {
+                                    mergedName = cleanedName;
+                                } else {
+                                    mergedName = `${levelStr}: ${cleanedName}`;
+                                }
+                            }
+
+                            const uniqueDescs = Array.from(new Set(descriptions.map(d => d.trim()))).filter(Boolean);
+                            const mergedDesc = uniqueDescs.join('\n\n');
+
+                            const uniqueMods = [];
+                            allMods.forEach(m => {
+                                if (!uniqueMods.some(um => um.variable === m.variable)) {
+                                    uniqueMods.push(m);
+                                }
+                            });
+
+                            addOrUpdateFeature(mergedName, level, mergedDesc, uniqueMods, 'Talent');
+                        });
 
                         // Sum passive modifier variables locally (to adjust weapons magic bonuses calculations)
                         let attackMeleeMod = 0;
@@ -8025,6 +8226,7 @@
                         newChar.variables['Damage_Melee'] = '0';
                         newChar.variables['Damage_Ranged'] = '0';
                         newChar.variables['Spellcheck'] = '0';
+                        newChar.variables['Backstab_Dice_Bonus'] = '0';
 
                         // Do not modify the define widgets values (leave them at 0)
                         const atkMeleeWidget = newWidgets.find(w => w.bindsVariable === 'Attack_Melee' && w.variableRelType === 'define');
@@ -8041,6 +8243,18 @@
 
                         const spellcheckWidget = newWidgets.find(w => w.bindsVariable === 'Spellcheck' && w.variableRelType === 'define');
                         if (spellcheckWidget) spellcheckWidget.value = 0;
+
+                        // Modify Backstab dice display widget to add Backstab_Dice_Bonus if not already present
+                        const backstabDiceWidget = newWidgets.find(w => w.bindsVariable === 'Backstab_Dice' && w.variableRelType === 'define');
+                        if (backstabDiceWidget && Array.isArray(backstabDiceWidget.unifiedQueue)) {
+                            const hasBonusRef = backstabDiceWidget.unifiedQueue.some(node => node.type === 'variable' && node.value === 'Backstab_Dice_Bonus');
+                            if (!hasBonusRef) {
+                                backstabDiceWidget.unifiedQueue.push(
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'variable', value: 'Backstab_Dice_Bonus', operator: '+' }
+                                );
+                            }
+                        }
 
                         // 3. Populate basic stats
                         const hpW = newWidgets.find(w => w.name === 'HP' && w.widgetType === 'stepper');
@@ -8063,10 +8277,10 @@
                         statKeys.forEach(k => {
                             const scoreW = newWidgets.find(w => w.name === `${k} Score` && w.widgetType === 'number');
                             if (scoreW) {
-                                if (data.rolledStats && data.rolledStats[k] !== undefined) {
-                                    scoreW.value = data.rolledStats[k];
-                                } else if (data.stats && data.stats[k] !== undefined) {
+                                if (data.stats && data.stats[k] !== undefined) {
                                     scoreW.value = data.stats[k];
+                                } else if (data.rolledStats && data.rolledStats[k] !== undefined) {
+                                    scoreW.value = data.rolledStats[k];
                                 }
                             }
                         });
@@ -8091,61 +8305,53 @@
 
                         // 4. Armor and Shield equipping
                         let hasShield = false;
-                        let bodyArmorWidget = null;
-                        
-                        const armorBases = {
-                            'leather': { base: 11, addDex: true },
-                            'chainmail': { base: 13, addDex: true },
-                            'plate': { base: 15, addDex: false },
-                            'brigandine': { base: 12, addDex: true },
-                            'hide': { base: 12, addDex: true },
-                            'studded': { base: 12, addDex: true },
-                            'mithril plate': { base: 16, addDex: false }
-                        };
+                        const bodyArmorWidgets = [];
                         
                         if (data.gear) {
                             data.gear.forEach(item => {
-                                if (item.type === 'armor') {
-                                    const nameLower = item.name.toLowerCase();
-                                    if (nameLower.includes('shield')) {
-                                        hasShield = true;
-                                    } else {
-                                        let baseInfo = null;
-                                        for (const [key, info] of Object.entries(armorBases)) {
-                                            if (nameLower.includes(key)) {
-                                                baseInfo = info;
-                                                break;
-                                            }
+                                const nameLower = item.name.toLowerCase();
+                                if (nameLower.includes('shield')) {
+                                    hasShield = true;
+                                } else {
+                                    const baseInfo = findArmorInfo(item.name);
+                                    if (baseInfo) {
+                                        const armorId = 'w_armor_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                        const armorQueue = [
+                                            { nodeType: 'modifier', type: 'literal', value: baseInfo.base, operator: '+' }
+                                        ];
+                                        if (baseInfo.addDex) {
+                                            armorQueue.push(
+                                                { nodeType: 'operator', operator: '+' },
+                                                { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+' }
+                                            );
                                         }
-                                        if (baseInfo) {
-                                            const armorId = 'w_armor_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                                            const armorQueue = [
-                                                { nodeType: 'modifier', type: 'literal', value: baseInfo.base, operator: '+' }
-                                            ];
-                                            if (baseInfo.addDex) {
-                                                armorQueue.push(
-                                                    { nodeType: 'operator', operator: '+' },
-                                                    { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+' }
-                                                );
-                                            }
-                                            
-                                            bodyArmorWidget = {
-                                                id: armorId,
-                                                characterId: newCharId,
-                                                groupId: groupIdMap['combat'],
-                                                name: item.name,
-                                                color: '#00d4ff',
-                                                widgetType: 'number',
-                                                bindsVariable: 'AC_Armor',
-                                                variableRelType: 'define',
-                                                addonToggle: {
-                                                    labelOn: 'Equipped',
-                                                    labelOff: 'Unequipped',
-                                                    checked: true
-                                                },
-                                                unifiedQueue: armorQueue
-                                            };
+
+                                        // Apply ArmorMaster AC bonus if applicable
+                                        const amBonus = armorMasterList.find(am => nameLower.includes(am.armor));
+                                        if (amBonus) {
+                                            armorQueue.push(
+                                                { nodeType: 'operator', operator: '+' },
+                                                { nodeType: 'modifier', type: 'literal', value: amBonus.amount, operator: '+' }
+                                            );
                                         }
+                                        
+                                        const bodyArmorWidget = {
+                                            id: armorId,
+                                            characterId: newCharId,
+                                            groupId: groupIdMap['combat'],
+                                            name: item.name,
+                                            color: '#00d4ff',
+                                            widgetType: 'number',
+                                            bindsVariable: 'AC_Armor',
+                                            variableRelType: 'define',
+                                            addonToggle: {
+                                                labelOn: 'Equipped',
+                                                labelOff: 'Unequipped',
+                                                checked: false
+                                            },
+                                            unifiedQueue: armorQueue
+                                        };
+                                        bodyArmorWidgets.push(bodyArmorWidget);
                                     }
                                 }
                             });
@@ -8154,47 +8360,107 @@
                         const shieldW = newWidgets.find(w => w.id.includes('w_shield') || w.name === 'Shield');
                         if (shieldW) {
                             shieldW.addonToggle.checked = hasShield;
+                            // Shield AC bonus from ArmorMaster
+                            const shieldAmBonus = armorMasterList.find(am => am.armor.includes('shield'));
+                            if (shieldAmBonus && shieldW.unifiedQueue) {
+                                shieldW.unifiedQueue.push(
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'literal', value: shieldAmBonus.amount, operator: '+' }
+                                );
+                            }
                         }
                         
-                        if (bodyArmorWidget) {
-                            newWidgets.push(bodyArmorWidget);
+                        if (bodyArmorWidgets.length > 0) {
+                            // Equip only the first body armor widget
+                            bodyArmorWidgets[0].addonToggle.checked = true;
+                            bodyArmorWidgets.forEach(w => newWidgets.push(w));
+                            
                             const unarmoredW = newWidgets.find(w => w.id.includes('w_armor') && w.name === 'Unarmored');
                             if (unarmoredW) {
                                 unarmoredW.addonToggle.checked = false;
                             }
                         }
 
-                        // 5. Gear mapping: item name in widget name, secondary info in text notes
+                        // 5. Gear mapping: combine normal gear and magic items sequentially
+                        const allGearItems = [];
                         if (data.gear) {
-                            let slotNum = 1;
-                            data.gear.forEach(item => {
-                                const gearWidget = newWidgets.find(w => w.id.includes(`w_gear_${slotNum}`));
-                                const qtyText = `Quantity: ${item.quantity || 1}`;
-                                const slotsText = `Slots: ${item.slots !== undefined ? item.slots : 1}`;
-                                const costText = item.cost ? `Cost: ${item.cost} ${item.currency || 'gp'}` : '';
-                                const secondaryInfo = [qtyText, slotsText, costText].filter(Boolean).join('\n');
-                                
-                                if (gearWidget) {
-                                    gearWidget.name = item.name;
-                                    gearWidget.text = secondaryInfo;
-                                    gearWidget.collapsed = true;
-                                }
-                                
-                                const slotsToConsume = item.slots !== undefined ? item.slots : 1;
-                                if (slotsToConsume > 1) {
-                                    for (let extra = 1; extra < slotsToConsume; extra++) {
-                                        slotNum++;
-                                        const extraWidget = newWidgets.find(w => w.id.includes(`w_gear_${slotNum}`));
-                                        if (extraWidget) {
-                                            extraWidget.name = `... extra slot`;
-                                            extraWidget.text = `Occupied by extra slot for ${item.name}`;
-                                            extraWidget.collapsed = true;
-                                        }
-                                    }
-                                }
-                                slotNum++;
+                            data.gear.forEach(g => {
+                                allGearItems.push({
+                                    name: g.name,
+                                    quantity: g.quantity || 1,
+                                    slots: g.slots !== undefined ? g.slots : 1,
+                                    cost: g.cost || 0,
+                                    currency: g.currency || 'gp',
+                                    isMagic: false,
+                                    raw: g
+                                });
                             });
                         }
+                        if (data.magicItems) {
+                            data.magicItems.forEach(mi => {
+                                allGearItems.push({
+                                    name: mi.name,
+                                    quantity: 1,
+                                    slots: mi.slots !== undefined ? mi.slots : 1,
+                                    cost: 0,
+                                    currency: 'gp',
+                                    isMagic: true,
+                                    raw: mi
+                                });
+                            });
+                        }
+
+                        let slotNum = 1;
+                        allGearItems.forEach(item => {
+                            const gearWidget = newWidgets.find(w => w.id.includes(`w_gear_${slotNum}`));
+                            if (gearWidget) {
+                                gearWidget.name = item.name;
+                                
+                                const infoParts = [
+                                    `Quantity: ${item.quantity}`,
+                                    `Slots: ${item.slots}`
+                                ];
+                                if (item.cost > 0) {
+                                    infoParts.push(`Cost: ${item.cost} ${item.currency}`);
+                                }
+                                const gearInfoStr = infoParts.join(' | ');
+                                gearWidget.detailText = `${slotNum}. - ${gearInfoStr}`;
+                                
+                                if (item.isMagic) {
+                                    const details = [];
+                                    const mi = item.raw;
+                                    if (mi.benefits) details.push(`Benefits: ${mi.benefits}`);
+                                    if (mi.features) details.push(`Features: ${mi.features}`);
+                                    if (mi.personalityTraits) details.push(`Personality: ${mi.personalityTraits}`);
+                                    if (mi.personalityVirtue) details.push(`Virtue: ${mi.personalityVirtue}`);
+                                    if (mi.personalityFlaws) details.push(`Flaws: ${mi.personalityFlaws}`);
+                                    if (mi.curses) details.push(`Curses: ${mi.curses}`);
+                                    if (mi.bonusNote) details.push(`Note: ${mi.bonusNote}`);
+                                    if (mi.attackNote) details.push(`Attack Note: ${mi.attackNote}`);
+                                    
+                                    gearWidget.text = details.join('\n\n');
+                                    gearWidget.collapsed = true;
+                                } else {
+                                    gearWidget.text = "";
+                                    gearWidget.collapsed = true;
+                                }
+                            }
+                            
+                            const slotsToConsume = item.slots;
+                            if (slotsToConsume > 1) {
+                                for (let extra = 1; extra < slotsToConsume; extra++) {
+                                    slotNum++;
+                                    const extraWidget = newWidgets.find(w => w.id.includes(`w_gear_${slotNum}`));
+                                    if (extraWidget) {
+                                        extraWidget.name = `... extra slot`;
+                                        extraWidget.detailText = `${slotNum}.`;
+                                        extraWidget.text = `Occupied by extra slot for ${item.name}`;
+                                        extraWidget.collapsed = true;
+                                    }
+                                }
+                            }
+                            slotNum++;
+                        });
 
                         // 6. Weapon attacks mapping (using Attack_Melee / Damage_Melee etc.)
                         const strValVal = data.stats.STR || 10;
@@ -8216,7 +8482,7 @@
                                 const parts = attackStr.split(':');
                                 if (parts.length >= 2) {
                                     name = parts[0].trim();
-                                    name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+                                    name = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
                                     
                                     const remaining = parts.slice(1).join(':').trim();
                                     const commaIdx = remaining.indexOf(',');
@@ -8234,7 +8500,7 @@
                                         
                                         const dmgMatch = damagePart.match(/^(\d+d\d+(?:[+-]\d+)?)/);
                                         if (dmgMatch) {
-                                            damage = dmgMatch[1];
+                                            damage = damagePart;
                                             notes += damagePart.substring(dmgMatch[1].length).trim();
                                         } else {
                                             damage = damagePart;
@@ -8243,31 +8509,35 @@
                                 }
 
                                 const nameLower = name.toLowerCase();
-                                const isFinesse = attackStr.toLowerCase().includes('fin') || nameLower.includes('whip') || nameLower.includes('dagger');
-                                const isRanged = nameLower.includes('bow') || nameLower.includes('crossbow') || nameLower.includes('sling') || nameLower.includes('pistol') || nameLower.includes('rifle') || attackStr.includes('(N)') || attackStr.includes('(F)') || notes.includes('Near') || notes.includes('Far');
+                                const wInfo = findWeaponInfo(name);
+
+                                // Check properties
+                                const isFinesse = (wInfo && wInfo.properties.includes("Finesse")) || attackStr.toLowerCase().includes('fin') || nameLower.includes('whip') || nameLower.includes('dagger');
+                                const isRanged = (wInfo && wInfo.type === "Ranged") || nameLower.includes('bow') || nameLower.includes('crossbow') || nameLower.includes('sling') || nameLower.includes('pistol') || nameLower.includes('rifle') || attackStr.includes('(N)') || attackStr.includes('(F)') || notes.includes('Near') || notes.includes('Far');
+                                const isVersatile = (wInfo && wInfo.properties.includes("Versatile")) || damage.includes('/');
+
+                                // Dynamic stat modifier choosing for Finesse
+                                const attackStat = isFinesse 
+                                    ? (parsedDexMod >= parsedStrMod ? 'DEX_mod' : 'STR_mod')
+                                    : (isRanged ? 'DEX_mod' : 'STR_mod');
                                 
-                                const attackStat = isFinesse ? 'DEX_mod' : (isRanged ? 'DEX_mod' : 'STR_mod');
-                                const attackModVal = isFinesse ? parsedDexMod : (isRanged ? parsedDexMod : parsedStrMod);
+                                const attackModVal = isFinesse 
+                                    ? Math.max(parsedStrMod, parsedDexMod)
+                                    : (isRanged ? parsedDexMod : parsedStrMod);
+
                                 const attackModVar = isRanged ? 'Attack_Ranged' : 'Attack_Melee';
                                 const currentGlobalAttackMod = isRanged ? attackRangedMod : attackMeleeMod;
                                 
-                                const magicBonus = bonus - attackModVal - currentGlobalAttackMod;
+                                // Determine Weapon Mastery values
+                                const hasMastery = weaponMasteryList.find(wm => nameLower.includes(wm.weapon));
+                                const masteryBonusVal = hasMastery ? (1 + Math.floor((data.level || 1) * 0.5)) : 0;
 
+                                // Subtraction formula to isolate weapon's magical bonus
+                                const magicBonus = bonus - attackModVal - currentGlobalAttackMod - masteryBonusVal;
+
+                                // Build Attack Widget
                                 const attackWId = 'w_atk_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                                const attackQueue = [
-                                    { nodeType: 'node', sides: 20, count: 1 },
-                                    { nodeType: 'operator', operator: '+' },
-                                    { nodeType: 'modifier', type: 'variable', value: attackStat, operator: '+' },
-                                    { nodeType: 'operator', operator: '+' },
-                                    { nodeType: 'modifier', type: 'variable', value: attackModVar, operator: '+' }
-                                ];
-                                if (magicBonus !== 0) {
-                                    const op = magicBonus > 0 ? '+' : '-';
-                                    attackQueue.push(
-                                        { nodeType: 'operator', operator: op },
-                                        { nodeType: 'modifier', type: 'literal', value: Math.abs(magicBonus), operator: op }
-                                    );
-                                }
+                                const attackQueue = buildAttackQueue(attackStat, attackModVar, magicBonus, masteryBonusVal);
 
                                 const attackWidget = {
                                     id: attackWId,
@@ -8282,51 +8552,118 @@
                                 };
                                 newWidgets.push(attackWidget);
                                 
-                                const damageWId = 'w_dmg_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                                
+                                // Build Damage Widget(s)
                                 const damageModVar = isRanged ? 'Damage_Ranged' : 'Damage_Melee';
                                 const currentGlobalDamageMod = isRanged ? damageRangedMod : damageMeleeMod;
-                                
-                                let cleanDmg = damage.split('/')[0].trim();
-                                const dmgRegexMatch = cleanDmg.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/);
-                                let damageQueue;
-                                if (dmgRegexMatch) {
-                                    const dCount = parseInt(dmgRegexMatch[1]);
-                                    const dSides = parseInt(dmgRegexMatch[2]);
-                                    const dOp = dmgRegexMatch[3] || '+';
-                                    const dModVal = dmgRegexMatch[4] ? parseInt(dmgRegexMatch[4]) : 0;
-                                    const signedModVal = dOp === '-' ? -dModVal : dModVal;
+                                const isD12Weapon = weaponDamageD12List.some(w => nameLower.includes(w));
+
+                                function parseAndPushDamageWidget(dmgFormula, labelSuffix) {
+                                    const damageWId = 'w_dmg_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                                    const damageQueue = buildDamageQueue(dmgFormula, damageModVar, currentGlobalDamageMod, masteryBonusVal, isD12Weapon);
                                     
-                                    const magicDmgBonus = signedModVal - currentGlobalDamageMod;
-                                    
-                                    damageQueue = [
-                                        { nodeType: 'node', sides: dSides, count: dCount },
-                                        { nodeType: 'operator', operator: '+' },
-                                        { nodeType: 'modifier', type: 'variable', value: damageModVar, operator: '+' }
-                                    ];
-                                    if (magicDmgBonus !== 0) {
-                                        const op = magicDmgBonus > 0 ? '+' : '-';
-                                        damageQueue.push(
-                                            { nodeType: 'operator', operator: op },
-                                            { nodeType: 'modifier', type: 'literal', value: Math.abs(magicDmgBonus), operator: op }
-                                        );
-                                    }
-                                } else {
-                                    damageQueue = parseDamageFormula(damage);
+                                    const damageWidget = {
+                                        id: damageWId,
+                                        characterId: newCharId,
+                                        groupId: groupIdMap['combat'],
+                                        name: `${name} Damage${labelSuffix}`,
+                                        color: '#ff3c00',
+                                        widgetType: 'roller',
+                                        includeAdvDis: false,
+                                        unifiedQueue: damageQueue
+                                    };
+                                    newWidgets.push(damageWidget);
                                 }
 
-                                const damageWidget = {
-                                    id: damageWId,
-                                    characterId: newCharId,
-                                    groupId: groupIdMap['combat'],
-                                    name: `${name} Damage`,
-                                    color: '#ff3c00',
-                                    widgetType: 'roller',
-                                    includeAdvDis: false,
-                                    unifiedQueue: damageQueue
-                                };
-                                newWidgets.push(damageWidget);
+                                if (isVersatile) {
+                                    let cleanDmg = damage.split('(')[0].trim();
+                                    const versatileParts = cleanDmg.split('/');
+                                    if (versatileParts.length >= 2) {
+                                        parseAndPushDamageWidget(versatileParts[0].trim(), " (1-Hand)");
+                                        parseAndPushDamageWidget(versatileParts[1].trim(), " (2-Hand)");
+                                    } else if (wInfo && wInfo.damage.oneHanded && wInfo.damage.twoHanded) {
+                                        const cleanFormula = damage.split('(')[0].trim();
+                                        const dmgMatch = cleanFormula.match(/^1d\d+(?:([+-])(\d+))?$/);
+                                        const modifierSuffix = (dmgMatch && dmgMatch[1] && dmgMatch[2]) ? `${dmgMatch[1]}${dmgMatch[2]}` : "";
+                                        
+                                        const oneHandedFormula = `${wInfo.damage.oneHanded.numDice}${wInfo.damage.oneHanded.diceType}${modifierSuffix}`;
+                                        const twoHandedFormula = `${wInfo.damage.twoHanded.numDice}${wInfo.damage.twoHanded.diceType}${modifierSuffix}`;
+                                        parseAndPushDamageWidget(oneHandedFormula, " (1-Hand)");
+                                        parseAndPushDamageWidget(twoHandedFormula, " (2-Hand)");
+                                    } else {
+                                        parseAndPushDamageWidget(damage, "");
+                                    }
+                                } else {
+                                    parseAndPushDamageWidget(damage, "");
+                                }
                             });
+                        }
+
+                        // Helper functions for building queues
+                        function buildAttackQueue(attackStat, attackModVar, magicBonus, masteryBonusVal) {
+                            const queue = [
+                                { nodeType: 'node', sides: 20, count: 1 },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: attackStat, operator: '+' },
+                                { nodeType: 'operator', operator: '+' },
+                                { nodeType: 'modifier', type: 'variable', value: attackModVar, operator: '+' }
+                            ];
+
+                            if (masteryBonusVal > 0) {
+                                queue.push(
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
+                                );
+                            }
+
+                            if (magicBonus !== 0) {
+                                const op = magicBonus > 0 ? '+' : '-';
+                                queue.push(
+                                    { nodeType: 'operator', operator: op },
+                                    { nodeType: 'modifier', type: 'literal', value: Math.abs(magicBonus), operator: op }
+                                );
+                            }
+                            return queue;
+                        }
+
+                        function buildDamageQueue(formulaStr, damageModVar, currentGlobalDamageMod, masteryBonusVal, isD12Weapon) {
+                            let cleanDmg = (formulaStr || '1d6').split('(')[0].trim();
+                            const dmgRegexMatch = cleanDmg.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/);
+                            if (dmgRegexMatch) {
+                                const dCount = parseInt(dmgRegexMatch[1]);
+                                let dSides = isD12Weapon ? 12 : parseInt(dmgRegexMatch[2]);
+                                const dOp = dmgRegexMatch[3] || '+';
+                                const dModVal = dmgRegexMatch[4] ? parseInt(dmgRegexMatch[4]) : 0;
+                                const signedModVal = dOp === '-' ? -dModVal : dModVal;
+                                
+                                const magicDmgBonus = signedModVal - currentGlobalDamageMod - (masteryBonusVal || 0);
+                                
+                                const queue = [
+                                    { nodeType: 'node', sides: dSides, count: dCount },
+                                    { nodeType: 'operator', operator: '+' },
+                                    { nodeType: 'modifier', type: 'variable', value: damageModVar, operator: '+' }
+                                ];
+
+                                if (masteryBonusVal > 0) {
+                                    queue.push(
+                                        { nodeType: 'operator', operator: '+' },
+                                        { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
+                                        { nodeType: 'operator', operator: '+' },
+                                        { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
+                                    );
+                                }
+
+                                if (magicDmgBonus !== 0) {
+                                    const op = magicDmgBonus > 0 ? '+' : '-';
+                                    queue.push(
+                                        { nodeType: 'operator', operator: op },
+                                        { nodeType: 'modifier', type: 'literal', value: Math.abs(magicDmgBonus), operator: op }
+                                    );
+                                }
+                                return queue;
+                            }
+                            return [{ nodeType: 'node', sides: 6, count: 1 }];
                         }
 
                         // 7. Spells known mapping
@@ -8345,8 +8682,49 @@
                             };
                             const castStat = castingStatMap[clsLower] || 'INT';
                             const castModVar = `${castStat}_mod`;
+
+                            const findSpellTier = (spellName, bonuses) => {
+                                if (!bonuses) return 1;
+                                const spellNameLower = spellName.toLowerCase().trim();
+                                for (const b of bonuses) {
+                                    const bName = (b.bonusName || '').toLowerCase().trim();
+                                    if (bName === spellNameLower && b.bonusTo) {
+                                        const tierMatch = b.bonusTo.match(/Tier:(\d+)/i);
+                                        if (tierMatch) return parseInt(tierMatch[1]) || 1;
+                                    }
+                                    if (bName === spellNameLower && b.name) {
+                                        const tierMatch = b.name.match(/Tier\s+(\d+)/i);
+                                        if (tierMatch) return parseInt(tierMatch[1]) || 1;
+                                    }
+                                }
+                                return 1;
+                            };
                             
-                            spellList.forEach(spellName => {
+                            const spellsWithTier = spellList.map(spellName => {
+                                return {
+                                    name: spellName,
+                                    tier: findSpellTier(spellName, data.bonuses)
+                                };
+                            });
+
+                            // Sort by tier ascending, then alphabetically by name
+                            spellsWithTier.sort((a, b) => {
+                                if (a.tier !== b.tier) {
+                                    return a.tier - b.tier;
+                                }
+                                return a.name.localeCompare(b.name);
+                            });
+
+                            spellsWithTier.forEach(spellObj => {
+                                const spellName = spellObj.name;
+                                const tier = spellObj.tier;
+                                const hasSpellAdv = data.bonuses && data.bonuses.some(b => 
+                                    b.bonusTo === 'AdvOnCastOneSpell' && 
+                                    (b.bonusName || '').toLowerCase().trim() === spellName.toLowerCase().trim()
+                                );
+                                const includeAdvDis = !!hasSpellAdv;
+                                const classTitle = (data.class || 'Wizard').trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
                                 const spellWId = 'w_spell_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                                 const spellWidget = {
                                     id: spellWId,
@@ -8354,8 +8732,8 @@
                                     groupId: groupIdMap['spells'],
                                     name: spellName.toUpperCase(),
                                     widgetType: 'roller',
-                                    includeAdvDis: true,
-                                    addonNote: `${data.class} Spellcasting Check`,
+                                    includeAdvDis: includeAdvDis,
+                                    addonNote: `T${tier} DC ${classTitle} Spellcasting`,
                                     addonToggle: {
                                         checked: true,
                                         labelOn: 'Ready',
@@ -8394,21 +8772,6 @@
                                     passiveModifiers: f.mods && f.mods.length > 0 ? f.mods : null
                                 };
                                 newWidgets.push(widget);
-                            } else if (f.mods && f.mods.length > 0) {
-                                const widget = {
-                                    id: 'w_feat_toggle_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                                    characterId: newCharId,
-                                    groupId: targetGrpId,
-                                    name: cleanFeatureName(f.name),
-                                    widgetType: 'toggle',
-                                    checked: true,
-                                    labelOn: 'Active',
-                                    labelOff: 'Inactive',
-                                    color: '#10b981',
-                                    detailText: f.desc || '',
-                                    passiveModifiers: f.mods
-                                };
-                                newWidgets.push(widget);
                             } else {
                                 const widget = {
                                     id: 'w_feat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -8417,57 +8780,14 @@
                                     name: cleanFeatureName(f.name),
                                     widgetType: 'text',
                                     text: f.desc || 'No description.',
-                                    collapsed: true
+                                    collapsed: true,
+                                    passiveModifiers: f.mods && f.mods.length > 0 ? f.mods : null
                                 };
                                 newWidgets.push(widget);
                             }
                         });
 
-                        if (data.magicItems && Array.isArray(data.magicItems)) {
-                            data.magicItems.forEach(mi => {
-                                const details = [];
-                                if (mi.benefits) details.push(`Benefits: ${mi.benefits}`);
-                                if (mi.features) details.push(`Features: ${mi.features}`);
-                                if (mi.personalityTraits) details.push(`Personality: ${mi.personalityTraits}`);
-                                if (mi.personalityVirtue) details.push(`Virtue: ${mi.personalityVirtue}`);
-                                if (mi.personalityFlaws) details.push(`Flaws: ${mi.personalityFlaws}`);
-                                if (mi.curses) details.push(`Curses: ${mi.curses}`);
-                                if (mi.bonusNote) details.push(`Note: ${mi.bonusNote}`);
-                                if (mi.attackNote) details.push(`Attack Note: ${mi.attackNote}`);
-                                if (mi.slots) details.push(`Slots: ${mi.slots}`);
-                                const detailTextVal = details.join('\n\n');
 
-                                const targetGrpId = groupIdMap['gear'] || passivesGrpId;
-                                const benefitsText = mi.benefits || '';
-                                const limit = parseUsageLimit(benefitsText);
-                                if (limit !== null) {
-                                    const widget = {
-                                        id: 'w_magic_item_stepper_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                                        characterId: newCharId,
-                                        groupId: targetGrpId,
-                                        name: mi.name.toUpperCase(),
-                                        widgetType: 'stepper',
-                                        min: 0,
-                                        max: limit,
-                                        value: typeof limit === 'number' ? limit : (data.level || 1),
-                                        showTracker: true,
-                                        detailText: detailTextVal
-                                    };
-                                    newWidgets.push(widget);
-                                } else {
-                                    const widget = {
-                                        id: 'w_magic_item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                                        characterId: newCharId,
-                                        groupId: targetGrpId,
-                                        name: mi.name.toUpperCase(),
-                                        widgetType: 'text',
-                                        text: detailTextVal,
-                                        collapsed: true
-                                    };
-                                    newWidgets.push(widget);
-                                }
-                            });
-                        }
 
                         // 9. Additional Metadata and Treasures mapping (putting anything unmapped in passives)
                         const metadataLines = [];
@@ -12970,14 +13290,12 @@
                     if (q.addonToggle) {
                         const t = q.addonToggle;
                         innerHtml += `
-                            <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
-                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
-                                    ${t.checked ? t.labelOn : t.labelOff}
-                                </span>
-                            </div>
-                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                            <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
                                  onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
                                  style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                                <svg class="w-3.5 h-3.5 transition-colors duration-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="color: ${t.checked ? '#090d16' : '#64748b'}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 3v9" />
+                                </svg>
                             </div>
                         `;
                     }
@@ -13075,14 +13393,12 @@
                     if (q.addonToggle) {
                         const t = q.addonToggle;
                         innerHtml += `
-                            <div class="flex items-center gap-1.5 mr-8 shrink-0 select-none">
-                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${t.checked ? 'text-white' : 'text-slate-500'}">
-                                    ${t.checked ? t.labelOn : t.labelOff}
-                                </span>
-                            </div>
-                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                            <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
                                  onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
                                  style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                                <svg class="w-3.5 h-3.5 transition-colors duration-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="color: ${t.checked ? '#090d16' : '#64748b'}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 3v9" />
+                                </svg>
                             </div>
                         `;
                     }
