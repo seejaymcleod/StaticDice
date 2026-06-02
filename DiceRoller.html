@@ -7684,6 +7684,18 @@
                             return null;
                         }
 
+                        function formatFeatureDescription(desc) {
+                            if (!desc) return '';
+                            const varnames = new Set(['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA', 'HP', 'AC', 'XP', 'ADV', 'DIS', 'DC']);
+                            return desc.replace(/(?:\s+|^)([A-Z]{2,}(?::|\b))/g, (match, word) => {
+                                const cleanWord = word.replace(/[^A-Z]/g, '');
+                                if (varnames.has(cleanWord)) {
+                                    return match;
+                                }
+                                return '\n' + word;
+                            }).trim();
+                        }
+
                         // Build a map of features (ancestry, bonuses, level talents)
                         const featuresMap = new Map();
 
@@ -7806,11 +7818,12 @@
                                 }
                             }
 
+                            const formattedDesc = formatFeatureDescription(desc);
                             const key = `${name.toLowerCase().trim()}_${level}`;
                             if (featuresMap.has(key)) {
                                 const existing = featuresMap.get(key);
-                                if (desc && (!existing.desc || existing.desc.length < desc.length)) {
-                                    existing.desc = desc;
+                                if (formattedDesc && (!existing.desc || existing.desc.length < formattedDesc.length)) {
+                                    existing.desc = formattedDesc;
                                 }
                                 if (mods && mods.length > 0) {
                                     mods.forEach(m => {
@@ -7823,7 +7836,7 @@
                                 featuresMap.set(key, {
                                     name: name.trim(),
                                     level: level,
-                                    desc: desc || '',
+                                    desc: formattedDesc || '',
                                     mods: mods || [],
                                     category: category || ''
                                 });
@@ -7887,30 +7900,57 @@
                             );
                         }
 
-                        // Pit Fighter class features
-                        if (data.class && data.class.toLowerCase().includes('pit fighter')) {
-                            addOrUpdateFeature('FLOURISH', 1, '3/day, regain 1d6 hit points when you hit with a melee attack.', [], 'Class');
-                            addOrUpdateFeature('IMPLACABLE', 1, 'ADV on CON checks to resist injury, poison, or endure extreme environments.', [], 'Class');
-                            addOrUpdateFeature('LAST STAND', 1, 'You get up from dying with 1 hit point on a natural 20.', [], 'Class');
-                            addOrUpdateFeature('RELENTLESS', 1, '1/day, when you would be reduced to 0 hit points, you are reduced to 1 hit point instead.', [], 'Class');
-                        }
+                        // Populate class features from rules compendium
+                        const CLASS_FEATURES_COMPENDIUM = {
+                            "wizard": [
+                                {
+                                    name: "WIZARD-1: LEARNING SPELLS",
+                                    desc: "You can learn a wizard spell from a scroll with DC 15 INT check."
+                                },
+                                {
+                                    name: "WIZARD-1: WIZARD SPELLCASTING",
+                                    desc: "To cast a Wizard spell, roll 1d20 + INT modifier + Spellcheck vs a DC equal to 10 + the spell's tier."
+                                }
+                            ],
+                            "pit fighter": [
+                                {
+                                    name: "FLOURISH",
+                                    desc: "3/day, regain 1d6 hit points when you hit with a melee attack."
+                                },
+                                {
+                                    name: "IMPLACABLE",
+                                    desc: "ADV on CON checks to resist injury, poison, or endure extreme environments."
+                                },
+                                {
+                                    name: "LAST STAND",
+                                    desc: "You get up from dying with 1 hit point on a natural 20."
+                                },
+                                {
+                                    name: "RELENTLESS",
+                                    desc: "1/day, when you would be reduced to 0 hit points, you are reduced to 1 hit point instead."
+                                }
+                            ],
+                            "ranger": [
+                                {
+                                    name: "HERBALISM",
+                                    desc: "INT check to prepare a herbal remedy you choose. If fail can't try to prepare that remedy again until rested. HERBS: [DC 11] SALVE: Heal 1HP, [DC 12] STIMULANT: Can't be surprised for 5 rounds, [DC 13] FOEBANE: ADV on attacks and damage vs one creature type you choose for 1d6 rounds, [DC 14] RESTORATIVE: Ends a poison or disease, [DC 15] CURATIVE: as Potion of Healing"
+                                },
+                                {
+                                    name: "WAYFINDER",
+                                    desc: "Trained in navigation, tracking, bushcraft, stealth and wild animals"
+                                }
+                            ]
+                        };
 
-                        // Wizard class features
-                        if (data.class && data.class.toLowerCase().includes('wizard')) {
-                            addOrUpdateFeature(
-                                'WIZARD-1: LEARNING SPELLS',
-                                1,
-                                'You can learn a wizard spell from a scroll with DC 15 INT check.',
-                                [],
-                                'Class'
-                            );
-                            addOrUpdateFeature(
-                                'WIZARD-1: WIZARD SPELLCASTING',
-                                1,
-                                "To cast a Wizard spell, roll 1d20 + INT modifier + Spellcheck vs a DC equal to 10 + the spell's tier.",
-                                [],
-                                'Class'
-                            );
+                        if (data.class) {
+                            const clsLower = data.class.toLowerCase().trim();
+                            for (const [clsKey, features] of Object.entries(CLASS_FEATURES_COMPENDIUM)) {
+                                if (clsLower.includes(clsKey)) {
+                                    features.forEach(f => {
+                                        addOrUpdateFeature(f.name, 1, f.desc, [], 'Class');
+                                    });
+                                }
+                            }
                         }
 
                         // Parse bonuses
@@ -8373,7 +8413,13 @@
                         if (bodyArmorWidgets.length > 0) {
                             // Equip only the first body armor widget
                             bodyArmorWidgets[0].addonToggle.checked = true;
-                            bodyArmorWidgets.forEach(w => newWidgets.push(w));
+                            
+                            const unarmoredIdx = newWidgets.findIndex(w => w.id.includes('w_armor') && w.name === 'Unarmored');
+                            if (unarmoredIdx > -1) {
+                                newWidgets.splice(unarmoredIdx, 0, ...bodyArmorWidgets);
+                            } else {
+                                bodyArmorWidgets.forEach(w => newWidgets.push(w));
+                            }
                             
                             const unarmoredW = newWidgets.find(w => w.id.includes('w_armor') && w.name === 'Unarmored');
                             if (unarmoredW) {
@@ -8468,6 +8514,7 @@
                         const parsedStrMod = Math.floor((strValVal - 10) / 2);
                         const parsedDexMod = Math.floor((dexValVal - 10) / 2);
 
+                        let weaponColorIdx = 0;
                         if (data.attacks) {
                             data.attacks.forEach(attackStr => {
                                 if (attackStr.trim().startsWith('SPELLS:') || attackStr.toLowerCase().includes('to cast a')) {
@@ -8535,6 +8582,9 @@
                                 // Subtraction formula to isolate weapon's magical bonus
                                 const magicBonus = bonus - attackModVal - currentGlobalAttackMod - masteryBonusVal;
 
+                                const weaponColor = COLOR_PALETTE[weaponColorIdx % COLOR_PALETTE.length];
+                                weaponColorIdx++;
+
                                 // Build Attack Widget
                                 const attackWId = 'w_atk_custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                                 const attackQueue = buildAttackQueue(attackStat, attackModVar, magicBonus, masteryBonusVal);
@@ -8544,7 +8594,7 @@
                                     characterId: newCharId,
                                     groupId: groupIdMap['combat'],
                                     name: `${name} Attack`,
-                                    color: '#ff9900',
+                                    color: weaponColor,
                                     widgetType: 'roller',
                                     includeAdvDis: true,
                                     addonNote: notes ? `Notes: ${notes.trim()}` : '',
@@ -8566,7 +8616,7 @@
                                         characterId: newCharId,
                                         groupId: groupIdMap['combat'],
                                         name: `${name} Damage${labelSuffix}`,
-                                        color: '#ff3c00',
+                                        color: weaponColor,
                                         widgetType: 'roller',
                                         includeAdvDis: false,
                                         unifiedQueue: damageQueue
@@ -8789,8 +8839,92 @@
 
 
 
-                        // 9. Additional Metadata and Treasures mapping (putting anything unmapped in passives)
-                        const metadataLines = [];
+                        // Add WEAPONS and ARMOR proficiencies to the Passives group
+                        const CLASS_PROFICIENCIES = {
+                            "fighter": {
+                                weapons: "All weapons",
+                                armor: "All armor, shields"
+                            },
+                            "pit fighter": {
+                                weapons: "All weapons",
+                                armor: "All armor, shields"
+                            },
+                            "priest": {
+                                weapons: "Club, mace, staff, warhammer",
+                                armor: "Chainmail, leather armor, plate mail, shield"
+                            },
+                            "cleric": {
+                                weapons: "Club, mace, staff, warhammer",
+                                armor: "Chainmail, leather armor, plate mail, shield"
+                            },
+                            "thief": {
+                                weapons: "Club, dagger, garrote, handaxe, L-crossbow, shortbow, shortsword",
+                                armor: "Leather armor, studded leather armor"
+                            },
+                            "wizard": {
+                                weapons: "Dagger, staff",
+                                armor: "None"
+                            },
+                            "ranger": {
+                                weapons: "All weapons",
+                                armor: "Leather armor, studded leather armor, shields"
+                            },
+                            "paladin": {
+                                weapons: "All weapons",
+                                armor: "All armor, shields"
+                            },
+                            "warlock": {
+                                weapons: "Club, dagger, handaxe, shortbow, shortsword, staff",
+                                armor: "Leather armor, studded leather armor"
+                            },
+                            "bard": {
+                                weapons: "Club, dagger, L-crossbow, shortbow, shortsword",
+                                armor: "Leather armor, studded leather armor, shields"
+                            },
+                            "druid": {
+                                weapons: "Club, dagger, javelin, spear, staff",
+                                armor: "Leather armor, studded leather armor, shields"
+                            }
+                        };
+                        const clsLower = (data.class || '').trim().toLowerCase();
+                        const prof = CLASS_PROFICIENCIES[clsLower];
+                        if (prof) {
+                            newWidgets.push({
+                                id: 'w_prof_weapons_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                characterId: newCharId,
+                                groupId: passivesGrpId,
+                                name: 'WEAPONS',
+                                widgetType: 'text',
+                                text: prof.weapons,
+                                collapsed: false
+                            });
+                            newWidgets.push({
+                                id: 'w_prof_armor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                characterId: newCharId,
+                                groupId: passivesGrpId,
+                                name: 'ARMOR',
+                                widgetType: 'text',
+                                text: prof.armor,
+                                collapsed: false
+                            });
+                        }
+
+                        // 9. Additional Metadata and Treasures mapping (putting anything unmapped in notes group as individual widgets)
+                        let notesGrpId = groupIdMap['notes'];
+                        if (!notesGrpId) {
+                            const existingNotesGrp = newGroups.find(g => g.name.toLowerCase() === 'notes');
+                            if (existingNotesGrp) {
+                                notesGrpId = existingNotesGrp.id;
+                            } else {
+                                notesGrpId = 'grp_' + Date.now() + '_notes_' + Math.random().toString(36).substring(2, 5);
+                                newGroups.push({
+                                    id: notesGrpId,
+                                    name: 'Notes',
+                                    color: '#ff55aa',
+                                    characterId: newCharId
+                                });
+                            }
+                        }
 
                         const handledKeys = new Set([
                             'name', 'stats', 'rolledStats', 'ancestry', 'class', 'level', 'levels',
@@ -8804,26 +8938,24 @@
                             if (!handledKeys.has(key)) {
                                 const val = data[key];
                                 if (val !== null && val !== undefined) {
+                                    let textVal = '';
                                     if (typeof val === 'object') {
-                                        metadataLines.push(`${key}: ${JSON.stringify(val)}`);
+                                        textVal = JSON.stringify(val, null, 2);
                                     } else {
-                                        metadataLines.push(`${key}: ${val}`);
+                                        textVal = String(val);
                                     }
+                                    newWidgets.push({
+                                        id: 'w_meta_' + key + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                        characterId: newCharId,
+                                        groupId: notesGrpId,
+                                        name: key.toUpperCase(),
+                                        widgetType: 'text',
+                                        text: textVal,
+                                        collapsed: true
+                                    });
                                 }
                             }
                         });
-                        
-                        if (metadataLines.length > 0) {
-                            newWidgets.push({
-                                id: 'w_meta_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                                characterId: newCharId,
-                                groupId: passivesGrpId,
-                                name: 'CHARACTER DETAILS',
-                                widgetType: 'text',
-                                text: metadataLines.join('\n'),
-                                collapsed: true
-                            });
-                        }
 
                         if (data.treasures && data.treasures.length > 0) {
                             const treasureLines = data.treasures.map(t => {
@@ -8894,6 +9026,7 @@
                         activeGroupId = newGroups.length > 0 ? newGroups[0].id : null;
                         
                         syncCharacterVariables(character);
+                        organizeCombatWidgets(character.id);
                         
                         persistArsenal();
                         persistSaved();
@@ -9446,10 +9579,14 @@
                 };
 
                 btn.addEventListener('mousedown', startHold);
-                btn.addEventListener('touchstart', startHold, { passive: true });
+                btn.addEventListener('touchstart', (e) => {
+                    btn.draggable = false;
+                    startHold(e);
+                }, { passive: true });
 
                 const endClick = (e) => {
                     clearTimeout(holdTimer);
+                    btn.draggable = true;
                     if (!isHold) {
                         selectGroup(g.id);
                     }
@@ -9457,7 +9594,10 @@
                 btn.addEventListener('mouseup', endClick);
                 btn.addEventListener('touchend', endClick);
                 btn.addEventListener('touchmove', cancelHold, { passive: true });
-                btn.addEventListener('touchcancel', cancelHold, { passive: true });
+                btn.addEventListener('touchcancel', (e) => {
+                    clearTimeout(holdTimer);
+                    btn.draggable = true;
+                }, { passive: true });
                 btn.addEventListener('mouseleave', cancelHold);
 
                 btn.addEventListener('contextmenu', (e) => {
@@ -9911,6 +10051,64 @@
             });
         }
 
+        function organizeCombatWidgets(charId) {
+            const charWidgets = engine.savedQueues.filter(w => w.characterId === charId);
+            const otherWidgets = engine.savedQueues.filter(w => w.characterId !== charId);
+            
+            const combatGrp = groups.find(g => g.characterId === charId && g.name.toLowerCase() === 'combat');
+            if (!combatGrp) return;
+            const combatGrpId = combatGrp.id;
+            
+            const combatWidgets = charWidgets.filter(w => w.groupId === combatGrpId);
+            const nonCombatWidgets = charWidgets.filter(w => w.groupId !== combatGrpId);
+            
+            const hpW = combatWidgets.find(w => w.name === 'HP');
+            const acTotalW = combatWidgets.find(w => w.name === 'Armor Class');
+            const unarmoredW = combatWidgets.find(w => w.name === 'Unarmored');
+            const shieldW = combatWidgets.find(w => w.name === 'Shield');
+            const acModW = combatWidgets.find(w => w.name === 'Misc AC Mod');
+            const backstabW = combatWidgets.find(w => w.name === 'Backstab Dice');
+            
+            const defaultAttacks = combatWidgets.filter(w => 
+                w.id.includes('w_atk_melee_str') || 
+                w.id.includes('w_atk_melee_dex') || 
+                w.id.includes('w_atk_ranged_str') || 
+                w.id.includes('w_atk_ranged_dex') ||
+                ['Attack Melee - STR', 'Attack Melee - DEX', 'Attack Ranged - STR', 'Attack Ranged - DEX'].includes(w.name)
+            );
+            
+            const bodyArmors = combatWidgets.filter(w => 
+                w.bindsVariable === 'AC_Armor' && 
+                w !== unarmoredW
+            );
+            
+            const knownIds = new Set([
+                hpW?.id, acTotalW?.id, unarmoredW?.id, shieldW?.id, acModW?.id, backstabW?.id,
+                ...defaultAttacks.map(w => w.id),
+                ...bodyArmors.map(w => w.id)
+            ].filter(Boolean));
+            
+            const customWeapons = combatWidgets.filter(w => !knownIds.has(w.id));
+            
+            const sortedCombat = [
+                hpW,
+                acTotalW,
+                ...bodyArmors,
+                unarmoredW,
+                shieldW,
+                ...customWeapons,
+                acModW,
+                backstabW,
+                ...defaultAttacks
+            ].filter(Boolean);
+            
+            engine.savedQueues = [
+                ...otherWidgets,
+                ...nonCombatWidgets,
+                ...sortedCombat
+            ];
+        }
+
         async function spawnTemplateInstance(tplId, event) {
             if (event) event.stopPropagation();
             const tpl = templates.find(t => t.id === tplId);
@@ -9969,6 +10167,8 @@
             characters.push(newChar);
             groups.push(...newGroups);
             engine.savedQueues.push(...newWidgets);
+
+            organizeCombatWidgets(newCharId);
 
             activeCharacterId = newCharId;
             activeGroupId = newGroups.length > 0 ? newGroups[0].id : null;
@@ -10759,6 +10959,55 @@
             vibrate(10);
         }
 
+        function ensureActiveCharacterAndGroup() {
+            if (campaigns.length === 0) {
+                campaigns.push({ id: 'default_campaign', name: 'Default Campaign' });
+            }
+            if (!activeCampaignId) {
+                activeCampaignId = campaigns[0].id;
+            }
+            
+            if (characters.length === 0) {
+                characters.push({
+                    id: 'primary',
+                    name: 'Default Character',
+                    dndType: 'standard',
+                    campaignId: activeCampaignId
+                });
+            }
+            if (!activeCharacterId) {
+                activeCharacterId = characters[0].id;
+            }
+            
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char && !char.campaignId) {
+                char.campaignId = activeCampaignId;
+            }
+
+            const charGroups = groups.filter(g => g.characterId === activeCharacterId);
+            if (charGroups.length === 0) {
+                const baseTime = Date.now();
+                const mainGrp = {
+                    id: `grp_main_${baseTime}`,
+                    name: 'Main',
+                    color: '#00d4ff',
+                    characterId: activeCharacterId
+                };
+                groups.push(mainGrp);
+            }
+            
+            const updatedCharGroups = groups.filter(g => g.characterId === activeCharacterId);
+            if (!activeGroupId || !updatedCharGroups.some(g => g.id === activeGroupId)) {
+                activeGroupId = updatedCharGroups[0].id;
+            }
+            
+            persistArsenal();
+            renderCharacterSelect();
+            renderGroupTabs();
+            renderSavedQueues();
+            renderBinder();
+        }
+
         // =========================================================================
         // WIDGET CREATION AND STATE EDITING
         // =========================================================================
@@ -10766,14 +11015,7 @@
 
         function openWidgetCreationModal(isSavingQueue = false) {
             closeAllArsenalMenus();
-            if (!activeCharacterId) {
-                showModal({
-                    title: 'No Active Character',
-                    body: 'Please create or select a character first to add widgets to their groups.',
-                    alertOnly: true
-                });
-                return;
-            }
+            ensureActiveCharacterAndGroup();
             editingWidgetId = null;
             const overlay = document.getElementById('widget-creation-overlay');
             if (!overlay) return;
@@ -11058,7 +11300,7 @@
         function toggleAddonToggleInput(checked) { selectAddonWidget(checked ? 'toggle' : 'none'); }
         function toggleAddonNoteInput(checked) { selectAddonWidget(checked ? 'note' : 'none'); }
 
-        function submitWidgetCreation() {
+        async function submitWidgetCreation() {
             const nameEl = document.getElementById('widget-name');
             const name = nameEl.value.trim() || 'Widget';
             const type = document.getElementById('widget-type').value;
@@ -11083,6 +11325,18 @@
                         bindsVariable = rawVar;
                         variableRelType = document.getElementById('widget-variable-rel-type').value;
                     }
+                }
+            }
+
+            if (bindsVariable && variableRelType === 'define') {
+                const uniqueVar = getUniqueVariableName(activeCharacterId, bindsVariable, editingWidgetId);
+                if (uniqueVar !== bindsVariable) {
+                    await showModal({
+                        title: 'Variable Collision',
+                        body: `The variable "${bindsVariable}" is already defined on this character. It has been renamed to "${uniqueVar}" to avoid conflicts.`,
+                        alertOnly: true
+                    });
+                    bindsVariable = uniqueVar;
                 }
             }
 
@@ -12703,6 +12957,73 @@
             }
         }
 
+        function getUniqueVariableName(charId, varName, excludeWidgetId) {
+            if (!varName) return null;
+            let baseName = varName.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+            if (!baseName) return null;
+
+            let candidate = baseName;
+            let suffix = 1;
+
+            const isNameTaken = (name) => {
+                return engine.savedQueues.some(w => 
+                    w.characterId === charId && 
+                    w.id !== excludeWidgetId && 
+                    w.bindsVariable && 
+                    w.bindsVariable.toUpperCase() === name && 
+                    w.variableRelType === 'define'
+                );
+            };
+
+            while (isNameTaken(candidate)) {
+                candidate = `${baseName}_${suffix}`;
+                suffix++;
+            }
+
+            return candidate;
+        }
+
+        async function duplicateWidget(widgetId, event) {
+            if (event) event.stopPropagation();
+            const original = engine.savedQueues.find(w => w.id === widgetId);
+            if (!original) return;
+
+            // Hide the active menu
+            const menus = document.querySelectorAll('.arsenal-menu');
+            menus.forEach(m => m.classList.add('hidden'));
+
+            const clone = JSON.parse(JSON.stringify(original));
+            clone.id = 'w_dup_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+
+            if (clone.bindsVariable && clone.variableRelType === 'define') {
+                const uniqueVar = getUniqueVariableName(clone.characterId, clone.bindsVariable, null);
+                if (uniqueVar !== clone.bindsVariable) {
+                    await showModal({
+                        title: 'Variable Collision',
+                        body: `The variable "${clone.bindsVariable}" is already defined on this character. The duplicated widget's variable has been renamed to "${uniqueVar}" to avoid conflicts.`,
+                        alertOnly: true
+                    });
+                    clone.bindsVariable = uniqueVar;
+                }
+            }
+
+            // Find index of original and insert clone after it
+            const idx = engine.savedQueues.findIndex(w => w.id === widgetId);
+            if (idx !== -1) {
+                engine.savedQueues.splice(idx + 1, 0, clone);
+            } else {
+                engine.savedQueues.push(clone);
+            }
+
+            persistSaved();
+            const char = characters.find(c => c.id === original.characterId);
+            if (char) {
+                syncCharacterVariables(char);
+            }
+            renderSavedQueues();
+            vibrate(10);
+        }
+
         function populateRulesVariableDropdowns() {
             const sumValEl = document.getElementById('rule-sum-val');
             const countValEl = document.getElementById('rule-count-thresh-val');
@@ -13063,9 +13384,13 @@
 
 
 
-                item.addEventListener('touchstart', startHold, { passive: true });
+                item.addEventListener('touchstart', (e) => {
+                    wrapper.draggable = false;
+                    startHold(e);
+                }, { passive: true });
                 item.addEventListener('touchend', (e) => {
                     cancelHold();
+                    wrapper.draggable = true;
                     if (isHold) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -13077,6 +13402,7 @@
                 item.addEventListener('touchmove', moveHold, { passive: true });
                 item.addEventListener('touchcancel', (e) => {
                     cancelHold();
+                    wrapper.draggable = true;
                     hasMoved = false;
                 });
 
@@ -13580,6 +13906,10 @@
                     <button onclick="openColorPicker('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
                         <span>Appearance</span>
+                    </button>
+                    <button onclick="duplicateWidget('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Duplicate</span>
                     </button>
                     <button onclick="toggleWidgetHiddenState('${q.id}', event)" class="menu-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]">
