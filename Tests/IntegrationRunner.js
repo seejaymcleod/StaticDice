@@ -714,8 +714,8 @@ window.addEventListener('load', () => {
                 if (!hSlot6 || hSlot6.name !== '') throw new Error('Horlabo gear slot 6 should be empty');
 
                 // Verify parsed ambition talent
-                const ambitionTalentW = horlaboWidgets.find(w => w.name === 'ADV ON CAST ONE SPELL');
-                if (!ambitionTalentW) throw new Error('Human ambition talent ADV ON CAST ONE SPELL should be parsed and created');
+                const ambitionTalentW = horlaboWidgets.find(w => w.name.includes('SPELL MASTERY'));
+                if (!ambitionTalentW) throw new Error('Human ambition talent SPELL MASTERY should be parsed and created');
                 if (!ambitionTalentW.text || !ambitionTalentW.text.includes('advantage on casting one spell')) throw new Error('Human ambition talent description is incorrect');
 
                 // Verify Title detail widget

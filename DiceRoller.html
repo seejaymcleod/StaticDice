@@ -3770,22 +3770,7 @@
                             </div>
                         </div>
 
-                        <label
-                            class="addon-radio-label flex items-center gap-2.5 cursor-pointer p-2.5 rounded-xl border border-white/5 bg-[#090d16]/40 hover:bg-[#090d16]/80 transition-all">
-                            <input type="radio" name="addon-widget" id="addon-note-check" value="note"
-                                onchange="selectAddonWidget('note')" class="addon-radio-input">
-                            <div class="flex flex-col">
-                                <span class="text-xs font-bold text-slate-200 uppercase">Text Note Addon</span>
-                                <span class="text-[9px] text-slate-400 font-medium">Adds a small text description below
-                                    the formula.</span>
-                            </div>
-                        </label>
-                        <div id="addon-note-config" class="hidden pl-6">
-                            <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Note
-                                Description</label>
-                            <input type="text" id="addon-note-text" placeholder="E.g., Deals double damage on crit"
-                                class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1 text-xs text-[#e2e8f0]">
-                        </div>
+
                     </div>
                 </div>
 
@@ -4082,6 +4067,13 @@
                         Text (Optional)</label>
                     <textarea id="widget-detail-text" placeholder="E.g., Makes you smarter somehow." rows="2"
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
+                </div>
+
+                <!-- Note Text -->
+                <div id="widget-note-config" class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Note (Optional)</label>
+                    <input type="text" id="addon-note-text" placeholder="E.g., Deals double damage on crit"
+                        class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors">
                 </div>
 
                 <!-- Display Mode Pill -->
@@ -7636,9 +7628,70 @@
                         // Build a map of features (ancestry, bonuses, level talents)
                         const featuresMap = new Map();
 
+                        function normalizeSourceName(sourceName) {
+                            if (!sourceName) return 'Class';
+                            let cleaned = sourceName.replace(/\(Class\)/gi, '').replace(/\(Ancestry\)/gi, '').trim();
+                            if (cleaned.toLowerCase().includes('wizard')) return 'Wizard';
+                            if (cleaned.toLowerCase().includes('priest') || cleaned.toLowerCase().includes('cleric')) return 'Priest';
+                            if (cleaned.toLowerCase().includes('fighter')) return 'Fighter';
+                            if (cleaned.toLowerCase().includes('thief')) return 'Thief';
+                            if (cleaned.toLowerCase().includes('ranger')) return 'Ranger';
+                            if (cleaned.toLowerCase().includes('paladin')) return 'Paladin';
+                            if (cleaned.toLowerCase().includes('warlock')) return 'Warlock';
+                            if (cleaned.toLowerCase().includes('bard')) return 'Bard';
+                            if (cleaned.toLowerCase().includes('druid')) return 'Druid';
+                            return cleaned;
+                        }
+
+                        function normalizeTalentName(name, desc) {
+                            const nameUpper = (name || '').toUpperCase();
+                            const descUpper = (desc || '').toUpperCase();
+                            
+                            if (nameUpper.includes('SPELL MASTERY') || nameUpper.includes('ADVONCASTONESPELL') || descUpper.includes('ADVANTAGE WHEN CASTING') || descUpper.includes('ADVANTAGE ON CASTING') || descUpper.includes('SPELL MASTERY')) {
+                                return 'SPELL MASTERY';
+                            }
+                            if (nameUpper.includes('STAT BONUS') || nameUpper.includes('STATBONUS') || descUpper.includes('+2 TO ') || (descUpper.includes('+2') && descUpper.includes('INTELLIGENCE')) || (descUpper.includes('+2') && descUpper.includes('STRENGTH')) || (descUpper.includes('+2') && descUpper.includes('DEXTERITY')) || (descUpper.includes('+2') && descUpper.includes('CONSTITUTION')) || (descUpper.includes('+2') && descUpper.includes('WISDOM')) || (descUpper.includes('+2') && descUpper.includes('CHARISMA'))) {
+                                return 'STAT BONUS';
+                            }
+                            if (nameUpper.includes('CASTING') || descUpper.includes('+1 TO WIZARD SPELL CASTING') || descUpper.includes('+1 TO WIZARD SPELLCASTING') || descUpper.includes('+1 TO PRIEST SPELL CASTING') || descUpper.includes('+1 TO PRIEST SPELLCASTING') || descUpper.includes('SPELL CASTING ROLLS') || descUpper.includes('SPELLCASTING ROLLS') || descUpper.includes('SPELL CASTING') || descUpper.includes('SPELLCASTING')) {
+                                return 'CASTING';
+                            }
+                            return name;
+                        }
+
+                        function parseStatBonusModifiers(desc) {
+                            if (!desc) return [];
+                            const descLower = desc.toLowerCase();
+                            const mods = [];
+                            const stats = {
+                                'strength': 'STR',
+                                'dexterity': 'DEX',
+                                'constitution': 'CON',
+                                'intelligence': 'INT',
+                                'wisdom': 'WIS',
+                                'charisma': 'CHA'
+                            };
+                            for (const [statName, varName] of Object.entries(stats)) {
+                                const regex = new RegExp(`\\+(\\d+)\\s+(?:to\\s+)?${statName}`, 'i');
+                                const match = descLower.match(regex);
+                                if (match) {
+                                    mods.push({ variable: varName, value: parseInt(match[1]) || 2 });
+                                }
+                            }
+                            return mods;
+                        }
+
                         function cleanFeatureName(name) {
                             if (!name) return '';
-                            let cleaned = name.replace(/\bpassive\b/gi, '');
+                            let prefix = '';
+                            let namePart = name;
+                            const prefixMatch = name.match(/^([A-Z\s0-9_]+-\d+):(.*)$/i);
+                            if (prefixMatch) {
+                                prefix = prefixMatch[1].trim().toUpperCase() + ': ';
+                                namePart = prefixMatch[2];
+                            }
+                            
+                            let cleaned = namePart.replace(/\bpassive\b/gi, '');
                             cleaned = cleaned.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
                             cleaned = cleaned.replace(/_/g, ' ');
                             cleaned = cleaned.replace(/\s*\([^)]+\)/g, '');
@@ -7647,27 +7700,39 @@
                             cleaned = cleaned.replace(/[\s:-]+/g, ' ');
                             const result = cleaned.trim().toUpperCase();
                             const SD_NAME_MAPPINGS = {
-                                'IGNORE ONE ATTACK': 'WALK IT OFF'
+                                'IGNORE ONE ATTACK': 'WALK IT OFF',
+                                'IGNOREONEATTACK': 'WALK IT OFF'
                             };
-                            return SD_NAME_MAPPINGS[result] || result;
+                            const mapped = SD_NAME_MAPPINGS[result] || result;
+                            
+                            if (mapped === 'WALK IT OFF') {
+                                return 'WALK IT OFF';
+                            }
+                            
+                            if (prefixMatch) {
+                                return (prefix + mapped).trim().toUpperCase();
+                            }
+                            return mapped;
                         }
 
                         function addOrUpdateFeature(name, level, desc, mods, category) {
                             if (!name || !name.trim()) return;
 
-                            let parts = name.split(':').map(p => p.trim());
-                            if (parts.length >= 2) {
-                                const firstLower = parts[0].toLowerCase();
-                                const knownSources = ['half-orc', 'human', 'elf', 'dwarf', 'halfling', 'goblin', 'wizard', 'priest', 'cleric', 'druid', 'ranger', 'paladin', 'warlock', 'bard', 'fighter', 'thief', 'pit fighter', 'class', 'ancestry'];
-                                if (knownSources.includes(firstLower)) {
-                                    parts.shift();
+                            if (!/^[a-zA-Z\s0-9_]+-\d+:/i.test(name)) {
+                                let parts = name.split(':').map(p => p.trim());
+                                if (parts.length >= 2) {
+                                    const firstLower = parts[0].toLowerCase();
+                                    const knownSources = ['half-orc', 'human', 'elf', 'dwarf', 'halfling', 'goblin', 'wizard', 'priest', 'cleric', 'druid', 'ranger', 'paladin', 'warlock', 'bard', 'fighter', 'thief', 'pit fighter', 'class', 'ancestry'];
+                                    if (knownSources.includes(firstLower)) {
+                                        parts.shift();
+                                    }
                                 }
-                            }
-                            if (parts.length >= 2) {
-                                name = parts[0];
-                                desc = parts.slice(1).join(': ').trim() + (desc ? '\n' + desc : '');
-                            } else if (parts.length === 1) {
-                                name = parts[0];
+                                if (parts.length >= 2) {
+                                    name = parts[0];
+                                    desc = parts.slice(1).join(': ').trim() + (desc ? '\n' + desc : '');
+                                } else if (parts.length === 1) {
+                                    name = parts[0];
+                                }
                             }
 
                             const key = `${name.toLowerCase().trim()}_${level}`;
@@ -7759,10 +7824,28 @@
                             addOrUpdateFeature('RELENTLESS', 1, '1/day, when you would be reduced to 0 hit points, you are reduced to 1 hit point instead.', [], 'Class');
                         }
 
+                        // Wizard class features
+                        if (data.class && data.class.toLowerCase().includes('wizard')) {
+                            addOrUpdateFeature(
+                                'WIZARD-1: LEARNING SPELLS',
+                                1,
+                                'You can learn a wizard spell from a scroll with DC 15 INT check.',
+                                [],
+                                'Class'
+                            );
+                            addOrUpdateFeature(
+                                'WIZARD-1: WIZARD SPELLCASTING',
+                                1,
+                                "To cast a Wizard spell, roll 1d20 + INT modifier + Spellcheck vs a DC equal to 10 + the spell's tier.",
+                                [],
+                                'Class'
+                            );
+                        }
+
                         // Talent / Abilities detection from data.bonuses
                         if (data.bonuses) {
                             data.bonuses.forEach(b => {
-                                if (b.sourceCategory === 'Talent' || b.sourceCategory === 'Ability') {
+                                if (b.sourceCategory === 'Talent' || b.sourceCategory === 'Ability' || b.sourceCategory === 'Item' || b.sourceType === 'Item') {
                                     if (b.bonusTo && b.bonusTo.startsWith('Tier:')) return;
                                     if (b.bonusTo === 'Languages') return;
                                     
@@ -7772,7 +7855,28 @@
                                     const descLower = (b.talentRolledDesc || b.desc || '').toLowerCase();
                                     const amount = parseInt(b.bonusAmount) || 1;
 
-                                    if (bNameLower.includes('plus1tocastingspells') || bToLower.includes('spellcasting') || (descLower.includes('spellcasting check') && !descLower.includes(' or ')) || (bNameLower.includes('plustwointorplusonewizcasting') && descLower.includes('casting') && !descLower.includes(' or '))) {
+                                    // Parse stat bonus modifiers (like +2 to Intelligence)
+                                    const statMods = parseStatBonusModifiers(descLower);
+                                    if (statMods.length > 0) mods.push(...statMods);
+
+                                    // Also parse from b.bonusTo if it defines a stat bonus (e.g. "INT:+2")
+                                    if (b.bonusTo && /^([A-Z]{3}):\+?(-?\d+)/i.test(b.bonusTo)) {
+                                        const match = b.bonusTo.match(/^([A-Z]{3}):\+?(-?\d+)/i);
+                                        const varName = match[1].toUpperCase();
+                                        const val = parseInt(match[2]) || 0;
+                                        if (!mods.some(m => m.variable === varName)) {
+                                            mods.push({ variable: varName, value: val });
+                                        }
+                                    }
+
+                                    if (bNameLower.includes('plus1tocastingspells') || 
+                                        bToLower.includes('spellcasting') || 
+                                        bToLower.includes('spell casting') || 
+                                        (descLower.includes('spellcasting check') && !descLower.includes(' or ')) || 
+                                        (descLower.includes('spell casting check') && !descLower.includes(' or ')) || 
+                                        descLower.includes('spell casting rolls') ||
+                                        descLower.includes('spellcasting rolls') ||
+                                        (bNameLower.includes('plustwointorplusonewizcasting') && (descLower.includes('casting') || descLower.includes('spellcasting') || descLower.includes('spell casting')) && !descLower.includes(' or '))) {
                                         mods.push({ variable: 'Spellcheck', value: amount });
                                     }
                                     if ((descLower.includes('+1 to melee attack') || descLower.includes('+1 melee attack')) && !descLower.includes(' or ')) {
@@ -7788,20 +7892,35 @@
                                         mods.push({ variable: 'Damage_Ranged', value: amount });
                                     }
 
-                                    const name = b.bonusName || b.name;
                                     const level = b.gainedAtLevel || 1;
                                     const desc = b.talentRolledDesc || b.desc || `Bonus from ${b.sourceName} (${b.sourceType})`;
-                                    addOrUpdateFeature(name, level, desc, mods, b.sourceCategory);
+                                    
+                                    let finalName;
+                                    if (b.sourceCategory === 'Talent') {
+                                        const sourceNameClean = normalizeSourceName(b.sourceName || 'Class');
+                                        const talentName = normalizeTalentName(b.bonusName || b.name, descLower);
+                                        finalName = `${sourceNameClean.toUpperCase()}-${level}: ${talentName.toUpperCase()}`;
+                                    } else {
+                                        finalName = b.bonusName || b.name;
+                                    }
+                                    
+                                    addOrUpdateFeature(finalName, level, desc, mods, b.sourceCategory);
                                 }
                             });
                         }
 
-                        function parseTalentObject(lvl, lvlNum) {
+                        function parseTalentObject(lvl, lvlNum, sourceName) {
                             if (!lvl) return;
+                            const sourceNameClean = normalizeSourceName(sourceName);
                             if (lvl.talentRolledName && lvl.talentRolledName.trim()) {
                                 const mods = [];
                                 const descLower = (lvl.talentRolledDesc || '').toLowerCase();
+                                
                                 if (!descLower.includes(' or ')) {
+                                    // Parse stat bonus modifiers
+                                    const statMods = parseStatBonusModifiers(lvl.talentRolledDesc);
+                                    if (statMods.length > 0) mods.push(...statMods);
+
                                     if (descLower.includes('+1 to melee attack') || descLower.includes('+1 melee attack')) {
                                         mods.push({ variable: 'Attack_Melee', value: 1 });
                                     }
@@ -7814,16 +7933,32 @@
                                     if (descLower.includes('+1 to ranged damage') || descLower.includes('+1 ranged damage')) {
                                         mods.push({ variable: 'Damage_Ranged', value: 1 });
                                     }
-                                    if (descLower.includes('+1 to wizard spellcasting') || descLower.includes('+1 to priest spellcasting') || descLower.includes('+1 to spellcasting') || descLower.includes('spellcasting check')) {
+                                    if (descLower.includes('+1 to wizard spellcasting') || 
+                                        descLower.includes('+1 to wizard spell casting') || 
+                                        descLower.includes('+1 to priest spellcasting') || 
+                                        descLower.includes('+1 to priest spell casting') || 
+                                        descLower.includes('+1 to spellcasting') || 
+                                        descLower.includes('+1 to spell casting') || 
+                                        descLower.includes('spellcasting check') ||
+                                        descLower.includes('spell casting check') ||
+                                        descLower.includes('spell casting rolls') ||
+                                        descLower.includes('spellcasting rolls')) {
                                         mods.push({ variable: 'Spellcheck', value: 1 });
                                     }
                                 }
-                                addOrUpdateFeature(lvl.talentRolledName, lvlNum, lvl.talentRolledDesc, mods, 'Talent');
+                                const talentName = normalizeTalentName(lvl.talentRolledName, lvl.talentRolledDesc);
+                                const finalName = `${sourceNameClean.toUpperCase()}-${lvlNum}: ${talentName.toUpperCase()}`;
+                                addOrUpdateFeature(finalName, lvlNum, lvl.talentRolledDesc, mods, 'Talent');
                             }
                             if (lvl.Rolled12ChosenTalentName && lvl.Rolled12ChosenTalentName.trim()) {
                                 const mods = [];
                                 const descLower = (lvl.Rolled12ChosenTalentDesc || '').toLowerCase();
+
                                 if (!descLower.includes(' or ')) {
+                                    // Parse stat bonus modifiers
+                                    const statMods = parseStatBonusModifiers(lvl.Rolled12ChosenTalentDesc);
+                                    if (statMods.length > 0) mods.push(...statMods);
+
                                     if (descLower.includes('+1 to melee attack') || descLower.includes('+1 melee attack')) {
                                         mods.push({ variable: 'Attack_Melee', value: 1 });
                                     }
@@ -7836,22 +7971,33 @@
                                     if (descLower.includes('+1 to ranged damage') || descLower.includes('+1 ranged damage')) {
                                         mods.push({ variable: 'Damage_Ranged', value: 1 });
                                     }
-                                    if (descLower.includes('+1 to wizard spellcasting') || descLower.includes('+1 to priest spellcasting') || descLower.includes('+1 to spellcasting') || descLower.includes('spellcasting check')) {
+                                    if (descLower.includes('+1 to wizard spellcasting') || 
+                                        descLower.includes('+1 to wizard spell casting') || 
+                                        descLower.includes('+1 to priest spellcasting') || 
+                                        descLower.includes('+1 to priest spell casting') || 
+                                        descLower.includes('+1 to spellcasting') || 
+                                        descLower.includes('+1 to spell casting') || 
+                                        descLower.includes('spellcasting check') ||
+                                        descLower.includes('spell casting check') ||
+                                        descLower.includes('spell casting rolls') ||
+                                        descLower.includes('spellcasting rolls')) {
                                         mods.push({ variable: 'Spellcheck', value: 1 });
                                     }
                                 }
-                                addOrUpdateFeature(lvl.Rolled12ChosenTalentName, lvlNum, lvl.Rolled12ChosenTalentDesc, mods, 'Talent');
+                                const talentName = normalizeTalentName(lvl.Rolled12ChosenTalentName, lvl.Rolled12ChosenTalentDesc);
+                                const finalName = `${sourceNameClean.toUpperCase()}-${lvlNum}: ${talentName.toUpperCase()}`;
+                                addOrUpdateFeature(finalName, lvlNum, lvl.Rolled12ChosenTalentDesc, mods, 'Talent');
                             }
                         }
 
                         // Talent / Abilities detection from data.levels
                         if (data.levels) {
                             data.levels.forEach(lvl => {
-                                parseTalentObject(lvl, lvl.level || 1);
+                                parseTalentObject(lvl, lvl.level || 1, data.class || 'Class');
                             });
                         }
                         if (data.ambitionTalentLevel) {
-                            parseTalentObject(data.ambitionTalentLevel, data.ambitionTalentLevel.level || 1);
+                            parseTalentObject(data.ambitionTalentLevel, data.ambitionTalentLevel.level || 1, 'Human Ambition');
                         }
 
                         // Sum passive modifier variables locally (to adjust weapons magic bonuses calculations)
@@ -7916,8 +8062,12 @@
                         const statKeys = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
                         statKeys.forEach(k => {
                             const scoreW = newWidgets.find(w => w.name === `${k} Score` && w.widgetType === 'number');
-                            if (scoreW && data.stats && data.stats[k] !== undefined) {
-                                scoreW.value = data.stats[k];
+                            if (scoreW) {
+                                if (data.rolledStats && data.rolledStats[k] !== undefined) {
+                                    scoreW.value = data.rolledStats[k];
+                                } else if (data.stats && data.stats[k] !== undefined) {
+                                    scoreW.value = data.stats[k];
+                                }
                             }
                         });
                         
@@ -8206,6 +8356,11 @@
                                     widgetType: 'roller',
                                     includeAdvDis: true,
                                     addonNote: `${data.class} Spellcasting Check`,
+                                    addonToggle: {
+                                        checked: true,
+                                        labelOn: 'Ready',
+                                        labelOff: 'Miscast'
+                                    },
                                     unifiedQueue: [
                                         { nodeType: 'node', sides: 20, count: 1 },
                                         { nodeType: 'operator', operator: '+' },
@@ -8220,12 +8375,15 @@
 
                         // 8. Custom talents, class abilities, magic items, and ancestry traits mapping
                         Array.from(featuresMap.values()).forEach(f => {
+                            const isItemFeature = f.category === 'Item' || f.category === 'MagicItem' || (f.category && f.category.toLowerCase().includes('item'));
+                            const targetGrpId = isItemFeature ? (groupIdMap['gear'] || passivesGrpId) : passivesGrpId;
+
                             const limit = parseUsageLimit(f.desc);
                             if (limit !== null) {
                                 const widget = {
                                     id: 'w_feat_stepper_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                                     characterId: newCharId,
-                                    groupId: passivesGrpId,
+                                    groupId: targetGrpId,
                                     name: cleanFeatureName(f.name),
                                     widgetType: 'stepper',
                                     min: 0,
@@ -8240,7 +8398,7 @@
                                 const widget = {
                                     id: 'w_feat_toggle_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                                     characterId: newCharId,
-                                    groupId: passivesGrpId,
+                                    groupId: targetGrpId,
                                     name: cleanFeatureName(f.name),
                                     widgetType: 'toggle',
                                     checked: true,
@@ -8255,7 +8413,7 @@
                                 const widget = {
                                     id: 'w_feat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                                     characterId: newCharId,
-                                    groupId: passivesGrpId,
+                                    groupId: targetGrpId,
                                     name: cleanFeatureName(f.name),
                                     widgetType: 'text',
                                     text: f.desc || 'No description.',
@@ -8279,13 +8437,14 @@
                                 if (mi.slots) details.push(`Slots: ${mi.slots}`);
                                 const detailTextVal = details.join('\n\n');
 
+                                const targetGrpId = groupIdMap['gear'] || passivesGrpId;
                                 const benefitsText = mi.benefits || '';
                                 const limit = parseUsageLimit(benefitsText);
                                 if (limit !== null) {
                                     const widget = {
                                         id: 'w_magic_item_stepper_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                                         characterId: newCharId,
-                                        groupId: passivesGrpId,
+                                        groupId: targetGrpId,
                                         name: mi.name.toUpperCase(),
                                         widgetType: 'stepper',
                                         min: 0,
@@ -8299,7 +8458,7 @@
                                     const widget = {
                                         id: 'w_magic_item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                                         characterId: newCharId,
-                                        groupId: passivesGrpId,
+                                        groupId: targetGrpId,
                                         name: mi.name.toUpperCase(),
                                         widgetType: 'text',
                                         text: detailTextVal,
@@ -10387,19 +10546,17 @@
             // Determine which addon radio to select
             const hasCounter = !!q.addonCounter;
             const hasToggle = !!q.addonToggle;
-            const hasNote = !!q.addonNote;
             let activeAddon = 'none';
             if (q.includeAdvDis) activeAddon = 'advdis';
             else if (hasCounter) activeAddon = 'stepper';
             else if (hasToggle) activeAddon = 'toggle';
-            else if (hasNote) activeAddon = 'note';
 
             document.getElementById('addon-stepper-label').value = hasCounter ? q.addonCounter.label : 'Resource';
             document.getElementById('addon-stepper-max').value = hasCounter ? q.addonCounter.max : '20';
             document.getElementById('addon-stepper-val').value = hasCounter ? q.addonCounter.value : '20';
             document.getElementById('addon-toggle-on').value = hasToggle ? q.addonToggle.labelOn : 'Ready';
             document.getElementById('addon-toggle-off').value = hasToggle ? q.addonToggle.labelOff : 'Miscast';
-            document.getElementById('addon-note-text').value = hasNote ? q.addonNote : '';
+            document.getElementById('addon-note-text').value = q.addonNote || '';
 
             // Set the correct radio and show its config
             const radioEl = document.querySelector(`input[name="addon-widget"][value="${activeAddon}"]`);
@@ -10555,7 +10712,6 @@
             // Hide all addon config panels
             document.getElementById('addon-stepper-config').classList.add('hidden');
             document.getElementById('addon-toggle-config').classList.add('hidden');
-            document.getElementById('addon-note-config').classList.add('hidden');
 
             // Highlight the selected radio label
             document.querySelectorAll('.addon-radio-label').forEach(lbl => {
@@ -10574,8 +10730,6 @@
                 document.getElementById('addon-stepper-config').classList.remove('hidden');
             } else if (type === 'toggle') {
                 document.getElementById('addon-toggle-config').classList.remove('hidden');
-            } else if (type === 'note') {
-                document.getElementById('addon-note-config').classList.remove('hidden');
             }
         }
 
@@ -10639,6 +10793,7 @@
                     q.name = name;
                     q.widgetType = type;
                     q.detailText = detailText;
+                    q.addonNote = document.getElementById('addon-note-text').value.trim() || null;
                     q.bindsVariable = bindsVariable;
                     q.variableRelType = variableRelType;
                     q.passiveModifiers = passiveModifiers;
@@ -10666,12 +10821,6 @@
                             };
                         } else {
                             q.addonToggle = null;
-                        }
-
-                        if (selectedAddon === 'note') {
-                            q.addonNote = document.getElementById('addon-note-text').value.trim() || null;
-                        } else {
-                            q.addonNote = null;
                         }
                     } else if (type === 'stepper') {
                         q.min = parseInt(document.getElementById('stepper-min').value) || 0;
@@ -10738,6 +10887,7 @@
                 widgetType: type,
                 queue: [],
                 detailText: detailText,
+                addonNote: document.getElementById('addon-note-text').value.trim() || null,
                 bindsVariable: bindsVariable,
                 variableRelType: variableRelType,
                 passiveModifiers: passiveModifiers,
@@ -10781,12 +10931,6 @@
                     };
                 } else {
                     newWidget.addonToggle = null;
-                }
-
-                if (selectedAddon === 'note') {
-                    newWidget.addonNote = document.getElementById('addon-note-text').value.trim() || null;
-                } else {
-                    newWidget.addonNote = null;
                 }
 
             } else if (type === 'stepper') {
@@ -12852,6 +12996,7 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-1 pr-2">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${q.name}</div>
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             ${trackerHtml}
                         </div>
@@ -12860,6 +13005,7 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-1 pr-8">
                             <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
@@ -12941,13 +13087,14 @@
                         `;
                     }
                 } else if (type === 'text') {
-                    const isCollapsed = q.collapsed ?? false;
+                    const isCollapsed = (globalLayout === 'force-normal') ? false : (q.collapsed ?? false);
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-1">
                             <div class="flex items-center gap-1.5 justify-between">
                                 <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || ''}</div>
                                 <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
                             </div>
+                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
                             ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
                             ${q.text ? `<div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed ? 'hidden' : ''}">${q.text}</div>` : ''}
                         </div>
