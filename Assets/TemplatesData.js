@@ -472,66 +472,7 @@ window.StaticDiceTemplates = [
                 animationType: 'torches',
                 detailText: 'Active Torch'
             },
-            {
-                id: 'w_atk_melee_str',
-                groupId: 'combat',
-                name: 'Attack Melee - STR',
-                color: '#ff9900',
-                widgetType: 'roller',
-                includeAdvDis: true,
-                unifiedQueue: [
-                    { nodeType: 'node', sides: 20, count: 1 },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'Attack_Melee', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                ]
-            },
-            {
-                id: 'w_atk_melee_dex',
-                groupId: 'combat',
-                name: 'Attack Melee - DEX',
-                color: '#ff9900',
-                widgetType: 'roller',
-                includeAdvDis: true,
-                unifiedQueue: [
-                    { nodeType: 'node', sides: 20, count: 1 },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'Attack_Melee', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                ]
-            },
-            {
-                id: 'w_atk_ranged_str',
-                groupId: 'combat',
-                name: 'Attack Ranged - STR',
-                color: '#ffdd00',
-                widgetType: 'roller',
-                includeAdvDis: true,
-                unifiedQueue: [
-                    { nodeType: 'node', sides: 20, count: 1 },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'Attack_Ranged', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                ]
-            },
-            {
-                id: 'w_atk_ranged_dex',
-                groupId: 'combat',
-                name: 'Attack Ranged - DEX',
-                color: '#ffdd00',
-                widgetType: 'roller',
-                includeAdvDis: true,
-                unifiedQueue: [
-                    { nodeType: 'node', sides: 20, count: 1 },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'Attack_Ranged', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                ]
-            },
+
             {
                 id: 'w_spellcheck_int',
                 groupId: 'spells',
@@ -632,10 +573,75 @@ window.StaticDiceTemplates = [
                 bindsVariable: 'Backstab_Dice',
                 variableRelType: 'define',
                 value: 1,
+                hidden: true,
                 unifiedQueue: [
                     { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' },
                     { nodeType: 'operator', operator: '+' },
                     { nodeType: 'modifier', type: 'variable', value: 'LVL', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'literal', divisorValue: 2, roundMode: 'down' }
+                ]
+            },
+            {
+                id: 'w_atk_melee_str',
+                groupId: 'combat',
+                name: 'Attack Melee - STR',
+                color: '#ff9900',
+                widgetType: 'roller',
+                includeAdvDis: true,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'Attack_Melee', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                ]
+            },
+            {
+                id: 'w_atk_melee_dex',
+                groupId: 'combat',
+                name: 'Attack Melee - DEX',
+                color: '#ff9900',
+                widgetType: 'roller',
+                includeAdvDis: true,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'Attack_Melee', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                ]
+            },
+            {
+                id: 'w_atk_ranged_str',
+                groupId: 'combat',
+                name: 'Attack Ranged - STR',
+                color: '#ffdd00',
+                widgetType: 'roller',
+                includeAdvDis: true,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'STR_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'Attack_Ranged', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
+                ]
+            },
+            {
+                id: 'w_atk_ranged_dex',
+                groupId: 'combat',
+                name: 'Attack Ranged - DEX',
+                color: '#ffdd00',
+                widgetType: 'roller',
+                includeAdvDis: true,
+                hidden: true,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'DEX_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'variable', value: 'Attack_Ranged', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
                 ]
             },
             {
