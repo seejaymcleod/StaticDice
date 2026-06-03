@@ -786,7 +786,7 @@
             transform: translateX(16px);
         }
 
-        /* Saved Queue Card Specific Toggle Switch (Vertical pill knob and theme-colored active track) */
+        /* Saved Queue Card Specific Toggle (Vertical pill knob and theme-colored active track) */
         .saved-item .toggle-slider:before {
             height: 14px;
             width: 6px;

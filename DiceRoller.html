@@ -12,7 +12,7 @@
 </head>
 
 <body class="flex flex-col items-center">
-    <!-- Countdown Tracker — Breakdown Dialog -->
+    <!-- Countdown — Breakdown Dialog -->
     <dialog id="ct-breakdown-dialog">
         <div class="ct-bd-header">
             <input type="text" class="ct-bd-title-input" id="ct-bd-title" placeholder="Side Name"
@@ -1302,13 +1302,13 @@
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">Widget
                         Type</label>
                     <select id="widget-type" onchange="onWidgetTypeChange(this.value)" class="char-select w-full">
-                        <option value="roller">Dice Roller (Card)</option>
+                        <option value="roller">Dice Roller</option>
                         <option value="stepper">Resource Stepper</option>
-                        <option value="toggle">Toggle Switch</option>
-                        <option value="number">Number Card</option>
+                        <option value="toggle">Toggle</option>
+                        <option value="number">Number</option>
                         <option value="text">Text</option>
-                        <option value="countdown">Countdown Tracker</option>
-                        <option value="timer">Timer Widget</option>
+                        <option value="countdown">Countdown</option>
+                        <option value="timer">Timer</option>
                     </select>
                 </div>
 
@@ -1374,7 +1374,7 @@
                             <input type="radio" name="addon-widget" id="addon-toggle-check" value="toggle"
                                 onchange="selectAddonWidget('toggle')" class="addon-radio-input">
                             <div class="flex flex-col">
-                                <span class="text-xs font-bold text-slate-200 uppercase">Usability Toggle Switch</span>
+                                <span class="text-xs font-bold text-slate-200 uppercase">Usability Toggle</span>
                                 <span class="text-[9px] text-slate-400 font-medium">Adds a mini switch (e.g.
                                     Prepared/Miscast) inside the card.</span>
                             </div>
@@ -1428,7 +1428,7 @@
                     </div>
                 </div>
 
-                <!-- Countdown Tracker Config -->
+                <!-- Countdown Config -->
                 <div id="widget-countdown-config" class="hidden space-y-3">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Countdown
                         Settings</label>
@@ -1571,7 +1571,7 @@
                     <input type="hidden" id="ct-right-color" value="#f59e0b">
                 </div>
 
-                <!-- Timer Widget Config -->
+                <!-- Timer Config -->
                 <div id="widget-timer-config" class="hidden space-y-3">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Timer
                         Settings</label>
@@ -1641,7 +1641,7 @@
                     </div>
                 </div>
 
-                <!-- Toggle Switch Config -->
+                <!-- Toggle Config -->
                 <div id="widget-toggle-config" class="hidden space-y-3">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Toggle
                         Settings</label>
@@ -1674,7 +1674,7 @@
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
                 </div>
 
-                <!-- Number Card Config -->
+                <!-- Number Config -->
                 <div id="widget-number-config" class="hidden space-y-3">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Number
                         Settings</label>

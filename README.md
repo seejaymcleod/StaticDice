@@ -23,7 +23,7 @@ Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a hi
 
 ### 🎛️ The Arsenal & Polymorphic Widgets
 Save your frequent rolls, character variables, or trackers as custom interactive widgets:
-- **Polymorphic Cards**: Save widgets as Rollers, Compact Resource Steppers, Toggle Switches, Timers / Dynamic Countdowns, or Collapsible Text notes.
+- **Polymorphic Cards**: Save widgets as Rollers, Compact Resource Steppers, Toggles, Timers / Dynamic Countdowns, or Collapsible Text notes.
 - **Roll Addons**: Extend Rollers with Advantage/Disadvantage buttons, inline description notes, or adjacent resource counters.
 - **Clean Indicators**: Toggle card states cleanly using full-card tap triggers and sleek, vertical right-side "bulb" stripes.
 - **Persistence & Portability**: Saved in LocalStorage, or easily imported/exported between devices via the Binder Drawer.
