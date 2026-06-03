@@ -183,13 +183,15 @@
                 btn.className = `group-tab ${g.id === activeGroupId ? 'active' : ''}`;
                 btn.innerHTML = `<span class="group-dot" style="background:${g.color}"></span>${g.name}`;
 
-                let isHold = false;
+                let isHold = false;          // used for native contextmenu guard
+                let holdOpened = false;      // true only after the timer opens the menu
                 let holdTimer = null;
 
                 const startHold = (e) => {
                     isHold = false;
+                    holdOpened = false;
                     holdTimer = setTimeout(() => {
-                        isHold = true;
+                        holdOpened = true;    // timer succeeded, menu opened
                         openGroupContextMenu(g.id, e);
                     }, 500);
                 };
@@ -203,9 +205,11 @@
 
                 const endClick = (e) => {
                     clearTimeout(holdTimer);
-                    if (!isHold) {
+                    if (!holdOpened) {
                         selectGroup(g.id);
                     }
+                    // reset for next interaction
+                    holdOpened = false;
                 };
                 btn.addEventListener('mouseup', endClick);
                 btn.addEventListener('touchend', endClick);
@@ -218,6 +222,8 @@
                 btn.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    // If the hold timer already opened the menu, ignore native event
+                    if (holdOpened) return;
                     isHold = true;
                     openGroupContextMenu(g.id, e);
                 });
@@ -618,10 +624,17 @@
 
 
 
+                // Add a separate flag for timer‑opened menus
+                let holdOpenedItem = false;
+
                 item.addEventListener('touchstart', startHold, { passive: true });
                 item.addEventListener('touchend', (e) => {
                     cancelHold();
-                    if (isHold) {
+                    // If the timer opened the menu, we already handled the event
+                    if (holdOpenedItem) {
+                        // reset flag for next interaction
+                        holdOpenedItem = false;
+                    } else if (isHold) {
                         e.preventDefault();
                         e.stopPropagation();
                     }
@@ -640,7 +653,9 @@
                 });
                 item.addEventListener('mouseup', (e) => {
                     cancelHold();
-                    if (isHold) {
+                    if (holdOpenedItem) {
+                        holdOpenedItem = false;
+                    } else if (isHold) {
                         e.preventDefault();
                         e.stopPropagation();
                     }
@@ -662,9 +677,9 @@
                     }
                     e.preventDefault();
                     e.stopPropagation();
-                    
-                    if (isHold) return; // Prevent double-toggling if holdTimer already opened it
-                    
+                    // If the hold timer already opened the menu, ignore native event
+                    if (holdOpenedItem) return;
+                    // Otherwise handle as before
                     isHold = true;
                     toggleArsenalMenu(q.id, e);
                 });
