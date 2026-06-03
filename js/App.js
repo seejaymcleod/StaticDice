@@ -3078,9 +3078,6 @@
 
         var activeMenuId = null;
 
-        // One-shot flag: when true, the next 'click' that would close the menu
-        // is swallowed (covers the synthetic click Android/iOS fire after long-press).
-        var suppressNextMenuDismiss = false;
 
         function toggleArsenalMenu(id, e) {
             if (e) e.stopPropagation();
@@ -3100,13 +3097,6 @@
                 targetMenu.classList.remove('hidden');
                 parentItem.classList.add('z-50');
                 activeMenuId = id;
-
-                // Absorb the synthetic click that Android/iOS fire after a
-                // long-press lifts. We register a one-shot CAPTURE listener so
-                // it fires before the bubble-phase window click handler below.
-                // If the click lands outside the menu we stop it; if it lands
-                // inside (user immediately taps a menu item) we let it through.
-                suppressNextMenuDismiss = true;
 
                 // Dynamically update play/pause menu button for timer widgets
                 const q = engine.findSavedQueue(id);
@@ -3210,18 +3200,13 @@
                 }
             }
 
-            // Close arsenal menus on any click that isn't inside the menu itself.
-            // Skip if suppressNextMenuDismiss is set — that flag is raised when a
-            // menu is opened by a long-press to absorb the synthetic click that
-            // Android/iOS fire after the finger lifts.
+            // Close arsenal menus on any click outside the menu.
+            // Synthetic post-longpress clicks are blocked upstream by
+            // e.stopPropagation() in item.onclick when isHold is true.
             if (!e.target.closest('.arsenal-menu') && !e.target.closest('.gear-btn') && !e.target.closest('#import-export-btn')) {
-                if (suppressNextMenuDismiss) {
-                    suppressNextMenuDismiss = false; // consume the flag
-                } else {
-                    document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
-                    document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
-                    activeMenuId = null;
-                }
+                document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
+                document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+                activeMenuId = null;
             }
         });
 

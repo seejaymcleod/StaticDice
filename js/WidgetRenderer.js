@@ -679,6 +679,7 @@
                     item.onclick = (e) => {
                         if (isHold) {
                             isHold = false;
+                            e.stopPropagation(); // prevent bubble to window click handler
                             return;
                         }
                         if (isDiceless) {
@@ -693,6 +694,7 @@
                     item.onclick = (e) => {
                         if (isHold) {
                             isHold = false;
+                            e.stopPropagation();
                             return;
                         }
                         if (q.addonToggle) {
@@ -703,6 +705,7 @@
                     item.onclick = (e) => {
                         if (isHold) {
                             isHold = false;
+                            e.stopPropagation();
                             return;
                         }
                         toggleTextCardCollapsed(q.id);
@@ -711,6 +714,7 @@
                     item.onclick = (e) => {
                         if (isHold) {
                             isHold = false;
+                            e.stopPropagation();
                             return;
                         }
                         changeToggleValue(q.id, !q.checked);
