@@ -36,24 +36,28 @@ Save your frequent rolls, character variables, or trackers as custom interactive
 
 ## ⚡ Technical Architecture
 
+Static Dice is explicitly designed to be **Zero-Install** and **100% Offline-Capable**. You do not need a web server, bundler, or internet connection to use it—just open the file.
+
 ### Entropy Source
 Unlike most rollers, Static Dice uses the **Web Crypto API** (`window.crypto.getRandomValues`). This taps into hardware-level entropy to generate values that are statistically indistinguishable from true randomness.
 
 ### Core Stack & Modularity
-- **Frontend**: Lightweight HTML application with Tailwind CSS.
-- **Data Architecture**: Built on a flexible entity-component system (`DataArchitecture.js`) that supports generic blueprinting for diverse TTRPG rule systems.
+- **Frontend**: Lightweight HTML application with externalized Tailwind CSS (`style.css`).
+- **Modular JS Core (`js/`)**: The UI logic is highly modularized into single-responsibility domains (`StorageManager`, `WidgetRenderer`, `App`) using a global namespace approach to avoid the file-breaking CORS errors associated with ES6 modules.
+- **Data Architecture**: Built on a flexible entity-component system (`DataArchitecture.js`). TTRPG rule schemas (like Shadowdark) are fully decoupled into the `Systems/` directory.
+- **Event Bus Decoupling**: A lightweight Publish/Subscribe system (`js/EventBus.js`) serves as the central nervous system, drastically decoupling the UI renderer from the math engine.
 - **Logic**: `DiceEngine.js` — A standalone, testable class that manages all mathematical operations using a Shunting-yard RPN parser.
-- **Parser Subsystem**: Modular parsing logic (`Parsers/`) allows easy expansion for new third-party integrations without cluttering the core UI code.
-- **Testing**: Built-in entropy verification (Stress Test) and a robust Jest testing suite for the engine.
+- **Parser Subsystem (`Parsers/`)**: Modular parsing logic intercepts imported data and routes it through an abstraction layer (`CharacterSheetAssembler.js`) to generate UI elements dynamically.
 
 ---
 
 ## 🚀 Getting Started
 
-Simply open `DiceRoller.html` in any modern web browser. No installation or internet connection is required once the file is saved locally.
+Simply open `DiceRoller.html` in any modern web browser. No installation or internet connection is required once the repository is saved locally on your device!
 
+**For Developers:**
 ```bash
-# To run tests (requires Node.js)
+# To run mathematical integration tests (requires Node.js)
 npm install
 npm test
 ```

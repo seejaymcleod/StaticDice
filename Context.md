@@ -1,14 +1,24 @@
 # ⚡ STATIC DICE | Project Context
 
 ## 📁 Repository Blueprint
-- **DiceEngine.js**: Mathematical core & parser (pure JS).
-- **DataArchitecture.js**: Core structural classes for Systems, Blueprints, Instances, and Containers (Campaigns/Encounters).
-- **DiceRoller.html**: UI layer (single-file HTML containing Tailwind CSS classes, inline scripts, audio, haptics).
+- **DiceRoller.html**: The application shell and entry point. Loads stylesheets and sequentially injects the modular JavaScript components.
+- **style.css**: Externalized styling, containing Tailwind core imports, glassmorphism UI rules, custom fonts, and micro-animations.
+- **DiceEngine.js**: Mathematical core & parser (pure JS). Handles the Shunting-yard algorithm and CSPRNG logic.
+- **DataArchitecture.js**: Core agnostic structural classes (`DiceSystem`, `Blueprint`, `Instance`, `CMSStore`).
+- **js/**: Core application logic, highly modularized for AI parsing efficiency:
+  - `EventBus.js`: Central publish/subscribe system decoupling UI from engine execution.
+  - `StorageManager.js`: `localStorage` synchronization, saving/loading, and JSON importing/exporting.
+  - `WidgetRenderer.js`: Constructs the DOM elements for the polymorphic interactive cards.
+  - `App.js`: Global orchestrator, maintaining application state (`window` global variables) and general DOM listeners.
+  - `CharacterSheetAssembler.js`: Data layer listening to the Event Bus to map imported Entity Blueprints to interactive UI widgets.
+  - `components/DiceWidget.js`: Experimental prototype for native Web Components (`<dice-widget>`).
+- **Systems/**: Game-specific logic and schemas.
+  - `Shadowdark/System.js`: Contains `ShadowdarkCharacterSchema`, `ShadowdarkMonsterSchema`, etc. Keeps the agnostic core untainted.
 - **Parsers/**: Directory containing third-party importer logic.
-  - `ParserRegistry.js`: Global registry for detecting and routing imported data.
+  - `ParserRegistry.js`: Global registry for detecting and routing imported JSON data.
   - `ShadowdarkParser.js`: Specialized parser for Shadowdarklings character exports.
 - **Tests/**: Jest mathematical test suite (`DiceEngine.test.js`, `IntegrationRunner.js`).
-- **package.json**: Contains scripts/dependencies (Jest, jsdom).
+- **package.json**: Contains scripts/dependencies (Jest, jsdom) for running tests.
 
 ## 🎲 DiceEngine State & Schemas
 
@@ -76,7 +86,7 @@
 ## 🗃️ Data Architecture (CMS Store)
 - Defines base classes: `DiceSystem`, `Blueprint` (Entity & Component), `Instance` (Entity & Component), and `Container` (Campaign & Encounter).
 - **Global Store (`CMSStore`)**: Stores active instances and overarching state across the application.
-- **Shadowdark System**: Pre-loaded system schema defining base entity blueprints (Characters, Monsters) and expected variable states (STR, DEX, AC, HP).
+- **Agnostic Core**: The core data layer is separated from game-specific logic. TTRPG-specific blueprints (like Shadowdark) are isolated in the `Systems/` directory.
 
 ## 🗃️ Dice Arsenal, Binder Drawer & Polymorphic Widgets
 
@@ -102,12 +112,14 @@ Saved items in `engine.savedQueues` act as different interactive cards based on 
 
 ### 3. Third-Party Character Importers (`Parsers/`)
 - **Parser Registry (`ParserRegistry.js`)**: Automatically detects imported JSON formats and routes them to the correct parser.
+- **Data Abstraction**: Parsers extract data and fire an `EventBus` emission. `CharacterSheetAssembler.js` intercepts this blueprint data and translates it into UI widgets, decoupling raw logic from rendering constraints.
 - **Shadowdarklings Importer (`ShadowdarkParser.js`)**:
-  - Maps stats, gear, and combat states to the generic Shadowdark templates.
+  - Maps stats, gear, and combat states to the Shadowdark schemas in `Systems/Shadowdark/System.js`.
   - Passives Display: Passive traits from class/ancestry are imported as Toggles/Text widgets. The source prefix (e.g., "Wizard-1") is moved to the widget's **Notes field** (formatted as `Bonus: Wizard(Class)-1`) to keep the primary widget name clean.
-  - Auto-calculates attack/damage properties based on core stat modifiers.
 
 ## 🎨 UI Hooks & Integration
+- **Global State Variables**: State is managed via explicit top-level `var` variables in the `js/` modules. This ensures variables natively map to the global `window` object, allowing cross-file modularity while fully avoiding Webpack/Vite bundlers (preserving the portable offline `<script>` injection philosophy).
+- **Event Bus Decoupling**: Application flows trigger via `EventBus.emit()` (e.g., `ROLL_COMPLETED`), drastically loosening coupling between UI buttons and the Math Engine.
 - **Character Variables**: DiceEngine dynamically resolves stats using `window.getActiveCharacterVariable(name)`.
 - **Haptics**: `haptics.tap()`, `haptics.thud()`, `haptics.error()`.
 - **Sound**: Audio constructor using loaded sound assets.
@@ -120,6 +132,7 @@ engine.setRng((sides) => sides); // Returns max value
 ```
 
 ## 💡 AI Prompting Tips
-- **Contiguous Edits**: Ask for targeted function replacements or git diffs rather than rewriting full files.
-- **Math First**: Implement new math mechanics in `DiceEngine.js` and verify via tests before making UI changes.
+- **Architectural Constraints**: Respect the modular layout (`js/`, `Systems/`, `Parsers/`). Do NOT embed complex styles in the HTML; use `style.css`.
+- **Bundler-Free Strategy**: Do NOT introduce ES6 `import/export` or require bundlers like Webpack. The app must execute directly from the local file system using sequence-loaded global scripts. Use `var` for global state.
+- **Math First**: Implement new math mechanics in `DiceEngine.js` and verify via tests before hooking into `js/WidgetRenderer.js`.
 - **Schema Strictness**: Generate queue elements adhering strictly to the Node JSON schemas.
