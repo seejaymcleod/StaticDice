@@ -858,7 +858,7 @@
                         innerHtml += `
                             <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
                                  onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
-                                 style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                                 style="background-color: ${t.checked ? (hasColor ? q.color : '#ffffff') : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? (hasColor ? q.color : '#ffffff') : 'transparent'}">
                                 <svg class="w-3.5 h-3.5 transition-colors duration-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="color: ${t.checked ? '#090d16' : '#64748b'}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 3v9" />
                                 </svg>
@@ -898,7 +898,7 @@
                             </span>
                         </div>
                         <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300" 
-                             style="background-color: ${q.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${q.checked ? q.color : 'transparent'}">
+                             style="background-color: ${q.checked ? (hasColor ? q.color : '#ffffff') : 'rgba(30, 41, 59, 0.3)'}; color: ${q.checked ? (hasColor ? q.color : '#ffffff') : 'transparent'}">
                         </div>
                     `;
                 } else if (type === 'number') {
@@ -961,7 +961,7 @@
                         innerHtml += `
                             <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
                                  onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
-                                 style="background-color: ${t.checked ? q.color : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? q.color : 'transparent'}">
+                                 style="background-color: ${t.checked ? (hasColor ? q.color : '#ffffff') : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? (hasColor ? q.color : '#ffffff') : 'transparent'}">
                                 <svg class="w-3.5 h-3.5 transition-colors duration-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="color: ${t.checked ? '#090d16' : '#64748b'}">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 3v9" />
                                 </svg>
