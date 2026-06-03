@@ -662,6 +662,9 @@
                     }
                     e.preventDefault();
                     e.stopPropagation();
+                    
+                    if (isHold) return; // Prevent double-toggling if holdTimer already opened it
+                    
                     isHold = true;
                     toggleArsenalMenu(q.id, e);
                 });
