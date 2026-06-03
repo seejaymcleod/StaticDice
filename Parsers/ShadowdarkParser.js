@@ -1040,9 +1040,9 @@ const ShadowdarkParser = {
                     slotNum++;
                     const extraWidget = newWidgets.find(w => w.id.includes(`w_gear_${slotNum}`));
                     if (extraWidget) {
-                        extraWidget.name = `... extra slot`;
-                        extraWidget.detailText = `${slotNum}.`;
-                        extraWidget.text = `Occupied by extra slot for ${item.name}`;
+                        extraWidget.name = `...`;
+                        extraWidget.detailText = `${slotNum}. - Extra slot for ${item.name}`;
+                        extraWidget.text = ``;
                         extraWidget.collapsed = true;
                     }
                 }
