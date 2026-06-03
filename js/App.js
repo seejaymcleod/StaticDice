@@ -3078,6 +3078,11 @@
 
         var activeMenuId = null;
 
+        // Timestamp of the last menu open – used to suppress the synthetic
+        // 'click' event that iOS fires after a long-press releases, which would
+        // otherwise immediately close the menu we just opened.
+        var menuLastOpenedAt = 0;
+
         function toggleArsenalMenu(id, e) {
             if (e) e.stopPropagation();
             vibrate(5);
@@ -3096,6 +3101,7 @@
                 targetMenu.classList.remove('hidden');
                 parentItem.classList.add('z-50');
                 activeMenuId = id;
+                menuLastOpenedAt = Date.now(); // suppress upcoming synthetic click
 
                 // Dynamically update play/pause menu button for timer widgets
                 const q = engine.findSavedQueue(id);
@@ -3199,11 +3205,15 @@
                 }
             }
 
-            // Close arsenal menus
+            // Close arsenal menus on any click that isn't inside the menu itself,
+            // but suppress if a menu was just opened (e.g. by a long-press, where
+            // iOS fires a synthetic click ~300ms after touchend).
             if (!e.target.closest('.arsenal-menu') && !e.target.closest('.gear-btn') && !e.target.closest('#import-export-btn')) {
-                document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
-                document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
-                activeMenuId = null;
+                if (Date.now() - menuLastOpenedAt > 400) {
+                    document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
+                    document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
+                    activeMenuId = null;
+                }
             }
         });
 

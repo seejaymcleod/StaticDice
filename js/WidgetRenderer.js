@@ -624,26 +624,19 @@
 
 
 
-                // Add a separate flag for timer‑opened menus
-                let holdOpenedItem = false;
-
                 item.addEventListener('touchstart', startHold, { passive: true });
                 item.addEventListener('touchend', (e) => {
                     cancelHold();
-                    // If the timer opened the menu, we already handled the event
-                    if (holdOpenedItem) {
-                        // reset flag for next interaction
-                        holdOpenedItem = false;
-                    } else if (isHold) {
+                    if (isHold) {
+                        // Long-press was handled by the timer; eat the touchend
+                        // so it doesn't propagate into a click.
                         e.preventDefault();
                         e.stopPropagation();
                     }
-                    setTimeout(() => {
-                        hasMoved = false;
-                    }, 50);
+                    setTimeout(() => { hasMoved = false; }, 50);
                 });
                 item.addEventListener('touchmove', moveHold, { passive: true });
-                item.addEventListener('touchcancel', (e) => {
+                item.addEventListener('touchcancel', () => {
                     cancelHold();
                     hasMoved = false;
                 });
@@ -651,37 +644,29 @@
                 item.addEventListener('mousedown', (e) => {
                     if (e.button === 0) startHold(e);
                 });
-                item.addEventListener('mouseup', (e) => {
+                item.addEventListener('mouseup', () => {
                     cancelHold();
-                    if (holdOpenedItem) {
-                        holdOpenedItem = false;
-                    } else if (isHold) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                    setTimeout(() => {
-                        hasMoved = false;
-                    }, 50);
+                    setTimeout(() => { hasMoved = false; }, 50);
                 });
                 item.addEventListener('mousemove', moveHold);
-                item.addEventListener('mouseleave', (e) => {
+                item.addEventListener('mouseleave', () => {
                     cancelHold();
                     hasMoved = false;
                 });
 
+                // contextmenu fires on desktop right-click AND on iOS after a
+                // long-press (after the timer has already opened the menu).
+                // We always prevent the native menu; if the timer beat us here
+                // the window click guard in App.js handles suppression.
                 item.addEventListener('contextmenu', (e) => {
-                    if (hasMoved) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return;
-                    }
                     e.preventDefault();
                     e.stopPropagation();
-                    // If the hold timer already opened the menu, ignore native event
-                    if (holdOpenedItem) return;
-                    // Otherwise handle as before
-                    isHold = true;
-                    toggleArsenalMenu(q.id, e);
+                    if (hasMoved) return;
+                    if (!isHold) {
+                        // Desktop right-click without prior hold timer
+                        isHold = true;
+                        toggleArsenalMenu(q.id, e);
+                    }
                 });
 
                 const isDiceless = type === 'roller' && !(q.unifiedQueue || []).some(node => node.nodeType === 'node');
