@@ -9,12 +9,16 @@ console.log('🧪 Starting JSDOM Integration Deep Dive Test...');
 const engineCode = fs.readFileSync(path.resolve(__dirname, '../DiceEngine.js'), 'utf8');
 const archCode = fs.readFileSync(path.resolve(__dirname, '../DataArchitecture.js'), 'utf8');
 const templatesCode = fs.readFileSync(path.resolve(__dirname, '../Assets/TemplatesData.js'), 'utf8');
+const parserRegistryCode = fs.readFileSync(path.resolve(__dirname, '../Parsers/ParserRegistry.js'), 'utf8');
+const shadowdarkParserCode = fs.readFileSync(path.resolve(__dirname, '../Parsers/ShadowdarkParser.js'), 'utf8');
 let html = fs.readFileSync(path.resolve(__dirname, '../DiceRoller.html'), 'utf8');
 
 // Inline scripts inside html script tags
 html = html.replace('<script src="Assets/TemplatesData.js"></script>', `<script>${templatesCode}</script>`);
 html = html.replace('<script src="DataArchitecture.js"></script>', `<script>${archCode}</script>`);
 html = html.replace('<script src="DiceEngine.js"></script>', `<script>${engineCode}</script>`);
+html = html.replace('<script src="Parsers/ParserRegistry.js"></script>', `<script>${parserRegistryCode}</script>`);
+html = html.replace('<script src="Parsers/ShadowdarkParser.js"></script>', `<script>${shadowdarkParserCode}</script>`);
 
 // 2. Initialize JSDOM
 const dom = new JSDOM(html, {
@@ -756,20 +760,20 @@ window.addEventListener('load', () => {
                 if (!hSlot9 || hSlot9.name !== '') throw new Error('Horlabo gear slot 9 should be empty');
 
                 // Verify parsed ambition talent and other merged class talents
-                const ambitionTalentW = horlaboWidgets.find(w => w.name === 'HUMAN AMBITION-1: SPELL MASTERY (DETECT MAGIC)');
+                const ambitionTalentW = horlaboWidgets.find(w => w.name === 'SPELL MASTERY (DETECT MAGIC)' && w.addonNote === 'Bonus: Human Ambition(Ancestry)-1');
                 if (!ambitionTalentW) throw new Error('Human ambition talent SPELL MASTERY should be parsed and created');
                 if (!ambitionTalentW.text || !ambitionTalentW.text.includes('advantage on casting one spell')) throw new Error('Human ambition talent description is incorrect');
 
-                const statBonusTalentW = horlaboWidgets.find(w => w.name === 'WIZARD-1: STAT BONUS (+2 INT)');
+                const statBonusTalentW = horlaboWidgets.find(w => w.name === 'STAT BONUS (+2 INT)' && w.addonNote === 'Bonus: Wizard(Class)-1');
                 if (!statBonusTalentW) throw new Error('Wizard level 1 STAT BONUS (+2 INT) widget should be created');
 
-                const statBonusTalentW5 = horlaboWidgets.find(w => w.name === 'WIZARD-5: STAT BONUS (+2 INT)');
+                const statBonusTalentW5 = horlaboWidgets.find(w => w.name === 'STAT BONUS (+2 INT)' && w.addonNote === 'Bonus: Wizard(Class)-5');
                 if (!statBonusTalentW5) throw new Error('Wizard level 5 STAT BONUS (+2 INT) widget should be created');
 
-                const castingTalentW7 = horlaboWidgets.find(w => w.name === 'WIZARD-7: SPELLCASTING (+1 CASTING)');
+                const castingTalentW7 = horlaboWidgets.find(w => w.name === 'SPELLCASTING (+1 CASTING)' && w.addonNote === 'Bonus: Wizard(Class)-7');
                 if (!castingTalentW7) throw new Error('Wizard level 7 SPELLCASTING (+1 CASTING) widget should be created');
 
-                const castingTalentW9 = horlaboWidgets.find(w => w.name === 'WIZARD-9: SPELLCASTING (+1 CASTING)');
+                const castingTalentW9 = horlaboWidgets.find(w => w.name === 'SPELLCASTING (+1 CASTING)' && w.addonNote === 'Bonus: Wizard(Class)-9');
                 if (!castingTalentW9) throw new Error('Wizard level 9 SPELLCASTING (+1 CASTING) widget should be created');
 
                 // Verify Title detail widget

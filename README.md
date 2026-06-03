@@ -1,16 +1,12 @@
 # ⚡ STATIC DICE
-[[AI-generated, obviously. Once the code is stable, I'll look into make proper readme.]]
-** This is me testing a Test and Prod workflow.-- NO EMPTY COMIT THIS TIME 
 
 ### High-Fidelity TTRPG Intelligence • Raw Electrical Entropy
 
 **Static Dice** is a premium, web-based TTRPG dice roller designed for speed, precision, and tactile satisfaction. It replaces standard `Math.random()` calls with cryptographically secure pseudo-random numbers (CSPRNG), ensuring your critical hits (and failures) are driven by high-quality entropy.
 
-![Static Dice UI Preview](Assets/StaticDice_Preview.png) *(Note: Placeholder for actual screenshot)*
-
 ---
 
-##  The Experience
+## 🌌 The Experience
 Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a high-contrast, glowing interface designed for dark-mode gaming environments. It features:
 - **Glassmorphism UI**: Frosted glass panels and glowing accents.
 - **Micro-Animations**: Weight-based bouncy transitions and haptic-style visual feedback.
@@ -18,7 +14,7 @@ Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a hi
 
 ---
 
-## Features
+## 🎲 Features
 
 ### Multi-Mode Rolling
 - **Sum Mode**: Classic TTRPG rolling—totals your dice and adds modifiers.
@@ -27,54 +23,41 @@ Static Dice is built with a **"Vivid Azure"** on **"The Void"** aesthetic—a hi
 
 ### The Arsenal & Polymorphic Widgets
 Save your frequent rolls, character variables, or trackers as custom interactive widgets:
-- **Polymorphic Cards**: Save widgets as Rollers, Standalone Steppers, Standalone Toggle Switches, or Collapsible Spell/Rule text notes.
+- **Polymorphic Cards**: Save widgets as Rollers, Compact Resource Steppers, Toggle Switches, Timers / Dynamic Countdowns, or Collapsible Text notes.
 - **Roll Addons**: Extend Rollers with Advantage/Disadvantage buttons, inline description notes, or adjacent resource counters.
-- **Smart Sizing**: Adjacent helper buttons (like counter steppers and ADV/DIS triggers) auto-stretch to perfectly match the height of their target card.
-- **Clean Indicators**: Toggle card states cleanly using full-card tap triggers and sleek, vertical right-side "bulb" stripes that illuminate or dim based on active state.
-- **Gesture Control**: Hold a card for 500ms (or right-click on desktop) to open its actions menu dynamically at your touch or cursor coordinates.
-- **Persistence & Portability**: Saved in LocalStorage, or easily imported/exported between devices using JSON.
+- **Clean Indicators**: Toggle card states cleanly using full-card tap triggers and sleek, vertical right-side "bulb" stripes.
+- **Persistence & Portability**: Saved in LocalStorage, or easily imported/exported between devices via the Binder Drawer.
 
-### ⚙️ Advanced Rules
-Static Dice handles complex mechanics so you don't have to:
-- **Advantage/Disadvantage**: One-tap toggles for 5e-style rolling.
-- **Exploding Dice**: Set dice to re-roll and add to the total when they hit a threshold.
-- **Rerolls**: Automatically re-roll values (e.g., "Reroll 1s and 2s").
-- **Set Detection**: Automatically identify pairs, triples, and quads in large pools.
+### ⚙️ Advanced Rules & Integrations
+- **Advanced Mechanics**: Advantage/Disadvantage toggles, Exploding Dice, Target DC Rerolls, and automatic Set Detection (Pairs, Triples).
+- **Universal Importer Registry**: Easily import characters from third-party tools (like Shadowdarklings) directly into the app. The system maps your stats, weapons, passive traits, and spellcasting automatically into interactive widget loadouts.
 
 ---
 
 ## ⚡ Technical Architecture
 
+Static Dice is explicitly designed to be **Zero-Install** and **100% Offline-Capable**. You do not need a web server, bundler, or internet connection to use it—just open the file.
+
 ### Entropy Source
-Unlike most rollers, Static Dice uses the **Web Crypto API** (`window.crypto.getRandomValues`). This taps into hardware-level entropy (like electrical noise or thermal jitter) to generate values that are statistically indistinguishable from true randomness.
+Unlike most rollers, Static Dice uses the **Web Crypto API** (`window.crypto.getRandomValues`). This taps into hardware-level entropy to generate values that are statistically indistinguishable from true randomness.
 
-### Core Stack
-- **Frontend**: Single-file HTML application for maximum portability.
-- **Styling**: Tailwind CSS with a bespoke design system.
-- **Logic**: `DiceEngine.js` — A standalone, testable class that manages all mathematical operations.
-- **Testing**: Built-in entropy verification (Stress Test) to visualize distribution across 100,000+ rolls.
-
----
-
-## 🎮 Interface Guide
-
-1.  **The Display Zone**: Shows your final total, success labels, and a detailed breakdown of every single die roll (including rerolls and explosions).
-2.  **The Queue**: As you tap dice, they are added to the queue. You can clear, backspace, or save this queue to your Arsenal.
-3.  **Action Grid**: 
-    *   **ADV/DIS**: Toggles Advantage/Disadvantage.
-    *   **MOD**: Quick-stepper for flat situational modifiers.
-    *   **TARGET**: Set the difficulty class (DC) or target number.
-4.  **The Dice Grid**: D4 through D100, plus the ability to create **Custom Dice** for unique systems (D7, D30, etc.).
-5.  **Advanced Rules Panel**: Accessible via the gear icon; configure success conditions, rerolls, and "fire-and-forget" behaviors.
+### Core Stack & Modularity
+- **Frontend**: Lightweight HTML application with externalized Tailwind CSS (`style.css`).
+- **Modular JS Core (`js/`)**: The UI logic is highly modularized into single-responsibility domains (`StorageManager`, `WidgetRenderer`, `App`) using a global namespace approach to avoid the file-breaking CORS errors associated with ES6 modules.
+- **Data Architecture**: Built on a flexible entity-component system (`DataArchitecture.js`). TTRPG rule schemas (like Shadowdark) are fully decoupled into the `Systems/` directory.
+- **Event Bus Decoupling**: A lightweight Publish/Subscribe system (`js/EventBus.js`) serves as the central nervous system, drastically decoupling the UI renderer from the math engine.
+- **Logic**: `DiceEngine.js` — A standalone, testable class that manages all mathematical operations using a Shunting-yard RPN parser.
+- **Parser Subsystem (`Parsers/`)**: Modular parsing logic intercepts imported data and routes it through an abstraction layer (`CharacterSheetAssembler.js`) to generate UI elements dynamically.
 
 ---
 
 ## 🚀 Getting Started
 
-Simply open `DiceRoller.html` in any modern web browser. No installation or internet connection is required once the file is saved locally.
+Simply open `DiceRoller.html` in any modern web browser. No installation or internet connection is required once the repository is saved locally on your device!
 
+**For Developers:**
 ```bash
-# To run tests (requires Node.js)
+# To run mathematical integration tests (requires Node.js)
 npm install
 npm test
 ```
