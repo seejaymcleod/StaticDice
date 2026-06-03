@@ -199,14 +199,10 @@
                 };
 
                 btn.addEventListener('mousedown', startHold);
-                btn.addEventListener('touchstart', (e) => {
-                    btn.draggable = false;
-                    startHold(e);
-                }, { passive: true });
+                btn.addEventListener('touchstart', startHold, { passive: true });
 
                 const endClick = (e) => {
                     clearTimeout(holdTimer);
-                    btn.draggable = true;
                     if (!isHold) {
                         selectGroup(g.id);
                     }
@@ -216,7 +212,6 @@
                 btn.addEventListener('touchmove', cancelHold, { passive: true });
                 btn.addEventListener('touchcancel', (e) => {
                     clearTimeout(holdTimer);
-                    btn.draggable = true;
                 }, { passive: true });
                 btn.addEventListener('mouseleave', cancelHold);
 
@@ -227,7 +222,6 @@
                     openGroupContextMenu(g.id, e);
                 });
 
-                btn.draggable = true;
                 btn.addEventListener('dragstart', (e) => {
                     cancelHold();
                     dragSrcGroupId = g.id;
@@ -557,7 +551,6 @@
                 const effectiveMode = getEffectiveDisplayMode(q);
                 if (effectiveMode === 'simple') wrapper.classList.add('widget-display-simple');
                 else if (effectiveMode === 'compact') wrapper.classList.add('widget-display-compact');
-                wrapper.draggable = true;
                 wrapper.dataset.id = q.id;
 
                 wrapper.addEventListener('dragstart', (e) => {
@@ -568,6 +561,7 @@
                     dragSrcId = q.id;
                     wrapper.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
+                    if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(wrapper, 15, 15);
                     cancelHold();
                     hasMoved = true;
                 });
@@ -624,13 +618,9 @@
 
 
 
-                item.addEventListener('touchstart', (e) => {
-                    wrapper.draggable = false;
-                    startHold(e);
-                }, { passive: true });
+                item.addEventListener('touchstart', startHold, { passive: true });
                 item.addEventListener('touchend', (e) => {
                     cancelHold();
-                    wrapper.draggable = true;
                     if (isHold) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -642,7 +632,6 @@
                 item.addEventListener('touchmove', moveHold, { passive: true });
                 item.addEventListener('touchcancel', (e) => {
                     cancelHold();
-                    wrapper.draggable = true;
                     hasMoved = false;
                 });
 
@@ -815,7 +804,7 @@
                         ? `<div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
                         : (!hideLeftTab ? `<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-white/5"></div>` : '')
                     }
-                    <div class="flex items-center justify-center w-4 h-full ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
+                    <div draggable="true" class="widget-drag-handle flex items-center justify-center w-4 h-full ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                     </div>
                 `;
