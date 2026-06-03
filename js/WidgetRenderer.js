@@ -222,10 +222,11 @@
                 btn.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    // If the hold timer already opened the menu, ignore native event
-                    if (holdOpened) return;
-                    isHold = true;
-                    openGroupContextMenu(g.id, e);
+                    cancelHold(); // stop the timer from double-toggling
+                    if (!holdOpened) {
+                        holdOpened = true;
+                        openGroupContextMenu(g.id, e);
+                    }
                 });
 
                 btn.addEventListener('dragstart', (e) => {
@@ -527,6 +528,7 @@
                     startX = touch.clientX;
                     startY = touch.clientY;
                     holdTimer = setTimeout(() => {
+                        if (isHold) return; // contextmenu already opened the menu
                         isHold = true;
                         toggleArsenalMenu(q.id, e);
                     }, 500);
@@ -654,19 +656,21 @@
                     hasMoved = false;
                 });
 
-                // contextmenu fires on desktop right-click AND on iOS after a
+                // contextmenu fires on desktop right-click AND on Android after a
                 // long-press (after the timer has already opened the menu).
-                // We always prevent the native menu; if the timer beat us here
-                // the window click guard in App.js handles suppression.
+                // We always prevent the native menu; cancel the timer so it
+                // can't double-toggle the menu closed after contextmenu opens it.
                 item.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (hasMoved) return;
+                    cancelHold(); // critical: stop the timer from firing after contextmenu
                     if (!isHold) {
-                        // Desktop right-click without prior hold timer
+                        // contextmenu beat the timer (Android), open the menu now
                         isHold = true;
                         toggleArsenalMenu(q.id, e);
                     }
+                    // if isHold is already true, timer already opened it — do nothing
                 });
 
                 const isDiceless = type === 'roller' && !(q.unifiedQueue || []).some(node => node.nodeType === 'node');
