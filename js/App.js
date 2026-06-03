@@ -3078,6 +3078,7 @@
 
         var activeMenuId = null;
 
+
         function toggleArsenalMenu(id, e) {
             if (e) e.stopPropagation();
             vibrate(5);
@@ -3199,7 +3200,9 @@
                 }
             }
 
-            // Close arsenal menus
+            // Close arsenal menus on any click outside the menu.
+            // Synthetic post-longpress clicks are blocked upstream by
+            // e.stopPropagation() in item.onclick when isHold is true.
             if (!e.target.closest('.arsenal-menu') && !e.target.closest('.gear-btn') && !e.target.closest('#import-export-btn')) {
                 document.querySelectorAll('.arsenal-menu').forEach(m => m.classList.add('hidden'));
                 document.querySelectorAll('.arsenal-item-wrapper').forEach(i => i.classList.remove('z-50'));
@@ -5823,7 +5826,7 @@
                         <!-- Content area: single row with name left, timer text right -->
                         <div class="flex-1 min-h-0 flex items-center justify-between pr-3 z-10 relative">
                             <div class="flex items-center min-w-0 flex-shrink pr-2">
-                                <div class="flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1">
+                                <div draggable="true" class="widget-drag-handle flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                                 </div>
                                 <span class="text-[13px] font-black text-slate-400 truncate uppercase tracking-tight">${q.name || 'Timer'}</span>
@@ -5857,8 +5860,13 @@
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
                         
                         <!-- Row 1: Title (left) | Detail text + Play (right) -->
-                        <div class="flex items-center justify-between w-full pl-4 pr-3 pt-2 z-10 relative">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
+                        <div class="flex items-center justify-between w-full pl-1.5 pr-3 pt-2 z-10 relative">
+                            <div class="flex items-center min-w-0 flex-shrink pr-2">
+                                <div draggable="true" class="widget-drag-handle flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1.5">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                                </div>
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
+                            </div>
                             <div class="flex items-center gap-2.5 shrink-0 select-none">
                                 ${q.detailText ? `<span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">${q.detailText}</span>` : ''}
                                 <button onclick="toggleTimerPlay('${q.id}', event)" class="timer-play-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-[#e2e8f0] hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="${isPaused ? 'Start Timer' : 'Pause Timer'}">
@@ -5940,11 +5948,6 @@
                 bar.addEventListener('pointerdown', (e) => {
                     e.stopPropagation();
 
-                    const wrapper = bar.closest('.arsenal-item-wrapper');
-                    if (wrapper) {
-                        wrapper.draggable = false;
-                    }
-
                     bar.setPointerCapture(e.pointerId);
                     isDragging = true;
                     updateTimeFromPointer(e);
@@ -5962,11 +5965,6 @@
                     e.stopPropagation();
                     bar.releasePointerCapture(e.pointerId);
                     isDragging = false;
-
-                    const wrapper = bar.closest('.arsenal-item-wrapper');
-                    if (wrapper) {
-                        wrapper.draggable = true;
-                    }
 
                     persistSaved();
                     vibrate(10);
