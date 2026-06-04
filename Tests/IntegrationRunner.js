@@ -988,6 +988,194 @@ window.addEventListener('load', () => {
                 if (!mithrilW) throw new Error('Mithril chainmail widget should be created');
                 const armorMasterAcNode = mithrilW.unifiedQueue.find(n => n.nodeType === 'modifier' && n.type === 'literal' && n.value === 1 && n.operator === '+');
                 if (!armorMasterAcNode) throw new Error('Mithril chainmail should have Armor Master modifier +1 in AC queue');
+
+                // 4. Detailed Grid Configuration and Rendering Test Suite
+                console.log("=== Running Comprehensive Grid Settings & Rendering Test Suite ===");
+                
+                // Let's create a temporary widget of each type and verify default grid settings are set correctly.
+                const widgetTypes = ['roller', 'number', 'timer', 'stepper', 'toggle', 'text', 'countdown'];
+                for (const wType of widgetTypes) {
+                    // Open the creation modal
+                    document.getElementById('widget-type').value = wType;
+                    onWidgetTypeChange(wType);
+                    
+                    // Verify the checkbox elements based on type
+                    const fullFormula = document.getElementById('widget-full-formula').checked;
+                    const fullNote = document.getElementById('widget-full-note').checked;
+                    const fullDetail = document.getElementById('widget-full-detail').checked;
+                    
+                    const showFormula = document.getElementById('widget-show-formula').checked;
+                    const showNote = document.getElementById('widget-show-note').checked;
+                    const showDetail = document.getElementById('widget-show-detail').checked;
+                    
+                    const compactFormula = document.getElementById('widget-compact-formula').checked;
+                    const compactNote = document.getElementById('widget-compact-note').checked;
+                    const compactDetail = document.getElementById('widget-compact-detail').checked;
+                    
+                    // Compact checkboxes should always be false by default
+                    if (compactFormula || compactNote || compactDetail) {
+                        throw new Error("Default compact grid checkboxes for " + wType + " should be false");
+                    }
+                    
+                    if (wType === 'roller' || wType === 'number' || wType === 'timer') {
+                        if (!fullFormula || !fullNote || !fullDetail || !showFormula || !showNote || !showDetail) {
+                            throw new Error("Default grid settings for " + wType + " (formula-relevant) should be all true for Full & Normal");
+                        }
+                    } else {
+                        // Formula-less widgets
+                        if (fullFormula || showFormula) {
+                            throw new Error("Default formula checkbox for " + wType + " should be false");
+                        }
+                        if (!fullNote || !fullDetail || !showNote || !showDetail) {
+                            throw new Error("Default grid settings for " + wType + " (formula-less) should have notes/details true for Full & Normal");
+                        }
+                    }
+                }
+                
+                // Now, let's test how different combinations of grid checkbox values, displayMode, and globalLayout affect the rendered subtext.
+                const sdWidgets = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
+                const testWidget = sdWidgets.find(w => w.name && w.name.includes('STR CHECK'));
+                if (!testWidget) throw new Error("Could not find STR CHECK widget for rendering tests");
+                
+                // Ensure note and detail are populated for testing
+                testWidget.addonNote = "Test Note";
+                testWidget.detailText = "Test Detail";
+                
+                // Save original values
+                const origDisplayMode = testWidget.displayMode;
+                const origGlobalLayout = globalLayout;
+                
+                try {
+                    // Helper to render and query elements in DOM
+                    const getRenderedElements = () => {
+                        renderSavedQueues();
+                        const el = document.querySelector('.saved-item[data-id="' + testWidget.id + '"]');
+                        if (!el) throw new Error("STR CHECK DOM element not found");
+                        return {
+                            formula: el.querySelector('.widget-formula'),
+                            note: el.querySelector('.widget-note'),
+                            detail: el.querySelector('.widget-detail')
+                        };
+                    };
+                    
+                    // Scenario A: Force Full (Global Override)
+                    localStorage.setItem('global_layout', 'force-full');
+                    globalLayout = 'force-full';
+                    
+                    // A1. All checked in Full
+                    testWidget.fullShowFormula = true;
+                    testWidget.fullShowNote = true;
+                    testWidget.fullShowDetail = true;
+                    let domItems = getRenderedElements();
+                    if (!domItems.formula || !domItems.note || !domItems.detail) {
+                        throw new Error("Force Full should render formula, note, and detail when all checked");
+                    }
+                    
+                    // A2. Formula and Detail unchecked, Note checked in Full
+                    testWidget.fullShowFormula = false;
+                    testWidget.fullShowNote = true;
+                    testWidget.fullShowDetail = false;
+                    domItems = getRenderedElements();
+                    if (domItems.formula || !domItems.note || domItems.detail) {
+                        throw new Error("Force Full should respect custom unchecked columns in Full grid");
+                    }
+                    
+                    // Scenario B: Force Normal (Global Override)
+                    localStorage.setItem('global_layout', 'force-normal');
+                    globalLayout = 'force-normal';
+                    
+                    // B1. All checked in Normal
+                    testWidget.showFormula = true;
+                    testWidget.showNote = true;
+                    testWidget.showDetail = true;
+                    domItems = getRenderedElements();
+                    if (!domItems.formula || !domItems.note || !domItems.detail) {
+                        throw new Error("Force Normal should render formula, note, and detail when all checked");
+                    }
+                    
+                    // B2. Formula unchecked in Normal
+                    testWidget.showFormula = false;
+                    testWidget.showNote = true;
+                    testWidget.showDetail = true;
+                    domItems = getRenderedElements();
+                    if (domItems.formula || !domItems.note || !domItems.detail) {
+                        throw new Error("Force Normal should respect unchecked formula in Normal grid");
+                    }
+                    
+                    // Scenario C: Override Compact (Global Override)
+                    localStorage.setItem('global_layout', 'override-compact');
+                    globalLayout = 'override-compact';
+                    
+                    // In compact mode, only the first checked/matching item in natural priority order (Note > Details > Formula) is rendered
+                    // C1. All checked in Compact -> should only show Note
+                    testWidget.compactShowFormula = true;
+                    testWidget.compactShowNote = true;
+                    testWidget.compactShowDetail = true;
+                    domItems = getRenderedElements();
+                    if (!domItems.note || domItems.detail || domItems.formula) {
+                        throw new Error("Compact mode should prioritize Note over Details and Formula");
+                    }
+                    
+                    // C2. Note unchecked, Details and Formula checked in Compact -> should show Detail only
+                    testWidget.compactShowFormula = true;
+                    testWidget.compactShowNote = false;
+                    testWidget.compactShowDetail = true;
+                    domItems = getRenderedElements();
+                    if (domItems.note || !domItems.detail || domItems.formula) {
+                        throw new Error("Compact mode should prioritize Details over Formula when Note is unchecked");
+                    }
+                    
+                    // C3. Note and Details unchecked, Formula checked in Compact -> should show Formula only
+                    testWidget.compactShowFormula = true;
+                    testWidget.compactShowNote = false;
+                    testWidget.compactShowDetail = false;
+                    domItems = getRenderedElements();
+                    if (domItems.note || domItems.detail || !domItems.formula) {
+                        throw new Error("Compact mode should show Formula when only Formula is checked");
+                    }
+                    
+                    // C4. All unchecked in Compact -> should show nothing
+                    testWidget.compactShowFormula = false;
+                    testWidget.compactShowNote = false;
+                    testWidget.compactShowDetail = false;
+                    domItems = getRenderedElements();
+                    if (domItems.note || domItems.detail || domItems.formula) {
+                        throw new Error("Compact mode should show nothing when all unchecked");
+                    }
+                    
+                    // Scenario D: Global layout is Auto, Widget Overrides
+                    localStorage.setItem('global_layout', 'auto');
+                    globalLayout = 'auto';
+                    
+                    // D1. Widget mode = 'full' -> should render based on Full settings
+                    testWidget.displayMode = 'full';
+                    testWidget.fullShowFormula = true;
+                    testWidget.fullShowNote = false;
+                    testWidget.fullShowDetail = true;
+                    domItems = getRenderedElements();
+                    if (!domItems.formula || domItems.note || !domItems.detail) {
+                        throw new Error("Widget Full mode override failed with Global Auto");
+                    }
+                    
+                    // D2. Widget mode = 'compact' -> should render based on Compact settings (Details prioritized here)
+                    testWidget.displayMode = 'compact';
+                    testWidget.compactShowFormula = true;
+                    testWidget.compactShowNote = false;
+                    testWidget.compactShowDetail = true;
+                    domItems = getRenderedElements();
+                    if (domItems.note || !domItems.detail || domItems.formula) {
+                        throw new Error("Widget Compact mode override failed with Global Auto");
+                    }
+                    
+                } finally {
+                    // Restore original global state and widget displayMode
+                    localStorage.setItem('global_layout', origGlobalLayout);
+                    globalLayout = origGlobalLayout;
+                    testWidget.displayMode = origDisplayMode;
+                    renderSavedQueues();
+                }
+                
+                console.log("=== Grid Settings & Rendering Test Suite Passed Successfully! ===");
             })()
 
         `).then(() => {
