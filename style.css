@@ -238,20 +238,7 @@
                 inset 0 0 15px rgba(0, 212, 255, 0.05);
         }
 
-        /* Widget display mode classes — applied to .arsenal-item-wrapper */
-        .widget-display-simple .saved-item,
-        .widget-display-compact .saved-item {
-            /* subtext hiding handled via child selectors below */
-        }
 
-        .widget-display-simple .widget-formula,
-        .widget-display-simple .widget-detail,
-        .widget-display-simple .widget-note,
-        .widget-display-compact .widget-formula,
-        .widget-display-compact .widget-detail,
-        .widget-display-compact .widget-note {
-            display: none !important;
-        }
 
         .widget-display-compact .saved-item {
             min-height: 2.25rem !important;

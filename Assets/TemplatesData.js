@@ -467,7 +467,7 @@ window.StaticDiceTemplates = [
                 maxTime: 3600,
                 currentTime: 3600,
                 isPaused: true,
-                diceFormula: '1d6',
+                diceFormula: '',
                 rundownText: 'Torch Extinguished!',
                 animationType: 'torches',
                 detailText: 'Active Torch'

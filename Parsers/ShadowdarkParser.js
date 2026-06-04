@@ -1325,7 +1325,7 @@ const ShadowdarkParser = {
                     name: spellName.toUpperCase(),
                     widgetType: 'roller',
                     includeAdvDis: includeAdvDis,
-                    addonNote: `T${tier} DC ${classTitle} Spellcasting`,
+                    addonNote: `DC${10 + tier} - T${tier} ${classTitle} Spellcasting`,
                     addonToggle: {
                         checked: true,
                         labelOn: 'Ready',

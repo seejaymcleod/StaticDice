@@ -1,3 +1,106 @@
+        function safeEvalMath(expr) {
+            // Replace floor/ceil/round with Math.floor/Math.ceil/Math.round
+            let prepared = expr
+                .replace(/floor\(/g, 'Math.floor(')
+                .replace(/ceil\(/g, 'Math.ceil(')
+                .replace(/round\(/g, 'Math.round(');
+            
+            // Check if there are any illegal characters/tokens
+            let test = prepared;
+            test = test.replace(/Math\.floor/g, '');
+            test = test.replace(/Math\.ceil/g, '');
+            test = test.replace(/Math\.round/g, '');
+            
+            // The remaining string should only contain digits, operators, dots, spaces, parentheses
+            const illegal = test.replace(/[0-9+\-*/().\s]/g, '');
+            if (illegal.length > 0) {
+                // Contains illegal characters, do not evaluate
+                return expr;
+            }
+            
+            try {
+                const fn = new Function(`return (${prepared});`);
+                const result = fn();
+                return typeof result === 'number' && !isNaN(result) ? result : expr;
+            } catch (e) {
+                return expr;
+            }
+        }
+
+        function resolveDynamicText(text) {
+            if (typeof text !== 'string') return text;
+            if (typeof window === 'undefined' || !window.getActiveCharacterVariable) return text;
+            
+            // 1. Resolve $VAR$ placeholders
+            let resolved = text.replace(/\$([a-zA-Z0-9_-]+)\$/g, (match, varName) => {
+                const resolvedVal = window.getActiveCharacterVariable(varName);
+                return resolvedVal !== null ? resolvedVal : match;
+            });
+            
+            // 2. Resolve [[ expression ]] math placeholders
+            resolved = resolved.replace(/\[\[([^\]]+)\]\]/g, (match, expr) => {
+                return safeEvalMath(expr);
+            });
+            
+            return resolved;
+        }
+        window.resolveDynamicText = resolveDynamicText;
+
+        function renderWidgetSubtext(q, formula, effectiveMode) {
+            const compactPriority = q.compactDisplayPriority || 'auto';
+            const canShowFormula = q.showFormula !== false;
+            const canShowNote = q.showNote !== false;
+            const canShowDetail = q.showDetail !== false;
+
+            const resolvedNote = q.addonNote ? resolveDynamicText(q.addonNote) : '';
+            const resolvedDetail = q.detailText ? resolveDynamicText(q.detailText) : '';
+
+            const hasFormula = !!formula;
+            const hasNote = !!resolvedNote;
+            const hasDetail = !!resolvedDetail;
+
+            if (effectiveMode === 'compact') {
+                let target = 'none';
+                if (compactPriority === 'auto') {
+                    if (hasNote && canShowNote) target = 'note';
+                    else if (hasDetail && canShowDetail) target = 'detail';
+                    else if (hasFormula && canShowFormula) target = 'formula';
+                } else {
+                    target = compactPriority;
+                }
+
+                if (target === 'note' && hasNote && canShowNote) {
+                    return `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${resolvedNote}</div>`;
+                }
+                if (target === 'detail' && hasDetail && canShowDetail) {
+                    return `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-detail">${resolvedDetail.replace(/\n/g, ' ')}</div>`;
+                }
+                if (target === 'formula' && hasFormula && canShowFormula) {
+                    return `<div class="text-[9px] mono text-[#94a3b8]/70 truncate mt-0.5 widget-formula">${formula}</div>`;
+                }
+                return '';
+            }
+
+            // Normal/Simple expanded view
+            let html = '';
+            const isFormulaVisible = canShowFormula && (effectiveMode !== 'simple' || q.showFormula === true);
+            if (hasFormula && isFormulaVisible) {
+                html += `<div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula}</div>`;
+            }
+
+            const isNoteVisible = canShowNote && (effectiveMode !== 'simple' || q.showNote === true);
+            if (hasNote && isNoteVisible) {
+                html += `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${resolvedNote}</div>`;
+            }
+
+            const isDetailVisible = canShowDetail && (effectiveMode !== 'simple' || q.showDetail === true);
+            if (hasDetail && isDetailVisible) {
+                html += `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${resolvedDetail}</div>`;
+            }
+
+            return html;
+        }
+
         function renderDiceGrid() {
             const grid = document.getElementById('dice-grid');
             if (!grid) return;
@@ -515,6 +618,8 @@
 
             filtered.forEach(q => {
                 const type = q.widgetType || 'roller';
+                const resolvedName = resolveDynamicText(q.name || '');
+                const resolvedText = q.text ? resolveDynamicText(q.text) : '';
 
                 let holdTimer = null;
                 let isHold = false;
@@ -667,10 +772,9 @@
                     cancelHold(); // critical: stop the timer from firing after contextmenu
                     if (!isHold) {
                         // contextmenu beat the timer (Android), open the menu now
-                        isHold = true;
                         toggleArsenalMenu(q.id, e);
                     }
-                    // if isHold is already true, timer already opened it — do nothing
+                    isHold = false; // Reset so next right-click works!
                 });
 
                 const isDiceless = type === 'roller' && !(q.unifiedQueue || []).some(node => node.nodeType === 'node');
@@ -828,11 +932,9 @@
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
                                 <div class="flex items-center gap-1.5">
-                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
                                 </div>
-                                <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula || 'Empty'}</div>
-                                ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
-                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
+                                ${renderWidgetSubtext(q, formula || 'Empty', effectiveMode)}
                             </div>
                             <div class="flex items-center gap-2 mr-8 shrink-0 select-none" onclick="event.stopPropagation()">
                                 <div class="w-16 bg-[#020617]/60 border border-[#00ff88]/20 shadow-[0_0_10px_rgba(0,255,136,0.1)] rounded-lg py-1.5 text-center text-[#00ff88] font-black tabular-nums text-lg leading-none" title="Current value">
@@ -844,11 +946,9 @@
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 pr-8">
                                 <div class="flex items-center gap-1.5">
-                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
+                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
                                 </div>
-                                <div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula || 'Empty'}</div>
-                                ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
-                                ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
+                                ${renderWidgetSubtext(q, formula || 'Empty', effectiveMode)}
                             </div>
                         `;
                     }
@@ -879,18 +979,16 @@
                     }
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-1 pr-2">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${q.name}</div>
-                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${resolvedName}</div>
+                            ${renderWidgetSubtext(q, '', effectiveMode)}
                             ${trackerHtml}
                         </div>
                     `;
                 } else if (type === 'toggle') {
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-1 pr-8">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                            ${renderWidgetSubtext(q, '', effectiveMode)}
                         </div>
                         <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
                             <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${q.checked ? 'text-white' : 'text-slate-500'}">
@@ -947,10 +1045,8 @@
 
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name}</div>
-                            ${formula ? `<div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula}</div>` : ''}
-                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
+                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                            ${renderWidgetSubtext(q, formula, effectiveMode)}
                         </div>
                         <div class="flex items-center gap-2 ${q.addonToggle ? 'mr-8' : 'mr-2'} shrink-0 select-none" onclick="event.stopPropagation()">
                             ${inputHtml}
@@ -973,12 +1069,11 @@
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-1">
                             <div class="flex items-center gap-1.5 justify-between">
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || ''}</div>
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
                                 <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
                             </div>
-                            ${q.addonNote ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${q.addonNote}</div>` : ''}
-                            ${q.detailText ? `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${q.detailText}</div>` : ''}
-                            ${q.text ? `<div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed ? 'hidden' : ''}">${q.text}</div>` : ''}
+                            ${renderWidgetSubtext(q, '', effectiveMode)}
+                            ${resolvedText ? `<div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed || effectiveMode === 'compact' ? 'hidden' : ''}">${resolvedText}</div>` : ''}
                         </div>
                     `;
                 }

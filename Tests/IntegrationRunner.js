@@ -11,6 +11,11 @@ const archCode = fs.readFileSync(path.resolve(__dirname, '../DataArchitecture.js
 const templatesCode = fs.readFileSync(path.resolve(__dirname, '../Assets/TemplatesData.js'), 'utf8');
 const parserRegistryCode = fs.readFileSync(path.resolve(__dirname, '../Parsers/ParserRegistry.js'), 'utf8');
 const shadowdarkParserCode = fs.readFileSync(path.resolve(__dirname, '../Parsers/ShadowdarkParser.js'), 'utf8');
+const systemCode = fs.readFileSync(path.resolve(__dirname, '../Systems/Shadowdark/System.js'), 'utf8');
+const eventBusCode = fs.readFileSync(path.resolve(__dirname, '../js/EventBus.js'), 'utf8');
+const storageManagerCode = fs.readFileSync(path.resolve(__dirname, '../js/StorageManager.js'), 'utf8');
+const widgetRendererCode = fs.readFileSync(path.resolve(__dirname, '../js/WidgetRenderer.js'), 'utf8');
+const appCode = fs.readFileSync(path.resolve(__dirname, '../js/App.js'), 'utf8');
 let html = fs.readFileSync(path.resolve(__dirname, '../DiceRoller.html'), 'utf8');
 
 // Inline scripts inside html script tags
@@ -19,6 +24,11 @@ html = html.replace('<script src="DataArchitecture.js"></script>', `<script>${ar
 html = html.replace('<script src="DiceEngine.js"></script>', `<script>${engineCode}</script>`);
 html = html.replace('<script src="Parsers/ParserRegistry.js"></script>', `<script>${parserRegistryCode}</script>`);
 html = html.replace('<script src="Parsers/ShadowdarkParser.js"></script>', `<script>${shadowdarkParserCode}</script>`);
+html = html.replace('<script src="Systems/Shadowdark/System.js"></script>', `<script>${systemCode}</script>`);
+html = html.replace('<script src="js/EventBus.js"></script>', `<script>${eventBusCode}</script>`);
+html = html.replace('<script src="js/StorageManager.js"></script>', `<script>${storageManagerCode}</script>`);
+html = html.replace('<script src="js/WidgetRenderer.js"></script>', `<script>${widgetRendererCode}</script>`);
+html = html.replace('<script src="js/App.js"></script>', `<script>${appCode}</script>`);
 
 // 2. Initialize JSDOM
 const dom = new JSDOM(html, {
@@ -313,6 +323,44 @@ window.addEventListener('load', () => {
                 if (!formulaText.includes('(+2)') && !formulaText.includes('+2')) {
                     throw new Error("Strength Check formula text in DOM did not update: " + formulaText);
                 }
+
+                // Verify Dynamic Variable Replacement in name and note fields
+                console.log('Testing dynamic variable replacement in names and notes...');
+                strCheckW.name = 'STR Check: $STR_mod$';
+                strCheckW.addonNote = 'Bonus $STR$';
+                renderSavedQueues();
+
+                const updatedStrCheckEl = document.querySelector('.saved-item[data-id="' + strCheckW.id + '"]');
+                if (!updatedStrCheckEl) {
+                    throw new Error("Could not find updated STR Check DOM element");
+                }
+                const renderedName = updatedStrCheckEl.querySelector('.text-sm').textContent;
+                if (!renderedName.toUpperCase().includes('STR CHECK: 2')) {
+                    throw new Error("Variable replacement failed in widget name: " + renderedName);
+                }
+                const renderedNote = updatedStrCheckEl.querySelector('.widget-note').textContent;
+                if (!renderedNote.includes('Bonus 15')) {
+                    throw new Error("Variable replacement failed in widget note: " + renderedNote);
+                }
+                // Verify Dynamic Math Evaluation in name and note fields
+                console.log('Testing dynamic math evaluation in names and notes...');
+                strCheckW.name = 'STR Check Math: [[$STR_mod$ * 2 + 10]]';
+                strCheckW.addonNote = 'Bonus Math: [[floor($STR$ / 2)]]';
+                renderSavedQueues();
+
+                const mathStrCheckEl = document.querySelector('.saved-item[data-id="' + strCheckW.id + '"]');
+                if (!mathStrCheckEl) {
+                    throw new Error("Could not find math STR Check DOM element");
+                }
+                const mathRenderedName = mathStrCheckEl.querySelector('.text-sm').textContent;
+                if (!mathRenderedName.toUpperCase().includes('STR CHECK MATH: 14')) {
+                    throw new Error("Math replacement failed in widget name: " + mathRenderedName);
+                }
+                const mathRenderedNote = mathStrCheckEl.querySelector('.widget-note').textContent;
+                if (!mathRenderedNote.includes('Bonus Math: 7')) {
+                    throw new Error("Math replacement failed in widget note: " + mathRenderedNote);
+                }
+                console.log('-> Dynamic Math Evaluation Passed.');
 
                 // Test 10: Refactored armor/shield to numbers & passive modifiers
                 console.log('Testing refactored armor/shield numbers & passive modifiers...');
@@ -630,7 +678,7 @@ window.addEventListener('load', () => {
                 if (!slot8 || slot8.name !== 'Rations') throw new Error('Gear slot 8 should be Rations, got: ' + (slot8 ? slot8.name : 'null'));
 
                 const slot9 = rimasWidgets.find(w => w.id.startsWith('w_gear_9_'));
-                if (!slot9 || slot9.name !== '... extra slot') throw new Error('Gear slot 9 should be "... extra slot" (placeholder for Rations), got: ' + (slot9 ? slot9.name : 'null'));
+                if (!slot9 || slot9.name !== '...') throw new Error('Gear slot 9 should be "..." (placeholder for Rations), got: ' + (slot9 ? slot9.name : 'null'));
 
                 const slot10 = rimasWidgets.find(w => w.id.startsWith('w_gear_10_'));
                 if (!slot10 || slot10.name !== 'Flask or bottle') throw new Error('Gear slot 10 should be Flask or bottle, got: ' + (slot10 ? slot10.name : 'null'));
@@ -723,14 +771,14 @@ window.addEventListener('load', () => {
 
                 const detectMagicW = spellWidgets.find(w => w.name === 'DETECT MAGIC');
                 if (detectMagicW.includeAdvDis !== true) throw new Error('DETECT MAGIC should have Advantage/Disadvantage enabled');
-                if (detectMagicW.addonNote !== 'T1 DC Wizard Spellcasting') throw new Error('DETECT MAGIC addonNote is incorrect: ' + detectMagicW.addonNote);
+                if (detectMagicW.addonNote !== 'DC11 - T1 Wizard Spellcasting') throw new Error('DETECT MAGIC addonNote is incorrect: ' + detectMagicW.addonNote);
 
                 const magicMissileW = spellWidgets.find(w => w.name === 'MAGIC MISSILE');
                 if (magicMissileW.includeAdvDis !== false) throw new Error('MAGIC MISSILE should NOT have Advantage/Disadvantage enabled');
-                if (magicMissileW.addonNote !== 'T1 DC Wizard Spellcasting') throw new Error('MAGIC MISSILE addonNote is incorrect: ' + magicMissileW.addonNote);
+                if (magicMissileW.addonNote !== 'DC11 - T1 Wizard Spellcasting') throw new Error('MAGIC MISSILE addonNote is incorrect: ' + magicMissileW.addonNote);
 
                 const fireballW = spellWidgets.find(w => w.name === 'FIREBALL');
-                if (fireballW.addonNote !== 'T3 DC Wizard Spellcasting') throw new Error('FIREBALL addonNote is incorrect: ' + fireballW.addonNote);
+                if (fireballW.addonNote !== 'DC13 - T3 Wizard Spellcasting') throw new Error('FIREBALL addonNote is incorrect: ' + fireballW.addonNote);
 
                 // Verify gear mapping (seq slots and no extra slots)
                 const hSlot1 = horlaboWidgets.find(w => w.id.startsWith('w_gear_1_'));

@@ -1700,6 +1700,40 @@
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors">
                 </div>
 
+                <!-- Display Config (Normal View Options) -->
+                <div class="space-y-2 pt-2 border-t border-white/5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Display Options (Normal View)</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label id="widget-show-formula-container" class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" id="widget-show-formula" checked
+                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Formula</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" id="widget-show-note" checked
+                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Note</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" id="widget-show-detail" checked
+                                class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Details</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Compact View Subtext Option -->
+                <div class="space-y-1.5 pt-1">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Compact Subtext Priority</label>
+                    <select id="widget-compact-priority" class="char-select w-full !text-xs !py-2">
+                        <option value="none">None (Hide subtext)</option>
+                        <option value="auto">Auto (Note > Details > Formula)</option>
+                        <option value="note">Note field only</option>
+                        <option value="detail">Detail Text only</option>
+                        <option value="formula" id="widget-compact-priority-formula-opt">Formula only</option>
+                    </select>
+                </div>
+
                 <!-- Display Mode Pill -->
                 <div class="space-y-1.5 pt-1">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Display
