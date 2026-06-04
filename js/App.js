@@ -175,12 +175,13 @@
             }
         }
 
-        // Resolves the effective display mode for a widget given the global layout
         function getEffectiveDisplayMode(q) {
-            const widgetMode = q.displayMode || 'normal';
+            const widgetMode = q.displayMode || 'auto';
             if (globalLayout === 'override-compact') return 'compact';
-            if (globalLayout === 'force-normal' && widgetMode !== 'compact') return 'normal';
-            return widgetMode;
+            if (globalLayout === 'force-normal') return 'normal';
+            if (widgetMode === 'compact') return 'compact';
+            if (widgetMode === 'full' || widgetMode === 'normal') return 'normal';
+            return 'normal';
         }
 
         // Update display mode pill selection visuals
@@ -4306,12 +4307,8 @@
 
             document.getElementById('number-val').value = '10';
             document.getElementById('widget-detail-text').value = '';
-            document.getElementById('widget-show-formula').checked = true;
-            document.getElementById('widget-show-note').checked = true;
-            document.getElementById('widget-show-detail').checked = true;
-            document.getElementById('widget-compact-priority').value = 'auto';
-            const normalPill = document.querySelector('input[name="widget-display-mode"][value="normal"]');
-            if (normalPill) { normalPill.checked = true; updateDisplayModePills('normal'); }
+            const autoPill = document.querySelector('input[name="widget-display-mode"][value="auto"]');
+            if (autoPill) { autoPill.checked = true; updateDisplayModePills('auto'); }
             document.getElementById('widget-bind-var-check').checked = false;
             document.getElementById('widget-binds-variable').value = '';
             document.getElementById('widget-variable-rel-type').value = 'define';
@@ -4412,10 +4409,37 @@
 
             // Populate detail text
             document.getElementById('widget-detail-text').value = q.detailText || '';
+            let compactShowFormula = q.compactShowFormula;
+            let compactShowNote = q.compactShowNote;
+            let compactShowDetail = q.compactShowDetail;
+
+            if (compactShowFormula === undefined && compactShowNote === undefined && compactShowDetail === undefined) {
+                if (q.compactDisplayPriority === 'note') {
+                    compactShowNote = true;
+                } else if (q.compactDisplayPriority === 'detail') {
+                    compactShowDetail = true;
+                } else if (q.compactDisplayPriority === 'formula') {
+                    compactShowFormula = true;
+                } else if (q.compactDisplayPriority === 'auto') {
+                    compactShowFormula = true;
+                    compactShowNote = true;
+                    compactShowDetail = true;
+                } else {
+                    compactShowFormula = false;
+                    compactShowNote = false;
+                    compactShowDetail = false;
+                }
+            }
+
+            document.getElementById('widget-full-formula').checked = q.fullShowFormula !== false;
+            document.getElementById('widget-full-note').checked = q.fullShowNote !== false;
+            document.getElementById('widget-full-detail').checked = q.fullShowDetail !== false;
             document.getElementById('widget-show-formula').checked = q.showFormula !== false;
             document.getElementById('widget-show-note').checked = q.showNote !== false;
             document.getElementById('widget-show-detail').checked = q.showDetail !== false;
-            document.getElementById('widget-compact-priority').value = q.compactDisplayPriority || 'auto';
+            document.getElementById('widget-compact-formula').checked = !!compactShowFormula;
+            document.getElementById('widget-compact-note').checked = !!compactShowNote;
+            document.getElementById('widget-compact-detail').checked = !!compactShowDetail;
 
 
             // Populate variable binding
@@ -4438,7 +4462,8 @@
             toggleWidgetPassiveModifiers(hasPassiveMods);
 
             // Populate display mode pill
-            const dm = q.displayMode || 'normal';
+            let dm = q.displayMode || 'auto';
+            if (dm === 'normal') dm = 'full'; // map old normal to full
             const dmPill = document.querySelector(`input[name="widget-display-mode"][value="${dm}"]`);
             if (dmPill) { dmPill.checked = true; updateDisplayModePills(dm); }
 
@@ -4461,6 +4486,28 @@
             }
             editingWidgetId = null;
             vibrate(5);
+        }
+
+        function applyDefaultGridSettingsForType(type) {
+            // Compact is always unchecked by default
+            document.getElementById('widget-compact-formula').checked = false;
+            document.getElementById('widget-compact-note').checked = false;
+            document.getElementById('widget-compact-detail').checked = false;
+
+            // Full and Normal default to true
+            document.getElementById('widget-full-formula').checked = true;
+            document.getElementById('widget-full-note').checked = true;
+            document.getElementById('widget-full-detail').checked = true;
+
+            document.getElementById('widget-show-formula').checked = true;
+            document.getElementById('widget-show-note').checked = true;
+            document.getElementById('widget-show-detail').checked = true;
+
+            // Formula is only relevant for roller, number, timer
+            if (type !== 'roller' && type !== 'number' && type !== 'timer') {
+                document.getElementById('widget-full-formula').checked = false;
+                document.getElementById('widget-show-formula').checked = false;
+            }
         }
 
         function onWidgetTypeChange(type) {
@@ -4488,29 +4535,29 @@
                 document.getElementById('widget-timer-config')?.classList.remove('hidden');
             }
 
-            // Show/Hide formula display configuration and compact priority based on widget type
-            const showFormulaContainer = document.getElementById('widget-show-formula-container');
-            if (showFormulaContainer) {
+            // Show/Hide formula row in matrix based on widget type
+            const formulaRow = document.getElementById('matrix-row-formula');
+            if (formulaRow) {
                 if (type === 'roller' || type === 'number' || type === 'timer') {
-                    showFormulaContainer.classList.remove('hidden');
+                    formulaRow.style.display = '';
                 } else {
-                    showFormulaContainer.classList.add('hidden');
+                    formulaRow.style.display = 'none';
                 }
             }
 
-            const formulaOpt = document.getElementById('widget-compact-priority-formula-opt');
-            if (formulaOpt) {
-                if (type === 'roller' || type === 'number' || type === 'timer') {
-                    formulaOpt.disabled = false;
-                    formulaOpt.classList.remove('hidden');
+            // Hide secondary Note input field if type is 'text' to merge note fields
+            const noteConfig = document.getElementById('widget-note-config');
+            if (noteConfig) {
+                if (type === 'text') {
+                    noteConfig.classList.add('hidden');
                 } else {
-                    formulaOpt.disabled = true;
-                    formulaOpt.classList.add('hidden');
-                    const selectEl = document.getElementById('widget-compact-priority');
-                    if (selectEl && selectEl.value === 'formula') {
-                        selectEl.value = 'auto';
-                    }
+                    noteConfig.classList.remove('hidden');
                 }
+            }
+
+            // Apply default display grid configuration if creating a new widget
+            if (editingWidgetId === null) {
+                applyDefaultGridSettingsForType(type);
             }
         }
 
@@ -4640,11 +4687,16 @@
             }
 
             let detailText = document.getElementById('widget-detail-text').value.trim() || null;
-            const displayMode = document.querySelector('input[name="widget-display-mode"]:checked')?.value || 'normal';
+            const displayMode = document.querySelector('input[name="widget-display-mode"]:checked')?.value || 'auto';
+            const fullShowFormula = document.getElementById('widget-full-formula').checked;
+            const fullShowNote = document.getElementById('widget-full-note').checked;
+            const fullShowDetail = document.getElementById('widget-full-detail').checked;
             const showFormula = document.getElementById('widget-show-formula').checked;
             const showNote = document.getElementById('widget-show-note').checked;
             const showDetail = document.getElementById('widget-show-detail').checked;
-            const compactDisplayPriority = document.getElementById('widget-compact-priority').value;
+            const compactShowFormula = document.getElementById('widget-compact-formula').checked;
+            const compactShowNote = document.getElementById('widget-compact-note').checked;
+            const compactShowDetail = document.getElementById('widget-compact-detail').checked;
 
             if (editingWidgetId !== null) {
                 const q = engine.findSavedQueue(editingWidgetId);
@@ -4656,11 +4708,16 @@
                     q.bindsVariable = bindsVariable;
                     q.variableRelType = variableRelType;
                     q.passiveModifiers = passiveModifiers;
-                    q.displayMode = displayMode === 'normal' ? null : displayMode;
+                    q.displayMode = displayMode === 'auto' ? null : displayMode;
+                    q.fullShowFormula = fullShowFormula;
+                    q.fullShowNote = fullShowNote;
+                    q.fullShowDetail = fullShowDetail;
                     q.showFormula = showFormula;
                     q.showNote = showNote;
                     q.showDetail = showDetail;
-                    q.compactDisplayPriority = compactDisplayPriority;
+                    q.compactShowFormula = compactShowFormula;
+                    q.compactShowNote = compactShowNote;
+                    q.compactShowDetail = compactShowDetail;
 
                     if (type === 'roller' || type === 'number') {
                         const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
@@ -4754,11 +4811,16 @@
                 bindsVariable: bindsVariable,
                 variableRelType: variableRelType,
                 passiveModifiers: passiveModifiers,
-                displayMode: displayMode === 'normal' ? null : displayMode,
+                displayMode: displayMode === 'auto' ? null : displayMode,
+                fullShowFormula: fullShowFormula,
+                fullShowNote: fullShowNote,
+                fullShowDetail: fullShowDetail,
                 showFormula: showFormula,
                 showNote: showNote,
                 showDetail: showDetail,
-                compactDisplayPriority: compactDisplayPriority
+                compactShowFormula: compactShowFormula,
+                compactShowNote: compactShowNote,
+                compactShowDetail: compactShowDetail
             };
 
             if (type === 'roller' || type === 'number') {

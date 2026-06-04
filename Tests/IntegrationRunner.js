@@ -287,10 +287,23 @@ window.addEventListener('load', () => {
                 const charW = engine.savedQueues.filter(w => w.characterId === activeCharacterId);
                 const strScoreW = charW.find(w => w.name === 'STR Score');
                 const strModW = charW.find(w => w.name === 'STR Modifier');
-                const strCheckW = charW.find(w => w.name === 'Strength Check');
+                const strCheckW = charW.find(w => w.name && w.name.includes('STR CHECK'));
 
                 if (!strScoreW || !strModW || !strCheckW) {
                     throw new Error("Could not find STR Score, STR Modifier, or Strength Check widgets");
+                }
+
+                // Verify template default grid settings
+                const meleeAtkW = charW.find(w => w.name === 'Attack Melee - STR');
+                if (!meleeAtkW) throw new Error("Could not find Melee Attack template widget");
+                if (meleeAtkW.showFormula !== true || meleeAtkW.fullShowFormula !== true) {
+                    throw new Error("Melee Attack template widget should show formula in Normal and Full");
+                }
+                if (strCheckW.showFormula !== false || strCheckW.fullShowFormula !== false) {
+                    throw new Error("STR CHECK template widget should hide formula in Normal and Full to avoid redundancy");
+                }
+                if (strCheckW.showNote !== false || strCheckW.fullShowNote !== false || strCheckW.showDetail !== false || strCheckW.fullShowDetail !== false) {
+                    throw new Error("STR CHECK template widget should hide note and details by default");
                 }
 
                 // Initial value assertions
@@ -311,6 +324,10 @@ window.addEventListener('load', () => {
                 // Verify that w_mod_str widget value got updated to 2
                 if (strModW.value !== 2) throw new Error('STR Modifier widget value should update to 2, got ' + strModW.value);
 
+                // Enable showFormula to render it in DOM
+                strCheckW.showFormula = true;
+                renderSavedQueues();
+
                 // Let's check the DOM elements inside JSDOM!
                 // The widgets list is rendered into '.saved-queues-list'
                 // Let's look for the formula/resolved display of the STR Check widget
@@ -328,6 +345,7 @@ window.addEventListener('load', () => {
                 console.log('Testing dynamic variable replacement in names and notes...');
                 strCheckW.name = 'STR Check: $STR_mod$';
                 strCheckW.addonNote = 'Bonus $STR$';
+                strCheckW.showNote = true;
                 renderSavedQueues();
 
                 const updatedStrCheckEl = document.querySelector('.saved-item[data-id="' + strCheckW.id + '"]');
@@ -346,6 +364,7 @@ window.addEventListener('load', () => {
                 console.log('Testing dynamic math evaluation in names and notes...');
                 strCheckW.name = 'STR Check Math: [[$STR_mod$ * 2 + 10]]';
                 strCheckW.addonNote = 'Bonus Math: [[floor($STR$ / 2)]]';
+                strCheckW.showNote = true;
                 renderSavedQueues();
 
                 const mathStrCheckEl = document.querySelector('.saved-item[data-id="' + strCheckW.id + '"]');
@@ -361,6 +380,41 @@ window.addEventListener('load', () => {
                     throw new Error("Math replacement failed in widget note: " + mathRenderedNote);
                 }
                 console.log('-> Dynamic Math Evaluation Passed.');
+
+                // Test 9.5: Verify Dynamic Sign Formatting ($+-$)
+                console.log('Testing dynamic sign formatting ($+-$)...');
+                
+                // Positive case
+                // STR_mod is 2 (since STR score is 15 from previous test)
+                strCheckW.name = 'STR Check: [$+-$ $STR_mod$]';
+                strCheckW.addonNote = 'Spell WIS: [$+-$ {$WIS_MOD$ + $SPELLCHECK$}]'; // WIS_mod is 0, Spellcheck is 0, total 0
+                renderSavedQueues();
+                
+                const signStrCheckEl = document.querySelector('.saved-item[data-id="' + strCheckW.id + '"]');
+                const signRenderedName = signStrCheckEl.querySelector('.text-sm').textContent;
+                if (!signRenderedName.includes('STR Check: [+2]')) {
+                    throw new Error("Positive dynamic sign formatting failed in name: " + signRenderedName);
+                }
+                const signRenderedNote = signStrCheckEl.querySelector('.widget-note').textContent;
+                if (!signRenderedNote.includes('Spell WIS: [+0]')) {
+                    throw new Error("Zero dynamic sign formatting failed in note: " + signRenderedNote);
+                }
+
+                // Negative case
+                // Set STR Score to 8, which makes STR_mod = -1
+                changeNumberValueDirect(strScoreW.id, 8);
+                renderSavedQueues();
+                
+                const negStrCheckEl = document.querySelector('.saved-item[data-id="' + strCheckW.id + '"]');
+                const negRenderedName = negStrCheckEl.querySelector('.text-sm').textContent;
+                if (!negRenderedName.includes('STR Check: [-1]')) {
+                    throw new Error("Negative dynamic sign formatting failed in name: " + negRenderedName);
+                }
+                
+                // Restore STR Score to 15 so downstream tests are not affected
+                changeNumberValueDirect(strScoreW.id, 15);
+                renderSavedQueues();
+                console.log('-> Dynamic Sign Formatting Passed.');
 
                 // Test 10: Refactored armor/shield to numbers & passive modifiers
                 console.log('Testing refactored armor/shield numbers & passive modifiers...');
@@ -668,6 +722,22 @@ window.addEventListener('load', () => {
                 if (!mightyW) throw new Error('MIGHTY feature should exist');
                 if (!mightyW.text.includes('You gain +1 to melee attack and damage rolls. (Half-Orc Ancestry Trait)')) {
                     throw new Error('Mighty description should place ancestry trait suffix after description');
+                }
+
+                // Verify sensible default grid settings for parsed widgets
+                if (longswordAtkW.showFormula !== true || longswordAtkW.fullShowFormula !== true || longswordAtkW.showNote !== true || longswordAtkW.fullShowNote !== true || longswordAtkW.showDetail !== true || longswordAtkW.fullShowDetail !== true) {
+                    throw new Error('Weapon attack widget grid settings should all be true for Normal/Full');
+                }
+                if (longswordAtkW.compactShowFormula !== false || longswordAtkW.compactShowNote !== false || longswordAtkW.compactShowDetail !== false) {
+                    throw new Error('Weapon attack widget grid settings should all be false for Compact');
+                }
+
+                if (flourishW.showFormula !== false || flourishW.fullShowFormula !== false || flourishW.showNote !== false || flourishW.fullShowNote !== true || flourishW.showDetail !== true || flourishW.fullShowDetail !== true) {
+                    throw new Error('Feature stepper widget grid settings are incorrect');
+                }
+                
+                if (implacableW.showFormula !== false || implacableW.fullShowFormula !== false || implacableW.showNote !== false || implacableW.fullShowNote !== true || implacableW.showDetail !== true || implacableW.fullShowDetail !== true) {
+                    throw new Error('Feature text widget grid settings are incorrect');
                 }
 
                 // Verify gear mapping slots

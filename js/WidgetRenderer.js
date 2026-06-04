@@ -41,17 +41,30 @@
             resolved = resolved.replace(/\[\[([^\]]+)\]\]/g, (match, expr) => {
                 return safeEvalMath(expr);
             });
+
+            // 3. Resolve { expression } math placeholders with backslash escaping support
+            resolved = resolved.replace(/(\\)?\{([^}]+)\}/g, (match, escaped, expr) => {
+                if (escaped) {
+                    return match.slice(1); // Remove the backslash escape
+                }
+                return safeEvalMath(expr);
+            });
+            
+            // 4. Resolve $+-$ sign formatting placeholders next to numbers
+            resolved = resolved.replace(/\$\+-\$\s*(-?\d+(?:\.\d+)?)/g, (match, numStr) => {
+                const num = parseFloat(numStr);
+                if (num >= 0) {
+                    return '+' + numStr;
+                } else {
+                    return numStr; // negative number already has "-" sign
+                }
+            });
             
             return resolved;
         }
         window.resolveDynamicText = resolveDynamicText;
 
         function renderWidgetSubtext(q, formula, effectiveMode) {
-            const compactPriority = q.compactDisplayPriority || 'auto';
-            const canShowFormula = q.showFormula !== false;
-            const canShowNote = q.showNote !== false;
-            const canShowDetail = q.showDetail !== false;
-
             const resolvedNote = q.addonNote ? resolveDynamicText(q.addonNote) : '';
             const resolvedDetail = q.detailText ? resolveDynamicText(q.detailText) : '';
 
@@ -60,41 +73,57 @@
             const hasDetail = !!resolvedDetail;
 
             if (effectiveMode === 'compact') {
-                let target = 'none';
-                if (compactPriority === 'auto') {
-                    if (hasNote && canShowNote) target = 'note';
-                    else if (hasDetail && canShowDetail) target = 'detail';
-                    else if (hasFormula && canShowFormula) target = 'formula';
-                } else {
-                    target = compactPriority;
+                let compactShowFormula = q.compactShowFormula;
+                let compactShowNote = q.compactShowNote;
+                let compactShowDetail = q.compactShowDetail;
+
+                // Legacy migration/fallback
+                if (compactShowFormula === undefined && compactShowNote === undefined && compactShowDetail === undefined) {
+                    const priority = q.compactDisplayPriority || 'auto';
+                    if (priority === 'note') {
+                        compactShowNote = true;
+                    } else if (priority === 'detail') {
+                        compactShowDetail = true;
+                    } else if (priority === 'formula') {
+                        compactShowFormula = true;
+                    } else if (priority === 'auto') {
+                        compactShowFormula = true;
+                        compactShowNote = true;
+                        compactShowDetail = true;
+                    } else {
+                        compactShowFormula = false;
+                        compactShowNote = false;
+                        compactShowDetail = false;
+                    }
                 }
 
-                if (target === 'note' && hasNote && canShowNote) {
+                // Show only the first checked/matching item in natural priority order (Note > Details > Formula)
+                if (compactShowNote && hasNote) {
                     return `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${resolvedNote}</div>`;
                 }
-                if (target === 'detail' && hasDetail && canShowDetail) {
+                if (compactShowDetail && hasDetail) {
                     return `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-detail">${resolvedDetail.replace(/\n/g, ' ')}</div>`;
                 }
-                if (target === 'formula' && hasFormula && canShowFormula) {
+                if (compactShowFormula && hasFormula) {
                     return `<div class="text-[9px] mono text-[#94a3b8]/70 truncate mt-0.5 widget-formula">${formula}</div>`;
                 }
                 return '';
             }
 
-            // Normal/Simple expanded view
+            // Expanded view (either Full or Normal)
+            const isFull = effectiveMode === 'full';
+            const canShowFormula = isFull ? (q.fullShowFormula !== false) : (q.showFormula !== false);
+            const canShowNote = isFull ? (q.fullShowNote !== false) : (q.showNote !== false);
+            const canShowDetail = isFull ? (q.fullShowDetail !== false) : (q.showDetail !== false);
+
             let html = '';
-            const isFormulaVisible = canShowFormula && (effectiveMode !== 'simple' || q.showFormula === true);
-            if (hasFormula && isFormulaVisible) {
+            if (hasFormula && canShowFormula) {
                 html += `<div class="text-xs mono text-[#94a3b8] truncate mt-0.5 opacity-80 widget-formula">${formula}</div>`;
             }
-
-            const isNoteVisible = canShowNote && (effectiveMode !== 'simple' || q.showNote === true);
-            if (hasNote && isNoteVisible) {
+            if (hasNote && canShowNote) {
                 html += `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal truncate widget-note">${resolvedNote}</div>`;
             }
-
-            const isDetailVisible = canShowDetail && (effectiveMode !== 'simple' || q.showDetail === true);
-            if (hasDetail && isDetailVisible) {
+            if (hasDetail && canShowDetail) {
                 html += `<div class="text-[9px] font-bold text-slate-500 mt-0.5 leading-normal whitespace-pre-wrap widget-detail">${resolvedDetail}</div>`;
             }
 

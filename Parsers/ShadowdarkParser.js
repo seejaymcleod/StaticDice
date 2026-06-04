@@ -931,7 +931,16 @@ const ShadowdarkParser = {
                                 labelOff: 'Unequipped',
                                 checked: false
                             },
-                            unifiedQueue: armorQueue
+                            unifiedQueue: armorQueue,
+                            showFormula: false,
+                            fullShowFormula: true,
+                            showNote: true,
+                            fullShowNote: true,
+                            showDetail: true,
+                            fullShowDetail: true,
+                            compactShowFormula: false,
+                            compactShowNote: false,
+                            compactShowDetail: false
                         };
                         bodyArmorWidgets.push(bodyArmorWidget);
                     }
@@ -1140,7 +1149,16 @@ const ShadowdarkParser = {
                     widgetType: 'roller',
                     includeAdvDis: true,
                     addonNote: notes ? `Notes: ${notes.trim()}` : '',
-                    unifiedQueue: attackQueue
+                    unifiedQueue: attackQueue,
+                    showFormula: true,
+                    fullShowFormula: true,
+                    showNote: true,
+                    fullShowNote: true,
+                    showDetail: true,
+                    fullShowDetail: true,
+                    compactShowFormula: false,
+                    compactShowNote: false,
+                    compactShowDetail: false
                 };
                 newWidgets.push(attackWidget);
                 
@@ -1161,7 +1179,16 @@ const ShadowdarkParser = {
                         color: weaponColor,
                         widgetType: 'roller',
                         includeAdvDis: false,
-                        unifiedQueue: damageQueue
+                        unifiedQueue: damageQueue,
+                        showFormula: true,
+                        fullShowFormula: true,
+                        showNote: true,
+                        fullShowNote: true,
+                        showDetail: true,
+                        fullShowDetail: true,
+                        compactShowFormula: false,
+                        compactShowNote: false,
+                        compactShowDetail: false
                     };
                     newWidgets.push(damageWidget);
                 }
@@ -1326,6 +1353,15 @@ const ShadowdarkParser = {
                     widgetType: 'roller',
                     includeAdvDis: includeAdvDis,
                     addonNote: `DC${10 + tier} - T${tier} ${classTitle} Spellcasting`,
+                    showFormula: false,
+                    fullShowFormula: false,
+                    showNote: true,
+                    fullShowNote: true,
+                    showDetail: true,
+                    fullShowDetail: true,
+                    compactShowFormula: false,
+                    compactShowNote: false,
+                    compactShowDetail: false,
                     addonToggle: {
                         checked: true,
                         labelOn: 'Ready',
@@ -1421,8 +1457,8 @@ const ShadowdarkParser = {
             }
 
             const limit = parseUsageLimit(cleanDesc);
-            if (limit !== null) {
-                const widget = {
+             if (limit !== null) {
+                 const widget = {
                     id: 'w_feat_stepper_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                     characterId: newCharId,
                     groupId: targetGrpId,
@@ -1434,6 +1470,15 @@ const ShadowdarkParser = {
                     showTracker: true,
                     addonNote: addonNoteVal || null,
                     detailText: cleanDesc || '',
+                    showNote: false,
+                    showFormula: false,
+                    showDetail: true,
+                    fullShowFormula: false,
+                    fullShowNote: true,
+                    fullShowDetail: true,
+                    compactShowFormula: false,
+                    compactShowNote: false,
+                    compactShowDetail: false,
                     passiveModifiers: f.mods && f.mods.length > 0 ? f.mods : null
                 };
                 newWidgets.push(widget);
@@ -1447,6 +1492,15 @@ const ShadowdarkParser = {
                     addonNote: addonNoteVal || null,
                     text: cleanDesc || 'No description.',
                     collapsed: true,
+                    showNote: false,
+                    showFormula: false,
+                    showDetail: true,
+                    fullShowFormula: false,
+                    fullShowNote: true,
+                    fullShowDetail: true,
+                    compactShowFormula: false,
+                    compactShowNote: false,
+                    compactShowDetail: false,
                     passiveModifiers: f.mods && f.mods.length > 0 ? f.mods : null
                 };
                 newWidgets.push(widget);
@@ -1510,7 +1564,16 @@ const ShadowdarkParser = {
                 name: 'WEAPONS',
                 widgetType: 'text',
                 text: prof.weapons,
-                collapsed: false
+                collapsed: false,
+                showFormula: false,
+                fullShowFormula: false,
+                showNote: true,
+                fullShowNote: true,
+                showDetail: true,
+                fullShowDetail: true,
+                compactShowFormula: false,
+                compactShowNote: false,
+                compactShowDetail: false
             });
             newWidgets.push({
                 id: 'w_prof_armor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -1519,7 +1582,16 @@ const ShadowdarkParser = {
                 name: 'ARMOR',
                 widgetType: 'text',
                 text: prof.armor,
-                collapsed: false
+                collapsed: false,
+                showFormula: false,
+                fullShowFormula: false,
+                showNote: true,
+                fullShowNote: true,
+                showDetail: true,
+                fullShowDetail: true,
+                compactShowFormula: false,
+                compactShowNote: false,
+                compactShowDetail: false
             });
         }
 
@@ -1565,7 +1637,16 @@ const ShadowdarkParser = {
                         name: key.toUpperCase(),
                         widgetType: 'text',
                         text: textVal,
-                        collapsed: true
+                        collapsed: true,
+                        showFormula: false,
+                        fullShowFormula: false,
+                        showNote: true,
+                        fullShowNote: true,
+                        showDetail: true,
+                        fullShowDetail: true,
+                        compactShowFormula: false,
+                        compactShowNote: false,
+                        compactShowDetail: false
                     });
                 }
             }
@@ -1583,7 +1664,16 @@ const ShadowdarkParser = {
                 name: 'TREASURES',
                 widgetType: 'text',
                 text: treasureLines.join('\n'),
-                collapsed: true
+                collapsed: true,
+                showFormula: false,
+                fullShowFormula: false,
+                showNote: true,
+                fullShowNote: true,
+                showDetail: true,
+                fullShowDetail: true,
+                compactShowFormula: false,
+                compactShowNote: false,
+                compactShowDetail: false
             });
         }
 
