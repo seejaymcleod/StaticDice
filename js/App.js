@@ -135,10 +135,10 @@
             }
         }
 
-        // Global layout mode: 'auto' | 'override-compact' | 'force-normal'
+        // Global layout mode: 'auto' | 'override-compact' | 'force-normal' | 'force-full'
         var globalLayout = localStorage.getItem('global_layout') || 'auto';
 
-        var GLOBAL_LAYOUT_STATES = ['auto', 'override-compact', 'force-normal'];
+        var GLOBAL_LAYOUT_STATES = ['auto', 'override-compact', 'force-normal', 'force-full'];
 
         function cycleGlobalLayout() {
             const idx = GLOBAL_LAYOUT_STATES.indexOf(globalLayout);
@@ -156,9 +156,11 @@
             btn.classList.remove(
                 'text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10',
                 'text-amber-400', 'border-amber-400/30', 'bg-amber-400/10',
+                'text-[#00ff88]', 'border-[#00ff88]/30', 'bg-[#00ff88]/10',
                 'text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40',
                 'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30',
-                'hover:text-amber-400', 'hover:border-amber-400/30'
+                'hover:text-amber-400', 'hover:border-amber-400/30',
+                'hover:text-[#00ff88]', 'hover:border-[#00ff88]/30'
             );
             if (globalLayout === 'override-compact') {
                 btn.classList.add('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10', 'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30');
@@ -167,7 +169,11 @@
             } else if (globalLayout === 'force-normal') {
                 btn.classList.add('text-amber-400', 'border-amber-400/30', 'bg-amber-400/10', 'hover:text-amber-400', 'hover:border-amber-400/30');
                 btn.title = 'Layout: Force Normal (click to cycle)';
-                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+            } else if (globalLayout === 'force-full') {
+                btn.classList.add('text-[#00ff88]', 'border-[#00ff88]/30', 'bg-[#00ff88]/10', 'hover:text-[#00ff88]', 'hover:border-[#00ff88]/30');
+                btn.title = 'Layout: Force Full (click to cycle)';
+                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>`;
             } else {
                 btn.classList.add('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40', 'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30');
                 btn.title = 'Layout: Auto (click to cycle)';
@@ -179,8 +185,10 @@
             const widgetMode = q.displayMode || 'auto';
             if (globalLayout === 'override-compact') return 'compact';
             if (globalLayout === 'force-normal') return 'normal';
+            if (globalLayout === 'force-full') return 'full';
             if (widgetMode === 'compact') return 'compact';
-            if (widgetMode === 'full' || widgetMode === 'normal') return 'normal';
+            if (widgetMode === 'full') return 'full';
+            if (widgetMode === 'normal') return 'normal';
             return 'normal';
         }
 
