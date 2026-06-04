@@ -64,7 +64,23 @@
         }
         window.resolveDynamicText = resolveDynamicText;
 
+        function getMicroRollerDisplay(q, formula) {
+            let clean = formula || '';
+            // Strip 1d20 + or 1d20 -
+            clean = clean.replace(/1d20\s*[\+\-]?\s*/gi, '');
+            // Strip brackets and spaces
+            clean = clean.replace(/[\[\]\s]/g, '');
+            // If there's nothing left, return +0
+            if (!clean) return '+0';
+            // Ensure it starts with + or - if it's a number
+            if (/^\d+$/.test(clean)) {
+                return '+' + clean;
+            }
+            return clean;
+        }
+
         function renderWidgetSubtext(q, formula, effectiveMode) {
+            if (effectiveMode === 'micro') return '';
             const resolvedNote = q.addonNote ? resolveDynamicText(q.addonNote) : '';
             const resolvedDetail = q.detailText ? resolveDynamicText(q.detailText) : '';
 
@@ -453,8 +469,17 @@
                 const itemEl = document.createElement('div');
                 itemEl.className = 'p-2 rounded-lg bg-white/[0.02] border border-white/5 flex items-center justify-between gap-2 hover:bg-white/[0.04] transition-all text-xs';
 
-                let typeBadge = t.dndType === 'monster' ? 'Monster' : 'Character';
-                let badgeColor = t.dndType === 'monster' ? 'text-rose-400 border-rose-500/20 bg-rose-500/5' : 'text-sky-400 border-sky-500/20 bg-sky-500/5';
+                let typeBadge, badgeColor;
+                if (t.dndType === 'monster') {
+                    typeBadge = 'Monster';
+                    badgeColor = 'text-rose-400 border-rose-500/20 bg-rose-500/5';
+                } else if (t.dndType === 'encounter') {
+                    typeBadge = 'Encounter';
+                    badgeColor = 'text-orange-400 border-orange-500/20 bg-orange-500/5';
+                } else {
+                    typeBadge = 'Character';
+                    badgeColor = 'text-sky-400 border-sky-500/20 bg-sky-500/5';
+                }
 
                 let deleteBtn = '';
                 if (!t.isDefault) {
@@ -644,19 +669,489 @@
                 return true;
             });
 
-            list.innerHTML = '';
+            function setupDragAndDrop(wrapper, q) {
+                wrapper.draggable = true;
+                wrapper.dataset.id = q.id;
 
-            filtered.forEach(q => {
+                wrapper.addEventListener('dragstart', (e) => {
+                    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.timer-bar-container')) {
+                        e.preventDefault();
+                        return;
+                    }
+                    dragSrcId = q.id;
+                    wrapper.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', q.id);
+                    if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(wrapper, 15, 15);
+                    hasMoved = true;
+                });
+                wrapper.addEventListener('dragend', () => {
+                    wrapper.classList.remove('dragging');
+                    document.querySelectorAll('.drag-over-before, .drag-over-after').forEach(el => el.classList.remove('drag-over-before', 'drag-over-after'));
+                    hasMoved = false;
+                });
+                wrapper.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (dragSrcId === q.id) return;
+
+                    const rect = wrapper.getBoundingClientRect();
+                    const middleY = rect.top + rect.height / 2;
+                    const isAfter = e.clientY > middleY;
+
+                    if (isAfter) {
+                        wrapper.classList.remove('drag-over-before');
+                        wrapper.classList.add('drag-over-after');
+                    } else {
+                        wrapper.classList.remove('drag-over-after');
+                        wrapper.classList.add('drag-over-before');
+                    }
+                });
+                wrapper.addEventListener('dragleave', () => wrapper.classList.remove('drag-over-before', 'drag-over-after'));
+                wrapper.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Stop event bubbling to list drop handler
+                    const isAfter = wrapper.classList.contains('drag-over-after');
+                    wrapper.classList.remove('drag-over-before', 'drag-over-after');
+
+                    if (dragSrcId === null || dragSrcId === q.id) return;
+
+                    // Prevent cycle (dragging a parent into its own child)
+                    function isDescendant(parentWidgetId, targetWidgetId) {
+                        if (!targetWidgetId) return false;
+                        const targetWidget = engine.findSavedQueue(targetWidgetId);
+                        if (!targetWidget) return false;
+                        if (targetWidget.parentId === parentWidgetId) return true;
+                        return isDescendant(parentWidgetId, targetWidget.parentId);
+                    }
+                    if (isDescendant(dragSrcId, q.id)) {
+                        vibrate([45, 50, 45]);
+                        dragSrcId = null;
+                        hasMoved = false;
+                        return;
+                    }
+
+                    const srcIdx = engine.savedQueues.findIndex(x => x.id === dragSrcId);
+                    const tgtIdx = engine.savedQueues.findIndex(x => x.id === q.id);
+                    if (srcIdx > -1 && tgtIdx > -1) {
+                        const [moved] = engine.savedQueues.splice(srcIdx, 1);
+                        moved.groupId = activeGroupId;
+                        moved.characterId = activeCharacterId;
+
+                        const targetWidget = engine.findSavedQueue(q.id);
+                        if (targetWidget) {
+                            const isContainer = ['grid', 'entity-group', 'entity'].includes(targetWidget.widgetType);
+                            if (isContainer) {
+                                // If dropped directly onto a container widget, make it a child of that container
+                                if (targetWidget.widgetType === 'entity-group') {
+                                    if (moved.widgetType === 'entity') {
+                                        moved.parentId = targetWidget.id;
+                                    } else if (targetWidget.sharedGridId) {
+                                        moved.parentId = targetWidget.sharedGridId;
+                                    } else {
+                                        moved.parentId = targetWidget.id;
+                                    }
+                                } else {
+                                    moved.parentId = targetWidget.id;
+                                }
+
+                                // Place it at the end of the container's children
+                                let lastChildIdx = -1;
+                                for (let i = engine.savedQueues.length - 1; i >= 0; i--) {
+                                    if (engine.savedQueues[i].parentId === targetWidget.id || 
+                                        (targetWidget.widgetType === 'entity-group' && targetWidget.sharedGridId && engine.savedQueues[i].parentId === targetWidget.sharedGridId)) {
+                                        lastChildIdx = i;
+                                        break;
+                                    }
+                                }
+                                if (lastChildIdx > -1) {
+                                    engine.savedQueues.splice(lastChildIdx + 1, 0, moved);
+                                } else {
+                                    const cIdx = engine.savedQueues.findIndex(x => x.id === targetWidget.id);
+                                    engine.savedQueues.splice(cIdx + 1, 0, moved);
+                                }
+                            } else {
+                                // Dropped on a leaf widget, inherit its parentId
+                                moved.parentId = targetWidget.parentId || null;
+                                
+                                let newTgt = engine.savedQueues.findIndex(x => x.id === q.id);
+                                if (isAfter) {
+                                    newTgt = newTgt + 1;
+                                }
+                                engine.savedQueues.splice(newTgt, 0, moved);
+                            }
+                        }
+
+                        persistSaved();
+                        renderSavedQueues();
+                    }
+                    dragSrcId = null;
+                    hasMoved = false;
+                });
+            }
+
+            function createWidgetMenu(q) {
+                const type = q.widgetType || 'roller';
+                const otherGroups = filtered.length > 0 ? groups.filter(g => g.characterId === activeCharacterId && g.id !== activeGroupId) : [];
+                const moveGroupHtml = otherGroups.length > 0 ? `
+                    <div class="h-px bg-white/5 my-1"></div>
+                    <button onclick="moveQueueToGroup('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                        <span>Move to Group</span>
+                    </button>
+                ` : '';
+
+                const editLoadoutButtonHtml = (type === 'roller' || (type === 'number' && q.unifiedQueue && q.unifiedQueue.length > 0)) ? `
+                    <button onclick="loadQueue('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span>Edit Loadout</span>
+                    </button>
+                    <button onclick="updateSavedQueue('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        <span>Overwrite</span>
+                    </button>
+                ` : '';
+
+                const timerIsPaused = type === 'timer' ? (q.isPaused !== false) : true;
+                const resetTimerMenuItemHtml = type === 'timer' ? `
+                    <button onclick="toggleTimerPlay('${q.id}', event)" class="menu-item menu-timer-play-btn">
+                        ${timerIsPaused
+                            ? `<svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-emerald-400"><path d="M8 5v14l11-7z"/></svg>`
+                            : `<svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-amber-400"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
+                        }
+                        <span>${timerIsPaused ? 'Start Timer' : 'Pause Timer'}</span>
+                    </button>
+                    <button onclick="resetTimerWidget('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                        <span>Reset Timer</span>
+                    </button>
+                ` : '';
+
+                let customMenuHtml = '';
+
+                // 1. If widget has a parent, allow unparenting it
+                if (q.parentId) {
+                    customMenuHtml += `
+                        <button onclick="unparentWidget('${q.id}', event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-amber-400"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            <span>Unparent</span>
+                        </button>
+                    `;
+                }
+
+                // 2. If widget is inside a grid, show colSpan configuration
+                const parentWidget = q.parentId ? engine.savedQueues.find(w => w.id === q.parentId) : null;
+                if (parentWidget && parentWidget.widgetType === 'grid') {
+                    customMenuHtml += `
+                        <div class="h-px bg-white/5 my-1"></div>
+                        <div class="px-3 py-1.5 text-[9px] font-black uppercase text-slate-500 tracking-wider">Grid Column Span</div>
+                        <div class="flex items-center justify-between px-3 py-1 gap-1 flex-wrap">
+                            ${[1, 2, 3, 4, 6, 8, 12].map(span => `
+                                <button onclick="setWidgetColSpan('${q.id}', ${span}, event)" class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-extrabold hover:bg-sky-500/20 hover:border-sky-500/30 text-slate-300 hover:text-sky-400 transition-all ${q.colSpan === span ? 'bg-sky-500/20 border-sky-500/30 text-sky-400 font-black' : ''}">
+                                    ${span}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                // 3. If widget is a Grid, allow configuring column count or adding a widget
+                if (type === 'grid') {
+                    customMenuHtml += `
+                        <div class="h-px bg-white/5 my-1"></div>
+                        <button onclick="openWidgetCreationForParent('${q.id}', event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-emerald-400"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Add Widget to Grid</span>
+                        </button>
+                        <div class="px-3 py-1.5 text-[9px] font-black uppercase text-slate-500 tracking-wider">Grid Columns</div>
+                        <div class="flex items-center justify-between px-3 py-1 gap-1">
+                            ${[1, 2, 3, 4, 6, 12].map(cols => `
+                                <button onclick="setGridColumns('${q.id}', ${cols}, event)" class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-extrabold hover:bg-sky-500/20 hover:border-sky-500/30 text-slate-300 hover:text-sky-400 transition-all ${q.columns === cols ? 'bg-sky-500/20 border-sky-500/30 text-sky-400 font-black' : ''}">
+                                    ${cols}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                // 4. If widget is an Entity Group, allow configuring entity template, adding to shared grid, or spawning entity
+                if (type === 'entity-group') {
+                    customMenuHtml += `
+                        <div class="h-px bg-white/5 my-1"></div>
+                        <button onclick="spawnGroupEntity('${q.id}')" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-emerald-400"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+                            <span>Spawn Entity</span>
+                        </button>
+                        <button onclick="configureEntityTemplate('${q.id}', event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                            <span>Configure Template</span>
+                        </button>
+                        ${q.sharedGridId ? `
+                        <button onclick="openWidgetCreationForParent('${q.sharedGridId}', event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-indigo-400"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Add Shared Widget</span>
+                        </button>
+                        ` : ''}
+                    `;
+                }
+
+                // 5. If widget is an Entity, allow adding a widget to it
+                if (type === 'entity') {
+                    customMenuHtml += `
+                        <div class="h-px bg-white/5 my-1"></div>
+                        <button onclick="openWidgetCreationForParent('${q.id}', event)" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-emerald-400"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Add Unique Widget</span>
+                        </button>
+                    `;
+                }
+
+                const menuContainer = document.createElement('div');
+                menuContainer.id = `menu-${q.id}`;
+                menuContainer.className = 'arsenal-menu absolute right-2 top-12 hidden';
+                menuContainer.style.zIndex = '100';
+                menuContainer.innerHTML = `
+                    <button onclick="configureSavedWidget('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span>Configure</span>
+                    </button>
+                    ${resetTimerMenuItemHtml}
+                    ${editLoadoutButtonHtml}
+                    <button onclick="openColorPicker('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
+                        <span>Appearance</span>
+                    </button>
+                    <button onclick="duplicateWidget('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Duplicate</span>
+                    </button>
+                    <button onclick="toggleWidgetHiddenState('${q.id}', event)" class="menu-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                        <span>${q.hidden ? 'Show Widget' : 'Hide Widget'}</span>
+                    </button>
+                    ${moveGroupHtml}
+                    ${customMenuHtml}
+                    <div class="h-px bg-white/5 my-1"></div>
+                    <button onclick="deleteQueue('${q.id}', event)" class="menu-item danger">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        <span>Delete</span>
+                    </button>
+                `;
+                return menuContainer;
+            }
+
+            function buildWidgetDOM(q) {
                 const type = q.widgetType || 'roller';
                 const resolvedName = resolveDynamicText(q.name || '');
                 const resolvedText = q.text ? resolveDynamicText(q.text) : '';
+                const effectiveMode = getEffectiveDisplayMode(q);
+
+                if (type === 'trigger') {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = `widget-type-trigger inline-flex items-center ${q.triggered ? '' : 'hidden'}`;
+                    wrapper.dataset.id = q.id;
+                    if (q.triggered) {
+                        const btn = document.createElement('button');
+                        btn.className = 'px-2 py-0.5 bg-rose-600/90 hover:bg-rose-500 border border-rose-500/30 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 shadow-[0_0_10px_rgba(244,63,94,0.3)] animate-pulse flex items-center gap-1 select-none';
+                        btn.innerHTML = q.actionParams?.label || '☠️ Kill';
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            deleteQueue(q.parentId, null, true);
+                        };
+                        wrapper.appendChild(btn);
+                    }
+                    return wrapper;
+                }
+
+                if (type === 'entity') {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity bg-black/20 border border-white/5 rounded-xl p-2.5`;
+                    if (q.hidden) {
+                        wrapper.classList.add('opacity-40');
+                    }
+                    wrapper.dataset.id = q.id;
+
+                    const item = document.createElement('div');
+                    item.className = 'saved-item flex flex-col gap-1.5 w-full cursor-pointer';
+                    item.dataset.id = q.id;
+                    bindHoldListeners(item);
+
+                    // Collect entity children, partitioned by role
+                    const entityChildren = filtered.filter(c => c.parentId === q.id);
+                    const textChildren = entityChildren.filter(c => c.widgetType === 'text');
+                    const stepperChildren = entityChildren.filter(c => c.widgetType === 'stepper');
+                    const triggerChildren = entityChildren.filter(c => c.widgetType === 'trigger');
+                    const otherChildren = entityChildren.filter(c => !['text','stepper','trigger'].includes(c.widgetType));
+
+                    // ROW 1: [Entity Name | Notes text input]
+                    const row1 = document.createElement('div');
+                    row1.className = 'flex items-center gap-2 w-full';
+
+                    const nameLabel = document.createElement('div');
+                    nameLabel.className = 'text-xs font-black text-slate-200 uppercase tracking-wide shrink-0 min-w-[70px] max-w-[130px] truncate';
+                    nameLabel.innerText = resolvedName;
+                    row1.appendChild(nameLabel);
+
+                    // Notes text widget(s) fill the right of row 1
+                    const noteSlot = document.createElement('div');
+                    noteSlot.className = 'flex-grow min-w-0';
+                    textChildren.forEach(child => {
+                        const originalMode = child.displayMode;
+                        child.displayMode = 'micro';
+                        const childDOM = buildWidgetDOM(child);
+                        child.displayMode = originalMode;
+                        if (childDOM) noteSlot.appendChild(childDOM);
+                    });
+                    row1.appendChild(noteSlot);
+                    item.appendChild(row1);
+
+                    // ROW 2: [HP Stepper | Trigger] (and any other children)
+                    const row2 = document.createElement('div');
+                    row2.className = 'flex items-center gap-2 w-full justify-between';
+
+                    const stepperSlot = document.createElement('div');
+                    stepperSlot.className = 'flex items-center gap-1.5 flex-grow';
+                    stepperChildren.forEach(child => {
+                        const originalMode = child.displayMode;
+                        child.displayMode = 'micro';
+                        const childDOM = buildWidgetDOM(child);
+                        child.displayMode = originalMode;
+                        if (childDOM) stepperSlot.appendChild(childDOM);
+                    });
+                    otherChildren.forEach(child => {
+                        const originalMode = child.displayMode;
+                        child.displayMode = 'micro';
+                        const childDOM = buildWidgetDOM(child);
+                        child.displayMode = originalMode;
+                        if (childDOM) stepperSlot.appendChild(childDOM);
+                    });
+                    row2.appendChild(stepperSlot);
+
+                    const triggerSlot = document.createElement('div');
+                    triggerSlot.className = 'flex items-center gap-1.5 shrink-0';
+                    triggerChildren.forEach(child => {
+                        const originalMode = child.displayMode;
+                        child.displayMode = 'micro';
+                        const childDOM = buildWidgetDOM(child);
+                        child.displayMode = originalMode;
+                        if (childDOM) triggerSlot.appendChild(childDOM);
+                    });
+                    row2.appendChild(triggerSlot);
+
+                    item.appendChild(row2);
+                    wrapper.appendChild(item);
+
+                    const menuContainer = createWidgetMenu(q);
+                    wrapper.appendChild(menuContainer);
+                    setupDragAndDrop(wrapper, q);
+
+                    return wrapper;
+                }
+
+                if (type === 'entity-group') {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = `arsenal-item-wrapper flex flex-col gap-3 relative w-full widget-type-entity-group bg-slate-900/20 border border-white/5 rounded-2xl p-4`;
+                    if (q.hidden) {
+                        wrapper.classList.add('opacity-40', 'border-dashed');
+                    }
+                    wrapper.dataset.id = q.id;
+
+                    const item = document.createElement('div');
+                    item.className = 'w-full flex flex-col';
+                    item.dataset.id = q.id;
+                    bindHoldListeners(item);
+
+                    let innerHtml = `
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+                            <div class="flex items-center gap-2">
+                                ${q.color && q.color !== 'none' ? `<div class="w-2.5 h-2.5 rounded-full" style="background-color: ${q.color}"></div>` : ''}
+                                <span class="text-sm font-black text-[#e2e8f0] uppercase tracking-wider">${resolvedName}</span>
+                            </div>
+                        </div>
+                        <div class="group-shared-area w-full mb-3 flex flex-col gap-2"></div>
+                        <div class="group-entities-area w-full flex flex-col gap-2"></div>
+                        <button onclick="spawnGroupEntity('${q.id}')" class="add-entity-btn flex items-center justify-center gap-1.5 w-full mt-3 py-2.5 border border-dashed border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 rounded-xl text-xs font-black text-slate-400 hover:text-emerald-400 transition-all select-none">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="w-3.5 h-3.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Add Instance</span>
+                        </button>
+                    `;
+                    item.innerHTML = innerHtml;
+
+                    const sharedArea = item.querySelector('.group-shared-area');
+                    const entitiesArea = item.querySelector('.group-entities-area');
+
+                    const groupChildren = filtered.filter(c => c.parentId === q.id);
+                    groupChildren.forEach(child => {
+                        const childDOM = buildWidgetDOM(child);
+                        if (childDOM) {
+                            if (child.widgetType === 'entity') {
+                                entitiesArea.appendChild(childDOM);
+                            } else {
+                                sharedArea.appendChild(childDOM);
+                            }
+                        }
+                    });
+
+                    wrapper.appendChild(item);
+
+                    const menuContainer = createWidgetMenu(q);
+                    wrapper.appendChild(menuContainer);
+                    setupDragAndDrop(wrapper, q);
+
+                    return wrapper;
+                }
+
+                if (type === 'grid') {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = `arsenal-item-wrapper flex flex-col gap-2 relative w-full widget-type-grid`;
+                    if (q.hidden) {
+                        wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
+                    }
+                    wrapper.dataset.id = q.id;
+
+                    const item = document.createElement('div');
+                    item.className = 'saved-item p-3 rounded-xl flex flex-col w-full relative overflow-hidden bg-slate-900/10 border border-white/5';
+                    item.dataset.id = q.id;
+                    bindHoldListeners(item);
+
+                    let innerHtml = `
+                        ${resolvedName ? `
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-black text-slate-400 uppercase tracking-widest">${resolvedName}</span>
+                        </div>` : ''}
+                        <div class="grid grid-cols-12 gap-2 w-full"></div>
+                    `;
+                    item.innerHTML = innerHtml;
+                    const gridEl = item.querySelector('.grid');
+
+                    const gridChildren = filtered.filter(c => c.parentId === q.id);
+                    gridChildren.forEach(child => {
+                        const childDOM = buildWidgetDOM(child);
+                        if (childDOM) {
+                            const cell = document.createElement('div');
+                            const span = child.colSpan || 12;
+                            cell.style.gridColumn = `span ${span}`;
+                            cell.appendChild(childDOM);
+                            gridEl.appendChild(cell);
+                        }
+                    });
+
+                    wrapper.appendChild(item);
+
+                    const menuContainer = createWidgetMenu(q);
+                    wrapper.appendChild(menuContainer);
+                    setupDragAndDrop(wrapper, q);
+
+                    return wrapper;
+                }
 
                 let holdTimer = null;
                 let isHold = false;
                 let hasMoved = false;
                 let startX = 0, startY = 0;
 
-                const startHold = (e) => {
+                function startHold(e) {
                     if (e.target.closest('button, input, textarea, select, .timer-bar-container')) {
                         return;
                     }
@@ -669,25 +1164,25 @@
                         isHold = true;
                         vibrate(15);
                     }, 500);
-                };
+                }
 
-                const cancelHold = () => {
+                function cancelHold() {
                     if (holdTimer) {
                         clearTimeout(holdTimer);
                         holdTimer = null;
                     }
-                };
+                }
 
-                const moveHold = (e) => {
+                function moveHold(e) {
                     if (e.type === 'mousemove' && e.buttons !== 1) return;
                     const touch = e.touches ? e.touches[0] : e;
                     if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
                         cancelHold();
                         hasMoved = true;
                     }
-                };
+                }
 
-                const bindHoldListeners = (el) => {
+                function bindHoldListeners(el) {
                     el.addEventListener('touchstart', startHold, { passive: true });
                     el.addEventListener('touchend', (e) => {
                         cancelHold();
@@ -738,83 +1233,25 @@
                         }
                         isHold = false;
                     });
-                };
+                }
 
                 const wrapper = document.createElement('div');
                 wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-${type}`;
                 if (q.hidden) {
                     wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
                 }
-                // Apply display mode class based on effective mode
-                const effectiveMode = getEffectiveDisplayMode(q);
                 if (effectiveMode === 'simple') wrapper.classList.add('widget-display-simple');
                 else if (effectiveMode === 'compact') wrapper.classList.add('widget-display-compact');
-                wrapper.draggable = true;
-                wrapper.dataset.id = q.id;
-
-                wrapper.addEventListener('dragstart', (e) => {
-                    // Block drag if it started on an interactive element
-                    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.timer-bar-container')) {
-                        e.preventDefault();
-                        return;
-                    }
-                    dragSrcId = q.id;
-                    wrapper.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', q.id);
-                    if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(wrapper, 15, 15);
-                    cancelHold();
-                    hasMoved = true;
-                });
-                wrapper.addEventListener('dragend', () => {
-                    wrapper.classList.remove('dragging');
-                    document.querySelectorAll('.drag-over-before, .drag-over-after').forEach(el => el.classList.remove('drag-over-before', 'drag-over-after'));
-                    hasMoved = false;
-                });
-                wrapper.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    if (dragSrcId === q.id) return;
-
-                    const rect = wrapper.getBoundingClientRect();
-                    const middleY = rect.top + rect.height / 2;
-                    const isAfter = e.clientY > middleY;
-
-                    if (isAfter) {
-                        wrapper.classList.remove('drag-over-before');
-                        wrapper.classList.add('drag-over-after');
-                    } else {
-                        wrapper.classList.remove('drag-over-after');
-                        wrapper.classList.add('drag-over-before');
-                    }
-                });
-                wrapper.addEventListener('dragleave', () => wrapper.classList.remove('drag-over-before', 'drag-over-after'));
-                wrapper.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const isAfter = wrapper.classList.contains('drag-over-after');
-                    wrapper.classList.remove('drag-over-before', 'drag-over-after');
-
-                    if (dragSrcId === null || dragSrcId === q.id) return;
-                    const srcIdx = engine.savedQueues.findIndex(x => x.id === dragSrcId);
-                    const tgtIdx = engine.savedQueues.findIndex(x => x.id === q.id);
-                    if (srcIdx > -1 && tgtIdx > -1) {
-                        const [moved] = engine.savedQueues.splice(srcIdx, 1);
-                        moved.groupId = activeGroupId;
-                        moved.characterId = activeCharacterId;
-                        let newTgt = engine.savedQueues.findIndex(x => x.id === q.id);
-                        if (isAfter) {
-                            newTgt = newTgt + 1;
-                        }
-                        engine.savedQueues.splice(newTgt, 0, moved);
-                        persistSaved();
-                        renderSavedQueues();
-                    }
-                    dragSrcId = null;
-                    hasMoved = false;
-                });
-
+                else if (effectiveMode === 'micro') wrapper.classList.add('widget-display-micro', 'display-micro');
+                
+                setupDragAndDrop(wrapper, q);
 
                 const item = document.createElement('div');
-                item.className = 'saved-item pl-5 pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
+                if (effectiveMode === 'micro') {
+                    item.className = 'saved-item flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden select-none';
+                } else {
+                    item.className = 'saved-item pl-5 pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
+                }
                 item.dataset.id = q.id;
 
                 bindHoldListeners(item);
@@ -854,7 +1291,9 @@
                             e.stopPropagation();
                             return;
                         }
-                        toggleTextCardCollapsed(q.id);
+                        if (effectiveMode !== 'micro') {
+                            toggleTextCardCollapsed(q.id);
+                        }
                     };
                 } else if (type === 'toggle') {
                     item.onclick = (e) => {
@@ -955,7 +1394,7 @@
 
                 const hasColor = q.color && q.color !== 'none';
                 item.style.setProperty('--item-color', hasColor ? q.color : 'transparent');
-                const hideLeftTab = type === 'stepper' && q.showTracker;
+                const hideLeftTab = (type === 'stepper' && q.showTracker) || effectiveMode === 'micro';
                 let innerHtml = `
                     ${(hasColor && !hideLeftTab)
                         ? `<div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
@@ -963,9 +1402,25 @@
                     }
                 `;
 
-
                 if (type === 'roller') {
-                    if (isDiceless) {
+                    if (effectiveMode === 'micro') {
+                        const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
+                        if (isVertical) {
+                            innerHtml += `
+                                <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center">
+                                    <span class="text-slate-400 text-[9px] leading-tight">${resolvedName}</span>
+                                    <span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${getMicroRollerDisplay(q, formula)}</span>
+                                </div>
+                            `;
+                        } else {
+                            innerHtml += `
+                                <div class="flex items-center justify-center px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full">
+                                    <span class="text-slate-400 mr-1">${resolvedName}:</span>
+                                    <span class="text-[#00d4ff] font-extrabold">${formula.replace(/[\[\]\s]/g, '') || '+0'}</span>
+                                </div>
+                            `;
+                        }
+                    } else if (isDiceless) {
                         let resolvedVal = 0;
                         const res = engine.calculateRoll(q.unifiedQueue || q.queue, true);
                         if (res) resolvedVal = parseInt(res.total) || 0;
@@ -993,7 +1448,7 @@
                         `;
                     }
 
-                    if (q.addonToggle) {
+                    if (q.addonToggle && effectiveMode !== 'micro') {
                         const t = q.addonToggle;
                         innerHtml += `
                             <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
@@ -1006,116 +1461,171 @@
                         `;
                     }
                 } else if (type === 'stepper') {
-                    const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
-                    let trackerHtml = '';
-                    if (q.showTracker) {
-                        const trackerColor = hasColor ? q.color : '#ffffff';
-                        const pct = resolvedMax > 0 ? Math.min(100, Math.max(0, ((q.value - (q.min || 0)) / (resolvedMax - (q.min || 0))) * 100)) : 0;
-                        trackerHtml = `
-                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#020617]/60 overflow-hidden">
-                                <div class="h-full transition-all duration-300" style="width: ${pct}%; background-color: ${trackerColor}; box-shadow: 0 0 10px ${trackerColor};"></div>
+                    if (effectiveMode === 'micro') {
+                        innerHtml = '';
+                    } else {
+                        const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
+                        let trackerHtml = '';
+                        if (q.showTracker) {
+                            const trackerColor = hasColor ? q.color : '#ffffff';
+                            const pct = resolvedMax > 0 ? Math.min(100, Math.max(0, ((q.value - (q.min || 0)) / (resolvedMax - (q.min || 0))) * 100)) : 0;
+                            trackerHtml = `
+                                <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#020617]/60 overflow-hidden">
+                                    <div class="h-full transition-all duration-300" style="width: ${pct}%; background-color: ${trackerColor}; box-shadow: 0 0 10px ${trackerColor};"></div>
+                                </div>
+                            `;
+                        }
+                        innerHtml += `
+                            <div class="flex-grow min-w-0 pl-1 pr-2">
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${resolvedName}</div>
+                                ${renderWidgetSubtext(q, '', effectiveMode)}
+                                ${trackerHtml}
                             </div>
                         `;
                     }
-                    innerHtml += `
-                        <div class="flex-grow min-w-0 pl-1 pr-2">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${resolvedName}</div>
-                            ${renderWidgetSubtext(q, '', effectiveMode)}
-                            ${trackerHtml}
-                        </div>
-                    `;
                 } else if (type === 'toggle') {
-                    innerHtml += `
-                        <div class="flex-grow min-w-0 pl-1 pr-8">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
-                            ${renderWidgetSubtext(q, '', effectiveMode)}
-                        </div>
-                        <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
-                            <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${q.checked ? 'text-white' : 'text-slate-500'}">
-                                    ${q.checked ? q.labelOn : q.labelOff}
-                            </span>
-                        </div>
-                        <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300" 
-                             style="background-color: ${q.checked ? (hasColor ? q.color : '#ffffff') : 'rgba(30, 41, 59, 0.3)'}; color: ${q.checked ? (hasColor ? q.color : '#ffffff') : 'transparent'}">
-                        </div>
-                    `;
-                } else if (type === 'number') {
-                    let displayVal = q.value;
-                    let isCalculated = false;
-                    let hasVariable = false;
-
-                    if (q.unifiedQueue && Array.isArray(q.unifiedQueue) && q.unifiedQueue.length > 0) {
-                        isCalculated = true;
-                        const res = engine.calculateRoll(q.unifiedQueue, true);
-                        if (res) {
-                            displayVal = parseInt(res.total) || 0;
-                            if (q.value !== displayVal) {
-                                q.value = displayVal;
-                            }
-                        }
-                    } else if (q.bindsVariable) {
-                        hasVariable = true;
-                        const resolved = window.getActiveCharacterVariable(q.bindsVariable);
-                        if (resolved !== null) {
-                            displayVal = resolved;
-                        }
-                        const calculatedVars = ['STR_MOD', 'DEX_MOD', 'CON_MOD', 'INT_MOD', 'WIS_MOD', 'CHA_MOD', 'BACKSTAB_DICE'];
-                        const upperBindVar = q.bindsVariable.toUpperCase();
-                        if (calculatedVars.includes(upperBindVar)) {
-                            isCalculated = true;
-                        }
-                    }
-
-                    const isInputDisabled = isCalculated || (q.addonToggle && !q.addonToggle.checked);
-                    
-                    let inputHtml = '';
-                    if (hasVariable) {
-                        inputHtml = `
-                            <input type="text" value="${displayVal >= 0 ? '+' : ''}${displayVal}" readonly 
-                                   onclick="event.stopPropagation(); showVariableModal('${q.id}')" 
-                                   class="w-16 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg cursor-pointer hover:border-[#00d4ff]/40">
+                    if (effectiveMode === 'micro') {
+                        innerHtml += `
+                            <div class="flex items-center gap-1.5 px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black uppercase tracking-wider select-none transition-all">
+                                <span class="text-slate-400 mr-1">${resolvedName}</span>
+                                <span class="${q.checked ? 'text-[#00ff88]' : 'text-slate-500'} font-extrabold">${q.checked ? q.labelOn : q.labelOff}</span>
+                            </div>
                         `;
                     } else {
-                        inputHtml = `
-                            <input type="number" value="${displayVal}" ${isInputDisabled ? 'readonly disabled' : ''} 
-                                   onchange="changeNumberValueDirect('${q.id}', this.value)" 
-                                   class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isInputDisabled ? 'opacity-70 pointer-events-none' : ''}">
-                        `;
-                    }
-
-                    innerHtml += `
-                        <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
-                            <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
-                            ${renderWidgetSubtext(q, formula, effectiveMode)}
-                        </div>
-                        <div class="flex items-center gap-2 ${q.addonToggle ? 'mr-8' : 'mr-2'} shrink-0 select-none" onclick="event.stopPropagation()">
-                            ${inputHtml}
-                        </div>
-                    `;
-                    if (q.addonToggle) {
-                        const t = q.addonToggle;
                         innerHtml += `
-                            <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
-                                 onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
-                                 style="background-color: ${t.checked ? (hasColor ? q.color : '#ffffff') : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? (hasColor ? q.color : '#ffffff') : 'transparent'}">
-                                <svg class="w-3.5 h-3.5 transition-colors duration-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="color: ${t.checked ? '#090d16' : '#64748b'}">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 3v9" />
-                                </svg>
+                            <div class="flex-grow min-w-0 pl-1 pr-8">
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                ${renderWidgetSubtext(q, '', effectiveMode)}
+                            </div>
+                            <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
+                                <span class="text-[11px] font-black uppercase tracking-wider min-w-[35px] text-center ${q.checked ? 'text-white' : 'text-slate-500'}">
+                                        ${q.checked ? q.labelOn : q.labelOff}
+                                </span>
+                            </div>
+                            <div class="absolute right-0 top-0 bottom-0 w-6 shadow-[-2px_0_15px_currentColor] transition-all duration-300" 
+                                 style="background-color: ${q.checked ? (hasColor ? q.color : '#ffffff') : 'rgba(30, 41, 59, 0.3)'}; color: ${q.checked ? (hasColor ? q.color : '#ffffff') : 'transparent'}">
                             </div>
                         `;
+                    }
+                } else if (type === 'number') {
+                    if (effectiveMode === 'micro') {
+                        let displayVal = q.value;
+                        if (q.bindsVariable) {
+                            const resolved = window.getActiveCharacterVariable(q.bindsVariable);
+                            if (resolved !== null) displayVal = resolved;
+                        }
+                        const showSign = q.showSign || q.name?.toLowerCase().includes('mod');
+                        const sign = (showSign && typeof displayVal === 'number' && displayVal >= 0) ? '+' : '';
+                        const resolvedDetail = q.detailText ? resolveDynamicText(q.detailText) : '';
+                        const detail = resolvedDetail ? ` ${resolvedDetail}` : '';
+                        innerHtml += `
+                            <div class="flex items-center justify-center px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center">
+                                <span class="text-slate-400 mr-1">${resolvedName}:</span>
+                                <span class="text-[#00d4ff] font-extrabold">${sign}${displayVal}${detail}</span>
+                            </div>
+                        `;
+                    } else {
+                        let displayVal = q.value;
+                        let isCalculated = false;
+                        let hasVariable = false;
+
+                        if (q.unifiedQueue && Array.isArray(q.unifiedQueue) && q.unifiedQueue.length > 0) {
+                            isCalculated = true;
+                            const res = engine.calculateRoll(q.unifiedQueue, true);
+                            if (res) {
+                                displayVal = parseInt(res.total) || 0;
+                                if (q.value !== displayVal) {
+                                    q.value = displayVal;
+                                }
+                            }
+                        } else if (q.bindsVariable) {
+                            hasVariable = true;
+                            const resolved = window.getActiveCharacterVariable(q.bindsVariable);
+                            if (resolved !== null) {
+                                displayVal = resolved;
+                            }
+                            const calculatedVars = ['STR_MOD', 'DEX_MOD', 'CON_MOD', 'INT_MOD', 'WIS_MOD', 'CHA_MOD', 'BACKSTAB_DICE'];
+                            const upperBindVar = q.bindsVariable.toUpperCase();
+                            if (calculatedVars.includes(upperBindVar)) {
+                                isCalculated = true;
+                            }
+                        }
+
+                        const isInputDisabled = isCalculated || (q.addonToggle && !q.addonToggle.checked);
+                        const isNumeric = !isNaN(q.value) && !isNaN(parseFloat(q.value));
+                        
+                        let inputHtml = '';
+                        if (hasVariable) {
+                            inputHtml = `
+                                <input type="text" value="${displayVal >= 0 ? '+' : ''}${displayVal}" readonly 
+                                       onclick="event.stopPropagation(); showVariableModal('${q.id}')" 
+                                       class="w-16 bg-black/40 border border-white/10 rounded-lg px-1 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg cursor-pointer hover:border-[#00d4ff]/40">
+                            `;
+                        } else if (isNumeric) {
+                            inputHtml = `
+                                <input type="number" value="${displayVal}" ${isInputDisabled ? 'readonly disabled' : ''} 
+                                       onchange="changeNumberValueDirect('${q.id}', this.value)" 
+                                       class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black tabular-nums transition-colors text-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isInputDisabled ? 'opacity-70 pointer-events-none' : ''}">
+                            `;
+                        } else {
+                            inputHtml = `
+                                <input type="text" value="${displayVal}" ${isInputDisabled ? 'readonly disabled' : ''} 
+                                       onchange="changeNumberValueDirect('${q.id}', this.value)" 
+                                       class="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-0.5 text-center outline-none focus:border-[#00d4ff] text-[#00d4ff] font-black transition-colors text-sm ${isInputDisabled ? 'opacity-70 pointer-events-none' : ''}">
+                            `;
+                        }
+
+                        innerHtml += `
+                            <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
+                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                ${renderWidgetSubtext(q, formula, effectiveMode)}
+                            </div>
+                            <div class="flex items-center gap-2 ${q.addonToggle ? 'mr-8' : 'mr-2'} shrink-0 select-none" onclick="event.stopPropagation()">
+                                ${inputHtml}
+                            </div>
+                        `;
+                        if (q.addonToggle) {
+                            const t = q.addonToggle;
+                            innerHtml += `
+                                <div class="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center shadow-[-2px_0_15px_currentColor] transition-all duration-300 cursor-pointer" 
+                                     onclick="event.stopPropagation(); toggleCardAddonState('${q.id}', !${t.checked})"
+                                     style="background-color: ${t.checked ? (hasColor ? q.color : '#ffffff') : 'rgba(30, 41, 59, 0.3)'}; color: ${t.checked ? (hasColor ? q.color : '#ffffff') : 'transparent'}">
+                                    <svg class="w-3.5 h-3.5 transition-colors duration-300" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="color: ${t.checked ? '#090d16' : '#64748b'}">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 3v9" />
+                                    </svg>
+                                </div>
+                            `;
+                        }
                     }
                 } else if (type === 'text') {
-                    const isCollapsed = (globalLayout === 'force-full') ? false : (q.collapsed ?? false);
-                    innerHtml += `
-                        <div class="flex-grow min-w-0 pl-1">
-                            <div class="flex items-center gap-1.5 justify-between">
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
-                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
+                    if (effectiveMode === 'micro') {
+                        innerHtml += `
+                            <div class="flex-grow min-w-0">
+                                <input type="text" value="${resolvedText}" placeholder="${resolvedName || 'Notes...'}" 
+                                       oninput="changeTextValueDirect('${q.id}', this.value)" 
+                                       class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-300 placeholder-slate-600 outline-none font-medium transition-all">
                             </div>
-                            ${renderWidgetSubtext(q, '', effectiveMode)}
-                            ${resolvedText ? `<div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed || effectiveMode === 'compact' ? 'hidden' : ''}">${resolvedText}</div>` : ''}
-                        </div>
-                    `;
+                        `;
+                    } else if (effectiveMode === 'compact') {
+                        innerHtml += `
+                            <div class="flex-grow min-w-0 pl-1 py-0.5">
+                                <span class="text-xs font-black text-slate-200 uppercase tracking-wide">${resolvedName}.</span>
+                                <span class="text-xs text-slate-400 font-medium ml-1">${resolvedText}</span>
+                            </div>
+                        `;
+                    } else {
+                        const isCollapsed = (globalLayout === 'force-full') ? false : (q.collapsed ?? false);
+                        innerHtml += `
+                            <div class="flex-grow min-w-0 pl-1">
+                                <div class="flex items-center gap-1.5 justify-between">
+                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
+                                </div>
+                                ${renderWidgetSubtext(q, '', effectiveMode)}
+                                ${resolvedText ? `<div class="text-[10px] text-slate-400 font-medium mt-1 leading-normal whitespace-pre-wrap ${isCollapsed || effectiveMode === 'compact' ? 'hidden' : ''}">${resolvedText}</div>` : ''}
+                            </div>
+                        `;
+                    }
                 }
 
                 item.innerHTML = innerHtml;
@@ -1124,7 +1634,7 @@
                     wrapper.appendChild(item);
                 }
 
-                if (type === 'roller' && q.includeAdvDis) {
+                if (type === 'roller' && q.includeAdvDis && effectiveMode !== 'micro') {
                     const advBtn = document.createElement('button');
                     advBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-[#00d4ff]/10 hover:border-[#00d4ff]/30 active:scale-95 group/adv';
                     advBtn.title = "Roll with Advantage";
@@ -1149,7 +1659,7 @@
 
                     wrapper.appendChild(advBtn);
                     wrapper.appendChild(disBtn);
-                } else if ((type === 'roller' || type === 'number') && q.addonCounter) {
+                } else if ((type === 'roller' || type === 'number') && q.addonCounter && effectiveMode !== 'micro') {
                     const c = q.addonCounter;
                     const decBtn = document.createElement('button');
                     decBtn.className = 'shrink-0 w-[3rem] h-auto self-stretch flex flex-col items-center justify-center rounded-xl transition-all border border-white/5 bg-[#020617]/40 hover:bg-white/10 active:scale-95 text-slate-400 hover:text-white text-xl font-black';
@@ -1180,11 +1690,20 @@
                 } else if (type === 'stepper') {
                     const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
                     const stepperControls = document.createElement('div');
-                    stepperControls.className = 'shrink-0 flex items-stretch border border-white/5 bg-[#020617]/40 rounded-xl select-none self-stretch overflow-hidden';
+                    
+                    if (effectiveMode === 'micro') {
+                        stepperControls.className = 'shrink-0 flex items-stretch border border-white/5 bg-[#020617]/40 rounded-lg select-none overflow-hidden h-7 text-[11px]';
+                    } else {
+                        stepperControls.className = 'shrink-0 flex items-stretch border border-white/5 bg-[#020617]/40 rounded-xl select-none self-stretch overflow-hidden';
+                    }
                     stepperControls.onclick = (e) => e.stopPropagation();
 
                     const decBtn = document.createElement('button');
-                    decBtn.className = 'w-8 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white text-lg font-black focus:outline-none';
+                    if (effectiveMode === 'micro') {
+                        decBtn.className = 'w-6 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white font-black text-xs focus:outline-none';
+                    } else {
+                        decBtn.className = 'w-8 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white text-lg font-black focus:outline-none';
+                    }
                     decBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, -1);
@@ -1192,17 +1711,30 @@
                     decBtn.innerHTML = `−`;
 
                     const valDisp = document.createElement('div');
-                    valDisp.className = 'flex items-center justify-center border-l border-r border-white/5 px-1.5 gap-0 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)]';
+                    valDisp.className = 'flex items-center justify-center border-l border-r border-white/5 px-1 gap-0 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)]';
                     const maxDisabled = typeof q.max === 'string' ? 'readonly disabled' : '';
                     const maxOpacity = typeof q.max === 'string' ? 'opacity-70 pointer-events-none' : '';
-                    valDisp.innerHTML = `
-                        <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-6 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                        <span class="text-slate-600 font-bold text-xs mx-0.5 opacity-60 leading-none">|</span>
-                        <input type="number" value="${resolvedMax}" ${maxDisabled} onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-6 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxOpacity}">
-                    `;
+                    
+                    if (effectiveMode === 'micro') {
+                        valDisp.innerHTML = `
+                            <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-5 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <span class="text-slate-600 font-bold text-[10px] mx-0.5 opacity-60 leading-none">/</span>
+                            <input type="number" value="${resolvedMax}" ${maxDisabled} onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-5 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxOpacity}">
+                        `;
+                    } else {
+                        valDisp.innerHTML = `
+                            <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-6 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <span class="text-slate-600 font-bold text-xs mx-0.5 opacity-60 leading-none">|</span>
+                            <input type="number" value="${resolvedMax}" ${maxDisabled} onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-6 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxOpacity}">
+                        `;
+                    }
 
                     const incBtn = document.createElement('button');
-                    incBtn.className = 'w-8 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white text-lg font-black focus:outline-none';
+                    if (effectiveMode === 'micro') {
+                        incBtn.className = 'w-6 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white font-black text-xs focus:outline-none';
+                    } else {
+                        incBtn.className = 'w-8 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white text-lg font-black focus:outline-none';
+                    }
                     incBtn.onclick = (e) => {
                         e.stopPropagation();
                         changeStepperValue(q.id, 1);
@@ -1214,7 +1746,6 @@
                     stepperControls.appendChild(incBtn);
                     wrapper.appendChild(stepperControls);
                 } else if (type === 'countdown') {
-                    // Countdown widgets build their own self-contained element
                     const ctEl = buildCountdownWidget(q);
                     bindHoldListeners(ctEl);
                     wrapper.appendChild(ctEl);
@@ -1224,77 +1755,58 @@
                     wrapper.appendChild(ctEl);
                 }
 
-
-                const otherGroups = filtered.length > 0 ? groups.filter(g => g.characterId === activeCharacterId && g.id !== activeGroupId) : [];
-                const moveGroupHtml = otherGroups.length > 0 ? `
-                    <div class="h-px bg-white/5 my-1"></div>
-                    <button onclick="moveQueueToGroup('${q.id}', event)" class="menu-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-                        <span>Move to Group</span>
-                    </button>
-                ` : '';
-
-                const editLoadoutButtonHtml = (type === 'roller' || (type === 'number' && q.unifiedQueue && q.unifiedQueue.length > 0)) ? `
-                    <button onclick="loadQueue('${q.id}', event)" class="menu-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        <span>Edit Loadout</span>
-                    </button>
-                    <button onclick="updateSavedQueue('${q.id}', event)" class="menu-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        <span>Overwrite</span>
-                    </button>
-                ` : '';
-
-                const timerIsPaused = type === 'timer' ? (q.isPaused !== false) : true;
-                const resetTimerMenuItemHtml = type === 'timer' ? `
-                    <button onclick="toggleTimerPlay('${q.id}', event)" class="menu-item menu-timer-play-btn">
-                        ${timerIsPaused
-                            ? `<svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-emerald-400"><path d="M8 5v14l11-7z"/></svg>`
-                            : `<svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-amber-400"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
-                        }
-                        <span>${timerIsPaused ? 'Start Timer' : 'Pause Timer'}</span>
-                    </button>
-                    <button onclick="resetTimerWidget('${q.id}', event)" class="menu-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                        <span>Reset Timer</span>
-                    </button>
-                ` : '';
-
-                const menuContainer = document.createElement('div');
-                menuContainer.id = `menu-${q.id}`;
-                menuContainer.className = 'arsenal-menu absolute right-2 top-12 hidden';
-                menuContainer.style.zIndex = '100';
-                menuContainer.innerHTML = `
-                    <button onclick="configureSavedWidget('${q.id}', event)" class="menu-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        <span>Configure</span>
-                    </button>
-                    ${resetTimerMenuItemHtml}
-                    ${editLoadoutButtonHtml}
-                    <button onclick="openColorPicker('${q.id}', event)" class="menu-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.941.732-1.688 1.688-1.688h1.906c2.327 0 4.625-1.811 4.625-4.125C21 5.438 17.438 2 12 2z"/></svg>
-                        <span>Appearance</span>
-                    </button>
-                    <button onclick="duplicateWidget('${q.id}', event)" class="menu-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        <span>Duplicate</span>
-                    </button>
-                    <button onclick="toggleWidgetHiddenState('${q.id}', event)" class="menu-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-[#94a3b8]">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
-                        </svg>
-                        <span>${q.hidden ? 'Show Widget' : 'Hide Widget'}</span>
-                    </button>
-                    ${moveGroupHtml}
-                    <div class="h-px bg-white/5 my-1"></div>
-                    <button onclick="deleteQueue('${q.id}', event)" class="menu-item danger">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                        <span>Delete</span>
-                    </button>
-                `;
-
+                const menuContainer = createWidgetMenu(q);
                 wrapper.appendChild(menuContainer);
-                list.appendChild(wrapper);
+
+                return wrapper;
+            }
+
+            if (!list.dataset.dragBound) {
+                list.dataset.dragBound = 'true';
+                list.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (e.target === list || e.target.classList.contains('saved-queues-list')) {
+                        list.classList.add('drag-over-list');
+                    }
+                });
+                list.addEventListener('dragleave', (e) => {
+                    if (e.target === list || e.target.classList.contains('saved-queues-list')) {
+                        list.classList.remove('drag-over-list');
+                    }
+                });
+                list.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    list.classList.remove('drag-over-list');
+                    if (dragSrcId === null) return;
+                    
+                    if (e.target === list || e.target.closest('.saved-queues-list') === list) {
+                        const wrapper = e.target.closest('.arsenal-item-wrapper');
+                        if (!wrapper) {
+                            const srcIdx = engine.savedQueues.findIndex(x => x.id === dragSrcId);
+                            if (srcIdx > -1) {
+                                const [moved] = engine.savedQueues.splice(srcIdx, 1);
+                                moved.parentId = null;
+                                moved.groupId = activeGroupId;
+                                moved.characterId = activeCharacterId;
+                                engine.savedQueues.push(moved);
+                                persistSaved();
+                                renderSavedQueues();
+                            }
+                        }
+                    }
+                    dragSrcId = null;
+                    hasMoved = false;
+                });
+            }
+
+            list.innerHTML = '';
+
+            // A widget is top-level if it has no parentId, OR if its parentId is not in the CURRENTLY FILTERED list.
+            const topLevel = filtered.filter(q => !q.parentId || !filtered.some(parent => parent.id === q.parentId));
+
+            topLevel.forEach(q => {
+                const el = buildWidgetDOM(q);
+                if (el) list.appendChild(el);
             });
         }
         function renderChainProgress(steps, scrambleVal, currentName, currentColor) {

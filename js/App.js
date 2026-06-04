@@ -190,6 +190,7 @@
             if (globalLayout === 'force-full') return 'full';
             if (widgetMode === 'compact') return 'compact';
             if (widgetMode === 'full') return 'full';
+            if (widgetMode === 'micro') return 'micro';
             if (widgetMode === 'normal') return 'normal';
             return 'normal';
         }
@@ -2705,26 +2706,40 @@
             activeMenuId = null;
         }
 
+        function deleteQueueCascade(id) {
+            const children = engine.savedQueues.filter(w => w.parentId === id);
+            children.forEach(c => {
+                deleteQueueCascade(c.id);
+            });
+            engine.deleteQueue(id);
+        }
 
-        function deleteQueue(id, event) {
+        function deleteQueue(id, event, bypassConfirm = false) {
             if (event) event.stopPropagation();
             closeAllArsenalMenus();
 
+            if (bypassConfirm) {
+                deleteQueueCascade(id);
+                persistSaved();
+                renderSavedQueues();
+                return;
+            }
+
             showModal({
-                title: 'Delete this loadout?',
-                body: 'This action cannot be undone.',
+                title: 'Delete this widget?',
+                body: 'This action will permanently delete this widget and all of its nested child widgets.',
                 confirmText: 'Delete',
                 danger: true
             }).then(confirmed => {
                 if (!confirmed) return;
-                engine.deleteQueue(id);
+                deleteQueueCascade(id);
                 persistSaved();
                 renderSavedQueues();
             });
         }
 
         function renameQueue(id, event) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
             const item = engine.findSavedQueue(id);
             if (!item) return;
             showModal({
@@ -3331,15 +3346,88 @@
             characters.push({ id, name, dndType, campaignId: activeCampaignId });
 
             const baseTime = Date.now();
-            const charGroups = [
-                { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: id },
-                { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: id },
-                { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: id },
-                { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: id }
-            ];
+            let charGroups = [];
+            if (dndType === 'encounter') {
+                charGroups = [
+                    { id: `grp_combat_${baseTime}_1`, name: 'Combat', color: '#ff003c', characterId: id }
+                ];
+            } else {
+                charGroups = [
+                    { id: `grp_stats_${baseTime}_1`, name: 'Stats', color: '#00d4ff', characterId: id },
+                    { id: `grp_attacks_${baseTime}_2`, name: 'Attacks', color: '#ff003c', characterId: id },
+                    { id: `grp_spells_${baseTime}_3`, name: 'Spells', color: '#a855f7', characterId: id },
+                    { id: `grp_items_${baseTime}_4`, name: 'Items', color: '#ffea00', characterId: id }
+                ];
+            }
             groups.push(...charGroups);
             activeCharacterId = id;
             activeGroupId = charGroups[0].id;
+
+            if (dndType === 'encounter') {
+                const groupId = charGroups[0].id;
+                const baseWidgetId = 'w_eg_' + Date.now();
+                const sharedGridId = 'w_g_' + Date.now();
+
+                // Push a blank Entity Group widget and its shared grid!
+                engine.savedQueues.push({
+                    id: baseWidgetId,
+                    parentId: null,
+                    characterId: id,
+                    groupId: groupId,
+                    name: 'Blank Entity Group',
+                    color: '#ff9900',
+                    widgetType: 'entity-group',
+                    sharedGridId: sharedGridId,
+                    entityTemplate: {
+                        namePrefix: 'Entity',
+                        widgets: [
+                            {
+                                name: 'HP',
+                                widgetType: 'stepper',
+                                min: 0,
+                                max: 10,
+                                value: 10,
+                                displayMode: 'micro',
+                                colSpan: 4
+                            },
+                            {
+                                name: 'Notes',
+                                widgetType: 'text',
+                                displayMode: 'micro',
+                                colSpan: 4,
+                                text: ''
+                            },
+                            {
+                                name: 'Trigger',
+                                widgetType: 'trigger',
+                                displayMode: 'micro',
+                                colSpan: 4,
+                                targetWidgetId: '',
+                                condition: '<=',
+                                conditionValue: 0,
+                                action: 'show-button',
+                                actionParams: {
+                                    label: '☠️ Kill',
+                                    actionType: 'delete-parent-entity',
+                                    btnColor: 'rose'
+                                }
+                            }
+                        ]
+                    }
+                });
+
+                engine.savedQueues.push({
+                    id: sharedGridId,
+                    parentId: baseWidgetId,
+                    characterId: id,
+                    groupId: groupId,
+                    widgetType: 'grid',
+                    columns: 12,
+                    name: 'Shared Stats'
+                });
+                
+                persistSaved();
+            }
 
             closeCharCreationModal();
             renderCharacterSelect();
@@ -3350,7 +3438,7 @@
             vibrate(10);
 
             // Automatically open the resources modal after creating a D&D character!
-            if (dndType !== 'none') {
+            if (dndType !== 'none' && dndType !== 'encounter') {
                 setTimeout(() => {
                     openResourcesModal();
                 }, 200);
@@ -3523,7 +3611,7 @@
 
             const name = await showModal({
                 title: 'Spawn Instance',
-                body: `Enter name for this ${tpl.dndType === 'monster' ? 'Monster' : 'Character'}:`,
+                body: `Enter name for this ${tpl.dndType === 'monster' ? 'Monster' : tpl.dndType === 'encounter' ? 'Encounter' : 'Character'}:`,
                 confirmText: 'Spawn',
                 inputPrompt: true,
                 defaultValue: tpl.name.replace(' (Blank)', '')
@@ -3551,14 +3639,28 @@
                 };
             });
 
-            const newWidgets = (tpl.widgets || []).map((w, idx) => {
+            // Build old->new widget ID map first so we can remap parentId and sharedGridId
+            const widgetIdMap = {};
+            (tpl.widgets || []).forEach((w, idx) => {
                 const newWId = 'w_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
-                return {
-                    ...JSON.parse(JSON.stringify(w)),
-                    id: newWId,
-                    characterId: newCharId,
-                    groupId: groupIdMap[w.groupId] || null
-                };
+                widgetIdMap[w.id] = newWId;
+            });
+
+            const newWidgets = (tpl.widgets || []).map((w) => {
+                const newWId = widgetIdMap[w.id];
+                const clone = JSON.parse(JSON.stringify(w));
+                clone.id = newWId;
+                clone.characterId = newCharId;
+                clone.groupId = groupIdMap[w.groupId] || null;
+                // Remap parentId to the new cloned widget ID
+                if (clone.parentId && widgetIdMap[clone.parentId]) {
+                    clone.parentId = widgetIdMap[clone.parentId];
+                }
+                // Remap sharedGridId on entity-group widgets
+                if (clone.sharedGridId && widgetIdMap[clone.sharedGridId]) {
+                    clone.sharedGridId = widgetIdMap[clone.sharedGridId];
+                }
+                return clone;
             });
 
             characters.push(newChar);
@@ -4267,14 +4369,58 @@
             renderSavedQueues();
             renderBinder();
         }
-
-        // =========================================================================
-        // WIDGET CREATION AND STATE EDITING
-        // =========================================================================
         var editingWidgetId = null;
+
+        function populateCreationModalDropdowns(editingWidgetId = null) {
+            const parentSelect = document.getElementById('widget-parent-id');
+            const targetSelect = document.getElementById('trigger-target-id');
+            
+            if (parentSelect) {
+                parentSelect.innerHTML = '<option value="">(None)</option>';
+                const containers = engine.savedQueues.filter(q => 
+                    q.characterId === activeCharacterId && 
+                    q.groupId === activeGroupId &&
+                    ['grid', 'entity-group', 'entity'].includes(q.widgetType) &&
+                    q.id !== editingWidgetId
+                );
+                containers.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = `${c.name || 'Unnamed'} [${c.widgetType}]`;
+                    parentSelect.appendChild(opt);
+                });
+            }
+
+            if (targetSelect) {
+                targetSelect.innerHTML = '<option value="">(Select Target)</option>';
+                const targets = engine.savedQueues.filter(q => 
+                    q.characterId === activeCharacterId && 
+                    q.groupId === activeGroupId &&
+                    q.id !== editingWidgetId
+                );
+                targets.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = `${t.name || 'Unnamed'} [${t.widgetType}]`;
+                    targetSelect.appendChild(opt);
+                });
+            }
+        }
 
         function openWidgetCreationModal(isSavingQueue = false) {
             closeAllArsenalMenus();
+            populateCreationModalDropdowns(null);
+
+            if (document.getElementById('trigger-target-id')) document.getElementById('trigger-target-id').value = '';
+            if (document.getElementById('trigger-condition')) document.getElementById('trigger-condition').value = '<=';
+            if (document.getElementById('trigger-val')) document.getElementById('trigger-val').value = '0';
+            if (document.getElementById('trigger-action')) document.getElementById('trigger-action').value = 'show-button';
+            if (document.getElementById('trigger-btn-label')) document.getElementById('trigger-btn-label').value = '☠️ Kill';
+            if (document.getElementById('trigger-btn-color')) document.getElementById('trigger-btn-color').value = 'rose';
+            if (document.getElementById('widget-parent-id')) document.getElementById('widget-parent-id').value = '';
+            if (document.getElementById('widget-colspan')) document.getElementById('widget-colspan').value = '12';
+
+            ensureActiveCharacterAndGroup();
             ensureActiveCharacterAndGroup();
             editingWidgetId = null;
             const overlay = document.getElementById('widget-creation-overlay');
@@ -4339,15 +4485,24 @@
             vibrate(5);
         }
 
+        function openEntityGroupCreationModal() {
+            openWidgetCreationModal(false);
+            const typeSelect = document.getElementById('widget-type');
+            if (typeSelect) {
+                typeSelect.value = 'entity-group';
+                onWidgetTypeChange('entity-group');
+            }
+        }
+        window.openEntityGroupCreationModal = openEntityGroupCreationModal;
+
         function configureSavedWidget(widgetId, event) {
             if (event) event.stopPropagation();
             closeAllArsenalMenus();
-
             const q = engine.findSavedQueue(widgetId);
             if (!q) return;
 
             editingWidgetId = widgetId;
-
+            populateCreationModalDropdowns(widgetId);
             const overlay = document.getElementById('widget-creation-overlay');
             if (!overlay) return;
 
@@ -4451,6 +4606,19 @@
             document.getElementById('widget-compact-note').checked = !!compactShowNote;
             document.getElementById('widget-compact-detail').checked = !!compactShowDetail;
 
+            // Populate grid & layout config
+            document.getElementById('widget-parent-id').value = q.parentId || '';
+            document.getElementById('widget-colspan').value = q.colSpan !== undefined ? q.colSpan : 12;
+
+            // Populate trigger config
+            if (q.widgetType === 'trigger') {
+                document.getElementById('trigger-target-id').value = q.targetWidgetId || '';
+                document.getElementById('trigger-condition').value = q.condition || '<=';
+                document.getElementById('trigger-val').value = q.conditionValue !== undefined ? q.conditionValue : 0;
+                document.getElementById('trigger-action').value = q.action || 'show-button';
+                document.getElementById('trigger-btn-label').value = (q.actionParams && q.actionParams.label) || '☠️ Kill';
+                document.getElementById('trigger-btn-color').value = (q.actionParams && q.actionParams.btnColor) || 'rose';
+            }
 
             // Populate variable binding
             const hasVarBind = !!q.bindsVariable;
@@ -4528,6 +4696,7 @@
             document.getElementById('widget-number-config').classList.add('hidden');
             document.getElementById('widget-countdown-config').classList.add('hidden');
             document.getElementById('widget-timer-config')?.classList.add('hidden');
+            document.getElementById('widget-trigger-config')?.classList.add('hidden');
 
             if (type === 'roller' || type === 'number') {
                 document.getElementById('widget-roller-addons').classList.remove('hidden');
@@ -4543,6 +4712,8 @@
                 document.getElementById('widget-countdown-config').classList.remove('hidden');
             } else if (type === 'timer') {
                 document.getElementById('widget-timer-config')?.classList.remove('hidden');
+            } else if (type === 'trigger') {
+                document.getElementById('widget-trigger-config')?.classList.remove('hidden');
             }
 
             // Show/Hide formula row in matrix based on widget type
@@ -4728,6 +4899,20 @@
                     q.compactShowFormula = compactShowFormula;
                     q.compactShowNote = compactShowNote;
                     q.compactShowDetail = compactShowDetail;
+                    q.parentId = document.getElementById('widget-parent-id').value || null;
+                    q.colSpan = parseInt(document.getElementById('widget-colspan').value, 10) || 12;
+
+                    if (type === 'trigger') {
+                        q.targetWidgetId = document.getElementById('trigger-target-id').value;
+                        q.condition = document.getElementById('trigger-condition').value;
+                        q.conditionValue = parseInt(document.getElementById('trigger-val').value, 10) || 0;
+                        q.action = document.getElementById('trigger-action').value;
+                        q.actionParams = {
+                            label: document.getElementById('trigger-btn-label').value,
+                            actionType: document.getElementById('trigger-action').value === 'delete-parent-entity' ? 'delete-parent-entity' : 'show-button',
+                            btnColor: document.getElementById('trigger-btn-color').value
+                        };
+                    }
 
                     if (type === 'roller' || type === 'number') {
                         const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
@@ -4808,10 +4993,15 @@
                 return;
             }
 
+            const parentId = document.getElementById('widget-parent-id').value || null;
+            const colSpan = parseInt(document.getElementById('widget-colspan').value, 10) || 12;
+
             let newWidget = {
-                id: Date.now(),
+                id: 'w_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
                 characterId: activeCharacterId,
                 groupId: activeGroupId,
+                parentId: parentId,
+                colSpan: colSpan,
                 name: name,
                 color: color,
                 widgetType: type,
@@ -4914,6 +5104,17 @@
                 newWidget.rundownText = document.getElementById('timer-rundown-text').value.trim() || "Time's Up!";
                 newWidget.animationType = document.getElementById('timer-animation').value || 'none';
                 newWidget.isPaused = true;
+            } else if (type === 'trigger') {
+                newWidget.targetWidgetId = document.getElementById('trigger-target-id').value;
+                newWidget.condition = document.getElementById('trigger-condition').value;
+                newWidget.conditionValue = parseInt(document.getElementById('trigger-val').value, 10) || 0;
+                newWidget.action = document.getElementById('trigger-action').value;
+                newWidget.actionParams = {
+                    label: document.getElementById('trigger-btn-label').value,
+                    actionType: document.getElementById('trigger-action').value === 'delete-parent-entity' ? 'delete-parent-entity' : 'show-button',
+                    btnColor: document.getElementById('trigger-btn-color').value
+                };
+                newWidget.triggered = false;
             }
 
             engine.savedQueues.push(newWidget);
@@ -5000,8 +5201,124 @@
                     populateRulesVariableDropdowns();
                     updateUI();
                 }
+                evaluateTriggers();
                 vibrate(5);
             }
+        }
+
+        function evaluateTriggers() {
+            let triggeredCount = 0;
+            engine.savedQueues.forEach(q => {
+                if (q.widgetType === 'trigger') {
+                    let targetVal = null;
+                    let hasTargetVal = false;
+                    const target = engine.findSavedQueue(q.targetWidgetId);
+                    if (target) {
+                        targetVal = target.value;
+                        hasTargetVal = true;
+                    } else if (q.targetWidgetId) {
+                        const varVal = window.getActiveCharacterVariable(q.targetWidgetId);
+                        if (varVal !== null) {
+                            targetVal = varVal;
+                            hasTargetVal = true;
+                        }
+                    }
+                    if (hasTargetVal) {
+                        let condMet = false;
+                        switch (q.condition) {
+                            case '==': condMet = (targetVal == q.conditionValue); break;
+                            case '<=': condMet = (targetVal <= q.conditionValue); break;
+                            case '<': condMet = (targetVal < q.conditionValue); break;
+                            case '>=': condMet = (targetVal >= q.conditionValue); break;
+                            case '>': condMet = (targetVal > q.conditionValue); break;
+                        }
+                        if (q.triggered !== condMet) {
+                            q.triggered = condMet;
+                            triggeredCount++;
+                            if (condMet && q.action === 'delete-parent-entity') {
+                                setTimeout(() => {
+                                    deleteQueue(q.parentId, null, true);
+                                }, 50);
+                            }
+                        }
+                    }
+                }
+            });
+            if (triggeredCount > 0) {
+                persistSaved();
+                renderSavedQueues();
+            }
+        }
+
+        function spawnGroupEntity(groupWidgetId) {
+            const groupWidget = engine.findSavedQueue(groupWidgetId);
+            if (!groupWidget || !groupWidget.entityTemplate) return;
+
+            const existingEntities = engine.savedQueues.filter(w => w.parentId === groupWidgetId && w.widgetType === 'entity');
+            let nextNum = 1;
+            const prefix = groupWidget.entityTemplate.namePrefix || 'Entity';
+            while (existingEntities.some(e => e.name === `${prefix} ${nextNum}`)) {
+                nextNum++;
+            }
+            const entityName = `${prefix} ${nextNum}`;
+            const entityId = 'w_ent_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+
+            const entityWidget = {
+                id: entityId,
+                parentId: groupWidgetId,
+                characterId: activeCharacterId,
+                groupId: activeGroupId,
+                name: entityName,
+                widgetType: 'entity'
+            };
+            engine.savedQueues.push(entityWidget);
+
+            const spawnedSiblings = [];
+            const tplWidgets = groupWidget.entityTemplate.widgets || [];
+
+            tplWidgets.forEach((tplWidget, idx) => {
+                const childId = 'w_child_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
+                const childWidget = JSON.parse(JSON.stringify(tplWidget));
+                childWidget.id = childId;
+                childWidget.parentId = entityId;
+                childWidget.characterId = activeCharacterId;
+                childWidget.groupId = activeGroupId;
+                
+                spawnedSiblings.push(childWidget);
+                engine.savedQueues.push(childWidget);
+            });
+
+            // Assign unique bindsVariable & targetWidgetId to stepper and trigger
+            const cleanVarBase = entityName.toUpperCase().trim().replace(/[^A-Z0-9_]/g, '_').replace(/_+/g, '_');
+            const hpVarName = `${cleanVarBase}_HP`;
+
+            spawnedSiblings.forEach(sibling => {
+                if (sibling.widgetType === 'stepper' && (sibling.name === 'HP' || sibling.name.toUpperCase().includes('HP'))) {
+                    sibling.bindsVariable = hpVarName;
+                    sibling.variableRelType = 'define';
+                }
+            });
+
+            spawnedSiblings.forEach(sibling => {
+                if (sibling.widgetType === 'trigger') {
+                    sibling.targetWidgetId = hpVarName;
+                }
+            });
+
+            // Register default HP value in character variables
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char) {
+                if (!char.variables) char.variables = {};
+                const hpWidget = spawnedSiblings.find(s => s.widgetType === 'stepper');
+                const defaultHP = hpWidget ? (hpWidget.value ?? 10) : 10;
+                char.variables[hpVarName] = String(defaultHP);
+                syncCharacterVariables(char);
+            }
+
+            persistSaved();
+            renderSavedQueues();
+            evaluateTriggers();
+            vibrate(15);
         }
 
         function toggleWidgetHiddenState(widgetId, event) {
@@ -5044,6 +5361,7 @@
                     syncCharacterVariables(char);
                 }
                 renderSavedQueues();
+                evaluateTriggers();
                 vibrate(5);
             }
         }
@@ -5069,6 +5387,7 @@
                     syncCharacterVariables(char);
                 }
                 renderSavedQueues();
+                evaluateTriggers();
                 vibrate(5);
             }
         }
@@ -5083,6 +5402,7 @@
                     syncCharacterVariables(char);
                 }
                 renderSavedQueues();
+                evaluateTriggers();
                 vibrate(5);
             }
         }
@@ -5094,6 +5414,14 @@
                 persistSaved();
                 renderSavedQueues();
                 vibrate(5);
+            }
+        }
+
+        function changeTextValueDirect(widgetId, newValue) {
+            const q = engine.findSavedQueue(widgetId);
+            if (q && q.widgetType === 'text') {
+                q.text = newValue;
+                persistSaved();
             }
         }
 
@@ -6352,27 +6680,71 @@
             const menus = document.querySelectorAll('.arsenal-menu');
             menus.forEach(m => m.classList.add('hidden'));
 
-            const clone = JSON.parse(JSON.stringify(original));
-            clone.id = 'w_dup_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            // Recursively collect original and all descendant widgets
+            const widgetsToCopy = [];
+            const idMap = {}; // Maps oldId -> newId
+            const varMap = {}; // Maps oldVarName -> newVarName
 
-            if (clone.bindsVariable && clone.variableRelType === 'define') {
-                const uniqueVar = getUniqueVariableName(clone.characterId, clone.bindsVariable, null);
-                if (uniqueVar !== clone.bindsVariable) {
-                    await showModal({
-                        title: 'Variable Collision',
-                        body: `The variable "${clone.bindsVariable}" is already defined on this character. The duplicated widget's variable has been renamed to "${uniqueVar}" to avoid conflicts.`,
-                        alertOnly: true
-                    });
-                    clone.bindsVariable = uniqueVar;
+            function collectDescendants(parentId) {
+                const children = engine.savedQueues.filter(w => w.parentId === parentId);
+                children.forEach(child => {
+                    widgetsToCopy.push(child);
+                    collectDescendants(child.id);
+                });
+            }
+
+            widgetsToCopy.push(original);
+            collectDescendants(original.id);
+
+            // Create clones and generate new IDs
+            const clones = widgetsToCopy.map(w => {
+                const clone = JSON.parse(JSON.stringify(w));
+                const newId = 'w_dup_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                idMap[w.id] = newId;
+                clone.id = newId;
+
+                // Fix variable name collisions if this defines a character variable
+                if (w.bindsVariable && w.variableRelType === 'define') {
+                    const uniqueVar = getUniqueVariableName(w.characterId, w.bindsVariable, null);
+                    if (uniqueVar !== w.bindsVariable) {
+                        varMap[w.bindsVariable.toUpperCase()] = uniqueVar.toUpperCase();
+                        clone.bindsVariable = uniqueVar;
+                    }
+                }
+                return clone;
+            });
+
+            // Re-parent the clones and fix variable names/trigger targets
+            for (const clone of clones) {
+                if (clone.parentId && idMap[clone.parentId]) {
+                    clone.parentId = idMap[clone.parentId];
+                }
+                
+                // If this is an entity group, duplicate the entityTemplate's sharedGridId references if cloned
+                if (clone.widgetType === 'entity-group' && clone.sharedGridId && idMap[clone.sharedGridId]) {
+                    clone.sharedGridId = idMap[clone.sharedGridId];
+                }
+
+                // If trigger widget, map its targetWidgetId to the new cloned target widget or variable
+                if (clone.widgetType === 'trigger' && clone.targetWidgetId) {
+                    if (idMap[clone.targetWidgetId]) {
+                        clone.targetWidgetId = idMap[clone.targetWidgetId];
+                    } else {
+                        // It might be a variable name!
+                        const upperTarget = clone.targetWidgetId.toUpperCase();
+                        if (varMap[upperTarget]) {
+                            clone.targetWidgetId = varMap[upperTarget];
+                        }
+                    }
                 }
             }
 
-            // Find index of original and insert clone after it
-            const idx = engine.savedQueues.findIndex(w => w.id === widgetId);
-            if (idx !== -1) {
-                engine.savedQueues.splice(idx + 1, 0, clone);
+            // Find index of original parent widget to insert all clones sequentially right after it
+            const originalIdx = engine.savedQueues.findIndex(w => w.id === widgetId);
+            if (originalIdx !== -1) {
+                engine.savedQueues.splice(originalIdx + 1, 0, ...clones);
             } else {
-                engine.savedQueues.push(clone);
+                engine.savedQueues.push(...clones);
             }
 
             persistSaved();
@@ -6383,6 +6755,143 @@
             renderSavedQueues();
             vibrate(10);
         }
+
+        function unparentWidget(id, event) {
+            if (event) event.stopPropagation();
+            closeAllArsenalMenus();
+            const q = engine.findSavedQueue(id);
+            if (q) {
+                q.parentId = null;
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+        window.unparentWidget = unparentWidget;
+
+        function setWidgetColSpan(id, span, event) {
+            if (event) event.stopPropagation();
+            closeAllArsenalMenus();
+            const q = engine.findSavedQueue(id);
+            if (q) {
+                q.colSpan = span;
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+        window.setWidgetColSpan = setWidgetColSpan;
+
+        function setGridColumns(id, cols, event) {
+            if (event) event.stopPropagation();
+            closeAllArsenalMenus();
+            const q = engine.findSavedQueue(id);
+            if (q && q.widgetType === 'grid') {
+                q.columns = cols;
+                persistSaved();
+                renderSavedQueues();
+                vibrate(5);
+            }
+        }
+        window.setGridColumns = setGridColumns;
+
+        function openWidgetCreationForParent(parentId, event) {
+            if (event) event.stopPropagation();
+            closeAllArsenalMenus();
+            openWidgetCreationModal(false);
+            setTimeout(() => {
+                const parentSelect = document.getElementById('widget-parent-id');
+                if (parentSelect) {
+                    parentSelect.value = parentId;
+                }
+            }, 80);
+        }
+        window.openWidgetCreationForParent = openWidgetCreationForParent;
+
+        async function configureEntityTemplate(widgetId, event) {
+            if (event) event.stopPropagation();
+            closeAllArsenalMenus();
+            const q = engine.findSavedQueue(widgetId);
+            if (!q || q.widgetType !== 'entity-group') return;
+
+            const template = q.entityTemplate || { namePrefix: 'Entity', widgets: [] };
+            const prefix = await showModal({
+                title: 'Configure Template',
+                body: 'Enter name prefix for spawned entities:',
+                confirmText: 'Next',
+                inputPrompt: true,
+                defaultValue: template.namePrefix || 'Entity'
+            });
+            if (prefix === null || prefix.trim() === '') return;
+
+            const hpWidget = (template.widgets || []).find(w => w.widgetType === 'stepper');
+            const defaultHP = hpWidget ? (hpWidget.max || 10) : 10;
+
+            const maxHPStr = await showModal({
+                title: 'Configure Template',
+                body: `Enter default Max HP for spawned ${prefix.trim()} entities:`,
+                confirmText: 'Save',
+                inputPrompt: true,
+                defaultValue: String(defaultHP)
+            });
+            if (maxHPStr === null) return;
+            const maxHP = parseInt(maxHPStr, 10) || 10;
+
+            q.entityTemplate = q.entityTemplate || {};
+            q.entityTemplate.namePrefix = prefix.trim();
+            q.entityTemplate.widgets = q.entityTemplate.widgets || [];
+
+            // Add or update HP stepper in template
+            let hpTpl = q.entityTemplate.widgets.find(w => w.widgetType === 'stepper');
+            if (!hpTpl) {
+                hpTpl = {
+                    name: 'HP',
+                    widgetType: 'stepper',
+                    min: 0,
+                    max: maxHP,
+                    value: maxHP,
+                    displayMode: 'micro',
+                    colSpan: 4
+                };
+                q.entityTemplate.widgets.push(hpTpl);
+            } else {
+                hpTpl.max = maxHP;
+                hpTpl.value = maxHP;
+            }
+
+            // Ensure Notes and Trigger also exist
+            if (!q.entityTemplate.widgets.some(w => w.widgetType === 'text')) {
+                q.entityTemplate.widgets.push({
+                    name: 'Notes',
+                    widgetType: 'text',
+                    displayMode: 'micro',
+                    colSpan: 4,
+                    text: ''
+                });
+            }
+            if (!q.entityTemplate.widgets.some(w => w.widgetType === 'trigger')) {
+                q.entityTemplate.widgets.push({
+                    name: 'Trigger',
+                    widgetType: 'trigger',
+                    displayMode: 'micro',
+                    colSpan: 4,
+                    targetWidgetId: '',
+                    condition: '<=',
+                    conditionValue: 0,
+                    action: 'show-button',
+                    actionParams: {
+                        label: '☠️ Kill',
+                        actionType: 'delete-parent-entity',
+                        btnColor: 'rose'
+                    }
+                });
+            }
+
+            persistSaved();
+            renderSavedQueues();
+            vibrate(10);
+        }
+        window.configureEntityTemplate = configureEntityTemplate;
 
         function populateRulesVariableDropdowns() {
             const sumValEl = document.getElementById('rule-sum-val');

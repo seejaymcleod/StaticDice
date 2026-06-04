@@ -1181,6 +1181,261 @@ window.addEventListener('load', () => {
                 console.log("=== Drag-and-Drop Event Bypassing Tests Passed Successfully! ===");
                 
                 console.log("=== Grid Settings & Rendering Test Suite Passed Successfully! ===");
+
+                // Test 15: Hierarchical & Encounter Layouts (Grid, Entity-Group, Entity, Trigger, Cascading Deletion, Trigger check)
+                console.log('Testing Hierarchical & Encounter Layouts...');
+                
+                // Clear any existing saved queues for active character first
+                engine.savedQueues = engine.savedQueues.filter(w => w.characterId !== activeCharacterId);
+                
+                // 1. Create an Entity Group with a shared Grid and entity template
+                const egId = 'w_test_eg';
+                const gridId = 'w_test_grid';
+                const entityGroup = {
+                    id: egId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Goblin Group',
+                    widgetType: 'entity-group',
+                    sharedGridId: gridId,
+                    entityTemplate: {
+                        namePrefix: 'Goblin',
+                        widgets: [
+                            {
+                                name: 'HP',
+                                widgetType: 'stepper',
+                                min: 0,
+                                max: 10,
+                                value: 10,
+                                displayMode: 'micro',
+                                colSpan: 6
+                            },
+                            {
+                                name: 'Trigger',
+                                widgetType: 'trigger',
+                                displayMode: 'micro',
+                                colSpan: 6,
+                                condition: '<=',
+                                conditionValue: 0,
+                                action: 'show-button',
+                                actionParams: {
+                                    label: '☠️ Kill',
+                                    btnColor: 'rose'
+                                }
+                            }
+                        ]
+                    }
+                };
+                
+                const sharedGrid = {
+                    id: gridId,
+                    parentId: egId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    widgetType: 'grid',
+                    name: 'Goblin Stats'
+                };
+                
+                const goblinAc = {
+                    id: 'w_test_goblin_ac',
+                    parentId: gridId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'AC',
+                    widgetType: 'number',
+                    displayMode: 'micro',
+                    colSpan: 12,
+                    value: 15
+                };
+                
+                engine.savedQueues.push(entityGroup, sharedGrid, goblinAc);
+                persistSaved();
+                renderSavedQueues();
+                
+                // Verify Group and Grid render in the DOM
+                const groupEl = document.querySelector('.widget-type-entity-group[data-id="' + egId + '"]');
+                if (!groupEl) throw new Error("Entity group element was not rendered");
+                const gridEl = document.querySelector('.widget-type-grid[data-id="' + gridId + '"]');
+                if (!gridEl) throw new Error("Shared grid element was not rendered");
+                
+                // 2. Spawn a Goblin entity
+                spawnGroupEntity(egId);
+                
+                // Verify entity widget and children are spawned in savedQueues
+                const spawnedEntities = engine.savedQueues.filter(w => w.parentId === egId && w.widgetType === 'entity');
+                if (spawnedEntities.length !== 1) throw new Error("Goblin entity was not spawned under group");
+                const goblinA = spawnedEntities[0];
+                if (goblinA.name !== 'Goblin 1') throw new Error("Spawned entity name prefix matching failed: " + goblinA.name);
+                
+                const goblinChildren = engine.savedQueues.filter(w => w.parentId === goblinA.id);
+                if (goblinChildren.length !== 2) throw new Error("Goblin children widgets (HP and Trigger) were not spawned");
+                
+                const hpWidget = goblinChildren.find(w => w.widgetType === 'stepper');
+                const triggerWidget = goblinChildren.find(w => w.widgetType === 'trigger');
+                if (!hpWidget || !triggerWidget) throw new Error("Could not find spawned HP or Trigger sub-widgets");
+                if (triggerWidget.targetWidgetId !== 'GOBLIN_1_HP') throw new Error("Trigger targetWidgetId did not auto-link to HP variable");
+                
+                // Verify they are rendered inside the entity row in JSDOM
+                renderSavedQueues();
+                const goblinRow = document.querySelector('.widget-type-entity[data-id="' + goblinA.id + '"]');
+                if (!goblinRow) throw new Error("Goblin entity row element was not rendered");
+                
+                // 3. Test Trigger activation (value change)
+                if (triggerWidget.triggered !== false) throw new Error("Trigger should initially be false");
+                
+                // Decrease HP to 0 using the stepper value change function
+                changeStepperValueDirect(hpWidget.id, 0, true);
+                if (triggerWidget.triggered !== true) throw new Error("Trigger should be true when HP is 0");
+                
+                // Check if trigger button is displayed in the DOM
+                renderSavedQueues();
+                const triggerBtn = document.querySelector('.widget-type-trigger[data-id="' + triggerWidget.id + '"] button');
+                if (!triggerBtn) throw new Error("Trigger Kill button was not rendered after triggering");
+                if (triggerBtn.textContent !== '☠️ Kill') throw new Error("Incorrect trigger button label: " + triggerBtn.textContent);
+                
+                // 4. Test Cascading Deletion
+                // Trigger button click deletes the parent entity
+                triggerBtn.click();
+                
+                // Verify entity and all children are removed from savedQueues
+                const deletedEntity = engine.findSavedQueue(goblinA.id);
+                const deletedHP = engine.findSavedQueue(hpWidget.id);
+                const deletedTrigger = engine.findSavedQueue(triggerWidget.id);
+                if (deletedEntity || deletedHP || deletedTrigger) {
+                    throw new Error("Cascading deletion did not remove entity and all nested sub-widgets");
+                }
+                console.log('-> Hierarchical & Encounter Layouts Integration Passed.');
+
+                // Test 16: Recursive Duplication & Drag-and-Drop Parenting
+                console.log('Testing Recursive Duplication & Drag-and-Drop Parenting...');
+                
+                // 1. Re-create Goblin group and spawn an entity to duplicate
+                const dupEgId = 'w_test_dup_eg';
+                const dupGridId = 'w_test_dup_grid';
+                const dupEntityGroup = {
+                    id: dupEgId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Goblin Horde',
+                    widgetType: 'entity-group',
+                    sharedGridId: dupGridId,
+                    entityTemplate: {
+                        namePrefix: 'Ork',
+                        widgets: [
+                            {
+                                name: 'HP',
+                                widgetType: 'stepper',
+                                min: 0,
+                                max: 15,
+                                value: 15,
+                                displayMode: 'micro'
+                            },
+                            {
+                                name: 'Trigger',
+                                widgetType: 'trigger',
+                                displayMode: 'micro',
+                                condition: '<=',
+                                conditionValue: 0,
+                                action: 'show-button',
+                                actionParams: { label: '☠️ Kill', btnColor: 'rose' }
+                            }
+                        ]
+                    }
+                };
+
+                const dupGrid = {
+                    id: dupGridId,
+                    parentId: dupEgId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    widgetType: 'grid',
+                    name: 'Ork Shared Grid'
+                };
+
+                engine.savedQueues.push(dupEntityGroup, dupGrid);
+                spawnGroupEntity(dupEgId);
+
+                const orkEntity = engine.savedQueues.find(w => w.parentId === dupEgId && w.widgetType === 'entity');
+                if (!orkEntity) throw new Error("Ork entity was not spawned");
+
+                // 2. Perform Duplication
+                const initialQueueCount = engine.savedQueues.length;
+                
+                // Duplicate the whole Goblin Horde Group
+                await duplicateWidget(dupEgId);
+                
+                // Check if all widgets in the tree were duplicated:
+                // - The entity-group itself
+                // - The shared grid
+                // - The entity (Ork 1)
+                // - Ork 1's HP stepper and Trigger
+                // So 5 new widgets should be added!
+                const newQueueCount = engine.savedQueues.length;
+                if (newQueueCount !== initialQueueCount + 5) {
+                    throw new Error("Recursive duplication failed to clone all 5 widgets. Old count: " + initialQueueCount + ", new count: " + newQueueCount);
+                }
+
+                // Check that the cloned trigger points to the cloned HP stepper
+                const clonedGroup = engine.savedQueues[engine.savedQueues.findIndex(w => w.id === dupEgId) + 1];
+                if (!clonedGroup || clonedGroup.widgetType !== 'entity-group') throw new Error("Cloned group not found in expected position");
+                
+                const clonedGrid = engine.savedQueues.find(w => w.parentId === clonedGroup.id && w.widgetType === 'grid');
+                if (!clonedGrid) throw new Error("Cloned grid not found or parentId not re-mapped");
+                if (clonedGroup.sharedGridId !== clonedGrid.id) throw new Error("Cloned group sharedGridId not remapped to cloned grid");
+
+                const clonedEntity = engine.savedQueues.find(w => w.parentId === clonedGroup.id && w.widgetType === 'entity');
+                if (!clonedEntity) throw new Error("Cloned entity not found or parentId not re-mapped");
+
+                const clonedEntityChildren = engine.savedQueues.filter(w => w.parentId === clonedEntity.id);
+                if (clonedEntityChildren.length !== 2) throw new Error("Cloned entity does not have exactly 2 child widgets");
+
+                const clonedHP = clonedEntityChildren.find(w => w.widgetType === 'stepper');
+                const clonedTrigger = clonedEntityChildren.find(w => w.widgetType === 'trigger');
+                if (!clonedHP || !clonedTrigger) throw new Error("Cloned HP or Trigger not found");
+                if (clonedTrigger.targetWidgetId !== clonedHP.bindsVariable) {
+                    throw new Error("Cloned trigger targetWidgetId did not re-map to cloned HP variable: " + clonedTrigger.targetWidgetId + " vs " + clonedHP.bindsVariable);
+                }
+
+                // 3. Test Drag-and-Drop Parenting (dropping widget inside grid, unparenting widget)
+                const standaloneWidgetId = 'w_test_drag_child';
+                const standaloneWidget = {
+                    id: standaloneWidgetId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Fireball Dmg',
+                    widgetType: 'roller',
+                    parentId: null
+                };
+                engine.savedQueues.push(standaloneWidget);
+                renderSavedQueues();
+
+                // Simulating drop on Grid
+                dragSrcId = standaloneWidgetId;
+                const gridWrapper = document.querySelector('.widget-type-grid[data-id="' + dupGridId + '"]');
+                if (!gridWrapper) throw new Error("Grid wrapper element not found for drop");
+
+                const dropEvent = new window.Event('drop', { bubbles: true });
+                gridWrapper.dispatchEvent(dropEvent);
+
+                const updatedWidget = engine.findSavedQueue(standaloneWidgetId);
+                if (updatedWidget.parentId !== dupGridId) {
+                    throw new Error("Drag-and-drop parenting failed. parentId is: " + updatedWidget.parentId);
+                }
+
+                // Simulating drop back to top-level list
+                dragSrcId = standaloneWidgetId;
+                const listEl = document.querySelector('.saved-queues-list');
+                if (!listEl) throw new Error("Saved queues list not found for drop");
+
+                const dropOnListEvent = new window.Event('drop', { bubbles: true });
+                listEl.dispatchEvent(dropOnListEvent);
+
+                const unparentedWidget = engine.findSavedQueue(standaloneWidgetId);
+                if (unparentedWidget.parentId !== null) {
+                    throw new Error("Drag-and-drop unparenting failed. parentId is: " + unparentedWidget.parentId);
+                }
+
+                console.log('-> Recursive Duplication & Drag-and-Drop Parenting Integration Passed.');
             })()
 
         `).then(() => {

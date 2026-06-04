@@ -1120,5 +1120,388 @@ window.StaticDiceTemplates = [
                 ]
             }
         ]
+    },
+    {
+        id: 'template_encounter_undead',
+        name: 'Undead Ambush (Encounter)',
+        system: 'Shadowdark',
+        dndType: 'encounter',
+        isDefault: true,
+        variables: {
+            SKELETON_A_HP: "11",
+            SKELETON_B_HP: "11"
+        },
+        groups: [
+            { id: 'combat', name: 'Combat', color: '#ff003c' }
+        ],
+        widgets: [
+            {
+                id: 'w_eg_skeletons',
+                groupId: 'combat',
+                name: 'Skeleton Group',
+                color: '#ff9900',
+                widgetType: 'entity-group',
+                sharedGridId: null,
+                entityTemplate: {
+                    namePrefix: 'Skeleton',
+                    widgets: [
+                        {
+                            name: 'HP',
+                            widgetType: 'stepper',
+                            min: 0,
+                            max: 11,
+                            value: 11,
+                            displayMode: 'micro',
+                            colSpan: 4
+                        },
+                        {
+                            name: 'Notes',
+                            widgetType: 'text',
+                            displayMode: 'micro',
+                            colSpan: 4,
+                            text: ''
+                        },
+                        {
+                            name: 'Trigger',
+                            widgetType: 'trigger',
+                            displayMode: 'micro',
+                            colSpan: 4,
+                            targetWidgetId: '',
+                            condition: '<=',
+                            conditionValue: 0,
+                            action: 'show-button',
+                            actionParams: {
+                                label: '☠️ Kill',
+                                actionType: 'delete-parent-entity',
+                                btnColor: 'rose'
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'w_s_skel_desc',
+                parentId: 'w_eg_skeletons',
+                groupId: 'combat',
+                name: 'Description',
+                widgetType: 'text',
+                displayMode: 'compact',
+                text: 'A bleach-boned skeleton with red pinpoints of light in its eyes.',
+                colSpan: 12
+            },
+            {
+                id: 'w_g_skeleton_stats',
+                parentId: 'w_eg_skeletons',
+                groupId: 'combat',
+                widgetType: 'grid',
+                columns: 12,
+                name: 'Ability Scores'
+            },
+            {
+                id: 'w_s_skel_str',
+                parentId: 'w_g_skeleton_stats',
+                groupId: 'combat',
+                name: 'Str',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 2,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_s_skel_dex',
+                parentId: 'w_g_skeleton_stats',
+                groupId: 'combat',
+                name: 'Dex',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 2,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'literal', value: 0, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_s_skel_con',
+                parentId: 'w_g_skeleton_stats',
+                groupId: 'combat',
+                name: 'Con',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 2,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_s_skel_int',
+                parentId: 'w_g_skeleton_stats',
+                groupId: 'combat',
+                name: 'Int',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 2,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 2, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_s_skel_wis',
+                parentId: 'w_g_skeleton_stats',
+                groupId: 'combat',
+                name: 'Wis',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 2,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'literal', value: 0, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_s_skel_cha',
+                parentId: 'w_g_skeleton_stats',
+                groupId: 'combat',
+                name: 'Cha',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 2,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '-' },
+                    { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_g_skeleton_other',
+                parentId: 'w_eg_skeletons',
+                groupId: 'combat',
+                widgetType: 'grid',
+                columns: 12,
+                name: 'Vital Stats'
+            },
+            {
+                id: 'w_s_skel_ac',
+                parentId: 'w_g_skeleton_other',
+                groupId: 'combat',
+                name: 'AC',
+                widgetType: 'number',
+                displayMode: 'micro',
+                colSpan: 3,
+                value: 13,
+                detailText: '(chainmail)',
+                showSign: false
+            },
+            {
+                id: 'w_s_skel_al',
+                parentId: 'w_g_skeleton_other',
+                groupId: 'combat',
+                name: 'AL',
+                widgetType: 'number',
+                displayMode: 'micro',
+                colSpan: 3,
+                value: 'C',
+                showSign: false
+            },
+            {
+                id: 'w_s_skel_lv',
+                parentId: 'w_g_skeleton_other',
+                groupId: 'combat',
+                name: 'LV',
+                widgetType: 'number',
+                displayMode: 'micro',
+                colSpan: 3,
+                value: 2,
+                showSign: false
+            },
+            {
+                id: 'w_s_skel_mv',
+                parentId: 'w_g_skeleton_other',
+                groupId: 'combat',
+                name: 'MV',
+                widgetType: 'number',
+                displayMode: 'micro',
+                colSpan: 3,
+                value: 'near',
+                showSign: false
+            },
+            {
+                id: 'w_s_skel_passive',
+                parentId: 'w_eg_skeletons',
+                groupId: 'combat',
+                name: 'Undead',
+                widgetType: 'text',
+                displayMode: 'compact',
+                text: 'Immune to morale checks.',
+                colSpan: 12
+            },
+            {
+                id: 'w_g_skeleton_attacks',
+                parentId: 'w_eg_skeletons',
+                groupId: 'combat',
+                widgetType: 'grid',
+                columns: 12,
+                name: 'Attacks'
+            },
+            {
+                id: 'w_s_skel_atk1',
+                parentId: 'w_g_skeleton_attacks',
+                groupId: 'combat',
+                name: 'Shortsword Atk',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 6,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'literal', value: 1, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_s_skel_dmg1',
+                parentId: 'w_g_skeleton_attacks',
+                groupId: 'combat',
+                name: 'Shortsword Dmg',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 6,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 6, count: 1 }
+                ]
+            },
+            {
+                id: 'w_s_skel_atk2',
+                parentId: 'w_g_skeleton_attacks',
+                groupId: 'combat',
+                name: 'Shortbow Atk',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 6,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 20, count: 1 },
+                    { nodeType: 'operator', operator: '+' },
+                    { nodeType: 'modifier', type: 'literal', value: 0, operator: '+' }
+                ]
+            },
+            {
+                id: 'w_s_skel_dmg2',
+                parentId: 'w_g_skeleton_attacks',
+                groupId: 'combat',
+                name: 'Shortbow Dmg',
+                widgetType: 'roller',
+                displayMode: 'micro',
+                colSpan: 6,
+                unifiedQueue: [
+                    { nodeType: 'node', sides: 4, count: 1 }
+                ]
+            },
+            {
+                id: 'w_skele_a',
+                parentId: 'w_eg_skeletons',
+                groupId: 'combat',
+                name: 'Skeleton A',
+                widgetType: 'entity'
+            },
+            {
+                id: 'w_skele_a_hp',
+                parentId: 'w_skele_a',
+                groupId: 'combat',
+                name: 'HP',
+                widgetType: 'stepper',
+                displayMode: 'micro',
+                colSpan: 4,
+                value: 11,
+                max: 11,
+                min: 0,
+                bindsVariable: 'SKELETON_A_HP',
+                variableRelType: 'define'
+            },
+            {
+                id: 'w_skele_a_notes',
+                parentId: 'w_skele_a',
+                groupId: 'combat',
+                name: 'Notes',
+                widgetType: 'text',
+                displayMode: 'micro',
+                colSpan: 4,
+                text: ''
+            },
+            {
+                id: 'w_skele_a_trigger',
+                parentId: 'w_skele_a',
+                groupId: 'combat',
+                name: 'Trigger',
+                widgetType: 'trigger',
+                displayMode: 'micro',
+                colSpan: 4,
+                targetWidgetId: 'SKELETON_A_HP',
+                condition: '<=',
+                conditionValue: 0,
+                action: 'show-button',
+                actionParams: {
+                    label: '☠️ Kill',
+                    actionType: 'delete-parent-entity',
+                    btnColor: 'rose'
+                }
+            },
+            {
+                id: 'w_skele_b',
+                parentId: 'w_eg_skeletons',
+                groupId: 'combat',
+                name: 'Skeleton B',
+                widgetType: 'entity'
+            },
+            {
+                id: 'w_skele_b_hp',
+                parentId: 'w_skele_b',
+                groupId: 'combat',
+                name: 'HP',
+                widgetType: 'stepper',
+                displayMode: 'micro',
+                colSpan: 4,
+                value: 11,
+                max: 11,
+                min: 0,
+                bindsVariable: 'SKELETON_B_HP',
+                variableRelType: 'define'
+            },
+            {
+                id: 'w_skele_b_notes',
+                parentId: 'w_skele_b',
+                groupId: 'combat',
+                name: 'Notes',
+                widgetType: 'text',
+                displayMode: 'micro',
+                colSpan: 4,
+                text: ''
+            },
+            {
+                id: 'w_skele_b_trigger',
+                parentId: 'w_skele_b',
+                groupId: 'combat',
+                name: 'Trigger',
+                widgetType: 'trigger',
+                displayMode: 'micro',
+                colSpan: 4,
+                targetWidgetId: 'SKELETON_B_HP',
+                condition: '<=',
+                conditionValue: 0,
+                action: 'show-button',
+                actionParams: {
+                    label: '☠️ Kill',
+                    actionType: 'delete-parent-entity',
+                    btnColor: 'rose'
+                }
+            }
+        ]
     }
 ];
