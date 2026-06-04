@@ -1155,62 +1155,29 @@ window.addEventListener('load', () => {
                 // === Test Suite: Widget Drag-and-Drop Event Bypassing ===
                 console.log("=== Running Drag-and-Drop Event Bypassing Tests ===");
                 
-                // Let's assert that drag handles do NOT have inline stopPropagation event handlers
                 renderSavedQueues();
-                const firstItem = document.querySelector('.saved-item');
-                if (!firstItem) throw new Error("No saved widgets rendered for event bypass test");
+                const firstWrapper = document.querySelector('.arsenal-item-wrapper');
+                if (!firstWrapper) throw new Error("No arsenal-item-wrapper found for drag-and-drop test");
                 
-                const dragHandle = firstItem.querySelector('.widget-drag-handle');
-                if (!dragHandle) throw new Error("Could not find widget drag handle on rendered widget");
+                // Verify wrapper is draggable (whole-card drag is now supported)
+                if (!firstWrapper.draggable) {
+                    throw new Error("arsenal-item-wrapper must have draggable=true for drag-and-drop to work");
+                }
                 
-                // Verify no inline propagation blockers exist on it
-                const forbiddenHandlers = ['onmousedown', 'onmouseup', 'onclick', 'ontouchstart', 'ontouchend', 'oncontextmenu'];
+                // Verify no leftover .widget-drag-handle icons exist (they were removed)
+                const orphanHandle = firstWrapper.querySelector('.widget-drag-handle');
+                if (orphanHandle) {
+                    throw new Error("Orphan .widget-drag-handle found — drag icon should have been removed");
+                }
+
+                // Verify the wrapper's dragstart listener does NOT have inline stopPropagation blockers
+                const forbiddenHandlers = ['ondragstart', 'onmousedown', 'onclick'];
                 forbiddenHandlers.forEach(handler => {
-                    if (dragHandle.getAttribute(handler)) {
-                        throw new Error("Drag handle must not contain inline event handler: " + handler);
+                    if (firstWrapper.getAttribute(handler)) {
+                        throw new Error("arsenal-item-wrapper must not have inline event handler: " + handler);
                     }
                 });
-                
-                // Verify that interactions targeting the drag handle do not trigger the timer hold state or trigger a click action
-                let menuOpened = false;
-                window.toggleArsenalMenu = () => { menuOpened = true; };
-                
-                // Construct a mock mousedown event originating from the drag handle
-                const mockMousedownEvent = new window.MouseEvent('mousedown', {
-                    bubbles: true,
-                    cancelable: true,
-                    button: 0
-                });
-                Object.defineProperty(mockMousedownEvent, 'target', { value: dragHandle, enumerable: true });
-                
-                // Dispatch event on the parent item (which handles the mouse/touch sequence)
-                firstItem.dispatchEvent(mockMousedownEvent);
-                
-                // Since it targets the drag handle, the startHold timer should not be started
-                // We wait 600ms inside JSDOM context to ensure no menu opened
-                await new Promise(resolve => setTimeout(resolve, 600));
-                if (menuOpened) {
-                    throw new Error("Mousedown on drag handle triggered the hold-to-menu timer incorrectly!");
-                }
-                
-                // Construct a mock click event originating from the drag handle
-                const mockClickEvent = new window.MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true
-                });
-                Object.defineProperty(mockClickEvent, 'target', { value: dragHandle, enumerable: true });
-                
-                let actionTriggered = false;
-                window.triggerRoll = () => { actionTriggered = true; };
-                window.toggleCardAddonState = () => { actionTriggered = true; };
-                window.toggleTextCardCollapsed = () => { actionTriggered = true; };
-                window.changeToggleValue = () => { actionTriggered = true; };
-                
-                firstItem.dispatchEvent(mockClickEvent);
-                if (actionTriggered) {
-                    throw new Error("Click on drag handle triggered card actions incorrectly!");
-                }
-                
+
                 console.log("=== Drag-and-Drop Event Bypassing Tests Passed Successfully! ===");
                 
                 console.log("=== Grid Settings & Rendering Test Suite Passed Successfully! ===");

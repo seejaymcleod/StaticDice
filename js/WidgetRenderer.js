@@ -657,9 +657,6 @@
                 let startX = 0, startY = 0;
 
                 const startHold = (e) => {
-                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                        return;
-                    }
                     isHold = false;
                     hasMoved = false;
                     const touch = e.touches ? e.touches[0] : e;
@@ -680,9 +677,6 @@
                 };
 
                 const moveHold = (e) => {
-                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                        return;
-                    }
                     if (e.type === 'mousemove' && e.buttons !== 1) return;
                     const touch = e.touches ? e.touches[0] : e;
                     if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
@@ -700,16 +694,19 @@
                 const effectiveMode = getEffectiveDisplayMode(q);
                 if (effectiveMode === 'simple') wrapper.classList.add('widget-display-simple');
                 else if (effectiveMode === 'compact') wrapper.classList.add('widget-display-compact');
+                wrapper.draggable = true;
                 wrapper.dataset.id = q.id;
 
                 wrapper.addEventListener('dragstart', (e) => {
-                    if (e.target.closest('.timer-bar-container') || e.target.closest('button') || e.target.closest('input')) {
+                    // Block drag if it started on an interactive element
+                    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.timer-bar-container')) {
                         e.preventDefault();
                         return;
                     }
                     dragSrcId = q.id;
                     wrapper.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', q.id);
                     if (e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(wrapper, 15, 15);
                     cancelHold();
                     hasMoved = true;
@@ -762,18 +759,13 @@
 
 
                 const item = document.createElement('div');
-                item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
+                item.className = 'saved-item pl-5 pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                 item.dataset.id = q.id;
 
                 item.addEventListener('touchstart', startHold, { passive: true });
                 item.addEventListener('touchend', (e) => {
-                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                        return;
-                    }
                     cancelHold();
                     if (isHold) {
-                        // Long-press was handled by the timer; eat the touchend
-                        // so it doesn't propagate into a click.
                         e.preventDefault();
                         e.stopPropagation();
                     }
@@ -789,9 +781,6 @@
                     if (e.button === 0) startHold(e);
                 });
                 item.addEventListener('mouseup', (e) => {
-                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                        return;
-                    }
                     cancelHold();
                     setTimeout(() => { hasMoved = false; }, 50);
                 });
@@ -806,30 +795,23 @@
                 // We always prevent the native menu; cancel the timer so it
                 // can't double-toggle the menu closed after contextmenu opens it.
                 item.addEventListener('contextmenu', (e) => {
-                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                        return;
-                    }
                     e.preventDefault();
                     e.stopPropagation();
                     if (hasMoved) return;
-                    cancelHold(); // critical: stop the timer from firing after contextmenu
+                    cancelHold();
                     if (!isHold) {
-                        // contextmenu beat the timer (Android), open the menu now
                         toggleArsenalMenu(q.id, e);
                     }
-                    isHold = false; // Reset so next right-click works!
+                    isHold = false;
                 });
 
                 const isDiceless = type === 'roller' && !(q.unifiedQueue || []).some(node => node.nodeType === 'node');
 
                 if (type === 'roller') {
                     item.onclick = (e) => {
-                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                            return;
-                        }
                         if (isHold) {
                             isHold = false;
-                            e.stopPropagation(); // prevent bubble to window click handler
+                            e.stopPropagation();
                             return;
                         }
                         if (isDiceless) {
@@ -842,9 +824,6 @@
                     };
                 } else if (type === 'number') {
                     item.onclick = (e) => {
-                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                            return;
-                        }
                         if (isHold) {
                             isHold = false;
                             e.stopPropagation();
@@ -856,9 +835,6 @@
                     };
                 } else if (type === 'text') {
                     item.onclick = (e) => {
-                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                            return;
-                        }
                         if (isHold) {
                             isHold = false;
                             e.stopPropagation();
@@ -868,9 +844,6 @@
                     };
                 } else if (type === 'toggle') {
                     item.onclick = (e) => {
-                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
-                            return;
-                        }
                         if (isHold) {
                             isHold = false;
                             e.stopPropagation();
@@ -974,11 +947,8 @@
                         ? `<div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
                         : (!hideLeftTab ? `<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-white/5"></div>` : '')
                     }
-                    <div draggable="true" 
-                         class="widget-drag-handle flex items-center justify-center w-4 h-full ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5" style="pointer-events: none;"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
-                    </div>
                 `;
+
 
                 if (type === 'roller') {
                     if (isDiceless) {
@@ -1135,6 +1105,7 @@
                 }
 
                 item.innerHTML = innerHtml;
+
                 if (type !== 'countdown' && type !== 'timer') {
                     wrapper.appendChild(item);
                 }
