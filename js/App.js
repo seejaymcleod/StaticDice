@@ -135,10 +135,14 @@
             }
         }
 
-        // Global layout mode: 'auto' | 'override-compact' | 'force-normal' | 'force-full'
+        // Global layout mode: 'auto' | 'override-compact' | 'force-full'
         var globalLayout = localStorage.getItem('global_layout') || 'auto';
+        if (globalLayout === 'force-normal') {
+            globalLayout = 'auto';
+            localStorage.setItem('global_layout', 'auto');
+        }
 
-        var GLOBAL_LAYOUT_STATES = ['auto', 'override-compact', 'force-normal', 'force-full'];
+        var GLOBAL_LAYOUT_STATES = ['auto', 'override-compact', 'force-full'];
 
         function cycleGlobalLayout() {
             const idx = GLOBAL_LAYOUT_STATES.indexOf(globalLayout);
@@ -155,25 +159,21 @@
             // Reset classes
             btn.classList.remove(
                 'text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10',
-                'text-amber-400', 'border-amber-400/30', 'bg-amber-400/10',
                 'text-[#00ff88]', 'border-[#00ff88]/30', 'bg-[#00ff88]/10',
+                'text-amber-400', 'border-amber-400/30', 'bg-amber-400/10',
                 'text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40',
                 'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30',
-                'hover:text-amber-400', 'hover:border-amber-400/30',
-                'hover:text-[#00ff88]', 'hover:border-[#00ff88]/30'
+                'hover:text-[#00ff88]', 'hover:border-[#00ff88]/30',
+                'hover:text-amber-400', 'hover:border-amber-400/30'
             );
             if (globalLayout === 'override-compact') {
                 btn.classList.add('text-[#00d4ff]', 'border-[#00d4ff]/30', 'bg-[#00d4ff]/10', 'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30');
                 btn.title = 'Layout: Override Compact (click to cycle)';
                 btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>`;
-            } else if (globalLayout === 'force-normal') {
-                btn.classList.add('text-amber-400', 'border-amber-400/30', 'bg-amber-400/10', 'hover:text-amber-400', 'hover:border-amber-400/30');
-                btn.title = 'Layout: Force Normal (click to cycle)';
-                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
             } else if (globalLayout === 'force-full') {
-                btn.classList.add('text-[#00ff88]', 'border-[#00ff88]/30', 'bg-[#00ff88]/10', 'hover:text-[#00ff88]', 'hover:border-[#00ff88]/30');
+                btn.classList.add('text-amber-400', 'border-amber-400/30', 'bg-amber-400/10', 'hover:text-amber-400', 'hover:border-amber-400/30');
                 btn.title = 'Layout: Force Full (click to cycle)';
-                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>`;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`;
             } else {
                 btn.classList.add('text-[#94a3b8]', 'border-white/5', 'bg-[#020617]/40', 'hover:text-[#00d4ff]', 'hover:border-[#00d4ff]/30');
                 btn.title = 'Layout: Auto (click to cycle)';
@@ -184,7 +184,6 @@
         function getEffectiveDisplayMode(q) {
             const widgetMode = q.displayMode || 'auto';
             if (globalLayout === 'override-compact') return 'compact';
-            if (globalLayout === 'force-normal') return 'normal';
             if (globalLayout === 'force-full') return 'full';
             if (widgetMode === 'compact') return 'compact';
             if (widgetMode === 'full') return 'full';
@@ -5570,8 +5569,9 @@
             el.innerHTML = `
                 <div class="ct-color-pip" style="${pipStyle}"></div>
                 <div class="ct-title-bar">
-                    <div class="ct-drag-handle">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:0.75rem;height:0.75rem"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                    <div draggable="true" 
+                         class="ct-drag-handle cursor-grab active:cursor-grabbing">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:0.75rem;height:0.75rem;pointer-events:none;"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                     </div>
                     <span class="ct-widget-name">${resolvedName}</span>
                     <span class="ct-round-badge">${roundLabel}</span>
@@ -5947,8 +5947,9 @@
                         <!-- Content area: single row with name left, timer text right -->
                         <div class="flex-1 min-h-0 flex items-center justify-between pr-3 z-10 relative">
                             <div class="flex items-center min-w-0 flex-shrink pr-2">
-                                <div draggable="true" class="widget-drag-handle flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                                <div draggable="true" 
+                                     class="widget-drag-handle flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5" style="pointer-events: none;"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                                 </div>
                                 <div class="flex flex-col min-w-0">
                                     <span class="text-[13px] font-black text-slate-400 truncate uppercase tracking-tight">${resolvedName}</span>
@@ -5986,8 +5987,9 @@
                         <!-- Row 1: Title (left) | Play (right) -->
                         <div class="flex items-center justify-between w-full pl-1.5 pr-3 pt-2 z-10 relative">
                             <div class="flex items-center min-w-0 flex-shrink pr-2">
-                                <div draggable="true" class="widget-drag-handle flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1.5">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                                <div draggable="true" 
+                                     class="widget-drag-handle flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1.5">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5" style="pointer-events: none;"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                                 </div>
                                 <div class="flex flex-col min-w-0">
                                     <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>

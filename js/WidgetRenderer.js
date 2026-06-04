@@ -313,6 +313,7 @@
             charGroups.forEach(g => {
                 const btn = document.createElement('button');
                 btn.className = `group-tab ${g.id === activeGroupId ? 'active' : ''}`;
+                btn.setAttribute('draggable', 'true');
                 btn.innerHTML = `<span class="group-dot" style="background:${g.color}"></span>${g.name}`;
 
                 let isHold = false;          // used for native contextmenu guard
@@ -656,6 +657,9 @@
                 let startX = 0, startY = 0;
 
                 const startHold = (e) => {
+                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                        return;
+                    }
                     isHold = false;
                     hasMoved = false;
                     const touch = e.touches ? e.touches[0] : e;
@@ -676,6 +680,9 @@
                 };
 
                 const moveHold = (e) => {
+                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                        return;
+                    }
                     if (e.type === 'mousemove' && e.buttons !== 1) return;
                     const touch = e.touches ? e.touches[0] : e;
                     if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
@@ -758,10 +765,11 @@
                 item.className = 'saved-item pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                 item.dataset.id = q.id;
 
-
-
                 item.addEventListener('touchstart', startHold, { passive: true });
                 item.addEventListener('touchend', (e) => {
+                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                        return;
+                    }
                     cancelHold();
                     if (isHold) {
                         // Long-press was handled by the timer; eat the touchend
@@ -780,7 +788,10 @@
                 item.addEventListener('mousedown', (e) => {
                     if (e.button === 0) startHold(e);
                 });
-                item.addEventListener('mouseup', () => {
+                item.addEventListener('mouseup', (e) => {
+                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                        return;
+                    }
                     cancelHold();
                     setTimeout(() => { hasMoved = false; }, 50);
                 });
@@ -795,6 +806,9 @@
                 // We always prevent the native menu; cancel the timer so it
                 // can't double-toggle the menu closed after contextmenu opens it.
                 item.addEventListener('contextmenu', (e) => {
+                    if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                        return;
+                    }
                     e.preventDefault();
                     e.stopPropagation();
                     if (hasMoved) return;
@@ -810,6 +824,9 @@
 
                 if (type === 'roller') {
                     item.onclick = (e) => {
+                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                            return;
+                        }
                         if (isHold) {
                             isHold = false;
                             e.stopPropagation(); // prevent bubble to window click handler
@@ -825,6 +842,9 @@
                     };
                 } else if (type === 'number') {
                     item.onclick = (e) => {
+                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                            return;
+                        }
                         if (isHold) {
                             isHold = false;
                             e.stopPropagation();
@@ -836,6 +856,9 @@
                     };
                 } else if (type === 'text') {
                     item.onclick = (e) => {
+                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                            return;
+                        }
                         if (isHold) {
                             isHold = false;
                             e.stopPropagation();
@@ -845,6 +868,9 @@
                     };
                 } else if (type === 'toggle') {
                     item.onclick = (e) => {
+                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                            return;
+                        }
                         if (isHold) {
                             isHold = false;
                             e.stopPropagation();
@@ -948,8 +974,9 @@
                         ? `<div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_currentColor]" style="background-color: ${q.color}; color: ${q.color}"></div>`
                         : (!hideLeftTab ? `<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-white/5"></div>` : '')
                     }
-                    <div draggable="true" class="widget-drag-handle flex items-center justify-center w-4 h-full ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
+                    <div draggable="true" 
+                         class="widget-drag-handle flex items-center justify-center w-4 h-full ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5" style="pointer-events: none;"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                     </div>
                 `;
 
@@ -1094,7 +1121,7 @@
                         `;
                     }
                 } else if (type === 'text') {
-                    const isCollapsed = (globalLayout === 'force-normal') ? false : (q.collapsed ?? false);
+                    const isCollapsed = (globalLayout === 'force-full') ? false : (q.collapsed ?? false);
                     innerHtml += `
                         <div class="flex-grow min-w-0 pl-1">
                             <div class="flex items-center gap-1.5 justify-between">
@@ -1205,6 +1232,9 @@
                     // Countdown widgets build their own self-contained element
                     const ctEl = buildCountdownWidget(q);
                     ctEl.addEventListener('contextmenu', (e) => {
+                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                            return;
+                        }
                         e.preventDefault();
                         e.stopPropagation();
                         toggleArsenalMenu(q.id, e);
@@ -1213,6 +1243,9 @@
                 } else if (type === 'timer') {
                     const ctEl = buildTimerWidget(q);
                     ctEl.addEventListener('contextmenu', (e) => {
+                        if (e.target.closest('.widget-drag-handle') || e.target.closest('.ct-drag-handle')) {
+                            return;
+                        }
                         e.preventDefault();
                         e.stopPropagation();
                         toggleArsenalMenu(q.id, e);

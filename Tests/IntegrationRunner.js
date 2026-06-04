@@ -1079,30 +1079,7 @@ window.addEventListener('load', () => {
                     if (domItems.formula || !domItems.note || domItems.detail) {
                         throw new Error("Force Full should respect custom unchecked columns in Full grid");
                     }
-                    
-                    // Scenario B: Force Normal (Global Override)
-                    localStorage.setItem('global_layout', 'force-normal');
-                    globalLayout = 'force-normal';
-                    
-                    // B1. All checked in Normal
-                    testWidget.showFormula = true;
-                    testWidget.showNote = true;
-                    testWidget.showDetail = true;
-                    domItems = getRenderedElements();
-                    if (!domItems.formula || !domItems.note || !domItems.detail) {
-                        throw new Error("Force Normal should render formula, note, and detail when all checked");
-                    }
-                    
-                    // B2. Formula unchecked in Normal
-                    testWidget.showFormula = false;
-                    testWidget.showNote = true;
-                    testWidget.showDetail = true;
-                    domItems = getRenderedElements();
-                    if (domItems.formula || !domItems.note || !domItems.detail) {
-                        throw new Error("Force Normal should respect unchecked formula in Normal grid");
-                    }
-                    
-                    // Scenario C: Override Compact (Global Override)
+                     // Scenario C: Override Compact (Global Override)
                     localStorage.setItem('global_layout', 'override-compact');
                     globalLayout = 'override-compact';
                     
@@ -1174,6 +1151,67 @@ window.addEventListener('load', () => {
                     testWidget.displayMode = origDisplayMode;
                     renderSavedQueues();
                 }
+                
+                // === Test Suite: Widget Drag-and-Drop Event Bypassing ===
+                console.log("=== Running Drag-and-Drop Event Bypassing Tests ===");
+                
+                // Let's assert that drag handles do NOT have inline stopPropagation event handlers
+                renderSavedQueues();
+                const firstItem = document.querySelector('.saved-item');
+                if (!firstItem) throw new Error("No saved widgets rendered for event bypass test");
+                
+                const dragHandle = firstItem.querySelector('.widget-drag-handle');
+                if (!dragHandle) throw new Error("Could not find widget drag handle on rendered widget");
+                
+                // Verify no inline propagation blockers exist on it
+                const forbiddenHandlers = ['onmousedown', 'onmouseup', 'onclick', 'ontouchstart', 'ontouchend', 'oncontextmenu'];
+                forbiddenHandlers.forEach(handler => {
+                    if (dragHandle.getAttribute(handler)) {
+                        throw new Error("Drag handle must not contain inline event handler: " + handler);
+                    }
+                });
+                
+                // Verify that interactions targeting the drag handle do not trigger the timer hold state or trigger a click action
+                let menuOpened = false;
+                window.toggleArsenalMenu = () => { menuOpened = true; };
+                
+                // Construct a mock mousedown event originating from the drag handle
+                const mockMousedownEvent = new window.MouseEvent('mousedown', {
+                    bubbles: true,
+                    cancelable: true,
+                    button: 0
+                });
+                Object.defineProperty(mockMousedownEvent, 'target', { value: dragHandle, enumerable: true });
+                
+                // Dispatch event on the parent item (which handles the mouse/touch sequence)
+                firstItem.dispatchEvent(mockMousedownEvent);
+                
+                // Since it targets the drag handle, the startHold timer should not be started
+                // We wait 600ms inside JSDOM context to ensure no menu opened
+                await new Promise(resolve => setTimeout(resolve, 600));
+                if (menuOpened) {
+                    throw new Error("Mousedown on drag handle triggered the hold-to-menu timer incorrectly!");
+                }
+                
+                // Construct a mock click event originating from the drag handle
+                const mockClickEvent = new window.MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true
+                });
+                Object.defineProperty(mockClickEvent, 'target', { value: dragHandle, enumerable: true });
+                
+                let actionTriggered = false;
+                window.triggerRoll = () => { actionTriggered = true; };
+                window.toggleCardAddonState = () => { actionTriggered = true; };
+                window.toggleTextCardCollapsed = () => { actionTriggered = true; };
+                window.changeToggleValue = () => { actionTriggered = true; };
+                
+                firstItem.dispatchEvent(mockClickEvent);
+                if (actionTriggered) {
+                    throw new Error("Click on drag handle triggered card actions incorrectly!");
+                }
+                
+                console.log("=== Drag-and-Drop Event Bypassing Tests Passed Successfully! ===");
                 
                 console.log("=== Grid Settings & Rendering Test Suite Passed Successfully! ===");
             })()
