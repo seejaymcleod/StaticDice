@@ -175,12 +175,13 @@
             }
         }
 
-        // Resolves the effective display mode for a widget given the global layout
         function getEffectiveDisplayMode(q) {
-            const widgetMode = q.displayMode || 'normal';
+            const widgetMode = q.displayMode || 'auto';
             if (globalLayout === 'override-compact') return 'compact';
-            if (globalLayout === 'force-normal' && widgetMode !== 'compact') return 'normal';
-            return widgetMode;
+            if (globalLayout === 'force-normal') return 'normal';
+            if (widgetMode === 'compact') return 'compact';
+            if (widgetMode === 'full' || widgetMode === 'normal') return 'normal';
+            return 'normal';
         }
 
         // Update display mode pill selection visuals
@@ -4306,8 +4307,8 @@
 
             document.getElementById('number-val').value = '10';
             document.getElementById('widget-detail-text').value = '';
-            const normalPill = document.querySelector('input[name="widget-display-mode"][value="normal"]');
-            if (normalPill) { normalPill.checked = true; updateDisplayModePills('normal'); }
+            const autoPill = document.querySelector('input[name="widget-display-mode"][value="auto"]');
+            if (autoPill) { autoPill.checked = true; updateDisplayModePills('auto'); }
             document.getElementById('widget-bind-var-check').checked = false;
             document.getElementById('widget-binds-variable').value = '';
             document.getElementById('widget-variable-rel-type').value = 'define';
@@ -4408,6 +4409,37 @@
 
             // Populate detail text
             document.getElementById('widget-detail-text').value = q.detailText || '';
+            let compactShowFormula = q.compactShowFormula;
+            let compactShowNote = q.compactShowNote;
+            let compactShowDetail = q.compactShowDetail;
+
+            if (compactShowFormula === undefined && compactShowNote === undefined && compactShowDetail === undefined) {
+                if (q.compactDisplayPriority === 'note') {
+                    compactShowNote = true;
+                } else if (q.compactDisplayPriority === 'detail') {
+                    compactShowDetail = true;
+                } else if (q.compactDisplayPriority === 'formula') {
+                    compactShowFormula = true;
+                } else if (q.compactDisplayPriority === 'auto') {
+                    compactShowFormula = true;
+                    compactShowNote = true;
+                    compactShowDetail = true;
+                } else {
+                    compactShowFormula = false;
+                    compactShowNote = false;
+                    compactShowDetail = false;
+                }
+            }
+
+            document.getElementById('widget-full-formula').checked = q.fullShowFormula !== false;
+            document.getElementById('widget-full-note').checked = q.fullShowNote !== false;
+            document.getElementById('widget-full-detail').checked = q.fullShowDetail !== false;
+            document.getElementById('widget-show-formula').checked = q.showFormula !== false;
+            document.getElementById('widget-show-note').checked = q.showNote !== false;
+            document.getElementById('widget-show-detail').checked = q.showDetail !== false;
+            document.getElementById('widget-compact-formula').checked = !!compactShowFormula;
+            document.getElementById('widget-compact-note').checked = !!compactShowNote;
+            document.getElementById('widget-compact-detail').checked = !!compactShowDetail;
 
 
             // Populate variable binding
@@ -4430,7 +4462,8 @@
             toggleWidgetPassiveModifiers(hasPassiveMods);
 
             // Populate display mode pill
-            const dm = q.displayMode || 'normal';
+            let dm = q.displayMode || 'auto';
+            if (dm === 'normal') dm = 'full'; // map old normal to full
             const dmPill = document.querySelector(`input[name="widget-display-mode"][value="${dm}"]`);
             if (dmPill) { dmPill.checked = true; updateDisplayModePills(dm); }
 
@@ -4453,6 +4486,28 @@
             }
             editingWidgetId = null;
             vibrate(5);
+        }
+
+        function applyDefaultGridSettingsForType(type) {
+            // Compact is always unchecked by default
+            document.getElementById('widget-compact-formula').checked = false;
+            document.getElementById('widget-compact-note').checked = false;
+            document.getElementById('widget-compact-detail').checked = false;
+
+            // Full and Normal default to true
+            document.getElementById('widget-full-formula').checked = true;
+            document.getElementById('widget-full-note').checked = true;
+            document.getElementById('widget-full-detail').checked = true;
+
+            document.getElementById('widget-show-formula').checked = true;
+            document.getElementById('widget-show-note').checked = true;
+            document.getElementById('widget-show-detail').checked = true;
+
+            // Formula is only relevant for roller, number, timer
+            if (type !== 'roller' && type !== 'number' && type !== 'timer') {
+                document.getElementById('widget-full-formula').checked = false;
+                document.getElementById('widget-show-formula').checked = false;
+            }
         }
 
         function onWidgetTypeChange(type) {
@@ -4480,6 +4535,30 @@
                 document.getElementById('widget-timer-config')?.classList.remove('hidden');
             }
 
+            // Show/Hide formula row in matrix based on widget type
+            const formulaRow = document.getElementById('matrix-row-formula');
+            if (formulaRow) {
+                if (type === 'roller' || type === 'number' || type === 'timer') {
+                    formulaRow.style.display = '';
+                } else {
+                    formulaRow.style.display = 'none';
+                }
+            }
+
+            // Hide secondary Note input field if type is 'text' to merge note fields
+            const noteConfig = document.getElementById('widget-note-config');
+            if (noteConfig) {
+                if (type === 'text') {
+                    noteConfig.classList.add('hidden');
+                } else {
+                    noteConfig.classList.remove('hidden');
+                }
+            }
+
+            // Apply default display grid configuration if creating a new widget
+            if (editingWidgetId === null) {
+                applyDefaultGridSettingsForType(type);
+            }
         }
 
 
@@ -4608,7 +4687,16 @@
             }
 
             let detailText = document.getElementById('widget-detail-text').value.trim() || null;
-            const displayMode = document.querySelector('input[name="widget-display-mode"]:checked')?.value || 'normal';
+            const displayMode = document.querySelector('input[name="widget-display-mode"]:checked')?.value || 'auto';
+            const fullShowFormula = document.getElementById('widget-full-formula').checked;
+            const fullShowNote = document.getElementById('widget-full-note').checked;
+            const fullShowDetail = document.getElementById('widget-full-detail').checked;
+            const showFormula = document.getElementById('widget-show-formula').checked;
+            const showNote = document.getElementById('widget-show-note').checked;
+            const showDetail = document.getElementById('widget-show-detail').checked;
+            const compactShowFormula = document.getElementById('widget-compact-formula').checked;
+            const compactShowNote = document.getElementById('widget-compact-note').checked;
+            const compactShowDetail = document.getElementById('widget-compact-detail').checked;
 
             if (editingWidgetId !== null) {
                 const q = engine.findSavedQueue(editingWidgetId);
@@ -4620,7 +4708,16 @@
                     q.bindsVariable = bindsVariable;
                     q.variableRelType = variableRelType;
                     q.passiveModifiers = passiveModifiers;
-                    q.displayMode = displayMode === 'normal' ? null : displayMode;
+                    q.displayMode = displayMode === 'auto' ? null : displayMode;
+                    q.fullShowFormula = fullShowFormula;
+                    q.fullShowNote = fullShowNote;
+                    q.fullShowDetail = fullShowDetail;
+                    q.showFormula = showFormula;
+                    q.showNote = showNote;
+                    q.showDetail = showDetail;
+                    q.compactShowFormula = compactShowFormula;
+                    q.compactShowNote = compactShowNote;
+                    q.compactShowDetail = compactShowDetail;
 
                     if (type === 'roller' || type === 'number') {
                         const selectedAddon = document.querySelector('input[name="addon-widget"]:checked')?.value || 'none';
@@ -4714,7 +4811,16 @@
                 bindsVariable: bindsVariable,
                 variableRelType: variableRelType,
                 passiveModifiers: passiveModifiers,
-                displayMode: displayMode === 'normal' ? null : displayMode
+                displayMode: displayMode === 'auto' ? null : displayMode,
+                fullShowFormula: fullShowFormula,
+                fullShowNote: fullShowNote,
+                fullShowDetail: fullShowDetail,
+                showFormula: showFormula,
+                showNote: showNote,
+                showDetail: showDetail,
+                compactShowFormula: compactShowFormula,
+                compactShowNote: compactShowNote,
+                compactShowDetail: compactShowDetail
             };
 
             if (type === 'roller' || type === 'number') {
@@ -5322,6 +5428,7 @@
 
         /** Build the full countdown DOM element for renderSavedQueues */
         function buildCountdownWidget(q) {
+            const resolvedName = window.resolveDynamicText ? window.resolveDynamicText(q.name || 'Countdown') : (q.name || 'Countdown');
             const leftColor = q.leftColor || '#1e293b';
             const rightColor = q.rightColor || '#ffffff';
             const isBi = q.biDirectional !== false;
@@ -5400,7 +5507,10 @@
                                     <div class="flex items-center justify-center w-5 h-5 ml-4 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-2">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                                     </div>
-                                    <span class="ct-widget-name text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">${q.name || 'Countdown'}</span>
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="ct-widget-name text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">${resolvedName}</span>
+                                        ${renderWidgetSubtext(q, '', effectiveMode)}
+                                    </div>
                                     <span class="ct-round-badge text-[9px] font-black text-slate-500 bg-white/5 border border-white/8 rounded px-1.5 py-0.5 ml-1.5 shrink-0">${roundLabel}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0 select-none">
@@ -5455,7 +5565,7 @@
                     <div class="ct-drag-handle">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:0.75rem;height:0.75rem"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                     </div>
-                    <span class="ct-widget-name">${q.name || 'Countdown'}</span>
+                    <span class="ct-widget-name">${resolvedName}</span>
                     <span class="ct-round-badge">${roundLabel}</span>
                     <button class="ct-end-turn-btn" onclick="countdownEndTurn('${q.id}',event)" ${isResolved ? 'disabled' : ''}>End Turn</button>
                     <button class="ct-undo-btn" onclick="countdownUndo('${q.id}',event)" ${undoDisabled} title="Undo last turn">
@@ -5517,8 +5627,10 @@
                         <div class="ct-bar-thumb" style="left:${pct}%;"></div>
                     </div>
                 </div>
-                ${q.detailText ? `
-                <div class="ct-detail-row">${q.detailText}</div>
+                ${(q.showDetail !== false && q.detailText) || (q.showNote !== false && q.addonNote) ? `
+                <div class="ct-detail-row" style="padding-top:0.25rem;">
+                    ${renderWidgetSubtext(q, '', effectiveMode)}
+                </div>
                 ` : ''}
                 `}
             `;
@@ -5788,6 +5900,7 @@
         }
 
         function buildTimerWidget(q) {
+            const resolvedName = window.resolveDynamicText ? window.resolveDynamicText(q.name || 'Timer') : (q.name || 'Timer');
             const hasColor = q.color && q.color !== 'none';
             const accentColor = hasColor ? q.color : '#00d4ff';
 
@@ -5829,7 +5942,10 @@
                                 <div draggable="true" class="widget-drag-handle flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                                 </div>
-                                <span class="text-[13px] font-black text-slate-400 truncate uppercase tracking-tight">${q.name || 'Timer'}</span>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-[13px] font-black text-slate-400 truncate uppercase tracking-tight">${resolvedName}</span>
+                                    ${renderWidgetSubtext(q, q.diceFormula || '', effectiveMode)}
+                                </div>
                             </div>
                             <div class="flex flex-col items-end shrink-0 select-none">
                                 <span class="timer-time-display text-[13px] font-black text-[#e2e8f0] tracking-tight tabular-nums leading-none" style="${isFinished ? 'color: rgb(248 113 113)' : ''}">${formatTime(currVal)}</span>
@@ -5859,16 +5975,18 @@
                         <!-- Accent side bar -->
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 shadow-[2px_0_15px_var(--widget-accent-color)]" style="background-color: var(--widget-accent-color)"></div>
                         
-                        <!-- Row 1: Title (left) | Detail text + Play (right) -->
+                        <!-- Row 1: Title (left) | Play (right) -->
                         <div class="flex items-center justify-between w-full pl-1.5 pr-3 pt-2 z-10 relative">
                             <div class="flex items-center min-w-0 flex-shrink pr-2">
                                 <div draggable="true" class="widget-drag-handle flex items-center justify-center w-4 h-4 ml-2 opacity-20 cursor-grab active:cursor-grabbing shrink-0 mr-1.5">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"/></svg>
                                 </div>
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${q.name || 'Timer'}</div>
+                                <div class="flex flex-col min-w-0">
+                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                    ${renderWidgetSubtext(q, q.diceFormula || '', effectiveMode)}
+                                </div>
                             </div>
                             <div class="flex items-center gap-2.5 shrink-0 select-none">
-                                ${q.detailText ? `<span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">${q.detailText}</span>` : ''}
                                 <button onclick="toggleTimerPlay('${q.id}', event)" class="timer-play-btn w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 bg-[#020617]/40 text-[#e2e8f0] hover:text-white hover:bg-white/5 active:scale-95 transition-all" title="${isPaused ? 'Start Timer' : 'Pause Timer'}">
                                     ${isPaused ? iconPlay : iconPause}
                                 </button>
