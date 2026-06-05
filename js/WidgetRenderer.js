@@ -1066,7 +1066,7 @@
                         <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
                             <div class="flex items-center gap-2">
                                 ${q.color && q.color !== 'none' ? `<div class="w-2.5 h-2.5 rounded-full" style="background-color: ${q.color}"></div>` : ''}
-                                <span class="text-sm font-black text-[#e2e8f0] uppercase tracking-wider">${resolvedName}</span>
+                                ${!q.hideName ? `<span class="text-sm font-black text-[#e2e8f0] uppercase tracking-wider">${resolvedName}</span>` : ''}
                             </div>
                         </div>
                         <div class="group-shared-area w-full mb-3 flex flex-col gap-2"></div>
@@ -1116,7 +1116,7 @@
                     bindHoldListeners(item);
 
                     let innerHtml = `
-                        ${resolvedName ? `
+                        ${!q.hideName && resolvedName ? `
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-black text-slate-400 uppercase tracking-widest">${resolvedName}</span>
                         </div>` : ''}
@@ -1132,6 +1132,12 @@
                             const cell = document.createElement('div');
                             const span = child.colSpan || 12;
                             cell.style.gridColumn = `span ${span}`;
+                            // Right-click / long-press on grid cells
+                            cell.addEventListener('contextmenu', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleArsenalMenu(child.id, e);
+                            });
                             cell.appendChild(childDOM);
                             gridEl.appendChild(cell);
                         }
@@ -1408,14 +1414,14 @@
                         if (isVertical) {
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center">
-                                    <span class="text-slate-400 text-[9px] leading-tight">${resolvedName}</span>
+                                    ${!q.hideName ? `<span class="text-slate-400 text-[9px] leading-tight">${resolvedName}</span>` : ''}
                                     <span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${getMicroRollerDisplay(q, formula)}</span>
                                 </div>
                             `;
                         } else {
                             innerHtml += `
                                 <div class="flex items-center justify-center px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full">
-                                    <span class="text-slate-400 mr-1">${resolvedName}:</span>
+                                    ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}:</span>` : ''}
                                     <span class="text-[#00d4ff] font-extrabold">${formula.replace(/[\[\]\s]/g, '') || '+0'}</span>
                                 </div>
                             `;
@@ -1427,7 +1433,7 @@
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
                                 <div class="flex items-center gap-1.5">
-                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                    ${!q.hideName ? `<div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>` : ''}
                                 </div>
                                 ${renderWidgetSubtext(q, formula || 'Empty', effectiveMode)}
                             </div>
@@ -1441,7 +1447,7 @@
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 pr-8">
                                 <div class="flex items-center gap-1.5">
-                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                    ${!q.hideName ? `<div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>` : ''}
                                 </div>
                                 ${renderWidgetSubtext(q, formula || 'Empty', effectiveMode)}
                             </div>
@@ -1477,7 +1483,7 @@
                         }
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 pr-2">
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${resolvedName}</div>
+                                ${!q.hideName ? `<div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight leading-tight">${resolvedName}</div>` : ''}
                                 ${renderWidgetSubtext(q, '', effectiveMode)}
                                 ${trackerHtml}
                             </div>
@@ -1487,14 +1493,14 @@
                     if (effectiveMode === 'micro') {
                         innerHtml += `
                             <div class="flex items-center gap-1.5 px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black uppercase tracking-wider select-none transition-all">
-                                <span class="text-slate-400 mr-1">${resolvedName}</span>
+                                ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}</span>` : ''}
                                 <span class="${q.checked ? 'text-[#00ff88]' : 'text-slate-500'} font-extrabold">${q.checked ? q.labelOn : q.labelOff}</span>
                             </div>
                         `;
                     } else {
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 pr-8">
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                ${!q.hideName ? `<div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>` : ''}
                                 ${renderWidgetSubtext(q, '', effectiveMode)}
                             </div>
                             <div class="flex items-center gap-2 mr-8 shrink-0 select-none">
@@ -1520,7 +1526,7 @@
                         const detail = resolvedDetail ? ` ${resolvedDetail}` : '';
                         innerHtml += `
                             <div class="flex items-center justify-center px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center">
-                                <span class="text-slate-400 mr-1">${resolvedName}:</span>
+                                ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}:</span>` : ''}
                                 <span class="text-[#00d4ff] font-extrabold">${sign}${displayVal}${detail}</span>
                             </div>
                         `;
@@ -1577,7 +1583,7 @@
 
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 ${q.addonToggle ? 'pr-8' : 'pr-2'}">
-                                <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                ${!q.hideName ? `<div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>` : ''}
                                 ${renderWidgetSubtext(q, formula, effectiveMode)}
                             </div>
                             <div class="flex items-center gap-2 ${q.addonToggle ? 'mr-8' : 'mr-2'} shrink-0 select-none" onclick="event.stopPropagation()">
@@ -1609,7 +1615,7 @@
                     } else if (effectiveMode === 'compact') {
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 py-0.5">
-                                <span class="text-xs font-black text-slate-200 uppercase tracking-wide">${resolvedName}.</span>
+                                ${!q.hideName && resolvedName ? `<span class="text-xs font-black text-slate-200 uppercase tracking-wide">${resolvedName}.</span>` : ''}
                                 <span class="text-xs text-slate-400 font-medium ml-1">${resolvedText}</span>
                             </div>
                         `;
@@ -1618,7 +1624,7 @@
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1">
                                 <div class="flex items-center gap-1.5 justify-between">
-                                    <div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>
+                                    ${!q.hideName ? `<div class="text-sm font-black text-[#e2e8f0] truncate uppercase tracking-tight">${resolvedName}</div>` : ''}
                                     <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest mr-2">${isCollapsed ? 'Show' : 'Hide'}</span>
                                 </div>
                                 ${renderWidgetSubtext(q, '', effectiveMode)}

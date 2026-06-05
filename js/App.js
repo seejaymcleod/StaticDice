@@ -4474,6 +4474,9 @@
             document.getElementById('passive-mods-list').innerHTML = '';
             toggleWidgetPassiveModifiers(false);
 
+            const hideNameReset = document.getElementById('widget-hide-name');
+            if (hideNameReset) hideNameReset.checked = false;
+
             onWidgetTypeChange(typeSelect.value);
 
             overlay.classList.remove('hidden');
@@ -4606,8 +4609,25 @@
             document.getElementById('widget-compact-note').checked = !!compactShowNote;
             document.getElementById('widget-compact-detail').checked = !!compactShowDetail;
 
+            // Populate hideName
+            const hideNameEl = document.getElementById('widget-hide-name');
+            if (hideNameEl) hideNameEl.checked = !!q.hideName;
+
             // Populate grid & layout config
-            document.getElementById('widget-parent-id').value = q.parentId || '';
+            const parentDropdown = document.getElementById('widget-parent-id');
+            if (q.parentId && parentDropdown) {
+                const exists = [...parentDropdown.options].some(o => o.value === String(q.parentId));
+                if (!exists) {
+                    const phantom = document.createElement('option');
+                    phantom.value = q.parentId;
+                    const parentWidget = engine.findSavedQueue(q.parentId);
+                    phantom.textContent = `(Current Parent: ${parentWidget ? (parentWidget.name || q.parentId) : q.parentId})`;
+                    parentDropdown.appendChild(phantom);
+                }
+                parentDropdown.value = String(q.parentId);
+            } else if (parentDropdown) {
+                parentDropdown.value = q.parentId || '';
+            }
             document.getElementById('widget-colspan').value = q.colSpan !== undefined ? q.colSpan : 12;
 
             // Populate trigger config
@@ -4899,6 +4919,8 @@
                     q.compactShowFormula = compactShowFormula;
                     q.compactShowNote = compactShowNote;
                     q.compactShowDetail = compactShowDetail;
+                    const hideNameSave = document.getElementById('widget-hide-name');
+                    q.hideName = hideNameSave ? hideNameSave.checked : false;
                     q.parentId = document.getElementById('widget-parent-id').value || null;
                     q.colSpan = parseInt(document.getElementById('widget-colspan').value, 10) || 12;
 
@@ -5020,7 +5042,8 @@
                 showDetail: showDetail,
                 compactShowFormula: compactShowFormula,
                 compactShowNote: compactShowNote,
-                compactShowDetail: compactShowDetail
+                compactShowDetail: compactShowDetail,
+                hideName: (document.getElementById('widget-hide-name')?.checked ?? false)
             };
 
             if (type === 'roller' || type === 'number') {

@@ -1436,6 +1436,22 @@ window.addEventListener('load', () => {
                 }
 
                 console.log('-> Recursive Duplication & Drag-and-Drop Parenting Integration Passed.');
+
+                // Test 13: configureSavedWidget execution
+                console.log('Testing configureSavedWidget...');
+                const configureSavedWidget = window.eval('configureSavedWidget');
+                if (typeof configureSavedWidget !== 'function') {
+                    throw new Error("configureSavedWidget should be a global function");
+                }
+                
+                // Let's call configureSavedWidget on standaloneWidgetId and ensure it doesn't throw
+                configureSavedWidget(standaloneWidgetId);
+                const overlay = document.getElementById('widget-creation-overlay');
+                if (!overlay || overlay.classList.contains('hidden')) {
+                    throw new Error("configureSavedWidget did not show the creation overlay modal");
+                }
+                console.log('-> configureSavedWidget Passed.');
+
             })()
 
         `).then(() => {

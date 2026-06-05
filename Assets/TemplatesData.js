@@ -1060,9 +1060,18 @@ window.StaticDiceTemplates = [
         },
         groups: [
             { id: 'actions', name: 'Actions', color: '#ff003c' },
-            { id: 'stats', name: 'Stats', color: '#00d4ff' }
+            { id: 'stats', name: 'Stats', color: '#00d4ff' },
+            { id: 'passives', name: 'Passives', color: '#a855f7' }
         ],
         widgets: [
+            {
+                id: 'w_m_desc',
+                groupId: 'stats',
+                name: 'Description',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
+            },
             {
                 id: 'w_m_hp',
                 groupId: 'stats',
@@ -1118,9 +1127,18 @@ window.StaticDiceTemplates = [
                 unifiedQueue: [
                     { nodeType: 'node', sides: 6, count: 1 }
                 ]
+            },
+            {
+                id: 'w_m_passives',
+                groupId: 'passives',
+                name: 'Passives',
+                widgetType: 'text',
+                text: '',
+                collapsed: false
             }
         ]
     },
+
     {
         id: 'template_encounter_undead',
         name: 'Undead Ambush (Encounter)',

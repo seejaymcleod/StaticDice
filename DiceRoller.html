@@ -1789,6 +1789,36 @@
                     </div>
                 </div>
 
+                <!-- Grid & Layout Config -->
+                <div class="space-y-3 pt-2 border-t border-white/5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Grid &amp; Layout Config</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="widget-parent-id" class="text-[9px] font-black text-slate-500 uppercase block mb-1">Parent Widget</label>
+                            <select id="widget-parent-id" class="char-select w-full !text-xs !py-2">
+                                <option value="">(None)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="widget-colspan" class="text-[9px] font-black text-slate-500 uppercase block mb-1">Column Span (1-12)</label>
+                            <select id="widget-colspan" class="char-select w-full !text-xs !py-2">
+                                <option value="1">1 Column</option>
+                                <option value="2">2 Columns</option>
+                                <option value="3">3 Columns</option>
+                                <option value="4">4 Columns</option>
+                                <option value="5">5 Columns</option>
+                                <option value="6">6 Columns</option>
+                                <option value="7">7 Columns</option>
+                                <option value="8">8 Columns</option>
+                                <option value="9">9 Columns</option>
+                                <option value="10">10 Columns</option>
+                                <option value="11">11 Columns</option>
+                                <option value="12" selected>12 Columns (Full Width)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Variable Binding Config -->
                 <div id="widget-var-binding-config" class="space-y-3 pt-2 border-t border-white/5">
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -1833,6 +1863,15 @@
                             + Add Modifier
                         </button>
                     </div>
+                </div>
+
+                <!-- Hide Widget Name -->
+                <div class="pt-2 border-t border-white/5 flex items-center gap-2">
+                    <input type="checkbox" id="widget-hide-name"
+                        class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                    <label for="widget-hide-name" class="text-[10px] font-black text-slate-500 uppercase tracking-wider cursor-pointer">
+                        Hide Widget Name
+                    </label>
                 </div>
             </div>
 
