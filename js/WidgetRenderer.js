@@ -985,7 +985,7 @@
 
                 if (type === 'entity') {
                     const wrapper = document.createElement('div');
-                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity bg-black/20 border border-white/5 rounded-xl p-2.5`;
+                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity bg-transparent border-b border-white/5 last:border-b-0 py-2.5 px-1`;
                     if (q.hidden) {
                         wrapper.classList.add('opacity-40');
                     }
@@ -1496,7 +1496,11 @@
                     }
                 } else if (type === 'stepper') {
                     if (effectiveMode === 'micro') {
-                        innerHtml = '';
+                        innerHtml = `
+                            <div class="flex items-center justify-start text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none w-full">
+                                ${!q.hideName ? `<span class="text-slate-400 mr-1.5">${resolvedName}</span>` : ''}
+                            </div>
+                        `;
                     } else {
                         const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
                         let trackerHtml = '';
@@ -1550,7 +1554,16 @@
                         }
                         const showSign = q.showSign || q.name?.toLowerCase().includes('mod');
                         const sign = (showSign && typeof displayVal === 'number' && displayVal >= 0) ? '+' : '';
-                        const resolvedDetail = q.detailText ? resolveDynamicText(q.detailText) : '';
+                        let compactShowDetail = q.compactShowDetail;
+                        if (q.compactShowFormula === undefined && q.compactShowNote === undefined && compactShowDetail === undefined) {
+                            const priority = q.compactDisplayPriority || 'auto';
+                            if (priority === 'detail' || priority === 'auto') {
+                                compactShowDetail = true;
+                            } else {
+                                compactShowDetail = false;
+                            }
+                        }
+                        const resolvedDetail = (q.detailText && compactShowDetail !== false) ? resolveDynamicText(q.detailText) : '';
                         
                         const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
                         if (isVertical) {

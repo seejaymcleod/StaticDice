@@ -1152,6 +1152,122 @@ window.addEventListener('load', () => {
                     renderSavedQueues();
                 }
                 
+                // === Test Suite: Undead Encounter Layout & Micro-Mode fixes ===
+                console.log("=== Running Undead Encounter Layout & Micro-Mode Tests ===");
+                
+                // Let's create a temporary number widget
+                const tempNumId = 'w_test_micro_num';
+                const tempNumWidget = {
+                    id: tempNumId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Num',
+                    widgetType: 'number',
+                    value: 42,
+                    detailText: 'Detail',
+                    displayMode: 'micro',
+                    compactShowDetail: true
+                };
+                engine.savedQueues.push(tempNumWidget);
+                
+                // Let's create a temporary stepper widget
+                const tempStepId = 'w_test_micro_step';
+                const tempStepWidget = {
+                    id: tempStepId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Step',
+                    widgetType: 'stepper',
+                    value: 10,
+                    max: 20,
+                    displayMode: 'micro',
+                    hideName: false
+                };
+                engine.savedQueues.push(tempStepWidget);
+
+                // Let's create a temporary grid widget
+                const tempGridId = 'w_test_grid';
+                const tempGridWidget = {
+                    id: tempGridId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Grid Name',
+                    widgetType: 'grid',
+                    hideName: false
+                };
+                engine.savedQueues.push(tempGridWidget);
+
+                // Let's create a temporary entity widget
+                const tempEntityId = 'w_test_entity';
+                const tempEntityWidget = {
+                    id: tempEntityId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Entity Name',
+                    widgetType: 'entity'
+                };
+                engine.savedQueues.push(tempEntityWidget);
+
+                try {
+                    // 1. Assert detail text visibility in micro mode for number widget
+                    renderSavedQueues();
+                    let numEl = document.querySelector('.widget-type-number[data-id="' + tempNumId + '"]');
+                    if (!numEl) throw new Error("Temp number widget not found in DOM");
+                    if (!numEl.innerHTML.includes('Detail')) {
+                        throw new Error("Micro number widget should render detail text when compactShowDetail is true");
+                    }
+                    
+                    tempNumWidget.compactShowDetail = false;
+                    renderSavedQueues();
+                    numEl = document.querySelector('.widget-type-number[data-id="' + tempNumId + '"]');
+                    if (numEl.innerHTML.includes('Detail')) {
+                        throw new Error("Micro number widget should NOT render detail text when compactShowDetail is false");
+                    }
+
+                    // 2. Assert stepper name visibility in micro mode
+                    renderSavedQueues();
+                    let stepEl = document.querySelector('.widget-type-stepper[data-id="' + tempStepId + '"]');
+                    if (!stepEl) throw new Error("Temp stepper widget not found in DOM");
+                    if (!stepEl.innerHTML.includes('Test Step')) {
+                        throw new Error("Micro stepper widget should render its name when hideName is false");
+                    }
+
+                    tempStepWidget.hideName = true;
+                    renderSavedQueues();
+                    stepEl = document.querySelector('.widget-type-stepper[data-id="' + tempStepId + '"]');
+                    if (stepEl.innerHTML.includes('Test Step')) {
+                        throw new Error("Micro stepper widget should NOT render its name when hideName is true");
+                    }
+
+                    // 3. Assert grid header name visibility and hiding
+                    renderSavedQueues();
+                    let gridEl = document.querySelector('.widget-type-grid[data-id="' + tempGridId + '"]');
+                    if (!gridEl) throw new Error("Temp grid widget not found in DOM");
+                    if (!gridEl.innerHTML.includes('Test Grid Name')) {
+                        throw new Error("Grid widget should render its name when hideName is false");
+                    }
+
+                    tempGridWidget.hideName = true;
+                    renderSavedQueues();
+                    gridEl = document.querySelector('.widget-type-grid[data-id="' + tempGridId + '"]');
+                    if (gridEl.innerHTML.includes('Test Grid Name')) {
+                        throw new Error("Grid widget should NOT render its name when hideName is true");
+                    }
+
+                    // 4. Assert entity instance card styling (transparent background, bottom border)
+                    renderSavedQueues();
+                    let entityEl = document.querySelector('.widget-type-entity[data-id="' + tempEntityId + '"]');
+                    if (!entityEl) throw new Error("Temp entity widget not found in DOM");
+                    if (!entityEl.className.includes('bg-transparent') || !entityEl.className.includes('border-b') || entityEl.className.includes('bg-black/20') || entityEl.className.includes('rounded-xl')) {
+                        throw new Error("Entity widget should have bg-transparent and border-b border-white/5 list styling, not a rounded card box background/border");
+                    }
+                    console.log("-> Undead Encounter Layout & Micro-Mode Tests Passed.");
+                } finally {
+                    // Clean up temp widgets
+                    engine.savedQueues = engine.savedQueues.filter(w => w.id !== tempNumId && w.id !== tempStepId && w.id !== tempGridId && w.id !== tempEntityId);
+                    renderSavedQueues();
+                }
+                
                 // === Test Suite: Widget Drag-and-Drop Event Bypassing ===
                 console.log("=== Running Drag-and-Drop Event Bypassing Tests ===");
                 
