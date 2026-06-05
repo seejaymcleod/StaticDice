@@ -839,7 +839,7 @@
                 }
 
                 // 2. If widget is inside a grid, show colSpan configuration
-                const parentWidget = q.parentId ? engine.savedQueues.find(w => w.id === q.parentId) : null;
+                const parentWidget = q.parentId ? engine.findSavedQueue(q.parentId) : null;
                 if (parentWidget && parentWidget.widgetType === 'grid') {
                     customMenuHtml += `
                         <div class="h-px bg-white/5 my-1"></div>
@@ -854,55 +854,38 @@
                     `;
                 }
 
-                // 3. If widget is a Grid, allow configuring column count or adding a widget
-                if (type === 'grid') {
-                    customMenuHtml += `
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="openWidgetCreationForParent('${q.id}', event)" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-emerald-400"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            <span>Add Widget to Grid</span>
-                        </button>
-                        <div class="px-3 py-1.5 text-[9px] font-black uppercase text-slate-500 tracking-wider">Grid Columns</div>
-                        <div class="flex items-center justify-between px-3 py-1 gap-1">
-                            ${[1, 2, 3, 4, 6, 12].map(cols => `
-                                <button onclick="setGridColumns('${q.id}', ${cols}, event)" class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-extrabold hover:bg-sky-500/20 hover:border-sky-500/30 text-slate-300 hover:text-sky-400 transition-all ${q.columns === cols ? 'bg-sky-500/20 border-sky-500/30 text-sky-400 font-black' : ''}">
-                                    ${cols}
-                                </button>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-
-                // 4. If widget is an Entity Group, allow configuring entity template, adding to shared grid, or spawning entity
-                if (type === 'entity-group') {
-                    customMenuHtml += `
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="spawnGroupEntity('${q.id}')" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-emerald-400"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
-                            <span>Spawn Entity</span>
-                        </button>
-                        <button onclick="configureEntityTemplate('${q.id}', event)" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                            <span>Configure Template</span>
-                        </button>
-                        ${q.sharedGridId ? `
-                        <button onclick="openWidgetCreationForParent('${q.sharedGridId}', event)" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-indigo-400"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            <span>Add Shared Widget</span>
-                        </button>
-                        ` : ''}
-                    `;
-                }
-
-                // 5. If widget is an Entity, allow adding a widget to it
-                if (type === 'entity') {
-                    customMenuHtml += `
-                        <div class="h-px bg-white/5 my-1"></div>
-                        <button onclick="openWidgetCreationForParent('${q.id}', event)" class="menu-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-emerald-400"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            <span>Add Unique Widget</span>
-                        </button>
-                    `;
+                // 2b. Add parent container configuration options recursively
+                let currentParent = parentWidget;
+                while (currentParent) {
+                    if (currentParent.widgetType === 'grid') {
+                        customMenuHtml += `
+                            <div class="h-px bg-white/5 my-1"></div>
+                            <div class="px-3 py-1 text-[9px] font-black uppercase text-slate-400 tracking-wider">Parent Grid: ${currentParent.name || 'Grid'}</div>
+                            <button onclick="configureSavedWidget('${currentParent.id}', event)" class="menu-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>Configure Grid</span>
+                            </button>
+                        `;
+                    } else if (currentParent.widgetType === 'entity-group') {
+                        customMenuHtml += `
+                            <div class="h-px bg-white/5 my-1"></div>
+                            <div class="px-3 py-1 text-[9px] font-black uppercase text-slate-400 tracking-wider">Parent Group: ${currentParent.name || 'Group'}</div>
+                            <button onclick="configureSavedWidget('${currentParent.id}', event)" class="menu-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>Configure Group</span>
+                            </button>
+                        `;
+                    } else if (currentParent.widgetType === 'entity') {
+                        customMenuHtml += `
+                            <div class="h-px bg-white/5 my-1"></div>
+                            <div class="px-3 py-1 text-[9px] font-black uppercase text-slate-400 tracking-wider">Parent Entity: ${currentParent.name || 'Entity'}</div>
+                            <button onclick="configureSavedWidget('${currentParent.id}', event)" class="menu-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-sky-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>Configure Entity</span>
+                            </button>
+                        `;
+                    }
+                    currentParent = currentParent.parentId ? engine.findSavedQueue(currentParent.parentId) : null;
                 }
 
                 const menuContainer = document.createElement('div');
@@ -953,11 +936,47 @@
                     wrapper.dataset.id = q.id;
                     if (q.triggered) {
                         const btn = document.createElement('button');
-                        btn.className = 'px-2 py-0.5 bg-rose-600/90 hover:bg-rose-500 border border-rose-500/30 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 shadow-[0_0_10px_rgba(244,63,94,0.3)] animate-pulse flex items-center gap-1 select-none';
+                        const colorMap = {
+                            rose: {
+                                bg: 'bg-rose-600/90',
+                                hover: 'hover:bg-rose-500',
+                                border: 'border-rose-500/30',
+                                shadow: 'shadow-[0_0_10px_rgba(244,63,94,0.3)]'
+                            },
+                            emerald: {
+                                bg: 'bg-emerald-600/90',
+                                hover: 'hover:bg-emerald-500',
+                                border: 'border-emerald-500/30',
+                                shadow: 'shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                            },
+                            amber: {
+                                bg: 'bg-amber-600/90',
+                                hover: 'hover:bg-amber-500',
+                                border: 'border-amber-500/30',
+                                shadow: 'shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                            },
+                            sky: {
+                                bg: 'bg-sky-600/90',
+                                hover: 'hover:bg-sky-500',
+                                border: 'border-sky-500/30',
+                                shadow: 'shadow-[0_0_10px_rgba(56,189,248,0.3)]'
+                            },
+                            violet: {
+                                bg: 'bg-violet-600/90',
+                                hover: 'hover:bg-violet-500',
+                                border: 'border-violet-500/30',
+                                shadow: 'shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                            }
+                        };
+                        const c = colorMap[q.actionParams?.btnColor] || colorMap.rose;
+                        btn.className = `px-2 py-0.5 ${c.bg} ${c.hover} border ${c.border} text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 ${c.shadow} animate-pulse flex items-center gap-1 select-none`;
                         btn.innerHTML = q.actionParams?.label || '☠️ Kill';
                         btn.onclick = (e) => {
                             e.stopPropagation();
-                            deleteQueue(q.parentId, null, true);
+                            const actionType = q.actionParams?.actionType || 'delete-parent-entity';
+                            if (actionType === 'delete-parent-entity') {
+                                deleteQueue(q.parentId, null, true);
+                            }
                         };
                         wrapper.appendChild(btn);
                     }
@@ -1110,8 +1129,14 @@
                     }
                     wrapper.dataset.id = q.id;
 
+                    const gridChildren = filtered.filter(c => c.parentId === q.id);
+
                     const item = document.createElement('div');
-                    item.className = 'saved-item p-3 rounded-xl flex flex-col w-full relative overflow-hidden bg-slate-900/10 border border-white/5';
+                    if (gridChildren.length === 0) {
+                        item.className = 'saved-item p-3 rounded-xl flex flex-col w-full relative overflow-hidden bg-slate-900/10 border border-dashed border-white/20';
+                    } else {
+                        item.className = 'saved-item p-1 flex flex-col w-full relative overflow-hidden bg-transparent border border-transparent shadow-none';
+                    }
                     item.dataset.id = q.id;
                     bindHoldListeners(item);
 
@@ -1125,11 +1150,11 @@
                     item.innerHTML = innerHtml;
                     const gridEl = item.querySelector('.grid');
 
-                    const gridChildren = filtered.filter(c => c.parentId === q.id);
                     gridChildren.forEach(child => {
                         const childDOM = buildWidgetDOM(child);
                         if (childDOM) {
                             const cell = document.createElement('div');
+                            cell.className = 'flex flex-col items-stretch h-full';
                             const span = child.colSpan || 12;
                             cell.style.gridColumn = `span ${span}`;
                             // Right-click / long-press on grid cells
@@ -1241,8 +1266,11 @@
                     });
                 }
 
+                const parentWidget = q.parentId ? engine.findSavedQueue(q.parentId) : null;
+                const isInsideGrid = parentWidget && parentWidget.widgetType === 'grid';
                 const wrapper = document.createElement('div');
-                wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-${type}`;
+                wrapper.dataset.id = q.id;
+                wrapper.className = `arsenal-item-wrapper flex ${isInsideGrid ? 'items-stretch h-full' : 'items-center'} gap-2 relative w-full widget-type-${type}`;
                 if (q.hidden) {
                     wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
                 }
@@ -1254,7 +1282,7 @@
 
                 const item = document.createElement('div');
                 if (effectiveMode === 'micro') {
-                    item.className = 'saved-item flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden select-none';
+                    item.className = 'saved-item saved-item-micro flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden select-none';
                 } else {
                     item.className = 'saved-item pl-5 pr-3 py-2 rounded-xl flex items-center cursor-pointer group flex-grow min-w-0 relative overflow-hidden';
                 }
@@ -1413,7 +1441,7 @@
                         const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
                         if (isVertical) {
                             innerHtml += `
-                                <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center">
+                                <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
                                     ${!q.hideName ? `<span class="text-slate-400 text-[9px] leading-tight">${resolvedName}</span>` : ''}
                                     <span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${getMicroRollerDisplay(q, formula)}</span>
                                 </div>
@@ -1492,7 +1520,7 @@
                 } else if (type === 'toggle') {
                     if (effectiveMode === 'micro') {
                         innerHtml += `
-                            <div class="flex items-center gap-1.5 px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black uppercase tracking-wider select-none transition-all">
+                            <div class="flex items-center justify-center gap-1.5 px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black uppercase tracking-wider select-none transition-all w-full h-full">
                                 ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}</span>` : ''}
                                 <span class="${q.checked ? 'text-[#00ff88]' : 'text-slate-500'} font-extrabold">${q.checked ? q.labelOn : q.labelOff}</span>
                             </div>
@@ -1523,13 +1551,25 @@
                         const showSign = q.showSign || q.name?.toLowerCase().includes('mod');
                         const sign = (showSign && typeof displayVal === 'number' && displayVal >= 0) ? '+' : '';
                         const resolvedDetail = q.detailText ? resolveDynamicText(q.detailText) : '';
-                        const detail = resolvedDetail ? ` ${resolvedDetail}` : '';
-                        innerHtml += `
-                            <div class="flex items-center justify-center px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center">
-                                ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}:</span>` : ''}
-                                <span class="text-[#00d4ff] font-extrabold">${sign}${displayVal}${detail}</span>
-                            </div>
-                        `;
+                        
+                        const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
+                        if (isVertical) {
+                            innerHtml += `
+                                <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
+                                    ${!q.hideName ? `<span class="text-slate-400 text-[9px] leading-tight">${resolvedName}</span>` : ''}
+                                    <span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${sign}${displayVal}</span>
+                                    ${resolvedDetail ? `<span class="text-slate-500 text-[8px] leading-tight mt-0.5">${resolvedDetail}</span>` : ''}
+                                </div>
+                            `;
+                        } else {
+                            const detail = resolvedDetail ? ` ${resolvedDetail}` : '';
+                            innerHtml += `
+                                <div class="flex items-center justify-center px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center">
+                                    ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}:</span>` : ''}
+                                    <span class="text-[#00d4ff] font-extrabold">${sign}${displayVal}${detail}</span>
+                                </div>
+                            `;
+                        }
                     } else {
                         let displayVal = q.value;
                         let isCalculated = false;
@@ -1605,13 +1645,23 @@
                     }
                 } else if (type === 'text') {
                     if (effectiveMode === 'micro') {
-                        innerHtml += `
-                            <div class="flex-grow min-w-0">
-                                <input type="text" value="${resolvedText}" placeholder="${resolvedName || 'Notes...'}" 
-                                       oninput="changeTextValueDirect('${q.id}', this.value)" 
-                                       class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-300 placeholder-slate-600 outline-none font-medium transition-all">
-                            </div>
-                        `;
+                        const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
+                        if (isVertical) {
+                            innerHtml += `
+                                <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
+                                    ${!q.hideName ? `<span class="text-slate-400 text-[9px] leading-tight">${resolvedName}</span>` : ''}
+                                    <span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${resolvedText || '-'}</span>
+                                </div>
+                            `;
+                        } else {
+                            innerHtml += `
+                                <div class="flex-grow min-w-0">
+                                    <input type="text" value="${resolvedText}" placeholder="${resolvedName || 'Notes...'}" 
+                                           oninput="changeTextValueDirect('${q.id}', this.value)" 
+                                           class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-300 placeholder-slate-600 outline-none font-medium transition-all">
+                                </div>
+                            `;
+                        }
                     } else if (effectiveMode === 'compact') {
                         innerHtml += `
                             <div class="flex-grow min-w-0 pl-1 py-0.5">

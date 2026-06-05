@@ -1324,11 +1324,10 @@ window.StaticDiceTemplates = [
                 parentId: 'w_g_skeleton_other',
                 groupId: 'combat',
                 name: 'AL',
-                widgetType: 'number',
+                widgetType: 'text',
                 displayMode: 'micro',
                 colSpan: 3,
-                value: 'C',
-                showSign: false
+                text: 'C'
             },
             {
                 id: 'w_s_skel_lv',
@@ -1346,11 +1345,10 @@ window.StaticDiceTemplates = [
                 parentId: 'w_g_skeleton_other',
                 groupId: 'combat',
                 name: 'MV',
-                widgetType: 'number',
+                widgetType: 'text',
                 displayMode: 'micro',
                 colSpan: 3,
-                value: 'near',
-                showSign: false
+                text: 'near'
             },
             {
                 id: 'w_s_skel_passive',

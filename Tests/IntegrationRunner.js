@@ -1450,6 +1450,46 @@ window.addEventListener('load', () => {
                 if (!overlay || overlay.classList.contains('hidden')) {
                     throw new Error("configureSavedWidget did not show the creation overlay modal");
                 }
+
+                // Test Trigger Widget configuration population & saving
+                console.log('Testing trigger widget configuration...');
+                const triggerWidgetId = 'w_test_trigger_config';
+                engine.savedQueues.push({
+                    id: triggerWidgetId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Trigger',
+                    widgetType: 'trigger',
+                    targetWidgetId: 'HP',
+                    condition: '<=',
+                    conditionValue: 0,
+                    action: 'show-button',
+                    actionParams: {
+                        label: '☠️ Kill',
+                        actionType: 'delete-parent-entity',
+                        btnColor: 'rose'
+                    },
+                    triggered: false
+                });
+
+                configureSavedWidget(triggerWidgetId);
+                if (document.getElementById('trigger-target-id').value !== 'HP') {
+                    throw new Error("trigger-target-id was not populated correctly in configureSavedWidget");
+                }
+                if (document.getElementById('trigger-btn-color').value !== 'rose') {
+                    throw new Error("trigger-btn-color was not populated correctly in configureSavedWidget");
+                }
+
+                // Make a modification and submit
+                document.getElementById('trigger-btn-color').value = 'emerald';
+                const submitWidgetCreation = window.eval('submitWidgetCreation');
+                await submitWidgetCreation();
+
+                const updatedTrigger = engine.findSavedQueue(triggerWidgetId);
+                if (updatedTrigger.actionParams.btnColor !== 'emerald') {
+                    throw new Error("trigger-btn-color was not saved/updated correctly by submitWidgetCreation");
+                }
+
                 console.log('-> configureSavedWidget Passed.');
 
             })()

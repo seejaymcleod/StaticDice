@@ -238,6 +238,20 @@
                 inset 0 0 15px rgba(0, 212, 255, 0.05);
         }
 
+        .saved-item-micro {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            min-height: auto !important;
+            padding: 0 !important;
+        }
+        .saved-item-micro:hover {
+            background: transparent !important;
+            border-color: transparent !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
 
 
         .widget-display-compact .saved-item {
@@ -2374,4 +2388,12 @@
                 transform: translate(-50%, -50%) scale(1.5);
                 opacity: 0;
             }
+        }
+
+        /* Grid container layout overrides */
+        .widget-type-grid > .saved-item:not(.border-dashed):hover {
+            background: transparent !important;
+            border-color: transparent !important;
+            transform: none !important;
+            box-shadow: none !important;
         }

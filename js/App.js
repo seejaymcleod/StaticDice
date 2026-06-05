@@ -3111,8 +3111,9 @@
             const menus = document.querySelectorAll('.arsenal-menu');
             const items = document.querySelectorAll('.arsenal-item-wrapper');
             const targetMenu = document.getElementById(`menu-${id}`);
-            const parentItem = targetMenu.closest('.arsenal-item-wrapper');
+            if (!targetMenu) return;
 
+            const parentItem = document.querySelector(`.arsenal-item-wrapper[data-id="${id}"]`);
             const isShowing = !targetMenu.classList.contains('hidden');
 
             // Hide all first
@@ -3120,8 +3121,12 @@
             items.forEach(i => i.classList.remove('z-50'));
 
             if (!isShowing) {
+                // Move targetMenu to body to avoid overflow/clipping from parent widgets
+                if (targetMenu.parentNode !== document.body) {
+                    document.body.appendChild(targetMenu);
+                }
                 targetMenu.classList.remove('hidden');
-                parentItem.classList.add('z-50');
+                if (parentItem) parentItem.classList.add('z-50');
                 activeMenuId = id;
 
                 // Dynamically update play/pause menu button for timer widgets
@@ -3136,35 +3141,41 @@
                     }
                 }
 
-                if (e && parentItem) {
-                    const rect = parentItem.getBoundingClientRect();
-                    let clientX = 0;
-                    let clientY = 0;
-
+                // Global Page Coordinates absolute positioning
+                let pageX = 0;
+                let pageY = 0;
+                if (e) {
                     if (e.touches && e.touches.length > 0) {
-                        clientX = e.touches[0].clientX;
-                        clientY = e.touches[0].clientY;
+                        pageX = e.touches[0].pageX;
+                        pageY = e.touches[0].pageY;
                     } else if (e.changedTouches && e.changedTouches.length > 0) {
-                        clientX = e.changedTouches[0].clientX;
-                        clientY = e.changedTouches[0].clientY;
-                    } else {
-                        clientX = e.clientX;
-                        clientY = e.clientY;
+                        pageX = e.changedTouches[0].pageX;
+                        pageY = e.changedTouches[0].pageY;
+                    } else if (typeof e.pageX === 'number') {
+                        pageX = e.pageX;
+                        pageY = e.pageY;
                     }
+                }
 
-                    // Calculate local offset
-                    let localX = clientX - rect.left;
-                    let localY = clientY - rect.top;
+                if (!pageX && parentItem) {
+                    const rect = parentItem.getBoundingClientRect();
+                    pageX = rect.left + window.scrollX;
+                    pageY = rect.bottom + window.scrollY;
+                }
 
-                    // Bound checks to ensure menu doesn't draw offscreen or overlap layout weirdly
+                if (pageX) {
                     const menuWidth = 170;
-                    if (localX + menuWidth > rect.width) {
-                        localX = rect.width - menuWidth - 8;
-                    }
-                    if (localX < 8) localX = 8;
+                    let left = pageX;
+                    let top = pageY + 8;
 
-                    targetMenu.style.left = `${localX}px`;
-                    targetMenu.style.top = `${localY + 8}px`;
+                    // Bounds check
+                    if (left + menuWidth > window.innerWidth + window.scrollX) {
+                        left = window.innerWidth + window.scrollX - menuWidth - 8;
+                    }
+                    if (left < 8) left = 8;
+
+                    targetMenu.style.left = `${left}px`;
+                    targetMenu.style.top = `${top}px`;
                     targetMenu.style.right = 'auto';
                 }
             } else {
@@ -4840,7 +4851,10 @@
                 toggle: '#a855f7',
                 number: '#ffea00',
                 text: 'none',
-                timer: '#ff5500'
+                timer: '#ff5500',
+                grid: 'none',
+                'entity-group': '#ff9900',
+                trigger: 'none'
             };
             const color = DEFAULT_COLORS_BY_TYPE[type] || '#00d4ff';
 
@@ -5138,6 +5152,14 @@
                     btnColor: document.getElementById('trigger-btn-color').value
                 };
                 newWidget.triggered = false;
+            } else if (type === 'grid') {
+                newWidget.columns = 12;
+            } else if (type === 'entity-group') {
+                newWidget.sharedGridId = null;
+                newWidget.entityTemplate = {
+                    namePrefix: 'Instance',
+                    widgets: []
+                };
             }
 
             engine.savedQueues.push(newWidget);
