@@ -1005,59 +1005,60 @@
 
                     // ROW 1: [Entity Name | Notes text input]
                     const row1 = document.createElement('div');
-                    row1.className = 'flex items-center gap-2 w-full';
+                    row1.className = 'grid grid-cols-12 gap-2 w-full items-center';
 
-                    const nameLabel = document.createElement('div');
-                    nameLabel.className = 'text-xs font-black text-slate-200 uppercase tracking-wide shrink-0 min-w-[70px] max-w-[130px] truncate';
-                    nameLabel.innerText = resolvedName;
-                    row1.appendChild(nameLabel);
+                    const nameCell = document.createElement('div');
+                    nameCell.className = 'col-span-6 flex items-center min-w-0';
+                    nameCell.innerHTML = `
+                        <input type="text" value="${resolvedName}" oninput="renameEntityDirect('${q.id}', this.value)" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"
+                               class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 outline-none font-bold transition-all uppercase tracking-wide">
+                    `;
+                    row1.appendChild(nameCell);
 
-                    // Notes text widget(s) fill the right of row 1
-                    const noteSlot = document.createElement('div');
-                    noteSlot.className = 'flex-grow min-w-0';
+                    const textCell = document.createElement('div');
+                    textCell.className = 'col-span-6 flex flex-col items-stretch min-w-0';
                     textChildren.forEach(child => {
                         const originalMode = child.displayMode;
                         child.displayMode = 'micro';
                         const childDOM = buildWidgetDOM(child);
                         child.displayMode = originalMode;
-                        if (childDOM) noteSlot.appendChild(childDOM);
+                        if (childDOM) textCell.appendChild(childDOM);
                     });
-                    row1.appendChild(noteSlot);
+                    row1.appendChild(textCell);
                     item.appendChild(row1);
 
-                    // ROW 2: [HP Stepper | Trigger] (and any other children)
+                    // ROW 2: [HP Stepper / Other widgets | Trigger]
                     const row2 = document.createElement('div');
-                    row2.className = 'flex items-center gap-2 w-full justify-between';
+                    row2.className = 'grid grid-cols-12 gap-2 w-full items-center mt-1.5';
 
-                    const stepperSlot = document.createElement('div');
-                    stepperSlot.className = 'flex items-center gap-1.5 flex-grow';
+                    const nonTriggerCell = document.createElement('div');
+                    nonTriggerCell.className = 'col-span-8 flex items-center gap-1.5 min-w-0';
                     stepperChildren.forEach(child => {
                         const originalMode = child.displayMode;
                         child.displayMode = 'micro';
                         const childDOM = buildWidgetDOM(child);
                         child.displayMode = originalMode;
-                        if (childDOM) stepperSlot.appendChild(childDOM);
+                        if (childDOM) nonTriggerCell.appendChild(childDOM);
                     });
                     otherChildren.forEach(child => {
                         const originalMode = child.displayMode;
                         child.displayMode = 'micro';
                         const childDOM = buildWidgetDOM(child);
                         child.displayMode = originalMode;
-                        if (childDOM) stepperSlot.appendChild(childDOM);
+                        if (childDOM) nonTriggerCell.appendChild(childDOM);
                     });
-                    row2.appendChild(stepperSlot);
+                    row2.appendChild(nonTriggerCell);
 
-                    const triggerSlot = document.createElement('div');
-                    triggerSlot.className = 'flex items-center gap-1.5 shrink-0';
+                    const triggerCell = document.createElement('div');
+                    triggerCell.className = 'col-span-4 flex items-center justify-end min-w-0';
                     triggerChildren.forEach(child => {
                         const originalMode = child.displayMode;
                         child.displayMode = 'micro';
                         const childDOM = buildWidgetDOM(child);
                         child.displayMode = originalMode;
-                        if (childDOM) triggerSlot.appendChild(childDOM);
+                        if (childDOM) triggerCell.appendChild(childDOM);
                     });
-                    row2.appendChild(triggerSlot);
-
+                    row2.appendChild(triggerCell);
                     item.appendChild(row2);
                     wrapper.appendChild(item);
 
@@ -1438,19 +1439,31 @@
 
                 if (type === 'roller') {
                     if (effectiveMode === 'micro') {
+                        let compactShowFormula = q.compactShowFormula;
+                        if (compactShowFormula === undefined && q.compactShowNote === undefined && q.compactShowDetail === undefined) {
+                            const priority = q.compactDisplayPriority || 'auto';
+                            if (priority === 'formula' || priority === 'auto') {
+                                compactShowFormula = true;
+                            } else {
+                                compactShowFormula = false;
+                            }
+                        } else if (compactShowFormula === undefined) {
+                            compactShowFormula = false;
+                        }
+
                         const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
                         if (isVertical) {
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
                                     ${!q.hideName ? `<span class="text-slate-400 text-[9px] leading-tight">${resolvedName}</span>` : ''}
-                                    <span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${getMicroRollerDisplay(q, formula)}</span>
+                                    ${compactShowFormula ? `<span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${getMicroRollerDisplay(q, formula)}</span>` : ''}
                                 </div>
                             `;
                         } else {
                             innerHtml += `
                                 <div class="flex items-center justify-center px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full">
-                                    ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}:</span>` : ''}
-                                    <span class="text-[#00d4ff] font-extrabold">${formula.replace(/[\[\]\s]/g, '') || '+0'}</span>
+                                    ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}${compactShowFormula ? ':' : ''}</span>` : ''}
+                                    ${compactShowFormula ? `<span class="text-[#00d4ff] font-extrabold">${formula.replace(/[\[\]\s]/g, '') || '+0'}</span>` : ''}
                                 </div>
                             `;
                         }

@@ -5470,6 +5470,15 @@
             }
         }
 
+        function renameEntityDirect(widgetId, newName) {
+            const q = engine.findSavedQueue(widgetId);
+            if (q && q.widgetType === 'entity') {
+                q.name = newName;
+                persistSaved();
+            }
+        }
+        window.renameEntityDirect = renameEntityDirect;
+
         // =========================================================================
         // COUNTDOWN TRACKER WIDGET FUNCTIONS
         // =========================================================================
