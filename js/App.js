@@ -5427,8 +5427,13 @@
                             hasTargetVal = true;
                         }
                     }
-                    if (hasTargetVal) {
-                        let condMet = false;
+                    let condMet = false;
+                    let shouldEvaluate = false;
+                    if (q.condition === 'always') {
+                        condMet = true;
+                        shouldEvaluate = true;
+                    } else if (hasTargetVal) {
+                        shouldEvaluate = true;
                         switch (q.condition) {
                             case '==': condMet = (targetVal == q.conditionValue); break;
                             case '<=': condMet = (targetVal <= q.conditionValue); break;
@@ -5436,6 +5441,8 @@
                             case '>=': condMet = (targetVal >= q.conditionValue); break;
                             case '>': condMet = (targetVal > q.conditionValue); break;
                         }
+                    }
+                    if (shouldEvaluate) {
                         if (q.triggered !== condMet) {
                             q.triggered = condMet;
                             triggeredCount++;
@@ -5492,32 +5499,7 @@
                 engine.savedQueues.push(childWidget);
             });
 
-            // Assign unique bindsVariable & targetWidgetId to stepper and trigger
-            const cleanVarBase = entityName.toUpperCase().trim().replace(/[^A-Z0-9_]/g, '_').replace(/_+/g, '_');
-            const hpVarName = `${cleanVarBase}_HP`;
-
-            spawnedSiblings.forEach(sibling => {
-                if (sibling.widgetType === 'stepper' && (sibling.name === 'HP' || sibling.name.toUpperCase().includes('HP'))) {
-                    sibling.bindsVariable = hpVarName;
-                    sibling.variableRelType = 'define';
-                }
-            });
-
-            spawnedSiblings.forEach(sibling => {
-                if (sibling.widgetType === 'trigger') {
-                    sibling.targetWidgetId = hpVarName;
-                }
-            });
-
-            // Register default HP value in character variables
-            const char = characters.find(c => c.id === activeCharacterId);
-            if (char) {
-                if (!char.variables) char.variables = {};
-                const hpWidget = spawnedSiblings.find(s => s.widgetType === 'stepper');
-                const defaultHP = hpWidget ? (hpWidget.value ?? 10) : 10;
-                char.variables[hpVarName] = String(defaultHP);
-                syncCharacterVariables(char);
-            }
+            // Hardcoded HP logic removed in favor of standalone widget state
 
             persistSaved();
             renderSavedQueues();
@@ -6982,18 +6964,18 @@
         }
         window.unparentWidget = unparentWidget;
 
-        function setWidgetColSpan(id, span, event) {
+        function setWidgetWidth(id, width, event) {
             if (event) event.stopPropagation();
             closeAllArsenalMenus();
             const q = engine.findSavedQueue(id);
             if (q) {
-                q.colSpan = span;
+                q.width = width;
                 persistSaved();
                 renderSavedQueues();
                 vibrate(5);
             }
         }
-        window.setWidgetColSpan = setWidgetColSpan;
+        window.setWidgetWidth = setWidgetWidth;
 
         function setGridColumns(id, cols, event) {
             if (event) event.stopPropagation();

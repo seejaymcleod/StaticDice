@@ -934,16 +934,16 @@
                     `;
                 }
 
-                // 2. If widget is inside a grid, show colSpan configuration
+                // 2. If widget is inside a grid, show width configuration
                 const parentWidget = q.parentId ? engine.findSavedQueue(q.parentId) : null;
-                if (parentWidget && parentWidget.widgetType === 'grid') {
+                if (parentWidget && (parentWidget.widgetType === 'grid' || parentWidget.widgetType === 'entity')) {
                     customMenuHtml += `
                         <div class="h-px bg-white/5 my-1"></div>
-                        <div class="px-3 py-1.5 text-[9px] font-black uppercase text-slate-500 tracking-wider">Grid Column Span</div>
+                        <div class="px-3 py-1.5 text-[9px] font-black uppercase text-slate-500 tracking-wider">Widget Width</div>
                         <div class="flex items-center justify-between px-3 py-1 gap-1 flex-wrap">
-                            ${[1, 2, 3, 4, 6, 8, 12].map(span => `
-                                <button onclick="setWidgetColSpan('${q.id}', ${span}, event)" class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-extrabold hover:bg-sky-500/20 hover:border-sky-500/30 text-slate-300 hover:text-sky-400 transition-all ${q.colSpan === span ? 'bg-sky-500/20 border-sky-500/30 text-sky-400 font-black' : ''}">
-                                    ${span}
+                            ${['1/1', '1/2', '1/3', '2/3', '1/4', '3/4', '1/6', '5/6'].map(w => `
+                                <button onclick="setWidgetWidth('${q.id}', '${w}', event)" class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-extrabold hover:bg-sky-500/20 hover:border-sky-500/30 text-slate-300 hover:text-sky-400 transition-all ${q.width === w ? 'bg-sky-500/20 border-sky-500/30 text-sky-400 font-black' : ''}">
+                                    ${w}
                                 </button>
                             `).join('')}
                         </div>
@@ -1156,7 +1156,27 @@
                             }
                         };
                         const c = colorMap[q.actionParams?.btnColor] || colorMap.rose;
-                        btn.className = `px-2 py-0.5 ${c.bg} ${c.hover} border ${c.border} text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 ${c.shadow} animate-pulse flex items-center gap-1 select-none`;
+                        
+                        let isActive = true;
+                        if (q.actionParams?.actionType === 'delete-parent-entity') {
+                            const hpWidget = engine.savedQueues.find(w => w.parentId === q.parentId && (w.name === 'HP' || w.name === 'hp'));
+                            if (hpWidget && hpWidget.value > 0) {
+                                isActive = false;
+                            }
+                        }
+                        
+                        let bgClass, borderClass, shadowClass;
+                        if (!isActive) {
+                            bgClass = 'bg-slate-800/80 hover:bg-slate-700/80 text-slate-500';
+                            borderClass = 'border-slate-700/50';
+                            shadowClass = '';
+                        } else {
+                            bgClass = c.bg + ' ' + c.hover + ' text-white';
+                            borderClass = 'border ' + c.border;
+                            shadowClass = c.shadow + ' animate-pulse';
+                        }
+
+                        btn.className = `px-2 py-0.5 ${bgClass} ${borderClass} text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 ${shadowClass} flex items-center justify-center gap-1 select-none w-full h-full min-h-[28px]`;
                         btn.innerHTML = q.actionParams?.label || 'Destroy';
                         btn.onclick = (e) => {
                             e.stopPropagation();
@@ -1172,7 +1192,18 @@
 
                 if (type === 'entity') {
                     const wrapper = document.createElement('div');
-                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity bg-transparent border-b border-white/5 last:border-b-0 py-1.5 px-1`;
+                    const bgColor = (q.color && q.color !== '#020617' && q.color !== 'none') ? q.color : 'transparent';
+                    
+                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity border rounded-xl my-1 py-1.5 px-1 shadow-sm backdrop-blur-sm`;
+                    
+                    if (bgColor !== 'transparent') {
+                        wrapper.style.backgroundColor = bgColor + '15';
+                        wrapper.style.borderColor = bgColor + '30';
+                    } else {
+                        wrapper.style.backgroundColor = 'rgba(15,23,42,0.4)';
+                        wrapper.style.borderColor = 'rgba(255,255,255,0.1)';
+                    }
+
                     if (q.hidden) {
                         wrapper.classList.add('opacity-40');
                     }
@@ -1183,70 +1214,51 @@
                     item.dataset.id = q.id;
                     bindHoldListeners(item);
 
-                    // Collect entity children, partitioned by role
                     const entityChildren = filtered.filter(c => c.parentId === q.id);
-                    const textChildren = entityChildren.filter(c => c.widgetType === 'text');
-                    const stepperChildren = entityChildren.filter(c => c.widgetType === 'stepper');
-                    const triggerChildren = entityChildren.filter(c => c.widgetType === 'trigger');
-                    const otherChildren = entityChildren.filter(c => !['text','stepper','trigger'].includes(c.widgetType));
 
-                    // ROW 1: [Entity Name | Notes text input]
-                    const row1 = document.createElement('div');
-                    row1.className = 'grid grid-cols-12 gap-2 w-full items-center';
-
+                    // Children Container
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'flex flex-wrap items-center -mx-1 mt-1';
+                    
+                    // Add Entity Name as first child
                     const nameCell = document.createElement('div');
-                    nameCell.className = 'col-span-6 flex items-center min-w-0';
+                    nameCell.className = 'px-1 py-1 flex items-center min-w-0';
+                    // We'll give the name input a default flex-grow so it takes remaining space, but a minimum width
+                    nameCell.style.flex = '0 0 50%';
+                    nameCell.style.maxWidth = '50%';
+                    nameCell.style.minWidth = '16.666%';
                     nameCell.innerHTML = `
                         <input type="text" value="${resolvedName}" oninput="renameEntityDirect('${q.id}', this.value)" onclick="event.stopPropagation()" onmousedown="if(event.button === 0) event.stopPropagation()"
                                class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 outline-none font-bold transition-all uppercase tracking-wide">
                     `;
-                    row1.appendChild(nameCell);
+                    childrenContainer.appendChild(nameCell);
 
-                    const textCell = document.createElement('div');
-                    textCell.className = 'col-span-6 flex flex-col items-stretch min-w-0';
-                    textChildren.forEach(child => {
+                    entityChildren.forEach(child => {
                         const originalMode = child.displayMode;
                         child.displayMode = 'micro';
                         const childDOM = buildWidgetDOM(child);
                         child.displayMode = originalMode;
-                        if (childDOM) textCell.appendChild(childDOM);
+                        
+                        if (childDOM) {
+                            const cell = document.createElement('div');
+                            cell.className = 'px-1 py-1 flex items-center justify-center min-w-0';
+                            let widthPct = 100;
+                            if (typeof child.width === 'string' && child.width.includes('/')) {
+                                const [n, d] = child.width.split('/').map(Number);
+                                if (d) widthPct = (n / d) * 100;
+                            } else if (child.width) {
+                                widthPct = parseFloat(child.width) || 100;
+                            }
+                            widthPct = Math.max(16.6666, widthPct);
+                            cell.style.flex = `1 1 ${widthPct}%`;
+                            cell.style.maxWidth = `100%`;
+                            cell.style.minWidth = `16.6666%`;
+                            cell.appendChild(childDOM);
+                            childrenContainer.appendChild(cell);
+                        }
                     });
-                    row1.appendChild(textCell);
-                    item.appendChild(row1);
-
-                    // ROW 2: [HP Stepper / Other widgets | Trigger]
-                    const row2 = document.createElement('div');
-                    row2.className = 'grid grid-cols-12 gap-2 w-full items-center mt-1';
-
-                    const nonTriggerCell = document.createElement('div');
-                    nonTriggerCell.className = 'col-span-8 flex items-center gap-1.5 min-w-0';
-                    stepperChildren.forEach(child => {
-                        const originalMode = child.displayMode;
-                        child.displayMode = 'micro';
-                        const childDOM = buildWidgetDOM(child);
-                        child.displayMode = originalMode;
-                        if (childDOM) nonTriggerCell.appendChild(childDOM);
-                    });
-                    otherChildren.forEach(child => {
-                        const originalMode = child.displayMode;
-                        child.displayMode = 'micro';
-                        const childDOM = buildWidgetDOM(child);
-                        child.displayMode = originalMode;
-                        if (childDOM) nonTriggerCell.appendChild(childDOM);
-                    });
-                    row2.appendChild(nonTriggerCell);
-
-                    const triggerCell = document.createElement('div');
-                    triggerCell.className = 'col-span-4 flex items-center justify-end min-w-0';
-                    triggerChildren.forEach(child => {
-                        const originalMode = child.displayMode;
-                        child.displayMode = 'micro';
-                        const childDOM = buildWidgetDOM(child);
-                        child.displayMode = originalMode;
-                        if (childDOM) triggerCell.appendChild(childDOM);
-                    });
-                    row2.appendChild(triggerCell);
-                    item.appendChild(row2);
+                    
+                    item.appendChild(childrenContainer);
                     wrapper.appendChild(item);
 
                     const menuContainer = createWidgetMenu(q);
@@ -1320,10 +1332,20 @@
                     const gridChildren = filtered.filter(c => c.parentId === q.id);
 
                     const item = document.createElement('div');
+                    const bgColor = (q.color && q.color !== '#020617' && q.color !== 'none') ? q.color : 'transparent';
+                    
                     if (gridChildren.length === 0) {
-                        item.className = 'saved-item p-3 rounded-xl flex flex-col w-full relative overflow-hidden bg-slate-900/10 border border-dashed border-white/20';
+                        item.className = 'saved-item p-3 rounded-xl flex flex-col w-full relative overflow-hidden border border-dashed border-white/20';
+                        item.style.backgroundColor = bgColor !== 'transparent' ? bgColor + '20' : 'rgba(15,23,42,0.1)';
+                        if (bgColor !== 'transparent') item.style.borderColor = bgColor + '40';
                     } else {
-                        item.className = 'saved-item p-1 flex flex-col w-full relative overflow-hidden bg-transparent border border-transparent shadow-none';
+                        item.className = 'saved-item p-1 flex flex-col w-full relative overflow-hidden shadow-none';
+                        item.style.setProperty('background-color', bgColor !== 'transparent' ? bgColor + '10' : 'transparent', 'important');
+                        item.style.setProperty('border-color', bgColor !== 'transparent' ? bgColor + '30' : 'transparent', 'important');
+                        if (bgColor !== 'transparent') {
+                            item.style.setProperty('border-width', '1px', 'important');
+                            item.style.setProperty('border-style', 'solid', 'important');
+                        }
                     }
                     item.dataset.id = q.id;
                     bindHoldListeners(item);
@@ -1333,18 +1355,27 @@
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-black text-slate-400 uppercase tracking-widest">${resolvedName}</span>
                         </div>` : ''}
-                        <div class="grid grid-cols-12 gap-2 w-full"></div>
+                        <div class="flex flex-wrap items-center -mx-1 w-full grid-content"></div>
                     `;
                     item.innerHTML = innerHtml;
-                    const gridEl = item.querySelector('.grid');
+                    const gridEl = item.querySelector('.grid-content');
 
                     gridChildren.forEach(child => {
                         const childDOM = buildWidgetDOM(child);
                         if (childDOM) {
                             const cell = document.createElement('div');
-                            cell.className = 'flex flex-col items-stretch h-full';
-                            const span = child.colSpan || 12;
-                            cell.style.gridColumn = `span ${span}`;
+                            cell.className = 'px-1 py-1 flex items-stretch h-full min-w-0';
+                            let widthPct = 100;
+                            if (typeof child.width === 'string' && child.width.includes('/')) {
+                                const [n, d] = child.width.split('/').map(Number);
+                                if (d) widthPct = (n / d) * 100;
+                            } else if (child.width) {
+                                widthPct = parseFloat(child.width) || 100;
+                            }
+                            widthPct = Math.max(16.6666, widthPct);
+                            cell.style.flex = `1 1 ${widthPct}%`;
+                            cell.style.maxWidth = `100%`;
+                            cell.style.minWidth = `16.6666%`;
                             // Right-click / long-press on grid cells
                             cell.addEventListener('contextmenu', (e) => {
                                 e.preventDefault();
@@ -1558,7 +1589,7 @@
                             microShowFormula = false;
                         }
 
-                        const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
+                        const isVertical = (q.width || 100) <= 25 || resolvedName.length <= 4;
                         if (isVertical) {
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
@@ -1633,6 +1664,15 @@
                                 </div>
                             </div>
                         `;
+                        if (q.showTracker) {
+                            const trackerColor = hasColor ? q.color : '#ffffff';
+                            const pct = resolvedMax > 0 ? Math.min(100, Math.max(0, ((q.value - (q.min || 0)) / (resolvedMax - (q.min || 0))) * 100)) : 0;
+                            innerHtml += `
+                                <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#020617]/60 overflow-hidden rounded-b-lg">
+                                    <div class="h-full transition-all duration-300" style="width: ${pct}%; background-color: ${trackerColor}; box-shadow: 0 0 5px ${trackerColor};"></div>
+                                </div>
+                            `;
+                        }
                     } else {
                         const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
                         let trackerHtml = '';
@@ -1706,7 +1746,7 @@
                         }
                         const resolvedDetail = (q.detailText && microShowDetail !== false) ? resolveDynamicText(q.detailText) : '';
                         
-                        const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
+                        const isVertical = (q.width || 100) <= 25 || resolvedName.length <= 4;
                         if (isVertical) {
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
@@ -1799,7 +1839,7 @@
                     }
                 } else if (type === 'text') {
                     if (effectiveMode === 'micro') {
-                        const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
+                        const isVertical = (q.width || 100) <= 25 || resolvedName.length <= 4;
                         if (isVertical) {
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">

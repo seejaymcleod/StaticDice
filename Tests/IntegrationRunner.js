@@ -1728,6 +1728,43 @@ window.addEventListener('load', () => {
                 
                 console.log('-> Entity Name Input Event Propagation Passed.');
 
+                // Test 16: Trigger Widget 'always' Condition Behavior
+                console.log('Testing Trigger Widget "always" Condition...');
+                const alwaysTriggerWidgetId = 'w_test_always_trigger';
+                engine.savedQueues.push({
+                    id: alwaysTriggerWidgetId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Always Trigger',
+                    widgetType: 'trigger',
+                    displayMode: 'micro',
+                    targetWidgetId: '',
+                    condition: 'always',
+                    conditionValue: 0,
+                    action: 'show-button',
+                    actionParams: {
+                        label: 'Destroy Always',
+                        actionType: 'delete-parent-entity',
+                        btnColor: 'rose'
+                    },
+                    triggered: false
+                });
+                
+                evaluateTriggers();
+                renderSavedQueues();
+                
+                const alwaysTrigger = engine.findSavedQueue(alwaysTriggerWidgetId);
+                if (alwaysTrigger.triggered !== true) {
+                    throw new Error("Trigger widget with 'always' condition did not evaluate to triggered === true");
+                }
+                
+                const alwaysTriggerBtn = document.querySelector('.widget-type-trigger[data-id="' + alwaysTriggerWidgetId + '"] button');
+                if (!alwaysTriggerBtn || alwaysTriggerBtn.textContent !== 'Destroy Always') {
+                    throw new Error("Action button for 'always' trigger was not rendered in DOM");
+                }
+                
+                console.log('-> Trigger Widget "always" Condition Passed.');
+
             })()
 
         `).then(() => {

@@ -1081,28 +1081,28 @@ window.StaticDiceTemplates = [
                     namePrefix: 'Skeleton',
                     widgets: [
                         {
+                            name: 'Notes',
+                            widgetType: 'text',
+                            displayMode: 'micro',
+                            width: '1/2',
+                            text: ''
+                        },
+                        {
                             name: 'HP',
                             widgetType: 'stepper',
                             min: 0,
                             max: 11,
                             value: 11,
                             displayMode: 'micro',
-                            colSpan: 4
-                        },
-                        {
-                            name: 'Notes',
-                            widgetType: 'text',
-                            displayMode: 'micro',
-                            colSpan: 4,
-                            text: ''
+                            width: '1/2'
                         },
                         {
                             name: 'Trigger',
                             widgetType: 'trigger',
                             displayMode: 'micro',
-                            colSpan: 4,
+                            width: '1/2',
                             targetWidgetId: '',
-                            condition: '<=',
+                            condition: 'always',
                             conditionValue: 0,
                             action: 'show-button',
                             actionParams: {
@@ -1123,7 +1123,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'compact',
                 text: 'A bleach-boned skeleton with red pinpoints of light in its eyes.',
                 hideName: true,
-                colSpan: 12
+                width: '1/1'
             },
             {
                 id: 'w_g_skeleton_stats',
@@ -1142,7 +1142,7 @@ window.StaticDiceTemplates = [
                 widgetType: 'roller',
                 displayMode: 'micro',
                 hideName: false,
-                colSpan: 2,
+                width: '1/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -1157,7 +1157,7 @@ window.StaticDiceTemplates = [
                 widgetType: 'roller',
                 displayMode: 'micro',
                 hideName: false,
-                colSpan: 2,
+                width: '1/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -1172,7 +1172,7 @@ window.StaticDiceTemplates = [
                 widgetType: 'roller',
                 displayMode: 'micro',
                 hideName: false,
-                colSpan: 2,
+                width: '1/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -1187,7 +1187,7 @@ window.StaticDiceTemplates = [
                 widgetType: 'roller',
                 displayMode: 'micro',
                 hideName: false,
-                colSpan: 2,
+                width: '1/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '-' },
@@ -1202,7 +1202,7 @@ window.StaticDiceTemplates = [
                 widgetType: 'roller',
                 displayMode: 'micro',
                 hideName: false,
-                colSpan: 2,
+                width: '1/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -1217,7 +1217,7 @@ window.StaticDiceTemplates = [
                 widgetType: 'roller',
                 displayMode: 'micro',
                 hideName: false,
-                colSpan: 2,
+                width: '1/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '-' },
@@ -1240,7 +1240,7 @@ window.StaticDiceTemplates = [
                 name: 'AC',
                 widgetType: 'number',
                 displayMode: 'micro',
-                colSpan: 3,
+                width: '1/4',
                 value: 13,
                 detailText: '(chainmail)',
                 showSign: false
@@ -1252,7 +1252,7 @@ window.StaticDiceTemplates = [
                 name: 'AL',
                 widgetType: 'text',
                 displayMode: 'micro',
-                colSpan: 3,
+                width: '1/4',
                 text: 'C'
             },
             {
@@ -1262,7 +1262,7 @@ window.StaticDiceTemplates = [
                 name: 'LV',
                 widgetType: 'number',
                 displayMode: 'micro',
-                colSpan: 3,
+                width: '1/4',
                 value: 2,
                 showSign: false
             },
@@ -1273,7 +1273,7 @@ window.StaticDiceTemplates = [
                 name: 'MV',
                 widgetType: 'text',
                 displayMode: 'micro',
-                colSpan: 3,
+                width: '1/4',
                 text: 'near'
             },
             {
@@ -1284,7 +1284,7 @@ window.StaticDiceTemplates = [
                 widgetType: 'text',
                 displayMode: 'compact',
                 text: 'Immune to morale checks.',
-                colSpan: 12
+                width: '1/1'
             },
             {
                 id: 'w_g_skeleton_attacks',
@@ -1304,7 +1304,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'micro',
                 hideName: false,
                 microShowFormula: false,
-                colSpan: 6,
+                width: '1/2',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -1320,7 +1320,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'micro',
                 hideName: false,
                 microShowFormula: false,
-                colSpan: 6,
+                width: '1/2',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 6, count: 1 }
                 ]
@@ -1334,7 +1334,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'micro',
                 hideName: false,
                 microShowFormula: false,
-                colSpan: 6,
+                width: '1/2',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -1350,7 +1350,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'micro',
                 hideName: false,
                 microShowFormula: false,
-                colSpan: 6,
+                width: '1/2',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 4, count: 1 }
                 ]

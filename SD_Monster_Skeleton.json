@@ -26,22 +26,22 @@
             "max": 11,
             "value": 11,
             "displayMode": "micro",
-            "colSpan": 4
+            "width": "1/2"
           },
           {
             "name": "Notes",
             "widgetType": "text",
             "displayMode": "micro",
-            "colSpan": 4,
+            "width": "1/2",
             "text": ""
           },
           {
             "name": "Trigger",
             "widgetType": "trigger",
             "displayMode": "micro",
-            "colSpan": 4,
+            "width": "1/2",
             "targetWidgetId": "",
-            "condition": "<=",
+            "condition": "always",
             "conditionValue": 0,
             "action": "show-button",
             "actionParams": {
@@ -62,7 +62,7 @@
       "displayMode": "compact",
       "text": "A bleach-boned skeleton with red pinpoints of light in its eyes.",
       "hideName": true,
-      "colSpan": 12
+      "width": "1/1"
     },
     {
       "id": "w_g_skeleton_stats",
@@ -81,7 +81,7 @@
       "widgetType": "roller",
       "displayMode": "micro",
       "hideName": false,
-      "colSpan": 2,
+      "width": "1/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
@@ -96,7 +96,7 @@
       "widgetType": "roller",
       "displayMode": "micro",
       "hideName": false,
-      "colSpan": 2,
+      "width": "1/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
@@ -111,7 +111,7 @@
       "widgetType": "roller",
       "displayMode": "micro",
       "hideName": false,
-      "colSpan": 2,
+      "width": "1/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
@@ -126,7 +126,7 @@
       "widgetType": "roller",
       "displayMode": "micro",
       "hideName": false,
-      "colSpan": 2,
+      "width": "1/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "-" },
@@ -141,7 +141,7 @@
       "widgetType": "roller",
       "displayMode": "micro",
       "hideName": false,
-      "colSpan": 2,
+      "width": "1/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
@@ -156,7 +156,7 @@
       "widgetType": "roller",
       "displayMode": "micro",
       "hideName": false,
-      "colSpan": 2,
+      "width": "1/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "-" },
@@ -179,7 +179,7 @@
       "name": "AC",
       "widgetType": "number",
       "displayMode": "micro",
-      "colSpan": 3,
+      "width": "1/4",
       "value": 13,
       "detailText": "(chainmail)",
       "showSign": false
@@ -191,7 +191,7 @@
       "name": "AL",
       "widgetType": "text",
       "displayMode": "micro",
-      "colSpan": 3,
+      "width": "1/4",
       "text": "C"
     },
     {
@@ -201,7 +201,7 @@
       "name": "LV",
       "widgetType": "number",
       "displayMode": "micro",
-      "colSpan": 3,
+      "width": "1/4",
       "value": 2,
       "showSign": false
     },
@@ -212,7 +212,7 @@
       "name": "MV",
       "widgetType": "text",
       "displayMode": "micro",
-      "colSpan": 3,
+      "width": "1/4",
       "text": "near"
     },
     {
@@ -223,7 +223,7 @@
       "widgetType": "text",
       "displayMode": "compact",
       "text": "Immune to morale checks.",
-      "colSpan": 12
+      "width": "1/1"
     },
     {
       "id": "w_g_skeleton_attacks",
@@ -243,7 +243,7 @@
       "displayMode": "micro",
       "hideName": false,
       "microShowFormula": false,
-      "colSpan": 6,
+      "width": "1/2",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
@@ -259,7 +259,7 @@
       "displayMode": "micro",
       "hideName": false,
       "microShowFormula": false,
-      "colSpan": 6,
+      "width": "1/2",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 6, "count": 1 }
       ]
@@ -273,7 +273,7 @@
       "displayMode": "micro",
       "hideName": false,
       "microShowFormula": false,
-      "colSpan": 6,
+      "width": "1/2",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
@@ -289,7 +289,7 @@
       "displayMode": "micro",
       "hideName": false,
       "microShowFormula": false,
-      "colSpan": 6,
+      "width": "1/2",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 4, "count": 1 }
       ]
