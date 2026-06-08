@@ -5480,7 +5480,8 @@
                 characterId: activeCharacterId,
                 groupId: activeGroupId,
                 name: entityName,
-                widgetType: 'entity'
+                widgetType: 'entity',
+                color: COLOR_PALETTE ? COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)] : null
             };
             engine.savedQueues.push(entityWidget);
 
@@ -8465,7 +8466,7 @@
             // Try loading skeleton template from local JSON file (can be overridden/configured)
             (async () => {
                 try {
-                    const res = await fetch('SD_Monster_Skeleton.json');
+                    const res = await fetch('SD_Monster_Skeleton.json?v=' + Date.now());
                     if (res.ok) {
                         const data = await res.json();
                         const idx = templates.findIndex(t => t.id === 'template_sd_monster_skeleton');

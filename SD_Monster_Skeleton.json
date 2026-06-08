@@ -20,26 +20,26 @@
         "namePrefix": "Skeleton",
         "widgets": [
           {
+            "name": "Notes",
+            "widgetType": "text",
+            "displayMode": "micro",
+            "width": "3/6",
+            "text": ""
+          },
+          {
             "name": "HP",
             "widgetType": "stepper",
             "min": 0,
             "max": 11,
             "value": 11,
             "displayMode": "micro",
-            "width": "1/2"
-          },
-          {
-            "name": "Notes",
-            "widgetType": "text",
-            "displayMode": "micro",
-            "width": "1/2",
-            "text": ""
+            "width": "3/6"
           },
           {
             "name": "Trigger",
             "widgetType": "trigger",
             "displayMode": "micro",
-            "width": "1/2",
+            "width": "3/6",
             "targetWidgetId": "",
             "condition": "always",
             "conditionValue": 0,
@@ -179,7 +179,7 @@
       "name": "AC",
       "widgetType": "number",
       "displayMode": "micro",
-      "width": "1/4",
+      "width": "3/6",
       "value": 13,
       "detailText": "(chainmail)",
       "showSign": false
@@ -191,7 +191,7 @@
       "name": "AL",
       "widgetType": "text",
       "displayMode": "micro",
-      "width": "1/4",
+      "width": "3/6",
       "text": "C"
     },
     {
@@ -201,7 +201,7 @@
       "name": "LV",
       "widgetType": "number",
       "displayMode": "micro",
-      "width": "1/4",
+      "width": "3/6",
       "value": 2,
       "showSign": false
     },
@@ -212,7 +212,7 @@
       "name": "MV",
       "widgetType": "text",
       "displayMode": "micro",
-      "width": "1/4",
+      "width": "3/6",
       "text": "near"
     },
     {
@@ -243,7 +243,7 @@
       "displayMode": "micro",
       "hideName": false,
       "microShowFormula": false,
-      "width": "1/2",
+      "width": "3/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
@@ -259,7 +259,7 @@
       "displayMode": "micro",
       "hideName": false,
       "microShowFormula": false,
-      "width": "1/2",
+      "width": "3/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 6, "count": 1 }
       ]
@@ -273,7 +273,7 @@
       "displayMode": "micro",
       "hideName": false,
       "microShowFormula": false,
-      "width": "1/2",
+      "width": "3/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
@@ -289,7 +289,7 @@
       "displayMode": "micro",
       "hideName": false,
       "microShowFormula": false,
-      "width": "1/2",
+      "width": "3/6",
       "unifiedQueue": [
         { "nodeType": "node", "sides": 4, "count": 1 }
       ]

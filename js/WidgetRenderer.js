@@ -66,13 +66,22 @@
 
         function getMicroRollerDisplay(q, formula) {
             let clean = formula || '';
-            // Strip 1d20 + or 1d20 -
-            clean = clean.replace(/1d20\s*[\+\-]?\s*/gi, '');
+            // Strip 1d20 but preserve the sign that follows
+            clean = clean.replace(/1d20\s*/gi, '');
             // Strip brackets and spaces
             clean = clean.replace(/[\[\]\s]/g, '');
-            // If there's nothing left, return +0
-            if (!clean) return '+0';
-            // Ensure it starts with + or - if it's a number
+            
+            // Resolve multiple signs (e.g., ++1 -> +1, -+2 -> -2)
+            while (/[\+\-]{2,}/.test(clean)) {
+                clean = clean.replace(/\+\+/g, '+')
+                             .replace(/\-\+/g, '-')
+                             .replace(/\+\-/g, '-')
+                             .replace(/\-\-/g, '+');
+            }
+
+            // If there's nothing left or just a stray sign, return +0
+            if (!clean || clean === '+' || clean === '-') return '+0';
+            // Ensure it starts with + or - if it's just digits
             if (/^\d+$/.test(clean)) {
                 return '+' + clean;
             }
@@ -1194,14 +1203,12 @@
                     const wrapper = document.createElement('div');
                     const bgColor = (q.color && q.color !== '#020617' && q.color !== 'none') ? q.color : 'transparent';
                     
-                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity border rounded-xl my-1 py-1.5 px-1 shadow-sm backdrop-blur-sm`;
+                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity rounded-xl my-1 py-1.5 px-1 shadow-sm backdrop-blur-sm`;
                     
                     if (bgColor !== 'transparent') {
                         wrapper.style.backgroundColor = bgColor + '15';
-                        wrapper.style.borderColor = bgColor + '30';
                     } else {
                         wrapper.style.backgroundColor = 'rgba(15,23,42,0.4)';
-                        wrapper.style.borderColor = 'rgba(255,255,255,0.1)';
                     }
 
                     if (q.hidden) {
@@ -1335,11 +1342,11 @@
                     const bgColor = (q.color && q.color !== '#020617' && q.color !== 'none') ? q.color : 'transparent';
                     
                     if (gridChildren.length === 0) {
-                        item.className = 'saved-item p-3 rounded-xl flex flex-col w-full relative overflow-hidden border border-dashed border-white/20';
+                        item.className = 'saved-item p-3 rounded-xl flex flex-col w-full relative overflow-visible border border-dashed border-white/20';
                         item.style.backgroundColor = bgColor !== 'transparent' ? bgColor + '20' : 'rgba(15,23,42,0.1)';
                         if (bgColor !== 'transparent') item.style.borderColor = bgColor + '40';
                     } else {
-                        item.className = 'saved-item p-1 flex flex-col w-full relative overflow-hidden shadow-none';
+                        item.className = 'saved-item p-1 flex flex-col w-full relative overflow-visible shadow-none';
                         item.style.setProperty('background-color', bgColor !== 'transparent' ? bgColor + '10' : 'transparent', 'important');
                         item.style.setProperty('border-color', bgColor !== 'transparent' ? bgColor + '30' : 'transparent', 'important');
                         if (bgColor !== 'transparent') {
@@ -1364,7 +1371,7 @@
                         const childDOM = buildWidgetDOM(child);
                         if (childDOM) {
                             const cell = document.createElement('div');
-                            cell.className = 'px-1 py-1 flex items-stretch h-full min-w-0';
+                            cell.className = 'px-1 py-1 flex items-stretch min-w-0';
                             let widthPct = 100;
                             if (typeof child.width === 'string' && child.width.includes('/')) {
                                 const [n, d] = child.width.split('/').map(Number);
@@ -1402,7 +1409,7 @@
                 const isInsideGrid = parentWidget && parentWidget.widgetType === 'grid';
                 const wrapper = document.createElement('div');
                 wrapper.dataset.id = q.id;
-                wrapper.className = `arsenal-item-wrapper flex ${isInsideGrid ? 'items-stretch h-full' : 'items-center'} gap-2 relative w-full widget-type-${type}`;
+                wrapper.className = `arsenal-item-wrapper flex ${isInsideGrid ? 'items-stretch' : 'items-center'} gap-2 relative w-full widget-type-${type}`;
                 if (q.hidden) {
                     wrapper.classList.add('opacity-40', 'border-dashed', 'border', 'border-white/10', 'rounded-xl');
                 }

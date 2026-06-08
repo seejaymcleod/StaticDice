@@ -1084,7 +1084,7 @@ window.StaticDiceTemplates = [
                             name: 'Notes',
                             widgetType: 'text',
                             displayMode: 'micro',
-                            width: '1/2',
+                            width: '3/6',
                             text: ''
                         },
                         {
@@ -1094,13 +1094,13 @@ window.StaticDiceTemplates = [
                             max: 11,
                             value: 11,
                             displayMode: 'micro',
-                            width: '1/2'
+                            width: '3/6'
                         },
                         {
                             name: 'Trigger',
                             widgetType: 'trigger',
                             displayMode: 'micro',
-                            width: '1/2',
+                            width: '3/6',
                             targetWidgetId: '',
                             condition: 'always',
                             conditionValue: 0,
@@ -1240,7 +1240,7 @@ window.StaticDiceTemplates = [
                 name: 'AC',
                 widgetType: 'number',
                 displayMode: 'micro',
-                width: '1/4',
+                width: '3/6',
                 value: 13,
                 detailText: '(chainmail)',
                 showSign: false
@@ -1252,7 +1252,7 @@ window.StaticDiceTemplates = [
                 name: 'AL',
                 widgetType: 'text',
                 displayMode: 'micro',
-                width: '1/4',
+                width: '3/6',
                 text: 'C'
             },
             {
@@ -1262,7 +1262,7 @@ window.StaticDiceTemplates = [
                 name: 'LV',
                 widgetType: 'number',
                 displayMode: 'micro',
-                width: '1/4',
+                width: '3/6',
                 value: 2,
                 showSign: false
             },
@@ -1273,7 +1273,7 @@ window.StaticDiceTemplates = [
                 name: 'MV',
                 widgetType: 'text',
                 displayMode: 'micro',
-                width: '1/4',
+                width: '3/6',
                 text: 'near'
             },
             {
@@ -1304,7 +1304,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'micro',
                 hideName: false,
                 microShowFormula: false,
-                width: '1/2',
+                width: '3/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -1320,7 +1320,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'micro',
                 hideName: false,
                 microShowFormula: false,
-                width: '1/2',
+                width: '3/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 6, count: 1 }
                 ]
@@ -1334,7 +1334,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'micro',
                 hideName: false,
                 microShowFormula: false,
-                width: '1/2',
+                width: '3/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
                     { nodeType: 'operator', operator: '+' },
@@ -1350,7 +1350,7 @@ window.StaticDiceTemplates = [
                 displayMode: 'micro',
                 hideName: false,
                 microShowFormula: false,
-                width: '1/2',
+                width: '3/6',
                 unifiedQueue: [
                     { nodeType: 'node', sides: 4, count: 1 }
                 ]
