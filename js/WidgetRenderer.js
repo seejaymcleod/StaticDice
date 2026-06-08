@@ -950,8 +950,8 @@
                         <div class="h-px bg-white/5 my-1"></div>
                         <div class="px-3 py-1.5 text-[9px] font-black uppercase text-slate-500 tracking-wider">Widget Width</div>
                         <div class="flex items-center justify-between px-3 py-1 gap-1 flex-wrap">
-                            ${['1/1', '1/2', '1/3', '2/3', '1/4', '3/4', '1/6', '5/6'].map(w => `
-                                <button onclick="setWidgetWidth('${q.id}', '${w}', event)" class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-extrabold hover:bg-sky-500/20 hover:border-sky-500/30 text-slate-300 hover:text-sky-400 transition-all ${q.width === w ? 'bg-sky-500/20 border-sky-500/30 text-sky-400 font-black' : ''}">
+                            ${[1, 2, 3, 4, 6, 8, 12].map(w => `
+                                <button onclick="setWidgetWidth('${q.id}', ${w}, event)" class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-extrabold hover:bg-sky-500/20 hover:border-sky-500/30 text-slate-300 hover:text-sky-400 transition-all ${q.width === w || String(q.width) === String(w) ? 'bg-sky-500/20 border-sky-500/30 text-sky-400 font-black' : ''}">
                                     ${w}
                                 </button>
                             `).join('')}
@@ -1225,15 +1225,11 @@
 
                     // Children Container
                     const childrenContainer = document.createElement('div');
-                    childrenContainer.className = 'flex flex-wrap items-center -mx-1 mt-1';
+                    childrenContainer.className = 'grid grid-cols-12 gap-1 items-stretch mt-1';
                     
                     // Add Entity Name as first child
                     const nameCell = document.createElement('div');
-                    nameCell.className = 'px-1 py-1 flex items-center min-w-0';
-                    // We'll give the name input a default flex-grow so it takes remaining space, but a minimum width
-                    nameCell.style.flex = '0 0 50%';
-                    nameCell.style.maxWidth = '50%';
-                    nameCell.style.minWidth = '16.666%';
+                    nameCell.className = 'col-span-12 px-1 py-1 flex items-center min-w-0';
                     nameCell.innerHTML = `
                         <input type="text" value="${resolvedName}" oninput="renameEntityDirect('${q.id}', this.value)" onclick="event.stopPropagation()" onmousedown="if(event.button === 0) event.stopPropagation()"
                                class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 outline-none font-bold transition-all uppercase tracking-wide">
@@ -1248,18 +1244,18 @@
                         
                         if (childDOM) {
                             const cell = document.createElement('div');
-                            cell.className = 'px-1 py-1 flex items-center justify-center min-w-0';
-                            let widthPct = 100;
-                            if (typeof child.width === 'string' && child.width.includes('/')) {
-                                const [n, d] = child.width.split('/').map(Number);
-                                if (d) widthPct = (n / d) * 100;
-                            } else if (child.width) {
-                                widthPct = parseFloat(child.width) || 100;
+                            cell.className = 'px-1 py-1 flex items-stretch min-w-0';
+                            let span = 12;
+                            if (child.width) {
+                                if (typeof child.width === 'string' && child.width.includes('/')) {
+                                    const [n, d] = child.width.split('/').map(Number);
+                                    if (d) span = Math.max(1, Math.round((n / d) * 12));
+                                } else {
+                                    span = parseInt(child.width, 10) || 12;
+                                }
                             }
-                            widthPct = Math.max(16.6666, widthPct);
-                            cell.style.flex = `1 1 ${widthPct}%`;
-                            cell.style.maxWidth = `100%`;
-                            cell.style.minWidth = `16.6666%`;
+                            span = Math.min(12, Math.max(1, span));
+                            cell.style.gridColumn = `span ${span} / span ${span}`;
                             cell.appendChild(childDOM);
                             childrenContainer.appendChild(cell);
                         }
@@ -1362,7 +1358,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-black text-slate-400 uppercase tracking-widest">${resolvedName}</span>
                         </div>` : ''}
-                        <div class="flex flex-wrap items-center -mx-1 w-full grid-content"></div>
+                        <div class="grid grid-cols-12 gap-1 items-stretch w-full grid-content"></div>
                     `;
                     item.innerHTML = innerHtml;
                     const gridEl = item.querySelector('.grid-content');
@@ -1372,17 +1368,17 @@
                         if (childDOM) {
                             const cell = document.createElement('div');
                             cell.className = 'px-1 py-1 flex items-stretch min-w-0';
-                            let widthPct = 100;
-                            if (typeof child.width === 'string' && child.width.includes('/')) {
-                                const [n, d] = child.width.split('/').map(Number);
-                                if (d) widthPct = (n / d) * 100;
-                            } else if (child.width) {
-                                widthPct = parseFloat(child.width) || 100;
+                            let span = 12;
+                            if (child.width) {
+                                if (typeof child.width === 'string' && child.width.includes('/')) {
+                                    const [n, d] = child.width.split('/').map(Number);
+                                    if (d) span = Math.max(1, Math.round((n / d) * 12));
+                                } else {
+                                    span = parseInt(child.width, 10) || 12;
+                                }
                             }
-                            widthPct = Math.max(16.6666, widthPct);
-                            cell.style.flex = `1 1 ${widthPct}%`;
-                            cell.style.maxWidth = `100%`;
-                            cell.style.minWidth = `16.6666%`;
+                            span = Math.min(12, Math.max(1, span));
+                            cell.style.gridColumn = `span ${span} / span ${span}`;
                             // Right-click / long-press on grid cells
                             cell.addEventListener('contextmenu', (e) => {
                                 e.preventDefault();
@@ -1596,7 +1592,16 @@
                             microShowFormula = false;
                         }
 
-                        const isVertical = (q.width || 100) <= 25 || resolvedName.length <= 4;
+                        let currentSpan = 12;
+                        if (q.width) {
+                            if (typeof q.width === 'string' && q.width.includes('/')) {
+                                const [n, d] = q.width.split('/').map(Number);
+                                if (d) currentSpan = Math.max(1, Math.round((n / d) * 12));
+                            } else {
+                                currentSpan = parseInt(q.width, 10) || 12;
+                            }
+                        }
+                        const isVertical = currentSpan <= 3 || resolvedName.length <= 4;
                         if (isVertical) {
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
@@ -1753,7 +1758,16 @@
                         }
                         const resolvedDetail = (q.detailText && microShowDetail !== false) ? resolveDynamicText(q.detailText) : '';
                         
-                        const isVertical = (q.width || 100) <= 25 || resolvedName.length <= 4;
+                        let currentSpan = 12;
+                        if (q.width) {
+                            if (typeof q.width === 'string' && q.width.includes('/')) {
+                                const [n, d] = q.width.split('/').map(Number);
+                                if (d) currentSpan = Math.max(1, Math.round((n / d) * 12));
+                            } else {
+                                currentSpan = parseInt(q.width, 10) || 12;
+                            }
+                        }
+                        const isVertical = currentSpan <= 3 || resolvedName.length <= 4;
                         if (isVertical) {
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
@@ -1846,7 +1860,16 @@
                     }
                 } else if (type === 'text') {
                     if (effectiveMode === 'micro') {
-                        const isVertical = (q.width || 100) <= 25 || resolvedName.length <= 4;
+                        let currentSpan = 12;
+                        if (q.width) {
+                            if (typeof q.width === 'string' && q.width.includes('/')) {
+                                const [n, d] = q.width.split('/').map(Number);
+                                if (d) currentSpan = Math.max(1, Math.round((n / d) * 12));
+                            } else {
+                                currentSpan = parseInt(q.width, 10) || 12;
+                            }
+                        }
+                        const isVertical = currentSpan <= 3 || resolvedName.length <= 4;
                         if (isVertical) {
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
