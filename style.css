@@ -265,6 +265,12 @@
             padding-bottom: 0 !important;
         }
 
+        .widget-display-compact.widget-type-text .saved-item {
+            min-height: auto !important;
+            padding-top: 0.35rem !important;
+            padding-bottom: 0.35rem !important;
+        }
+
         /* Compact Timer & Countdown Override Styles */
         .widget-display-compact .timer-widget,
         .timer-widget.widget-display-compact {
@@ -2391,9 +2397,43 @@
         }
 
         /* Grid container layout overrides */
+        .widget-type-grid > .saved-item:not(.border-dashed) {
+            min-height: 0 !important;
+            min-height: auto !important;
+            background: transparent !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+
         .widget-type-grid > .saved-item:not(.border-dashed):hover {
             background: transparent !important;
             border-color: transparent !important;
             transform: none !important;
             box-shadow: none !important;
+        }
+
+        /* Entity Group Layout overrides for minimal vertical spacing */
+        .widget-type-entity-group {
+            padding: 0.65rem 0.85rem !important;
+            gap: 0.35rem !important;
+        }
+
+        /* Entity Spacing overrides */
+        .widget-type-entity {
+            padding-top: 0.15rem !important;
+            padding-bottom: 0.15rem !important;
+        }
+
+        .widget-type-entity > .saved-item {
+            padding: 0.25rem 0.45rem !important;
+            min-height: 0 !important;
+            min-height: auto !important;
+        }
+
+        /* Compact mode text widgets - minimal height and padding */
+        .widget-display-compact.widget-type-text .saved-item {
+            min-height: auto !important;
+            padding-top: 0.15rem !important;
+            padding-bottom: 0.15rem !important;
         }

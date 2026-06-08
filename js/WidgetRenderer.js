@@ -465,10 +465,21 @@
             if (!listContainer) return;
             listContainer.innerHTML = '';
 
-            templates.forEach(t => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'p-2 rounded-lg bg-white/[0.02] border border-white/5 flex items-center justify-between gap-2 hover:bg-white/[0.04] transition-all text-xs';
+            // Group templates
+            const systemTemplates = templates.filter(t => t.isDefault);
+            const customTemplates = templates.filter(t => !t.isDefault);
 
+            // Shadowdark templates
+            const sdTemplates = systemTemplates.filter(t => t.system === 'Shadowdark');
+            const otherSystemTemplates = systemTemplates.filter(t => t.system !== 'Shadowdark');
+
+            // Categorize Shadowdark templates
+            const sdCharacters = sdTemplates.filter(t => t.dndType === 'standard');
+            const sdMonsters = sdTemplates.filter(t => t.dndType === 'monster');
+            const sdEncounters = sdTemplates.filter(t => t.dndType === 'encounter');
+
+            // Helper to render a single template item HTML
+            function getTemplateItemHTML(t) {
                 let typeBadge, badgeColor;
                 if (t.dndType === 'monster') {
                     typeBadge = 'Monster';
@@ -490,23 +501,108 @@
                     `;
                 }
 
-                itemEl.innerHTML = `
-                    <div class="flex flex-col min-w-0 flex-grow">
-                        <span class="font-bold text-slate-300 truncate">${t.name}</span>
-                        <span class="text-[9px] font-black uppercase tracking-wider text-slate-500 mt-0.5 flex items-center gap-1">
-                            <span class="px-1 py-0.2 rounded border ${badgeColor}">${typeBadge}</span>
-                            <span>${t.system || 'Generic'}</span>
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-1 shrink-0">
-                        <button onclick="spawnTemplateInstance('${t.id}', event)" class="px-2 py-1 rounded bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all border border-[#00d4ff]/20 active:scale-95" title="Spawn Sheet">
-                            Spawn
-                        </button>
-                        ${deleteBtn}
+                return `
+                    <div class="p-2 rounded-lg bg-white/[0.02] border border-white/5 flex items-center justify-between gap-2 hover:bg-white/[0.04] transition-all text-xs mb-1">
+                        <div class="flex flex-col min-w-0 flex-grow">
+                            <span class="font-bold text-slate-300 truncate">${t.name}</span>
+                            <span class="text-[9px] font-black uppercase tracking-wider text-slate-500 mt-0.5 flex items-center gap-1">
+                                <span class="px-1 py-0.2 rounded border ${badgeColor}">${typeBadge}</span>
+                                <span>${t.system || 'Generic'}</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="spawnTemplateInstance('${t.id}', event)" class="px-2 py-1 rounded bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] text-[10px] font-black uppercase tracking-wider transition-all border border-[#00d4ff]/20 active:scale-95" title="Spawn Sheet">
+                                Spawn
+                            </button>
+                            ${deleteBtn}
+                        </div>
                     </div>
                 `;
-                listContainer.appendChild(itemEl);
+            }
+
+            // Create a folder element
+            function createFolderDOM(name, isOpen = false) {
+                const details = document.createElement('details');
+                details.className = 'group/folder select-none mb-1';
+                if (isOpen) details.setAttribute('open', '');
+
+                const summary = document.createElement('summary');
+                summary.className = 'flex items-center justify-between cursor-pointer p-1.5 hover:bg-white/5 rounded-lg transition-all text-slate-300 font-bold uppercase tracking-wider text-[10px] outline-none';
+                
+                summary.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-[8px] transition-transform duration-200 group-open/folder:rotate-90 text-slate-500">▶</span>
+                        <span class="text-slate-400 font-black">${name}</span>
+                    </div>
+                `;
+                
+                const content = document.createElement('div');
+                content.className = 'pl-3 pr-0.5 mt-1 border-l border-white/5 ml-2.5';
+
+                details.appendChild(summary);
+                details.appendChild(content);
+
+                return { details, content };
+            }
+
+            // 1. Root System folder
+            const systemFolder = createFolderDOM('System', true);
+            listContainer.appendChild(systemFolder.details);
+
+            // 2. Under System, create Shadowdark folder
+            const sdFolder = createFolderDOM('Shadowdark', true);
+            systemFolder.content.appendChild(sdFolder.details);
+
+            // 3. Under Shadowdark, create Characters subfolder
+            if (sdCharacters.length > 0) {
+                const charsFolder = createFolderDOM('Characters', true);
+                sdFolder.content.appendChild(charsFolder.details);
+                sdCharacters.forEach(t => {
+                    const el = document.createElement('div');
+                    el.innerHTML = getTemplateItemHTML(t);
+                    charsFolder.content.appendChild(el.firstElementChild);
+                });
+            }
+
+            // 4. Under Shadowdark, create Monsters subfolder
+            if (sdMonsters.length > 0) {
+                const monstersFolder = createFolderDOM('Monsters', true);
+                sdFolder.content.appendChild(monstersFolder.details);
+                sdMonsters.forEach(t => {
+                    const el = document.createElement('div');
+                    el.innerHTML = getTemplateItemHTML(t);
+                    monstersFolder.content.appendChild(el.firstElementChild);
+                });
+            }
+
+            // 5. Under Shadowdark directly, render blank encounters
+            sdEncounters.forEach(t => {
+                const el = document.createElement('div');
+                el.innerHTML = getTemplateItemHTML(t);
+                sdFolder.content.appendChild(el.firstElementChild);
             });
+
+            // 6. Handle any other system templates if they exist
+            if (otherSystemTemplates.length > 0) {
+                const otherSystemFolder = createFolderDOM('Other Systems', false);
+                systemFolder.content.appendChild(otherSystemFolder.details);
+                otherSystemTemplates.forEach(t => {
+                    const el = document.createElement('div');
+                    el.innerHTML = getTemplateItemHTML(t);
+                    otherSystemFolder.content.appendChild(el.firstElementChild);
+                });
+            }
+
+            // 7. Render Custom Templates
+            if (customTemplates.length > 0) {
+                const customFolder = createFolderDOM('Custom Templates', true);
+                listContainer.appendChild(customFolder.details);
+                customTemplates.forEach(t => {
+                    const el = document.createElement('div');
+                    el.innerHTML = getTemplateItemHTML(t);
+                    customFolder.content.appendChild(el.firstElementChild);
+                });
+            }
         }
         function renderBinder() {
             // Update Instanced Sheets List (Now campaign folders!)
@@ -925,10 +1021,101 @@
             }
 
             function buildWidgetDOM(q) {
+                q = { ...q };
+
                 const type = q.widgetType || 'roller';
                 const resolvedName = resolveDynamicText(q.name || '');
                 const resolvedText = q.text ? resolveDynamicText(q.text) : '';
                 const effectiveMode = getEffectiveDisplayMode(q);
+
+                let holdTimer = null;
+                let isHold = false;
+                let hasMoved = false;
+                let startX = 0, startY = 0;
+
+                function startHold(e) {
+                    if (e.target.closest('button, select, .timer-bar-container')) {
+                        return;
+                    }
+                    isHold = false;
+                    hasMoved = false;
+                    const touch = e.touches ? e.touches[0] : e;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    holdTimer = setTimeout(() => {
+                        isHold = true;
+                        vibrate(15);
+                    }, 500);
+                }
+
+                function cancelHold() {
+                    if (holdTimer) {
+                        clearTimeout(holdTimer);
+                        holdTimer = null;
+                    }
+                }
+
+                function moveHold(e) {
+                    if (e.type === 'mousemove' && e.buttons !== 1) return;
+                    const touch = e.touches ? e.touches[0] : e;
+                    if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+                        cancelHold();
+                        hasMoved = true;
+                    }
+                }
+
+                function bindHoldListeners(el) {
+                    el.addEventListener('touchstart', startHold, { passive: true });
+                    el.addEventListener('touchend', (e) => {
+                        cancelHold();
+                        if (isHold) {
+                            if (!hasMoved) {
+                                toggleArsenalMenu(q.id, e);
+                            }
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                        setTimeout(() => { hasMoved = false; isHold = false; }, 50);
+                    });
+                    el.addEventListener('touchmove', moveHold, { passive: true });
+                    el.addEventListener('touchcancel', () => {
+                        cancelHold();
+                        hasMoved = false;
+                        isHold = false;
+                    });
+
+                    el.addEventListener('mousedown', (e) => {
+                        if (e.button === 0) startHold(e);
+                    });
+                    el.addEventListener('mouseup', (e) => {
+                        cancelHold();
+                        if (isHold) {
+                            if (!hasMoved) {
+                                toggleArsenalMenu(q.id, e);
+                            }
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                        setTimeout(() => { hasMoved = false; isHold = false; }, 50);
+                    });
+                    el.addEventListener('mousemove', moveHold);
+                    el.addEventListener('mouseleave', () => {
+                        cancelHold();
+                        hasMoved = false;
+                        isHold = false;
+                    });
+
+                    el.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (hasMoved) return;
+                        cancelHold();
+                        if (!isHold) {
+                            toggleArsenalMenu(q.id, e);
+                        }
+                        isHold = false;
+                    });
+                }
 
                 if (type === 'trigger') {
                     const wrapper = document.createElement('div');
@@ -970,7 +1157,7 @@
                         };
                         const c = colorMap[q.actionParams?.btnColor] || colorMap.rose;
                         btn.className = `px-2 py-0.5 ${c.bg} ${c.hover} border ${c.border} text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-95 ${c.shadow} animate-pulse flex items-center gap-1 select-none`;
-                        btn.innerHTML = q.actionParams?.label || '☠️ Kill';
+                        btn.innerHTML = q.actionParams?.label || 'Destroy';
                         btn.onclick = (e) => {
                             e.stopPropagation();
                             const actionType = q.actionParams?.actionType || 'delete-parent-entity';
@@ -985,14 +1172,14 @@
 
                 if (type === 'entity') {
                     const wrapper = document.createElement('div');
-                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity bg-transparent border-b border-white/5 last:border-b-0 py-2.5 px-1`;
+                    wrapper.className = `arsenal-item-wrapper flex items-center gap-2 relative w-full widget-type-entity bg-transparent border-b border-white/5 last:border-b-0 py-1.5 px-1`;
                     if (q.hidden) {
                         wrapper.classList.add('opacity-40');
                     }
                     wrapper.dataset.id = q.id;
 
                     const item = document.createElement('div');
-                    item.className = 'saved-item flex flex-col gap-1.5 w-full cursor-pointer';
+                    item.className = 'saved-item flex flex-col gap-1 w-full cursor-pointer';
                     item.dataset.id = q.id;
                     bindHoldListeners(item);
 
@@ -1010,7 +1197,7 @@
                     const nameCell = document.createElement('div');
                     nameCell.className = 'col-span-6 flex items-center min-w-0';
                     nameCell.innerHTML = `
-                        <input type="text" value="${resolvedName}" oninput="renameEntityDirect('${q.id}', this.value)" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"
+                        <input type="text" value="${resolvedName}" oninput="renameEntityDirect('${q.id}', this.value)" onclick="event.stopPropagation()" onmousedown="if(event.button === 0) event.stopPropagation()"
                                class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 outline-none font-bold transition-all uppercase tracking-wide">
                     `;
                     row1.appendChild(nameCell);
@@ -1029,7 +1216,7 @@
 
                     // ROW 2: [HP Stepper / Other widgets | Trigger]
                     const row2 = document.createElement('div');
-                    row2.className = 'grid grid-cols-12 gap-2 w-full items-center mt-1.5';
+                    row2.className = 'grid grid-cols-12 gap-2 w-full items-center mt-1';
 
                     const nonTriggerCell = document.createElement('div');
                     nonTriggerCell.className = 'col-span-8 flex items-center gap-1.5 min-w-0';
@@ -1071,7 +1258,7 @@
 
                 if (type === 'entity-group') {
                     const wrapper = document.createElement('div');
-                    wrapper.className = `arsenal-item-wrapper flex flex-col gap-3 relative w-full widget-type-entity-group bg-slate-900/20 border border-white/5 rounded-2xl p-4`;
+                    wrapper.className = `arsenal-item-wrapper flex flex-col gap-2 relative w-full widget-type-entity-group bg-slate-900/20 border border-white/5 rounded-2xl p-3.5`;
                     if (q.hidden) {
                         wrapper.classList.add('opacity-40', 'border-dashed');
                     }
@@ -1083,15 +1270,15 @@
                     bindHoldListeners(item);
 
                     let innerHtml = `
-                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+                        <div class="flex items-center justify-between mb-1.5 pb-1 border-b border-white/5">
                             <div class="flex items-center gap-2">
                                 ${q.color && q.color !== 'none' ? `<div class="w-2.5 h-2.5 rounded-full" style="background-color: ${q.color}"></div>` : ''}
                                 ${!q.hideName ? `<span class="text-sm font-black text-[#e2e8f0] uppercase tracking-wider">${resolvedName}</span>` : ''}
                             </div>
                         </div>
-                        <div class="group-shared-area w-full mb-3 flex flex-col gap-2"></div>
-                        <div class="group-entities-area w-full flex flex-col gap-2"></div>
-                        <button onclick="spawnGroupEntity('${q.id}')" class="add-entity-btn flex items-center justify-center gap-1.5 w-full mt-3 py-2.5 border border-dashed border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 rounded-xl text-xs font-black text-slate-400 hover:text-emerald-400 transition-all select-none">
+                        <div class="group-shared-area w-full mb-1.5 flex flex-col gap-1"></div>
+                        <div class="group-entities-area w-full flex flex-col gap-1"></div>
+                        <button onclick="spawnGroupEntity('${q.id}')" class="add-entity-btn flex items-center justify-center gap-1.5 w-full mt-1.5 py-1.5 border border-dashed border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 rounded-xl text-xs font-black text-slate-400 hover:text-emerald-400 transition-all select-none">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="w-3.5 h-3.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             <span>Add Instance</span>
                         </button>
@@ -1178,94 +1365,7 @@
                     return wrapper;
                 }
 
-                let holdTimer = null;
-                let isHold = false;
-                let hasMoved = false;
-                let startX = 0, startY = 0;
 
-                function startHold(e) {
-                    if (e.target.closest('button, input, textarea, select, .timer-bar-container')) {
-                        return;
-                    }
-                    isHold = false;
-                    hasMoved = false;
-                    const touch = e.touches ? e.touches[0] : e;
-                    startX = touch.clientX;
-                    startY = touch.clientY;
-                    holdTimer = setTimeout(() => {
-                        isHold = true;
-                        vibrate(15);
-                    }, 500);
-                }
-
-                function cancelHold() {
-                    if (holdTimer) {
-                        clearTimeout(holdTimer);
-                        holdTimer = null;
-                    }
-                }
-
-                function moveHold(e) {
-                    if (e.type === 'mousemove' && e.buttons !== 1) return;
-                    const touch = e.touches ? e.touches[0] : e;
-                    if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
-                        cancelHold();
-                        hasMoved = true;
-                    }
-                }
-
-                function bindHoldListeners(el) {
-                    el.addEventListener('touchstart', startHold, { passive: true });
-                    el.addEventListener('touchend', (e) => {
-                        cancelHold();
-                        if (isHold) {
-                            if (!hasMoved) {
-                                toggleArsenalMenu(q.id, e);
-                            }
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }
-                        setTimeout(() => { hasMoved = false; isHold = false; }, 50);
-                    });
-                    el.addEventListener('touchmove', moveHold, { passive: true });
-                    el.addEventListener('touchcancel', () => {
-                        cancelHold();
-                        hasMoved = false;
-                        isHold = false;
-                    });
-
-                    el.addEventListener('mousedown', (e) => {
-                        if (e.button === 0) startHold(e);
-                    });
-                    el.addEventListener('mouseup', (e) => {
-                        cancelHold();
-                        if (isHold) {
-                            if (!hasMoved) {
-                                toggleArsenalMenu(q.id, e);
-                            }
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }
-                        setTimeout(() => { hasMoved = false; isHold = false; }, 50);
-                    });
-                    el.addEventListener('mousemove', moveHold);
-                    el.addEventListener('mouseleave', () => {
-                        cancelHold();
-                        hasMoved = false;
-                        isHold = false;
-                    });
-
-                    el.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (hasMoved) return;
-                        cancelHold();
-                        if (!isHold) {
-                            toggleArsenalMenu(q.id, e);
-                        }
-                        isHold = false;
-                    });
-                }
 
                 const parentWidget = q.parentId ? engine.findSavedQueue(q.parentId) : null;
                 const isInsideGrid = parentWidget && parentWidget.widgetType === 'grid';
@@ -1439,16 +1539,23 @@
 
                 if (type === 'roller') {
                     if (effectiveMode === 'micro') {
-                        let compactShowFormula = q.compactShowFormula;
-                        if (compactShowFormula === undefined && q.compactShowNote === undefined && q.compactShowDetail === undefined) {
+                        let microShowFormula = q.microShowFormula;
+                        let microShowNote = q.microShowNote;
+                        let microShowDetail = q.microShowDetail;
+                        if (microShowFormula === undefined && microShowNote === undefined && microShowDetail === undefined) {
+                            microShowFormula = q.compactShowFormula;
+                            microShowNote = q.compactShowNote;
+                            microShowDetail = q.compactShowDetail;
+                        }
+                        if (microShowFormula === undefined && microShowNote === undefined && microShowDetail === undefined) {
                             const priority = q.compactDisplayPriority || 'auto';
                             if (priority === 'formula' || priority === 'auto') {
-                                compactShowFormula = true;
+                                microShowFormula = true;
                             } else {
-                                compactShowFormula = false;
+                                microShowFormula = false;
                             }
-                        } else if (compactShowFormula === undefined) {
-                            compactShowFormula = false;
+                        } else if (microShowFormula === undefined) {
+                            microShowFormula = false;
                         }
 
                         const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
@@ -1456,14 +1563,14 @@
                             innerHtml += `
                                 <div class="flex flex-col items-center justify-center p-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full text-center h-full">
                                     ${!q.hideName ? `<span class="text-slate-400 text-[9px] leading-tight">${resolvedName}</span>` : ''}
-                                    ${compactShowFormula ? `<span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${getMicroRollerDisplay(q, formula)}</span>` : ''}
+                                    ${microShowFormula ? `<span class="text-[#00d4ff] text-xs font-black leading-tight mt-0.5">${getMicroRollerDisplay(q, formula)}</span>` : ''}
                                 </div>
                             `;
                         } else {
                             innerHtml += `
                                 <div class="flex items-center justify-center px-2 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full">
-                                    ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}${compactShowFormula ? ':' : ''}</span>` : ''}
-                                    ${compactShowFormula ? `<span class="text-[#00d4ff] font-extrabold">${formula.replace(/[\[\]\s]/g, '') || '+0'}</span>` : ''}
+                                    ${!q.hideName ? `<span class="text-slate-400 mr-1">${resolvedName}${microShowFormula ? ':' : ''}</span>` : ''}
+                                    ${microShowFormula ? `<span class="text-[#00d4ff] font-extrabold">${formula.replace(/[\[\]\s]/g, '') || '+0'}</span>` : ''}
                                 </div>
                             `;
                         }
@@ -1509,9 +1616,21 @@
                     }
                 } else if (type === 'stepper') {
                     if (effectiveMode === 'micro') {
+                        const resolvedMax = (typeof q.max === 'string') ? (window.getActiveCharacterVariable(q.max) ?? 100) : (q.max ?? 100);
+                        const maxDisabled = typeof q.max === 'string' ? 'readonly disabled' : '';
+                        const maxOpacity = typeof q.max === 'string' ? 'opacity-70 pointer-events-none' : '';
                         innerHtml = `
-                            <div class="flex items-center justify-start text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none w-full">
-                                ${!q.hideName ? `<span class="text-slate-400 mr-1.5">${resolvedName}</span>` : ''}
+                            <div class="flex items-center justify-between px-2.5 py-1 bg-slate-800/80 border border-white/10 hover:border-[#00d4ff]/40 hover:bg-[#00d4ff]/10 rounded-lg text-[10px] font-black text-[#e2e8f0] uppercase tracking-wider select-none transition-all w-full h-8 gap-2">
+                                ${!q.hideName ? `<span class="text-slate-400 shrink-0">${resolvedName}</span>` : ''}
+                                <div class="flex items-stretch border border-white/5 bg-[#020617]/40 rounded-lg select-none overflow-hidden h-6 text-[11px]" onclick="event.stopPropagation()">
+                                    <button onclick="event.stopPropagation(); changeStepperValue('${q.id}', -1)" class="w-5 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white font-black text-xs focus:outline-none">−</button>
+                                    <div class="flex items-center justify-center border-l border-r border-white/5 px-1 gap-0 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)]">
+                                        <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-5 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                        <span class="text-slate-600 font-bold text-[10px] mx-0.5 opacity-60 leading-none">|</span>
+                                        <input type="number" value="${resolvedMax}" ${maxDisabled} onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-5 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxOpacity}">
+                                    </div>
+                                    <button onclick="event.stopPropagation(); changeStepperValue('${q.id}', 1)" class="w-5 flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[#00d4ff] hover:text-white font-black text-xs focus:outline-none">+</button>
+                                </div>
                             </div>
                         `;
                     } else {
@@ -1567,16 +1686,25 @@
                         }
                         const showSign = q.showSign || q.name?.toLowerCase().includes('mod');
                         const sign = (showSign && typeof displayVal === 'number' && displayVal >= 0) ? '+' : '';
-                        let compactShowDetail = q.compactShowDetail;
-                        if (q.compactShowFormula === undefined && q.compactShowNote === undefined && compactShowDetail === undefined) {
+                        let microShowFormula = q.microShowFormula;
+                        let microShowNote = q.microShowNote;
+                        let microShowDetail = q.microShowDetail;
+                        if (microShowFormula === undefined && microShowNote === undefined && microShowDetail === undefined) {
+                            microShowFormula = q.compactShowFormula;
+                            microShowNote = q.compactShowNote;
+                            microShowDetail = q.compactShowDetail;
+                        }
+                        if (microShowFormula === undefined && microShowNote === undefined && microShowDetail === undefined) {
                             const priority = q.compactDisplayPriority || 'auto';
                             if (priority === 'detail' || priority === 'auto') {
-                                compactShowDetail = true;
+                                microShowDetail = true;
                             } else {
-                                compactShowDetail = false;
+                                microShowDetail = false;
                             }
+                        } else if (microShowDetail === undefined) {
+                            microShowDetail = false;
                         }
-                        const resolvedDetail = (q.detailText && compactShowDetail !== false) ? resolveDynamicText(q.detailText) : '';
+                        const resolvedDetail = (q.detailText && microShowDetail !== false) ? resolveDynamicText(q.detailText) : '';
                         
                         const isVertical = (q.colSpan || 12) <= 3 || resolvedName.length <= 4;
                         if (isVertical) {
@@ -1800,7 +1928,7 @@
                     if (effectiveMode === 'micro') {
                         valDisp.innerHTML = `
                             <input type="number" value="${q.value}" onchange="changeStepperValueDirect('${q.id}', this.value, true)" class="w-5 bg-transparent text-center outline-none focus:text-white text-[#00d4ff] font-black tabular-nums transition-colors text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                            <span class="text-slate-600 font-bold text-[10px] mx-0.5 opacity-60 leading-none">/</span>
+                            <span class="text-slate-600 font-bold text-[10px] mx-0.5 opacity-60 leading-none">|</span>
                             <input type="number" value="${resolvedMax}" ${maxDisabled} onchange="changeStepperValueDirect('${q.id}', this.value, false)" class="w-5 bg-transparent text-center outline-none focus:text-white text-slate-400 font-black tabular-nums transition-colors text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${maxOpacity}">
                         `;
                     } else {
@@ -1823,10 +1951,12 @@
                     };
                     incBtn.innerHTML = `+`;
 
-                    stepperControls.appendChild(decBtn);
-                    stepperControls.appendChild(valDisp);
-                    stepperControls.appendChild(incBtn);
-                    wrapper.appendChild(stepperControls);
+                    if (effectiveMode !== 'micro') {
+                        stepperControls.appendChild(decBtn);
+                        stepperControls.appendChild(valDisp);
+                        stepperControls.appendChild(incBtn);
+                        wrapper.appendChild(stepperControls);
+                    }
                 } else if (type === 'countdown') {
                     const ctEl = buildCountdownWidget(q);
                     bindHoldListeners(ctEl);
@@ -1890,6 +2020,21 @@
                 const el = buildWidgetDOM(q);
                 if (el) list.appendChild(el);
             });
+
+            // If the active character is an encounter, append the "Add Monster" section
+            const activeChar = characters.find(c => c.id === activeCharacterId);
+            if (activeChar && activeChar.dndType === 'encounter') {
+                const addMonsterContainer = document.createElement('div');
+                addMonsterContainer.className = 'w-full mt-4 select-none';
+                
+                addMonsterContainer.innerHTML = `
+                    <button onclick="handleAddMonsterToEncounterClick()" class="w-full py-3 rounded-xl bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] text-xs font-black uppercase tracking-widest transition-all border border-[#00d4ff]/20 active:scale-[0.98] flex items-center justify-center gap-2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Add Monster</span>
+                    </button>
+                `;
+                list.appendChild(addMonsterContainer);
+            }
         }
         function renderChainProgress(steps, scrambleVal, currentName, currentColor) {
             const container = document.getElementById('chain-cascade-container');

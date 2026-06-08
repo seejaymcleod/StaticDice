@@ -1046,109 +1046,26 @@ window.StaticDiceTemplates = [
         ]
     },
     {
-        id: 'template_sd_monster',
-        name: 'Shadowdark Monster (Blank)',
-        system: 'Shadowdark',
-        dndType: 'monster',
-        isDefault: true,
-        variables: {
-            "HP": "5",
-            "MaxHP": "5",
-            "AC": "10",
-            "LVL": "1",
-            "ATK_mod": "0"
-        },
-        groups: [
-            { id: 'actions', name: 'Actions', color: '#ff003c' },
-            { id: 'stats', name: 'Stats', color: '#00d4ff' },
-            { id: 'passives', name: 'Passives', color: '#a855f7' }
-        ],
-        widgets: [
-            {
-                id: 'w_m_desc',
-                groupId: 'stats',
-                name: 'Description',
-                widgetType: 'text',
-                text: '',
-                collapsed: false
-            },
-            {
-                id: 'w_m_hp',
-                groupId: 'stats',
-                name: 'HP',
-                widgetType: 'stepper',
-                min: 0,
-                max: 5,
-                value: 5
-            },
-            {
-                id: 'w_m_ac',
-                groupId: 'stats',
-                name: 'AC',
-                widgetType: 'number',
-                value: 10,
-                bindsVariable: 'AC',
-                variableRelType: 'define'
-            },
-            {
-                id: 'w_m_lvl',
-                groupId: 'stats',
-                name: 'Level',
-                widgetType: 'number',
-                value: 1,
-                bindsVariable: 'LVL',
-                variableRelType: 'define'
-            },
-            {
-                id: 'w_m_atk_mod',
-                groupId: 'stats',
-                name: 'Attack Modifier',
-                widgetType: 'number',
-                value: 0,
-                bindsVariable: 'ATK_mod',
-                variableRelType: 'define'
-            },
-            {
-                id: 'w_m_atk',
-                groupId: 'actions',
-                name: 'Claw Attack Roll',
-                widgetType: 'roller',
-                unifiedQueue: [
-                    { nodeType: 'node', sides: 20, count: 1 },
-                    { nodeType: 'operator', operator: '+' },
-                    { nodeType: 'modifier', type: 'variable', value: 'ATK_mod', operator: '+', multiplierType: 'none', multiplierValue: 1, divisorType: 'none', divisorValue: 1, roundMode: 'none' }
-                ]
-            },
-            {
-                id: 'w_m_dmg',
-                groupId: 'actions',
-                name: 'Claw Damage Roll',
-                widgetType: 'roller',
-                unifiedQueue: [
-                    { nodeType: 'node', sides: 6, count: 1 }
-                ]
-            },
-            {
-                id: 'w_m_passives',
-                groupId: 'passives',
-                name: 'Passives',
-                widgetType: 'text',
-                text: '',
-                collapsed: false
-            }
-        ]
-    },
-
-    {
-        id: 'template_encounter_undead',
-        name: 'Undead Ambush (Encounter)',
+        id: 'template_sd_encounter',
+        name: 'Shadowdark Encounter (Blank)',
         system: 'Shadowdark',
         dndType: 'encounter',
         isDefault: true,
-        variables: {
-            SKELETON_A_HP: "11",
-            SKELETON_B_HP: "11"
-        },
+        variables: {},
+        groups: [
+            { id: 'combat', name: 'Combat', color: '#ff003c' },
+            { id: 'passives', name: 'Passives', color: '#10b981' }
+        ],
+        widgets: []
+    },
+
+    {
+        id: 'template_sd_monster_skeleton',
+        name: 'Skeleton (Shadowdark)',
+        system: 'Shadowdark',
+        dndType: 'monster',
+        isDefault: true,
+        variables: {},
         groups: [
             { id: 'combat', name: 'Combat', color: '#ff003c' }
         ],
@@ -1189,7 +1106,7 @@ window.StaticDiceTemplates = [
                             conditionValue: 0,
                             action: 'show-button',
                             actionParams: {
-                                label: '☠️ Kill',
+                                label: 'Destroy',
                                 actionType: 'delete-parent-entity',
                                 btnColor: 'rose'
                             }
@@ -1205,6 +1122,7 @@ window.StaticDiceTemplates = [
                 widgetType: 'text',
                 displayMode: 'compact',
                 text: 'A bleach-boned skeleton with red pinpoints of light in its eyes.',
+                hideName: true,
                 colSpan: 12
             },
             {
@@ -1213,7 +1131,8 @@ window.StaticDiceTemplates = [
                 groupId: 'combat',
                 widgetType: 'grid',
                 columns: 12,
-                name: 'Ability Scores'
+                name: 'Ability Scores',
+                hideName: true
             },
             {
                 id: 'w_s_skel_str',
@@ -1222,6 +1141,7 @@ window.StaticDiceTemplates = [
                 name: 'Str',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
                 colSpan: 2,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -1236,6 +1156,7 @@ window.StaticDiceTemplates = [
                 name: 'Dex',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
                 colSpan: 2,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -1250,6 +1171,7 @@ window.StaticDiceTemplates = [
                 name: 'Con',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
                 colSpan: 2,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -1264,6 +1186,7 @@ window.StaticDiceTemplates = [
                 name: 'Int',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
                 colSpan: 2,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -1278,6 +1201,7 @@ window.StaticDiceTemplates = [
                 name: 'Wis',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
                 colSpan: 2,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -1292,6 +1216,7 @@ window.StaticDiceTemplates = [
                 name: 'Cha',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
                 colSpan: 2,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -1305,7 +1230,8 @@ window.StaticDiceTemplates = [
                 groupId: 'combat',
                 widgetType: 'grid',
                 columns: 12,
-                name: 'Vital Stats'
+                name: 'Vital Stats',
+                hideName: true
             },
             {
                 id: 'w_s_skel_ac',
@@ -1366,7 +1292,8 @@ window.StaticDiceTemplates = [
                 groupId: 'combat',
                 widgetType: 'grid',
                 columns: 12,
-                name: 'Attacks'
+                name: 'Attacks',
+                hideName: true
             },
             {
                 id: 'w_s_skel_atk1',
@@ -1375,6 +1302,8 @@ window.StaticDiceTemplates = [
                 name: 'Shortsword Atk',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
+                microShowFormula: false,
                 colSpan: 6,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -1389,6 +1318,8 @@ window.StaticDiceTemplates = [
                 name: 'Shortsword Dmg',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
+                microShowFormula: false,
                 colSpan: 6,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 6, count: 1 }
@@ -1401,6 +1332,8 @@ window.StaticDiceTemplates = [
                 name: 'Shortbow Atk',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
+                microShowFormula: false,
                 colSpan: 6,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 20, count: 1 },
@@ -1415,108 +1348,12 @@ window.StaticDiceTemplates = [
                 name: 'Shortbow Dmg',
                 widgetType: 'roller',
                 displayMode: 'micro',
+                hideName: false,
+                microShowFormula: false,
                 colSpan: 6,
                 unifiedQueue: [
                     { nodeType: 'node', sides: 4, count: 1 }
                 ]
-            },
-            {
-                id: 'w_skele_a',
-                parentId: 'w_eg_skeletons',
-                groupId: 'combat',
-                name: 'Skeleton A',
-                widgetType: 'entity'
-            },
-            {
-                id: 'w_skele_a_hp',
-                parentId: 'w_skele_a',
-                groupId: 'combat',
-                name: 'HP',
-                widgetType: 'stepper',
-                displayMode: 'micro',
-                colSpan: 4,
-                value: 11,
-                max: 11,
-                min: 0,
-                bindsVariable: 'SKELETON_A_HP',
-                variableRelType: 'define'
-            },
-            {
-                id: 'w_skele_a_notes',
-                parentId: 'w_skele_a',
-                groupId: 'combat',
-                name: 'Notes',
-                widgetType: 'text',
-                displayMode: 'micro',
-                colSpan: 4,
-                text: ''
-            },
-            {
-                id: 'w_skele_a_trigger',
-                parentId: 'w_skele_a',
-                groupId: 'combat',
-                name: 'Trigger',
-                widgetType: 'trigger',
-                displayMode: 'micro',
-                colSpan: 4,
-                targetWidgetId: 'SKELETON_A_HP',
-                condition: '<=',
-                conditionValue: 0,
-                action: 'show-button',
-                actionParams: {
-                    label: '☠️ Kill',
-                    actionType: 'delete-parent-entity',
-                    btnColor: 'rose'
-                }
-            },
-            {
-                id: 'w_skele_b',
-                parentId: 'w_eg_skeletons',
-                groupId: 'combat',
-                name: 'Skeleton B',
-                widgetType: 'entity'
-            },
-            {
-                id: 'w_skele_b_hp',
-                parentId: 'w_skele_b',
-                groupId: 'combat',
-                name: 'HP',
-                widgetType: 'stepper',
-                displayMode: 'micro',
-                colSpan: 4,
-                value: 11,
-                max: 11,
-                min: 0,
-                bindsVariable: 'SKELETON_B_HP',
-                variableRelType: 'define'
-            },
-            {
-                id: 'w_skele_b_notes',
-                parentId: 'w_skele_b',
-                groupId: 'combat',
-                name: 'Notes',
-                widgetType: 'text',
-                displayMode: 'micro',
-                colSpan: 4,
-                text: ''
-            },
-            {
-                id: 'w_skele_b_trigger',
-                parentId: 'w_skele_b',
-                groupId: 'combat',
-                name: 'Trigger',
-                widgetType: 'trigger',
-                displayMode: 'micro',
-                colSpan: 4,
-                targetWidgetId: 'SKELETON_B_HP',
-                condition: '<=',
-                conditionValue: 0,
-                action: 'show-button',
-                actionParams: {
-                    label: '☠️ Kill',
-                    actionType: 'delete-parent-entity',
-                    btnColor: 'rose'
-                }
             }
         ]
     }

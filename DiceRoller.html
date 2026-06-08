@@ -1725,7 +1725,7 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="text-[9px] font-black text-slate-500 uppercase block mb-1">Button Label</label>
-                            <input type="text" id="trigger-btn-label" value="☠️ Kill"
+                            <input type="text" id="trigger-btn-label" value="Destroy"
                                 class="w-full bg-[#090d16] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-[#e2e8f0] font-bold">
                         </div>
                         <div>
@@ -1760,13 +1760,14 @@
                 <div class="space-y-2 pt-2 border-t border-white/5" id="widget-display-matrix-container">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Display Options</label>
                     <div class="w-full text-[10px] text-slate-400">
-                        <div class="grid grid-cols-4 gap-2 border-b border-white/5 pb-1 mb-1 font-black uppercase tracking-wider text-slate-500 text-center">
+                        <div class="grid grid-cols-5 gap-2 border-b border-white/5 pb-1 mb-1 font-black uppercase tracking-wider text-slate-500 text-center">
                             <div class="text-left">Show Element</div>
                             <div>Full</div>
                             <div>Normal</div>
                             <div>Compact</div>
+                            <div>Micro</div>
                         </div>
-                        <div class="grid grid-cols-4 gap-2 py-1 items-center text-center" id="matrix-row-formula">
+                        <div class="grid grid-cols-5 gap-2 py-1 items-center text-center" id="matrix-row-formula">
                             <div class="text-left font-bold uppercase tracking-wider text-slate-400">Formula</div>
                             <div class="flex justify-center">
                                 <input type="checkbox" id="widget-full-formula" checked
@@ -1780,8 +1781,12 @@
                                 <input type="checkbox" id="widget-compact-formula"
                                     class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
                             </div>
+                            <div class="flex justify-center">
+                                <input type="checkbox" id="widget-micro-formula"
+                                    class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            </div>
                         </div>
-                        <div class="grid grid-cols-4 gap-2 py-1 items-center text-center" id="matrix-row-note">
+                        <div class="grid grid-cols-5 gap-2 py-1 items-center text-center" id="matrix-row-note">
                             <div class="text-left font-bold uppercase tracking-wider text-slate-400">Note</div>
                             <div class="flex justify-center">
                                 <input type="checkbox" id="widget-full-note" checked
@@ -1795,8 +1800,12 @@
                                 <input type="checkbox" id="widget-compact-note"
                                     class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
                             </div>
+                            <div class="flex justify-center">
+                                <input type="checkbox" id="widget-micro-note"
+                                    class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            </div>
                         </div>
-                        <div class="grid grid-cols-4 gap-2 py-1 items-center text-center" id="matrix-row-detail">
+                        <div class="grid grid-cols-5 gap-2 py-1 items-center text-center" id="matrix-row-detail">
                             <div class="text-left font-bold uppercase tracking-wider text-slate-400">Details</div>
                             <div class="flex justify-center">
                                 <input type="checkbox" id="widget-full-detail" checked
@@ -1808,6 +1817,10 @@
                             </div>
                             <div class="flex justify-center">
                                 <input type="checkbox" id="widget-compact-detail"
+                                    class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            </div>
+                            <div class="flex justify-center">
+                                <input type="checkbox" id="widget-micro-detail"
                                     class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
                             </div>
                         </div>

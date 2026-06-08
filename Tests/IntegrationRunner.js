@@ -187,8 +187,8 @@ window.addEventListener('load', () => {
                 // Since showModal returns a promise, wait a frame
                 await new Promise(r => setTimeout(r, 10));
                 
-                if (characters.length !== 0) throw new Error("characters array should be empty");
-                if (activeCharacterId !== null) throw new Error("activeCharacterId should be null");
+                if (characters.length !== 1) throw new Error("characters array should have 1 default character recreated");
+                if (activeCharacterId !== 'primary') throw new Error("activeCharacterId should be 'primary'");
                 
                 // Let's test campaign deletion
                 campaigns = [{ id: 'camp_temp', name: 'Temp Campaign' }];
@@ -197,8 +197,8 @@ window.addEventListener('load', () => {
                 deleteCampaignFromBinder('camp_temp');
                 await new Promise(r => setTimeout(r, 10));
                 
-                if (campaigns.length !== 0) throw new Error("campaigns array should be empty");
-                if (activeCampaignId !== null) throw new Error("activeCampaignId should be null");
+                if (campaigns.length !== 1) throw new Error("campaigns array should have 1 default campaign recreated");
+                if (activeCampaignId !== 'default_campaign') throw new Error("activeCampaignId should be 'default_campaign'");
 
                 // Test 8: Template spawning, cloning, and template creation
                 console.log('Testing template spawning, cloning, and template creation...');
@@ -1335,7 +1335,7 @@ window.addEventListener('load', () => {
                                 conditionValue: 0,
                                 action: 'show-button',
                                 actionParams: {
-                                    label: '☠️ Kill',
+                                    label: 'Destroy',
                                     btnColor: 'rose'
                                 }
                             }
@@ -1407,7 +1407,7 @@ window.addEventListener('load', () => {
                 renderSavedQueues();
                 const triggerBtn = document.querySelector('.widget-type-trigger[data-id="' + triggerWidget.id + '"] button');
                 if (!triggerBtn) throw new Error("Trigger Kill button was not rendered after triggering");
-                if (triggerBtn.textContent !== '☠️ Kill') throw new Error("Incorrect trigger button label: " + triggerBtn.textContent);
+                if (triggerBtn.textContent !== 'Destroy') throw new Error("Incorrect trigger button label: " + triggerBtn.textContent);
                 
                 // 4. Test Cascading Deletion
                 // Trigger button click deletes the parent entity
@@ -1453,7 +1453,7 @@ window.addEventListener('load', () => {
                                 condition: '<=',
                                 conditionValue: 0,
                                 action: 'show-button',
-                                actionParams: { label: '☠️ Kill', btnColor: 'rose' }
+                                actionParams: { label: 'Destroy', btnColor: 'rose' }
                             }
                         ]
                     }
@@ -1581,7 +1581,7 @@ window.addEventListener('load', () => {
                     conditionValue: 0,
                     action: 'show-button',
                     actionParams: {
-                        label: '☠️ Kill',
+                        label: 'Destroy',
                         actionType: 'delete-parent-entity',
                         btnColor: 'rose'
                     },
@@ -1607,6 +1607,126 @@ window.addEventListener('load', () => {
                 }
 
                 console.log('-> configureSavedWidget Passed.');
+
+                // Test 14: Touch-Hold / Long-Press Configuration on Input Elements
+                console.log('Testing Touch-Hold / Long-Press Configuration on Input Elements...');
+                
+                const textWidgetId = 'w_test_touch_hold_text';
+                engine.savedQueues.push({
+                    id: textWidgetId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Touch Hold Notes',
+                    widgetType: 'text',
+                    displayMode: 'micro',
+                    text: 'Initial Text'
+                });
+                
+                renderSavedQueues();
+                
+                const textWidgetWrapper = document.querySelector('.widget-type-text[data-id="' + textWidgetId + '"]');
+                if (!textWidgetWrapper) {
+                    throw new Error("Text widget wrapper not found in DOM");
+                }
+                const textInput = textWidgetWrapper.querySelector('input[type="text"]');
+                if (!textInput) {
+                    throw new Error("Text widget input element not found in DOM");
+                }
+                
+                let menuToggledId = null;
+                const originalToggleArsenalMenu = window.toggleArsenalMenu;
+                window.toggleArsenalMenu = (id, e) => {
+                    menuToggledId = id;
+                };
+                
+                const touchStartEvent = new window.Event('touchstart', { bubbles: true });
+                touchStartEvent.touches = [{ clientX: 100, clientY: 100 }];
+                textInput.dispatchEvent(touchStartEvent);
+                
+                await new Promise(resolve => setTimeout(resolve, 550));
+                
+                const touchEndEvent = new window.Event('touchend', { bubbles: true });
+                textInput.dispatchEvent(touchEndEvent);
+                
+                window.toggleArsenalMenu = originalToggleArsenalMenu;
+                
+                if (menuToggledId !== textWidgetId) {
+                    throw new Error("Touch-hold/long-press on text input did not trigger configure menu. menuToggledId is: " + menuToggledId);
+                }
+                
+                console.log('-> Touch-Hold / Long-Press Configuration on Inputs Passed.');
+
+                // Test 15: Entity Name Input Event Propagation (right-click / long-press configurability)
+                console.log('Testing Entity Name Input Event Propagation...');
+                
+                const testEgId = 'w_test_propagation_eg';
+                const testEntId = 'w_test_propagation_ent';
+                engine.savedQueues.push({
+                    id: testEgId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Test Propagation Group',
+                    widgetType: 'entity-group',
+                    entityTemplate: { namePrefix: 'Gob', widgets: [] }
+                });
+                engine.savedQueues.push({
+                    id: testEntId,
+                    parentId: testEgId,
+                    characterId: activeCharacterId,
+                    groupId: activeGroupId,
+                    name: 'Gob 1',
+                    widgetType: 'entity'
+                });
+                
+                renderSavedQueues();
+                
+                const entityWrapper = document.querySelector('.widget-type-entity[data-id="' + testEntId + '"]');
+                if (!entityWrapper) {
+                    throw new Error("Entity widget wrapper not found in DOM");
+                }
+                const entityNameInput = entityWrapper.querySelector('input[type="text"]');
+                if (!entityNameInput) {
+                    throw new Error("Entity name input element not found in DOM");
+                }
+                
+                let entityMenuToggledId = null;
+                const originalToggleArsenalMenu2 = window.toggleArsenalMenu;
+                window.toggleArsenalMenu = (id, e) => {
+                    entityMenuToggledId = id;
+                };
+                
+                // 1. Simulate Touch Hold (long press) on the entity name input
+                const touchStartEvent2 = new window.Event('touchstart', { bubbles: true });
+                touchStartEvent2.touches = [{ clientX: 100, clientY: 100 }];
+                entityNameInput.dispatchEvent(touchStartEvent2);
+                
+                await new Promise(resolve => setTimeout(resolve, 550));
+                
+                const touchEndEvent2 = new window.Event('touchend', { bubbles: true });
+                entityNameInput.dispatchEvent(touchEndEvent2);
+                
+                if (entityMenuToggledId !== testEntId) {
+                    throw new Error("Touch-hold/long-press on entity name input did not trigger configure menu. entityMenuToggledId is: " + entityMenuToggledId);
+                }
+                entityMenuToggledId = null;
+                
+                // Clear the touchend isHold reset timeout
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // 2. Simulate Right-Click (mousedown button 2 + contextmenu) on the entity name input
+                const mouseDownEvent = new window.MouseEvent('mousedown', { bubbles: true, button: 2 });
+                entityNameInput.dispatchEvent(mouseDownEvent);
+                
+                const contextMenuEvent = new window.MouseEvent('contextmenu', { bubbles: true });
+                entityNameInput.dispatchEvent(contextMenuEvent);
+                
+                window.toggleArsenalMenu = originalToggleArsenalMenu2;
+                
+                if (entityMenuToggledId !== testEntId) {
+                    throw new Error("Right-click on entity name input did not trigger configure menu. entityMenuToggledId is: " + entityMenuToggledId);
+                }
+                
+                console.log('-> Entity Name Input Event Propagation Passed.');
 
             })()
 

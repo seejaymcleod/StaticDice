@@ -3418,7 +3418,7 @@
                                 conditionValue: 0,
                                 action: 'show-button',
                                 actionParams: {
-                                    label: '☠️ Kill',
+                                    label: 'Destroy',
                                     actionType: 'delete-parent-entity',
                                     btnColor: 'rose'
                                 }
@@ -3488,6 +3488,10 @@
                 engine.savedQueues = engine.savedQueues.filter(q => q.characterId !== activeCharacterId);
                 groups = groups.filter(g => g.characterId !== activeCharacterId);
                 characters = characters.filter(c => c.id !== activeCharacterId);
+                if (characters.length === 0) {
+                    ensureActiveCharacterAndGroup();
+                    return;
+                }
 
                 const campChars = characters.filter(c => c.campaignId === activeCampaignId);
                 if (campChars.length > 0) {
@@ -3620,6 +3624,58 @@
                 }
             }
 
+            if (tpl.dndType === 'monster') {
+                const activeChar = characters.find(c => c.id === activeCharacterId);
+                let encounterChar = (activeChar && activeChar.dndType === 'encounter') ? activeChar : null;
+                
+                if (!encounterChar) {
+                    const encName = await showModal({
+                        title: 'New Encounter',
+                        body: 'Enter name for the new Encounter sheet:',
+                        confirmText: 'Create',
+                        inputPrompt: true,
+                        defaultValue: 'Encounter'
+                    });
+                    if (!encName || !encName.trim()) return;
+
+                    const newCharId = 'char_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                    encounterChar = {
+                        id: newCharId,
+                        name: encName.trim(),
+                        dndType: 'encounter',
+                        campaignId: activeCampaignId,
+                        variables: {}
+                    };
+                    
+                    const newGroups = [
+                        { id: 'grp_combat_' + Date.now(), name: 'Combat', color: '#ff003c', characterId: newCharId },
+                        { id: 'grp_passives_' + Date.now(), name: 'Passives', color: '#10b981', characterId: newCharId }
+                    ];
+
+                    characters.push(encounterChar);
+                    groups.push(...newGroups);
+
+                    activeCharacterId = newCharId;
+                    activeGroupId = newGroups[0].id;
+                    
+                    if (!openTabs.includes(activeCampaignId)) {
+                        openTabs.push(activeCampaignId);
+                    }
+                }
+                
+                const targetGroupId = groups.find(g => g.characterId === activeCharacterId && g.name === 'Combat')?.id || activeGroupId;
+                addMonsterToEncounter(tpl, activeCharacterId, targetGroupId);
+                
+                persistArsenal();
+                renderCampaignSelect();
+                renderCharacterSelect();
+                renderGroupTabs();
+                renderSavedQueues();
+                renderBinder();
+                vibrate(15);
+                return;
+            }
+
             const name = await showModal({
                 title: 'Spawn Instance',
                 body: `Enter name for this ${tpl.dndType === 'monster' ? 'Monster' : tpl.dndType === 'encounter' ? 'Encounter' : 'Character'}:`,
@@ -3696,6 +3752,80 @@
 
             vibrate(15);
         }
+
+        function addMonsterToEncounter(tpl, charId, grpId) {
+            const widgetIdMap = {};
+            (tpl.widgets || []).forEach((w, idx) => {
+                const newWId = 'w_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 5);
+                widgetIdMap[w.id] = newWId;
+            });
+
+            const newWidgets = (tpl.widgets || []).map(w => {
+                const newWId = widgetIdMap[w.id];
+                const clone = JSON.parse(JSON.stringify(w));
+                clone.id = newWId;
+                clone.characterId = charId;
+                clone.groupId = grpId;
+                
+                if (clone.parentId && widgetIdMap[clone.parentId]) {
+                    clone.parentId = widgetIdMap[clone.parentId];
+                }
+                if (clone.sharedGridId && widgetIdMap[clone.sharedGridId]) {
+                    clone.sharedGridId = widgetIdMap[clone.sharedGridId];
+                }
+                return clone;
+            });
+
+            engine.savedQueues.push(...newWidgets);
+            persistSaved();
+
+            const entityGroupWidget = newWidgets.find(w => w.widgetType === 'entity-group');
+            if (entityGroupWidget) {
+                spawnGroupEntity(entityGroupWidget.id);
+            }
+        }
+
+        window.handleAddMonsterToEncounterClick = async function() {
+            const monsterTpls = templates.filter(t => t.dndType === 'monster');
+            if (monsterTpls.length === 0) {
+                await showModal({
+                    title: 'Add Monster',
+                    body: '<div class="text-slate-400 text-xs text-center py-4">No monster templates found. Create one in the binder first.</div>',
+                    alertOnly: true
+                });
+                return;
+            }
+            
+            // Build a list of buttons for each monster template
+            let buttonsHtml = monsterTpls.map((t, idx) => `
+                <button onclick="handleAddMonsterTemplateSelected('${t.id}')" class="w-full text-left px-4 py-3 bg-slate-800/80 hover:bg-[#00d4ff]/10 hover:border-[#00d4ff]/30 border border-white/5 rounded-xl text-slate-200 hover:text-white transition-all text-xs font-bold flex items-center justify-between mb-2 last:mb-0">
+                    <span>${t.name}</span>
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">${t.system || ''}</span>
+                </button>
+            `).join('');
+
+            showModal({
+                title: 'Select Monster to Add',
+                body: `<div class="max-h-60 overflow-y-auto pr-1 mt-2">${buttonsHtml}</div>`,
+                alertOnly: true
+            });
+            const okBtn = document.getElementById('modal-ok-btn');
+            if (okBtn) okBtn.textContent = 'Cancel';
+        };
+
+        window.handleAddMonsterTemplateSelected = function(tplId) {
+            const tpl = templates.find(t => t.id === tplId);
+            if (tpl) {
+                addMonsterToEncounter(tpl, activeCharacterId, activeGroupId);
+                renderSavedQueues();
+                vibrate(15);
+            }
+            const overlay = document.getElementById('modal-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        };
 
         async function deleteTemplate(tplId, event) {
             if (event) event.stopPropagation();
@@ -4190,6 +4320,10 @@
                 persistSaved();
 
                 characters = characters.filter(c => c.id !== charId);
+                if (characters.length === 0) {
+                    ensureActiveCharacterAndGroup();
+                    return;
+                }
                 if (activeCharacterId === charId) {
                     const remaining = characters.filter(c => c.campaignId === campId);
                     if (remaining.length > 0) {
@@ -4226,6 +4360,10 @@
                 persistSaved();
 
                 campaigns = campaigns.filter(c => c.id !== campId);
+                if (campaigns.length === 0) {
+                    ensureActiveCharacterAndGroup();
+                    return;
+                }
                 if (activeCampaignId === campId) {
                     activeCampaignId = campaigns.length > 0 ? campaigns[0].id : null;
                 }
@@ -4336,19 +4474,19 @@
             if (campaigns.length === 0) {
                 campaigns.push({ id: 'default_campaign', name: 'Default Campaign' });
             }
-            if (!activeCampaignId) {
+            if (!activeCampaignId || !campaigns.some(c => c.id === activeCampaignId)) {
                 activeCampaignId = campaigns[0].id;
             }
             
             if (characters.length === 0) {
                 characters.push({
                     id: 'primary',
-                    name: 'Default Character',
+                    name: 'Default',
                     dndType: 'standard',
                     campaignId: activeCampaignId
                 });
             }
-            if (!activeCharacterId) {
+            if (!activeCharacterId || !characters.some(c => c.id === activeCharacterId)) {
                 activeCharacterId = characters[0].id;
             }
             
@@ -4426,7 +4564,7 @@
             if (document.getElementById('trigger-condition')) document.getElementById('trigger-condition').value = '<=';
             if (document.getElementById('trigger-val')) document.getElementById('trigger-val').value = '0';
             if (document.getElementById('trigger-action')) document.getElementById('trigger-action').value = 'show-button';
-            if (document.getElementById('trigger-btn-label')) document.getElementById('trigger-btn-label').value = '☠️ Kill';
+            if (document.getElementById('trigger-btn-label')) document.getElementById('trigger-btn-label').value = 'Destroy';
             if (document.getElementById('trigger-btn-color')) document.getElementById('trigger-btn-color').value = 'rose';
             if (document.getElementById('widget-parent-id')) document.getElementById('widget-parent-id').value = '';
             if (document.getElementById('widget-colspan')) document.getElementById('widget-colspan').value = '12';
@@ -4620,6 +4758,18 @@
             document.getElementById('widget-compact-note').checked = !!compactShowNote;
             document.getElementById('widget-compact-detail').checked = !!compactShowDetail;
 
+            let microShowFormula = q.microShowFormula;
+            let microShowNote = q.microShowNote;
+            let microShowDetail = q.microShowDetail;
+            if (microShowFormula === undefined && microShowNote === undefined && microShowDetail === undefined) {
+                microShowFormula = q.compactShowFormula !== undefined ? q.compactShowFormula : true;
+                microShowNote = q.compactShowNote !== undefined ? q.compactShowNote : true;
+                microShowDetail = q.compactShowDetail !== undefined ? q.compactShowDetail : true;
+            }
+            document.getElementById('widget-micro-formula').checked = !!microShowFormula;
+            document.getElementById('widget-micro-note').checked = !!microShowNote;
+            document.getElementById('widget-micro-detail').checked = !!microShowDetail;
+
             // Populate hideName
             const hideNameEl = document.getElementById('widget-hide-name');
             if (hideNameEl) hideNameEl.checked = !!q.hideName;
@@ -4647,7 +4797,7 @@
                 document.getElementById('trigger-condition').value = q.condition || '<=';
                 document.getElementById('trigger-val').value = q.conditionValue !== undefined ? q.conditionValue : 0;
                 document.getElementById('trigger-action').value = q.action || 'show-button';
-                document.getElementById('trigger-btn-label').value = (q.actionParams && q.actionParams.label) || '☠️ Kill';
+                document.getElementById('trigger-btn-label').value = (q.actionParams && q.actionParams.label) || 'Destroy';
                 document.getElementById('trigger-btn-color').value = (q.actionParams && q.actionParams.btnColor) || 'rose';
             }
 
@@ -4912,6 +5062,9 @@
             const compactShowFormula = document.getElementById('widget-compact-formula').checked;
             const compactShowNote = document.getElementById('widget-compact-note').checked;
             const compactShowDetail = document.getElementById('widget-compact-detail').checked;
+            const microShowFormula = document.getElementById('widget-micro-formula').checked;
+            const microShowNote = document.getElementById('widget-micro-note').checked;
+            const microShowDetail = document.getElementById('widget-micro-detail').checked;
 
             if (editingWidgetId !== null) {
                 const q = engine.findSavedQueue(editingWidgetId);
@@ -4933,6 +5086,9 @@
                     q.compactShowFormula = compactShowFormula;
                     q.compactShowNote = compactShowNote;
                     q.compactShowDetail = compactShowDetail;
+                    q.microShowFormula = microShowFormula;
+                    q.microShowNote = microShowNote;
+                    q.microShowDetail = microShowDetail;
                     const hideNameSave = document.getElementById('widget-hide-name');
                     q.hideName = hideNameSave ? hideNameSave.checked : false;
                     q.parentId = document.getElementById('widget-parent-id').value || null;
@@ -5057,6 +5213,9 @@
                 compactShowFormula: compactShowFormula,
                 compactShowNote: compactShowNote,
                 compactShowDetail: compactShowDetail,
+                microShowFormula: microShowFormula,
+                microShowNote: microShowNote,
+                microShowDetail: microShowDetail,
                 hideName: (document.getElementById('widget-hide-name')?.checked ?? false)
             };
 
@@ -6934,7 +7093,7 @@
                     conditionValue: 0,
                     action: 'show-button',
                     actionParams: {
-                        label: '☠️ Kill',
+                        label: 'Destroy',
                         actionType: 'delete-parent-entity',
                         btnColor: 'rose'
                     }
@@ -8320,6 +8479,23 @@
         window.onload = () => {
             initRollPad();
             loadTemplates();
+
+            // Try loading skeleton template from local JSON file (can be overridden/configured)
+            (async () => {
+                try {
+                    const res = await fetch('SD_Monster_Skeleton.json');
+                    if (res.ok) {
+                        const data = await res.json();
+                        const idx = templates.findIndex(t => t.id === 'template_sd_monster_skeleton');
+                        if (idx > -1) {
+                            templates[idx] = data;
+                            renderTemplates();
+                        }
+                    }
+                } catch (e) {
+                    console.log("Could not dynamically load SD_Monster_Skeleton.json, using fallback.");
+                }
+            })();
 
             updateScrollSpacer();
             const padContainer = document.getElementById('roll-pad-container');
