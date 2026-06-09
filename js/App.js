@@ -4625,6 +4625,15 @@
 
             const hideNameReset = document.getElementById('widget-hide-name');
             if (hideNameReset) hideNameReset.checked = false;
+            // Reset name visibility pills to "Show"
+            const showRadio = document.querySelector('input[name="widget-name-visibility"][value="show"]');
+            if (showRadio) { showRadio.checked = true; }
+            document.querySelectorAll('.widget-name-pill').forEach(p => {
+                const r = p.querySelector('input');
+                p.classList.toggle('!bg-sky-500/20', r && r.checked);
+                p.classList.toggle('!border-sky-500/30', r && r.checked);
+                p.classList.toggle('!text-sky-400', r && r.checked);
+            });
 
             onWidgetTypeChange(typeSelect.value);
 
@@ -4773,6 +4782,15 @@
             // Populate hideName
             const hideNameEl = document.getElementById('widget-hide-name');
             if (hideNameEl) hideNameEl.checked = !!q.hideName;
+            // Sync the Show/Hide name pills
+            const nameVisRadio = document.querySelector(`input[name="widget-name-visibility"][value="${q.hideName ? 'hide' : 'show'}"]`);
+            if (nameVisRadio) nameVisRadio.checked = true;
+            document.querySelectorAll('.widget-name-pill').forEach(pill => {
+                const radio = pill.querySelector('input[name="widget-name-visibility"]');
+                pill.classList.toggle('!bg-sky-500/20', radio && radio.checked);
+                pill.classList.toggle('!border-sky-500/30', radio && radio.checked);
+                pill.classList.toggle('!text-sky-400', radio && radio.checked);
+            });
 
             // Populate grid & layout config
             const parentDropdown = document.getElementById('widget-parent-id');

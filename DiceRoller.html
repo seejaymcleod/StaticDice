@@ -1671,9 +1671,8 @@
 
                 <!-- Text Card Config -->
                 <div id="widget-text-config" class="hidden space-y-3">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Note / Journal
-                        Text</label>
-                    <textarea id="text-card-content" placeholder="Type notes here..." rows="3"
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Text Content</label>
+                    <textarea id="text-card-content" placeholder="Type content here..." rows="3"
                         class="w-full bg-[#090d16] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#e2e8f0] font-medium outline-none focus:border-sky-500 transition-colors"></textarea>
                 </div>
 
@@ -1865,36 +1864,43 @@
                             <span class="text-[8px] text-slate-500 font-medium">Tiny vertical stat</span>
                         </label>
                     </div>
+                    <!-- Widget Name Show/Hide toggle -->
+                    <div class="pt-1.5">
+                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">Widget Name</span>
+                        <div class="grid grid-cols-2 gap-1">
+                            <label class="widget-name-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-1.5 px-1 transition-all hover:bg-white/5">
+                                <input type="radio" name="widget-name-visibility" value="show" class="sr-only" checked
+                                    onclick="document.getElementById('widget-hide-name').checked=false; document.querySelectorAll('.widget-name-pill').forEach(p=>{const r=p.querySelector('input');p.classList.toggle('!bg-sky-500/20',r&&r.checked);p.classList.toggle('!border-sky-500/30',r&&r.checked);p.classList.toggle('!text-sky-400',r&&r.checked);})">
+                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Show</span>
+                            </label>
+                            <label class="widget-name-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-1.5 px-1 transition-all hover:bg-white/5">
+                                <input type="radio" name="widget-name-visibility" value="hide" class="sr-only"
+                                    onclick="document.getElementById('widget-hide-name').checked=true; document.querySelectorAll('.widget-name-pill').forEach(p=>{const r=p.querySelector('input');p.classList.toggle('!bg-sky-500/20',r&&r.checked);p.classList.toggle('!border-sky-500/30',r&&r.checked);p.classList.toggle('!text-sky-400',r&&r.checked);})">
+                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Hide</span>
+                            </label>
+                        </div>
+                        <!-- hidden real checkbox so existing save/load logic is untouched -->
+                        <input type="checkbox" id="widget-hide-name" class="sr-only">
+                    </div>
                 </div>
 
                 <!-- Grid & Layout Config -->
                 <div class="space-y-3 pt-2 border-t border-white/5">
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Grid &amp; Layout Config</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="widget-parent-id" class="text-[9px] font-black text-slate-500 uppercase block mb-1">Parent Widget</label>
-                            <select id="widget-parent-id" class="char-select w-full !text-xs !py-2">
-                                <option value="">(None)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="widget-colspan" class="text-[9px] font-black text-slate-500 uppercase block mb-1">Column Span (1-12)</label>
-                            <select id="widget-colspan" class="char-select w-full !text-xs !py-2">
-                                <option value="1">1 Column</option>
-                                <option value="2">2 Columns</option>
-                                <option value="3">3 Columns</option>
-                                <option value="4">4 Columns</option>
-                                <option value="5">5 Columns</option>
-                                <option value="6">6 Columns</option>
-                                <option value="7">7 Columns</option>
-                                <option value="8">8 Columns</option>
-                                <option value="9">9 Columns</option>
-                                <option value="10">10 Columns</option>
-                                <option value="11">11 Columns</option>
-                                <option value="12" selected>12 Columns (Full Width)</option>
-                            </select>
-                        </div>
+                    <div>
+                        <label for="widget-parent-id" class="text-[9px] font-black text-slate-500 uppercase block mb-1">Parent Widget</label>
+                        <select id="widget-parent-id" class="char-select w-full !text-xs !py-2">
+                            <option value="">(None)</option>
+                        </select>
                     </div>
+                    <!-- Column span hidden — use right-click menu on widget to change width -->
+                    <select id="widget-colspan" class="sr-only">
+                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                        <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                        <option value="10">10</option><option value="11">11</option>
+                        <option value="12" selected>12</option>
+                    </select>
                 </div>
 
                 <!-- Variable Binding Config -->
@@ -1943,14 +1949,7 @@
                     </div>
                 </div>
 
-                <!-- Hide Widget Name -->
-                <div class="pt-2 border-t border-white/5 flex items-center gap-2">
-                    <input type="checkbox" id="widget-hide-name"
-                        class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
-                    <label for="widget-hide-name" class="text-[10px] font-black text-slate-500 uppercase tracking-wider cursor-pointer">
-                        Hide Widget Name
-                    </label>
-                </div>
+
             </div>
 
             <!-- Footer Buttons -->
