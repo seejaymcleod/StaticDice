@@ -1196,13 +1196,6 @@
                         };
                         wrapper.appendChild(btn);
                     }
-                    
-                    wrapper.style.position = 'relative';
-                    bindHoldListeners(wrapper);
-                    setupDragAndDrop(wrapper, q);
-                    const menuContainer = createWidgetMenu(q);
-                    wrapper.appendChild(menuContainer);
-                    
                     return wrapper;
                 }
 
@@ -1235,15 +1228,13 @@
                     childrenContainer.className = 'grid grid-cols-12 gap-1 items-stretch mt-1';
                     
                     // Add Entity Name as first child
-                    if (!q.hideName) {
-                        const nameCell = document.createElement('div');
-                        nameCell.className = 'col-span-6 px-1 py-1 flex items-center min-w-0';
-                        nameCell.innerHTML = `
-                            <input type="text" value="${resolvedName}" oninput="renameEntityDirect('${q.id}', this.value)" onclick="event.stopPropagation()" onmousedown="if(event.button === 0) event.stopPropagation()"
-                                   class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 outline-none font-bold transition-all uppercase tracking-wide">
-                        `;
-                        childrenContainer.appendChild(nameCell);
-                    }
+                    const nameCell = document.createElement('div');
+                    nameCell.className = 'col-span-12 px-1 py-1 flex items-center min-w-0';
+                    nameCell.innerHTML = `
+                        <input type="text" value="${resolvedName}" oninput="renameEntityDirect('${q.id}', this.value)" onclick="event.stopPropagation()" onmousedown="if(event.button === 0) event.stopPropagation()"
+                               class="w-full bg-slate-900/60 border border-white/5 focus:border-[#00d4ff]/30 focus:bg-slate-900/90 rounded-lg px-2 py-1 text-[10px] text-slate-200 placeholder-slate-600 outline-none font-bold transition-all uppercase tracking-wide">
+                    `;
+                    childrenContainer.appendChild(nameCell);
 
                     entityChildren.forEach(child => {
                         const originalMode = child.displayMode;

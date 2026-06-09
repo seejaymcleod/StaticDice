@@ -1079,7 +1079,17 @@ window.StaticDiceTemplates = [
                 sharedGridId: null,
                 entityTemplate: {
                     namePrefix: 'Skeleton',
+                    hideName: true,
                     widgets: [
+                        {
+                            name: 'Name',
+                            widgetType: 'text',
+                            displayMode: 'micro',
+                            width: 6,
+                            hideName: true,
+                            isEntityName: true,
+                            text: ''
+                        },
                         {
                             name: 'Notes',
                             widgetType: 'text',
@@ -1094,13 +1104,13 @@ window.StaticDiceTemplates = [
                             max: 11,
                             value: 11,
                             displayMode: 'micro',
-                            width: 12,
+                            width: 8,
                         },
                         {
                             name: 'Trigger',
                             widgetType: 'trigger',
                             displayMode: 'micro',
-                            width: 6,
+                            width: 4,
                             targetWidgetId: '',
                             condition: 'always',
                             conditionValue: 0,

@@ -5481,6 +5481,7 @@
                 groupId: activeGroupId,
                 name: entityName,
                 widgetType: 'entity',
+                hideName: groupWidget.entityTemplate.hideName === true,
                 color: COLOR_PALETTE ? COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)] : null
             };
             engine.savedQueues.push(entityWidget);
@@ -5495,6 +5496,10 @@
                 childWidget.parentId = entityId;
                 childWidget.characterId = activeCharacterId;
                 childWidget.groupId = activeGroupId;
+                
+                if (childWidget.isEntityName) {
+                    childWidget.text = entityName;
+                }
                 
                 spawnedSiblings.push(childWidget);
                 engine.savedQueues.push(childWidget);
@@ -5608,6 +5613,12 @@
             const q = engine.findSavedQueue(widgetId);
             if (q && q.widgetType === 'text') {
                 q.text = newValue;
+                if (q.isEntityName && q.parentId) {
+                    const parentEntity = engine.findSavedQueue(q.parentId);
+                    if (parentEntity && parentEntity.widgetType === 'entity') {
+                        parentEntity.name = newValue;
+                    }
+                }
                 persistSaved();
             }
         }
