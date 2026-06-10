@@ -1079,17 +1079,8 @@ window.StaticDiceTemplates = [
                 sharedGridId: null,
                 entityTemplate: {
                     namePrefix: 'Skeleton',
-                    hideName: true,
+                    hideName: false,
                     widgets: [
-                        {
-                            name: 'Name',
-                            widgetType: 'text',
-                            displayMode: 'micro',
-                            width: 6,
-                            hideName: true,
-                            isEntityName: true,
-                            text: ''
-                        },
                         {
                             name: 'Notes',
                             widgetType: 'text',

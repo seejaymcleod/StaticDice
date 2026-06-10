@@ -4623,17 +4623,8 @@
             document.getElementById('passive-mods-list').innerHTML = '';
             toggleWidgetPassiveModifiers(false);
 
-            const hideNameReset = document.getElementById('widget-hide-name');
-            if (hideNameReset) hideNameReset.checked = false;
-            // Reset name visibility pills to "Show"
-            const showRadio = document.querySelector('input[name="widget-name-visibility"][value="show"]');
-            if (showRadio) { showRadio.checked = true; }
-            document.querySelectorAll('.widget-name-pill').forEach(p => {
-                const r = p.querySelector('input');
-                p.classList.toggle('!bg-sky-500/20', r && r.checked);
-                p.classList.toggle('!border-sky-500/30', r && r.checked);
-                p.classList.toggle('!text-sky-400', r && r.checked);
-            });
+            const showNameReset = document.getElementById('widget-show-name');
+            if (showNameReset) showNameReset.checked = true;
 
             onWidgetTypeChange(typeSelect.value);
 
@@ -4779,18 +4770,9 @@
             document.getElementById('widget-micro-note').checked = !!microShowNote;
             document.getElementById('widget-micro-detail').checked = !!microShowDetail;
 
-            // Populate hideName
-            const hideNameEl = document.getElementById('widget-hide-name');
-            if (hideNameEl) hideNameEl.checked = !!q.hideName;
-            // Sync the Show/Hide name pills
-            const nameVisRadio = document.querySelector(`input[name="widget-name-visibility"][value="${q.hideName ? 'hide' : 'show'}"]`);
-            if (nameVisRadio) nameVisRadio.checked = true;
-            document.querySelectorAll('.widget-name-pill').forEach(pill => {
-                const radio = pill.querySelector('input[name="widget-name-visibility"]');
-                pill.classList.toggle('!bg-sky-500/20', radio && radio.checked);
-                pill.classList.toggle('!border-sky-500/30', radio && radio.checked);
-                pill.classList.toggle('!text-sky-400', radio && radio.checked);
-            });
+            // Populate showName
+            const showNameEl = document.getElementById('widget-show-name');
+            if (showNameEl) showNameEl.checked = !q.hideName;
 
             // Populate grid & layout config
             const parentDropdown = document.getElementById('widget-parent-id');
@@ -5107,8 +5089,8 @@
                     q.microShowFormula = microShowFormula;
                     q.microShowNote = microShowNote;
                     q.microShowDetail = microShowDetail;
-                    const hideNameSave = document.getElementById('widget-hide-name');
-                    q.hideName = hideNameSave ? hideNameSave.checked : false;
+                    const showNameSave = document.getElementById('widget-show-name');
+                    q.hideName = showNameSave ? !showNameSave.checked : false;
                     q.parentId = document.getElementById('widget-parent-id').value || null;
                     q.colSpan = parseInt(document.getElementById('widget-colspan').value, 10) || 12;
 
@@ -5234,7 +5216,7 @@
                 microShowFormula: microShowFormula,
                 microShowNote: microShowNote,
                 microShowDetail: microShowDetail,
-                hideName: (document.getElementById('widget-hide-name')?.checked ?? false)
+                hideName: !(document.getElementById('widget-show-name')?.checked ?? true)
             };
 
             if (type === 'roller' || type === 'number') {
@@ -5499,7 +5481,7 @@
                 groupId: activeGroupId,
                 name: entityName,
                 widgetType: 'entity',
-                hideName: groupWidget.entityTemplate.hideName === true,
+                hideName: false,
                 color: COLOR_PALETTE ? COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)] : null
             };
             engine.savedQueues.push(entityWidget);
@@ -5516,7 +5498,8 @@
                 childWidget.groupId = activeGroupId;
                 
                 if (childWidget.isEntityName) {
-                    childWidget.text = entityName;
+                    // Legacy support: skip spawning this widget entirely since entity names are natively rendered now
+                    return;
                 }
                 
                 spawnedSiblings.push(childWidget);

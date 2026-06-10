@@ -1767,6 +1767,16 @@
                             <div>Compact</div>
                             <div>Micro</div>
                         </div>
+                        <div class="grid grid-cols-5 gap-2 py-1 items-center text-center" id="matrix-row-name">
+                            <div class="text-left font-bold uppercase tracking-wider text-slate-400">Name</div>
+                            <div class="flex justify-center">
+                                <input type="checkbox" id="widget-show-name" checked
+                                    class="rounded border-white/10 bg-[#020617] text-[#00d4ff] focus:ring-sky-500 w-4 h-4">
+                            </div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                        </div>
                         <div class="grid grid-cols-5 gap-2 py-1 items-center text-center" id="matrix-row-formula">
                             <div class="text-left font-bold uppercase tracking-wider text-slate-400">Formula</div>
                             <div class="flex justify-center">
@@ -1863,24 +1873,6 @@
                                 class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Micro</span>
                             <span class="text-[8px] text-slate-500 font-medium">Tiny vertical stat</span>
                         </label>
-                    </div>
-                    <!-- Widget Name Show/Hide toggle -->
-                    <div class="pt-1.5">
-                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">Widget Name</span>
-                        <div class="grid grid-cols-2 gap-1">
-                            <label class="widget-name-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-1.5 px-1 transition-all hover:bg-white/5">
-                                <input type="radio" name="widget-name-visibility" value="show" class="sr-only" checked
-                                    onclick="document.getElementById('widget-hide-name').checked=false; document.querySelectorAll('.widget-name-pill').forEach(p=>{const r=p.querySelector('input');p.classList.toggle('!bg-sky-500/20',r&&r.checked);p.classList.toggle('!border-sky-500/30',r&&r.checked);p.classList.toggle('!text-sky-400',r&&r.checked);})">
-                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Show</span>
-                            </label>
-                            <label class="widget-name-pill cursor-pointer text-center rounded-lg border border-white/10 bg-[#090d16]/60 py-1.5 px-1 transition-all hover:bg-white/5">
-                                <input type="radio" name="widget-name-visibility" value="hide" class="sr-only"
-                                    onclick="document.getElementById('widget-hide-name').checked=true; document.querySelectorAll('.widget-name-pill').forEach(p=>{const r=p.querySelector('input');p.classList.toggle('!bg-sky-500/20',r&&r.checked);p.classList.toggle('!border-sky-500/30',r&&r.checked);p.classList.toggle('!text-sky-400',r&&r.checked);})">
-                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-wide block">Hide</span>
-                            </label>
-                        </div>
-                        <!-- hidden real checkbox so existing save/load logic is untouched -->
-                        <input type="checkbox" id="widget-hide-name" class="sr-only">
                     </div>
                 </div>
 
