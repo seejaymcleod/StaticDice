@@ -12,6 +12,8 @@
   - `App.js`: Global orchestrator, maintaining application state (`window` global variables) and general DOM listeners.
   - `CharacterSheetAssembler.js`: Data layer listening to the Event Bus to map imported Entity Blueprints to interactive UI widgets.
   - `components/DiceWidget.js`: Experimental prototype for native Web Components (`<dice-widget>`).
+- **SD_Monster_Skeleton.json**: Base schema template for a Shadowdark skeleton monster.
+- **SD_Monster_Blank.json**: Blank template for creating custom Shadowdark monsters.
 - **Systems/**: Game-specific logic and schemas.
   - `Shadowdark/System.js`: Contains `ShadowdarkCharacterSchema`, `ShadowdarkMonsterSchema`, etc. Keeps the agnostic core untainted.
 - **Parsers/**: Directory containing third-party importer logic.

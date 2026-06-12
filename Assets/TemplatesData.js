@@ -1241,7 +1241,7 @@ window.StaticDiceTemplates = [
                 name: 'AC',
                 widgetType: 'number',
                 displayMode: 'micro',
-                width: 6,
+                width: 3,
                 value: 13,
                 detailText: '(chainmail)',
                 showSign: false
@@ -1253,7 +1253,7 @@ window.StaticDiceTemplates = [
                 name: 'AL',
                 widgetType: 'text',
                 displayMode: 'micro',
-                width: 6,
+                width: 3,
                 text: 'C'
             },
             {
@@ -1263,7 +1263,7 @@ window.StaticDiceTemplates = [
                 name: 'LV',
                 widgetType: 'number',
                 displayMode: 'micro',
-                width: 6,
+                width: 3,
                 value: 2,
                 showSign: false
             },
@@ -1274,7 +1274,7 @@ window.StaticDiceTemplates = [
                 name: 'MV',
                 widgetType: 'text',
                 displayMode: 'micro',
-                width: 6,
+                width: 3,
                 text: 'near'
             },
             {
@@ -1357,5 +1357,293 @@ window.StaticDiceTemplates = [
                 ]
             }
         ]
+    },
+    {
+      "id": "template_sd_monster_blank",
+      "name": "Blank Monster (Shadowdark)",
+      "system": "Shadowdark",
+      "dndType": "monster",
+      "isDefault": true,
+      "variables": {},
+      "groups": [
+        { "id": "combat", "name": "Combat", "color": "#ff003c" }
+      ],
+      "widgets": [
+        {
+          "id": "w_eg_blank",
+          "groupId": "combat",
+          "name": "Monster Group",
+          "color": "#ff9900",
+          "widgetType": "entity-group",
+          "sharedGridId": null,
+          "entityTemplate": {
+            "namePrefix": "Monster",
+            "widgets": [
+              {
+                "name": "Notes",
+                "widgetType": "text",
+                "displayMode": "micro",
+                "width": 6,
+                "text": ""
+              },
+              {
+                "name": "HP",
+                "widgetType": "stepper",
+                "min": 0,
+                "max": 1,
+                "value": 1,
+                "displayMode": "micro",
+                "width": 8
+              },
+              {
+                "name": "Trigger",
+                "widgetType": "trigger",
+                "displayMode": "micro",
+                "width": 4,
+                "targetWidgetId": "",
+                "condition": "always",
+                "conditionValue": 0,
+                "action": "show-button",
+                "actionParams": {
+                  "label": "Destroy",
+                  "actionType": "delete-parent-entity",
+                  "btnColor": "rose"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "w_s_blank_desc",
+          "parentId": "w_eg_blank",
+          "groupId": "combat",
+          "name": "Description",
+          "widgetType": "text",
+          "displayMode": "compact",
+          "text": "A blank canvas for a custom monster.",
+          "hideName": true,
+          "width": 12
+        },
+        {
+          "id": "w_g_blank_stats",
+          "parentId": "w_eg_blank",
+          "groupId": "combat",
+          "widgetType": "grid",
+          "columns": 12,
+          "name": "Ability Scores",
+          "hideName": true
+        },
+        {
+          "id": "w_s_blank_str",
+          "parentId": "w_g_blank_stats",
+          "groupId": "combat",
+          "name": "Str",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "width": 2,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 20, "count": 1 },
+            { "nodeType": "operator", "operator": "+" },
+            { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+          ]
+        },
+        {
+          "id": "w_s_blank_dex",
+          "parentId": "w_g_blank_stats",
+          "groupId": "combat",
+          "name": "Dex",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "width": 2,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 20, "count": 1 },
+            { "nodeType": "operator", "operator": "+" },
+            { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+          ]
+        },
+        {
+          "id": "w_s_blank_con",
+          "parentId": "w_g_blank_stats",
+          "groupId": "combat",
+          "name": "Con",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "width": 2,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 20, "count": 1 },
+            { "nodeType": "operator", "operator": "+" },
+            { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+          ]
+        },
+        {
+          "id": "w_s_blank_int",
+          "parentId": "w_g_blank_stats",
+          "groupId": "combat",
+          "name": "Int",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "width": 2,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 20, "count": 1 },
+            { "nodeType": "operator", "operator": "+" },
+            { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+          ]
+        },
+        {
+          "id": "w_s_blank_wis",
+          "parentId": "w_g_blank_stats",
+          "groupId": "combat",
+          "name": "Wis",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "width": 2,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 20, "count": 1 },
+            { "nodeType": "operator", "operator": "+" },
+            { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+          ]
+        },
+        {
+          "id": "w_s_blank_cha",
+          "parentId": "w_g_blank_stats",
+          "groupId": "combat",
+          "name": "Cha",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "width": 2,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 20, "count": 1 },
+            { "nodeType": "operator", "operator": "+" },
+            { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+          ]
+        },
+        {
+          "id": "w_g_blank_other",
+          "parentId": "w_eg_blank",
+          "groupId": "combat",
+          "widgetType": "grid",
+          "columns": 12,
+          "name": "Vital Stats",
+          "hideName": true
+        },
+        {
+          "id": "w_s_blank_ac",
+          "parentId": "w_g_blank_other",
+          "groupId": "combat",
+          "name": "AC",
+          "widgetType": "number",
+          "displayMode": "micro",
+          "width": 3,
+          "value": 10,
+          "detailText": "(none)",
+          "showSign": false
+        },
+        {
+          "id": "w_s_blank_al",
+          "parentId": "w_g_blank_other",
+          "groupId": "combat",
+          "name": "AL",
+          "widgetType": "text",
+          "displayMode": "micro",
+          "width": 3,
+          "text": "N"
+        },
+        {
+          "id": "w_s_blank_lv",
+          "parentId": "w_g_blank_other",
+          "groupId": "combat",
+          "name": "LV",
+          "widgetType": "number",
+          "displayMode": "micro",
+          "width": 3,
+          "value": 0,
+          "showSign": false
+        },
+        {
+          "id": "w_s_blank_mv",
+          "parentId": "w_g_blank_other",
+          "groupId": "combat",
+          "name": "MV",
+          "widgetType": "text",
+          "displayMode": "micro",
+          "width": 3,
+          "text": "near"
+        },
+        {
+          "id": "w_g_blank_attacks",
+          "parentId": "w_eg_blank",
+          "groupId": "combat",
+          "widgetType": "grid",
+          "columns": 12,
+          "name": "Attacks",
+          "hideName": true
+        },
+        {
+          "id": "w_s_blank_atk1",
+          "parentId": "w_g_blank_attacks",
+          "groupId": "combat",
+          "name": "Melee Atk",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "microShowFormula": false,
+          "width": 6,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 20, "count": 1 },
+            { "nodeType": "operator", "operator": "+" },
+            { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+          ]
+        },
+        {
+          "id": "w_s_blank_dmg1",
+          "parentId": "w_g_blank_attacks",
+          "groupId": "combat",
+          "name": "Melee Dmg",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "microShowFormula": false,
+          "width": 6,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 4, "count": 1 }
+          ]
+        },
+        {
+          "id": "w_s_blank_atk2",
+          "parentId": "w_g_blank_attacks",
+          "groupId": "combat",
+          "name": "Ranged Atk",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "microShowFormula": false,
+          "width": 6,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 20, "count": 1 },
+            { "nodeType": "operator", "operator": "+" },
+            { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+          ]
+        },
+        {
+          "id": "w_s_blank_dmg2",
+          "parentId": "w_g_blank_attacks",
+          "groupId": "combat",
+          "name": "Ranged Dmg",
+          "widgetType": "roller",
+          "displayMode": "micro",
+          "hideName": false,
+          "microShowFormula": false,
+          "width": 6,
+          "unifiedQueue": [
+            { "nodeType": "node", "sides": 4, "count": 1 }
+          ]
+        }
+      ]
     }
 ];

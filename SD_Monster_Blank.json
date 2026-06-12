@@ -1,6 +1,6 @@
 {
-  "id": "template_sd_monster_skeleton",
-  "name": "Skeleton (Shadowdark)",
+  "id": "template_sd_monster_blank",
+  "name": "Blank Monster (Shadowdark)",
   "system": "Shadowdark",
   "dndType": "monster",
   "isDefault": true,
@@ -10,14 +10,14 @@
   ],
   "widgets": [
     {
-      "id": "w_eg_skeletons",
+      "id": "w_eg_blank",
       "groupId": "combat",
-      "name": "Skeleton Group",
+      "name": "Monster Group",
       "color": "#ff9900",
       "widgetType": "entity-group",
       "sharedGridId": null,
       "entityTemplate": {
-        "namePrefix": "Skeleton",
+        "namePrefix": "Monster",
         "widgets": [
           {
             "name": "Notes",
@@ -30,8 +30,8 @@
             "name": "HP",
             "widgetType": "stepper",
             "min": 0,
-            "max": 11,
-            "value": 11,
+            "max": 1,
+            "value": 1,
             "displayMode": "micro",
             "width": 8
           },
@@ -54,19 +54,19 @@
       }
     },
     {
-      "id": "w_s_skel_desc",
-      "parentId": "w_eg_skeletons",
+      "id": "w_s_blank_desc",
+      "parentId": "w_eg_blank",
       "groupId": "combat",
       "name": "Description",
       "widgetType": "text",
       "displayMode": "compact",
-      "text": "A bleach-boned skeleton with red pinpoints of light in its eyes.",
+      "text": "A blank canvas for a custom monster.",
       "hideName": true,
       "width": 12
     },
     {
-      "id": "w_g_skeleton_stats",
-      "parentId": "w_eg_skeletons",
+      "id": "w_g_blank_stats",
+      "parentId": "w_eg_blank",
       "groupId": "combat",
       "widgetType": "grid",
       "columns": 12,
@@ -74,8 +74,8 @@
       "hideName": true
     },
     {
-      "id": "w_s_skel_str",
-      "parentId": "w_g_skeleton_stats",
+      "id": "w_s_blank_str",
+      "parentId": "w_g_blank_stats",
       "groupId": "combat",
       "name": "Str",
       "widgetType": "roller",
@@ -85,12 +85,12 @@
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
-        { "nodeType": "modifier", "type": "literal", "value": 1, "operator": "+" }
+        { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
       ]
     },
     {
-      "id": "w_s_skel_dex",
-      "parentId": "w_g_skeleton_stats",
+      "id": "w_s_blank_dex",
+      "parentId": "w_g_blank_stats",
       "groupId": "combat",
       "name": "Dex",
       "widgetType": "roller",
@@ -104,8 +104,8 @@
       ]
     },
     {
-      "id": "w_s_skel_con",
-      "parentId": "w_g_skeleton_stats",
+      "id": "w_s_blank_con",
+      "parentId": "w_g_blank_stats",
       "groupId": "combat",
       "name": "Con",
       "widgetType": "roller",
@@ -115,12 +115,12 @@
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
         { "nodeType": "operator", "operator": "+" },
-        { "nodeType": "modifier", "type": "literal", "value": 2, "operator": "+" }
+        { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
       ]
     },
     {
-      "id": "w_s_skel_int",
-      "parentId": "w_g_skeleton_stats",
+      "id": "w_s_blank_int",
+      "parentId": "w_g_blank_stats",
       "groupId": "combat",
       "name": "Int",
       "widgetType": "roller",
@@ -129,13 +129,13 @@
       "width": 2,
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
-        { "nodeType": "operator", "operator": "-" },
-        { "nodeType": "modifier", "type": "literal", "value": 2, "operator": "+" }
+        { "nodeType": "operator", "operator": "+" },
+        { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
       ]
     },
     {
-      "id": "w_s_skel_wis",
-      "parentId": "w_g_skeleton_stats",
+      "id": "w_s_blank_wis",
+      "parentId": "w_g_blank_stats",
       "groupId": "combat",
       "name": "Wis",
       "widgetType": "roller",
@@ -149,8 +149,8 @@
       ]
     },
     {
-      "id": "w_s_skel_cha",
-      "parentId": "w_g_skeleton_stats",
+      "id": "w_s_blank_cha",
+      "parentId": "w_g_blank_stats",
       "groupId": "combat",
       "name": "Cha",
       "widgetType": "roller",
@@ -159,13 +159,13 @@
       "width": 2,
       "unifiedQueue": [
         { "nodeType": "node", "sides": 20, "count": 1 },
-        { "nodeType": "operator", "operator": "-" },
-        { "nodeType": "modifier", "type": "literal", "value": 1, "operator": "+" }
+        { "nodeType": "operator", "operator": "+" },
+        { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
       ]
     },
     {
-      "id": "w_g_skeleton_other",
-      "parentId": "w_eg_skeletons",
+      "id": "w_g_blank_other",
+      "parentId": "w_eg_blank",
       "groupId": "combat",
       "widgetType": "grid",
       "columns": 12,
@@ -173,41 +173,41 @@
       "hideName": true
     },
     {
-      "id": "w_s_skel_ac",
-      "parentId": "w_g_skeleton_other",
+      "id": "w_s_blank_ac",
+      "parentId": "w_g_blank_other",
       "groupId": "combat",
       "name": "AC",
       "widgetType": "number",
       "displayMode": "micro",
       "width": 3,
-      "value": 13,
-      "detailText": "(chainmail)",
+      "value": 10,
+      "detailText": "(none)",
       "showSign": false
     },
     {
-      "id": "w_s_skel_al",
-      "parentId": "w_g_skeleton_other",
+      "id": "w_s_blank_al",
+      "parentId": "w_g_blank_other",
       "groupId": "combat",
       "name": "AL",
       "widgetType": "text",
       "displayMode": "micro",
       "width": 3,
-      "text": "C"
+      "text": "N"
     },
     {
-      "id": "w_s_skel_lv",
-      "parentId": "w_g_skeleton_other",
+      "id": "w_s_blank_lv",
+      "parentId": "w_g_blank_other",
       "groupId": "combat",
       "name": "LV",
       "widgetType": "number",
       "displayMode": "micro",
       "width": 3,
-      "value": 2,
+      "value": 0,
       "showSign": false
     },
     {
-      "id": "w_s_skel_mv",
-      "parentId": "w_g_skeleton_other",
+      "id": "w_s_blank_mv",
+      "parentId": "w_g_blank_other",
       "groupId": "combat",
       "name": "MV",
       "widgetType": "text",
@@ -216,18 +216,8 @@
       "text": "near"
     },
     {
-      "id": "w_s_skel_passive",
-      "parentId": "w_eg_skeletons",
-      "groupId": "combat",
-      "name": "Undead",
-      "widgetType": "text",
-      "displayMode": "compact",
-      "text": "Immune to morale checks.",
-      "width": 12
-    },
-    {
-      "id": "w_g_skeleton_attacks",
-      "parentId": "w_eg_skeletons",
+      "id": "w_g_blank_attacks",
+      "parentId": "w_eg_blank",
       "groupId": "combat",
       "widgetType": "grid",
       "columns": 12,
@@ -235,40 +225,10 @@
       "hideName": true
     },
     {
-      "id": "w_s_skel_atk1",
-      "parentId": "w_g_skeleton_attacks",
+      "id": "w_s_blank_atk1",
+      "parentId": "w_g_blank_attacks",
       "groupId": "combat",
-      "name": "Shortsword Atk",
-      "widgetType": "roller",
-      "displayMode": "micro",
-      "hideName": false,
-      "microShowFormula": false,
-      "width": 6,
-      "unifiedQueue": [
-        { "nodeType": "node", "sides": 20, "count": 1 },
-        { "nodeType": "operator", "operator": "+" },
-        { "nodeType": "modifier", "type": "literal", "value": 1, "operator": "+" }
-      ]
-    },
-    {
-      "id": "w_s_skel_dmg1",
-      "parentId": "w_g_skeleton_attacks",
-      "groupId": "combat",
-      "name": "Shortsword Dmg",
-      "widgetType": "roller",
-      "displayMode": "micro",
-      "hideName": false,
-      "microShowFormula": false,
-      "width": 6,
-      "unifiedQueue": [
-        { "nodeType": "node", "sides": 6, "count": 1 }
-      ]
-    },
-    {
-      "id": "w_s_skel_atk2",
-      "parentId": "w_g_skeleton_attacks",
-      "groupId": "combat",
-      "name": "Shortbow Atk",
+      "name": "Melee Atk",
       "widgetType": "roller",
       "displayMode": "micro",
       "hideName": false,
@@ -281,10 +241,40 @@
       ]
     },
     {
-      "id": "w_s_skel_dmg2",
-      "parentId": "w_g_skeleton_attacks",
+      "id": "w_s_blank_dmg1",
+      "parentId": "w_g_blank_attacks",
       "groupId": "combat",
-      "name": "Shortbow Dmg",
+      "name": "Melee Dmg",
+      "widgetType": "roller",
+      "displayMode": "micro",
+      "hideName": false,
+      "microShowFormula": false,
+      "width": 6,
+      "unifiedQueue": [
+        { "nodeType": "node", "sides": 4, "count": 1 }
+      ]
+    },
+    {
+      "id": "w_s_blank_atk2",
+      "parentId": "w_g_blank_attacks",
+      "groupId": "combat",
+      "name": "Ranged Atk",
+      "widgetType": "roller",
+      "displayMode": "micro",
+      "hideName": false,
+      "microShowFormula": false,
+      "width": 6,
+      "unifiedQueue": [
+        { "nodeType": "node", "sides": 20, "count": 1 },
+        { "nodeType": "operator", "operator": "+" },
+        { "nodeType": "modifier", "type": "literal", "value": 0, "operator": "+" }
+      ]
+    },
+    {
+      "id": "w_s_blank_dmg2",
+      "parentId": "w_g_blank_attacks",
+      "groupId": "combat",
+      "name": "Ranged Dmg",
       "widgetType": "roller",
       "displayMode": "micro",
       "hideName": false,

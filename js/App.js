@@ -8492,6 +8492,23 @@
                 }
             })();
 
+            // Try loading blank template from local JSON file
+            (async () => {
+                try {
+                    const res = await fetch('SD_Monster_Blank.json?v=' + Date.now());
+                    if (res.ok) {
+                        const data = await res.json();
+                        const idx = templates.findIndex(t => t.id === 'template_sd_monster_blank');
+                        if (idx > -1) {
+                            templates[idx] = data;
+                            renderTemplates();
+                        }
+                    }
+                } catch (e) {
+                    console.log("Could not dynamically load SD_Monster_Blank.json, using fallback.");
+                }
+            })();
+
             updateScrollSpacer();
             const padContainer = document.getElementById('roll-pad-container');
             if (padContainer) {
