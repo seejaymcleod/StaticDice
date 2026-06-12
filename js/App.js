@@ -5506,7 +5506,32 @@
                 engine.savedQueues.push(childWidget);
             });
 
-            // Hardcoded HP logic removed in favor of standalone widget state
+            // Assign unique bindsVariable & targetWidgetId to stepper and trigger
+            const cleanVarBase = entityName.toUpperCase().trim().replace(/[^A-Z0-9_]/g, '_').replace(/_+/g, '_');
+            const hpVarName = `${cleanVarBase}_HP`;
+
+            spawnedSiblings.forEach(sibling => {
+                if (sibling.widgetType === 'stepper' && (sibling.name === 'HP' || sibling.name.toUpperCase().includes('HP'))) {
+                    sibling.bindsVariable = hpVarName;
+                    sibling.variableRelType = 'define';
+                }
+            });
+
+            spawnedSiblings.forEach(sibling => {
+                if (sibling.widgetType === 'trigger') {
+                    sibling.targetWidgetId = hpVarName;
+                }
+            });
+
+            // Register default HP value in character variables
+            const char = characters.find(c => c.id === activeCharacterId);
+            if (char) {
+                if (!char.variables) char.variables = {};
+                const hpWidget = spawnedSiblings.find(s => s.widgetType === 'stepper');
+                const defaultHP = hpWidget ? (hpWidget.value ?? 10) : 10;
+                char.variables[hpVarName] = String(defaultHP);
+                syncCharacterVariables(char);
+            }
 
             persistSaved();
             renderSavedQueues();

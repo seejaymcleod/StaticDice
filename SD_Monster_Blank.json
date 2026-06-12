@@ -182,6 +182,7 @@
       "width": 3,
       "value": 10,
       "detailText": "(none)",
+      "microShowDetail": false,
       "showSign": false
     },
     {

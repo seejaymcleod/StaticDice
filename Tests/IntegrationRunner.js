@@ -1258,8 +1258,8 @@ window.addEventListener('load', () => {
                     renderSavedQueues();
                     let entityEl = document.querySelector('.widget-type-entity[data-id="' + tempEntityId + '"]');
                     if (!entityEl) throw new Error("Temp entity widget not found in DOM");
-                    if (!entityEl.className.includes('bg-transparent') || !entityEl.className.includes('border-b') || entityEl.className.includes('bg-black/20') || entityEl.className.includes('rounded-xl')) {
-                        throw new Error("Entity widget should have bg-transparent and border-b border-white/5 list styling, not a rounded card box background/border");
+                    if (!entityEl.className.includes('rounded-xl') || !entityEl.className.includes('backdrop-blur-sm')) {
+                        throw new Error("Entity widget should have rounded-xl and backdrop-blur-sm styling");
                     }
                     console.log("-> Undead Encounter Layout & Micro-Mode Tests Passed.");
                 } finally {

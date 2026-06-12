@@ -1244,6 +1244,7 @@ window.StaticDiceTemplates = [
                 width: 3,
                 value: 13,
                 detailText: '(chainmail)',
+                microShowDetail: false,
                 showSign: false
             },
             {
@@ -1542,6 +1543,7 @@ window.StaticDiceTemplates = [
           "width": 3,
           "value": 10,
           "detailText": "(none)",
+          "microShowDetail": false,
           "showSign": false
         },
         {
